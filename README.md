@@ -39,7 +39,7 @@ Ningún tipo de escena, plantilla de prompt ni modo de montaje está escrito en 
 
 ## Prueba real de imágenes (Fase 1): 10 escenas de alacranes
 
-En tu PC, con la clave de Gemini en `.env` (`GEMINI_API_KEY=...`):
+En tu PC, con la clave en `.env` (`TOGETHER_API_KEY=...`, o `GEMINI_API_KEY=...` si cambias el proveedor en `config/proveedores.json`):
 
 ```bash
 pip install -e ".[dev]"

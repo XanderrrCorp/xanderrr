@@ -34,6 +34,10 @@
         "tokens_salida_por_imagen": 1290,
         "tokens_por_imagen_de_referencia": 1032,
         "descuento_lotes": 0.5
+      },
+      "google/flash-image-2.5": {
+        "precio_por_imagen": 0.0403,
+        "_nota": "Together cobra por imagen generada; las referencias no se cobran aparte. 0,0403 USD medido por el dueño: CONFIRMAR en together.ai/pricing."
       }
     }
   },

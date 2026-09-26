@@ -1,11 +1,24 @@
 {
-  "_nota": "Proveedor y modelo de cada servicio. Cambiar aquí no requiere tocar código. Las claves van en .env.",
+  "_nota": "Proveedor y modelo de cada servicio. Cambiar aquí no requiere tocar código. Las claves van en .env (nunca en el repositorio, que es público).",
   "imagenes": {
-    "proveedor": "gemini",
-    "modelo": "gemini-2.5-flash-image",
+    "proveedor": "together",
     "relacion_aspecto": "16:9",
     "reintentos_por_escena": 2,
     "tiempo_max_s": 120,
-    "variable_clave": "GEMINI_API_KEY"
+    "opciones": {
+      "together": {
+        "modelo": "google/flash-image-2.5",
+        "variable_clave": "TOGETHER_API_KEY",
+        "ancho": 1344,
+        "alto": 768
+      },
+      "gemini": {
+        "modelo": "gemini-2.5-flash-image",
+        "variable_clave": "GEMINI_API_KEY"
+      },
+      "simulado": {
+        "modelo": "simulado"
+      }
+    }
   }
 }

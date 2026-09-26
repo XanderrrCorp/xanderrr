@@ -187,3 +187,25 @@ def test_gemini_sin_clave(config, monkeypatch):
     monkeypatch.setattr("estudio.imagenes.proveedores.clave_api", lambda n: None)
     with pytest.raises(ErrorProveedor):
         ProveedorGemini(config, "gemini-2.5-flash-image", sesion=object())
+
+
+def test_together_peticion_y_costo(tmp_path, config, monkeypatch):
+    from estudio.imagenes.proveedores import ProveedorTogether
+    monkeypatch.setenv("TOGETHER_API_KEY", "clave-de-prueba")
+    ref = tmp_path / "mascota.png"; ref.write_bytes(b"\x89PNG fake")
+    sesion = _Sesion([_Resp(200, {"data": [{"b64_json": _png()}]})])
+    prov = ProveedorTogether(config, "google/flash-image-2.5", sesion=sesion)
+    res = prov.generar("un alacrán. 16:9, no text.", [ref])
+    url, cab, cuerpo = sesion.pedidos[0]
+    assert url == "https://api.together.xyz/v1/images/generations"
+    assert cab["Authorization"] == "Bearer clave-de-prueba"
+    assert cuerpo["model"] == "google/flash-image-2.5" and cuerpo["response_format"] == "base64"
+    assert cuerpo["reference_images"][0].startswith("data:image/png;base64,")
+    assert res.uso.costo_usd == pytest.approx(0.0403) and prov.estimar_usd("x", [ref]) == pytest.approx(0.0403)
+
+
+def test_proveedor_por_defecto_es_together(config, monkeypatch):
+    from estudio.config import leer_config
+    from estudio.imagenes.proveedores import ProveedorTogether, crear_proveedor
+    monkeypatch.setenv("TOGETHER_API_KEY", "x")
+    assert isinstance(crear_proveedor(config, leer_config("proveedores.json")["imagenes"]), ProveedorTogether)
