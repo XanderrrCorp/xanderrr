@@ -17,6 +17,22 @@ from .config import RAIZ, _leer_env, clave_api, ruta_proyectos
 from .proyecto import CarpetaProyecto
 
 WEB = Path(__file__).parent / "web"
+
+
+def _version() -> str:
+    """Huella del código instalado: si cambia (se actualizó), el Xandart viejo que siga
+    abierto se cierra y se abre el nuevo."""
+    import hashlib
+
+    h = hashlib.sha256()
+    base = Path(__file__).parent
+    for f in sorted(list(base.glob("*.py")) + list(WEB.glob("*"))):
+        h.update(f.name.encode())
+        h.update(f.read_bytes())
+    return h.hexdigest()[:12]
+
+
+VERSION = _version()
 PUERTO = int(os.environ.get("XANDART_PUERTO", "8030"))
 app = FastAPI(title="Xandart")
 
@@ -57,6 +73,20 @@ def archivo(slug: str, ruta: str, descargar: bool = False):
     if descargar:
         nombre = f"{pipeline.slugificar(_proyecto(slug).cargar().titulo)[:60]}{destino.suffix}"
     return FileResponse(destino, filename=nombre)
+
+
+@app.get("/api/version")
+def version():
+    return {"version": VERSION}
+
+
+@app.post("/api/apagar")
+def apagar():
+    """Solo lo usa el acceso directo cuando hay una versión nueva instalada."""
+    import threading
+
+    threading.Timer(0.5, lambda: os._exit(0)).start()
+    return {"ok": True}
 
 
 # ------------------------------------------------------------------ estado y claves
@@ -359,9 +389,28 @@ def main():
         salida = open(RAIZ / "logs" / "xandart.log", "a", encoding="utf-8", buffering=1)  # noqa: SIM115
         sys.stdout = sys.stdout or salida
         sys.stderr = sys.stderr or salida
-    if _ya_abierto():  # segundo clic en el acceso directo: solo abre la página
-        webbrowser.open(f"http://127.0.0.1:{PUERTO}/")
-        return
+    if _ya_abierto():
+        import json
+        import time
+        import urllib.request
+
+        try:
+            with urllib.request.urlopen(f"http://127.0.0.1:{PUERTO}/api/version", timeout=3) as r:
+                abierta = json.load(r).get("version")
+        except Exception:  # noqa: BLE001 — un Xandart muy viejo no tiene /api/version
+            abierta = None
+        if abierta == VERSION:     # segundo clic en el acceso directo: solo abre la página
+            webbrowser.open(f"http://127.0.0.1:{PUERTO}/")
+            return
+        try:                       # quedó abierto el Xandart de antes de actualizar: se cierra
+            urllib.request.urlopen(urllib.request.Request(f"http://127.0.0.1:{PUERTO}/api/apagar", method="POST"),
+                                   timeout=3)
+        except Exception:  # noqa: BLE001
+            pass
+        for _ in range(20):
+            time.sleep(0.5)
+            if not _ya_abierto():
+                break
     if "--sin-navegador" not in sys.argv:
         import threading
 

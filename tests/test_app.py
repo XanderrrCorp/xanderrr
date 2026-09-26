@@ -78,3 +78,10 @@ def test_importar_zip_y_probar_10_escenas(cliente, monkeypatch):
 def test_importar_rechaza_basura(cliente):
     r = cliente.post("/api/importar", files={"archivo": ("x.json", b"no es json", "application/json")})
     assert r.status_code == 400
+
+
+def test_version_para_reemplazar_un_xandart_viejo(cliente):
+    from estudio import app as modulo
+
+    assert cliente.get("/api/version").json()["version"] == modulo.VERSION
+    assert cliente.get("/").headers["cache-control"].startswith("no-store")

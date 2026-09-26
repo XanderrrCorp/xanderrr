@@ -74,10 +74,13 @@ Write-Host "   listo: $Destino"
 # ---------------------------------------------------------------- 3. dependencias
 Paso '3/5 Instalando lo que necesita (imagenes, video, pagina)'
 # si Xandart esta abierto, Windows bloquea sus archivos: se cierra antes de actualizar
-Get-Process python, pythonw -ErrorAction SilentlyContinue |
-    Where-Object { $_.Path -and $_.Path.StartsWith($Venv, [StringComparison]::OrdinalIgnoreCase) } |
-    Stop-Process -Force -ErrorAction SilentlyContinue
-Start-Sleep -Seconds 1
+# (el acceso directo abre un lanzador que a su vez abre otro python: se cierran todos los de Xandart)
+Get-CimInstance Win32_Process -ErrorAction SilentlyContinue |
+    Where-Object { ($_.Name -like 'python*') -and (
+        ($_.CommandLine -and $_.CommandLine -like '*estudio.app*') -or
+        ($_.ExecutablePath -and $_.ExecutablePath.StartsWith($Destino, [StringComparison]::OrdinalIgnoreCase)) ) } |
+    ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }
+Start-Sleep -Seconds 2
 if (-not (Test-Path "$Venv\Scripts\pythonw.exe")) {
     if (Test-Path $Venv) { Remove-Item $Venv -Recurse -Force }
     & $Uv venv --python 3.12 $Venv

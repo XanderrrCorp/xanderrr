@@ -47,9 +47,17 @@ jobs:
           & "$d\.venv\Scripts\python.exe" -m pytest -q
           if ($LASTEXITCODE -ne 0) { throw 'fallaron pruebas' }
 
-      - name: Actualizar (segunda corrida no borra claves)
-        shell: cmd
+      - name: Actualizar con Xandart abierto (cierra el viejo y no borra claves)
+        shell: powershell
         run: |
-          echo TOGETHER_API_KEY=prueba> "%LOCALAPPDATA%\Xandart\.env"
-          echo.| call "instalar\Instalar Xandart.bat"
-          findstr /c:"TOGETHER_API_KEY=prueba" "%LOCALAPPDATA%\Xandart\.env"
+          $d = Join-Path $env:LOCALAPPDATA 'Xandart'
+          Set-Content "$d\.env" 'TOGETHER_API_KEY=prueba' -Encoding ascii
+          $antes = @(Get-CimInstance Win32_Process | Where-Object { $_.CommandLine -like '*estudio.app*' } | ForEach-Object { $_.ProcessId })
+          "Xandart abierto antes de actualizar: $($antes -join ', ')"
+          if (-not $antes) { throw 'la prueba necesita a Xandart abierto' }
+          cmd /c 'echo.| call "instalar\Instalar Xandart.bat"'
+          $vivos = @(Get-Process -Id $antes -ErrorAction SilentlyContinue)
+          if ($vivos) { throw "el Xandart viejo sigue abierto: $($vivos.Id -join ', ')" }
+          if (-not (Select-String -Path "$d\.env" -Pattern 'TOGETHER_API_KEY=prueba' -Quiet)) { throw 'se borraron las claves' }
+          Start-Sleep 5
+          (Invoke-RestMethod http://127.0.0.1:8030/api/version).version
