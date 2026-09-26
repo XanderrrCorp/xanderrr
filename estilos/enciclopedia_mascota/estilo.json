@@ -86,5 +86,42 @@
     "personaje": "2D cartoon character, full body, front view, standing relaxed with arms at his sides, neutral friendly expression, thick clean black outlines, flat soft cel shading, simple and expressive design. {personaje}. {descripcion}. Isolated on a flat solid medium-gray background (#808080), no shadow on the floor, no other objects, no text, no letters.",
     "_defecto": "Semi-realistic digital illustration, highly detailed, fine black ink outlines, rich painterly shading with visible texture on every plate of the exoskeleton, glossy highlights, natural anatomical proportions, crisp and sharp. {descripcion}. Isolated on a flat solid medium-gray background (#808080), no shadow on the floor, no other objects, no text, no letters. Aspect ratio 16:9."
   },
-  "_fuente": "Plantillas extraídas del proyecto real de alacranes (escenas.json, 215 prompts): inicio y final comunes por tipo; {descripcion} es lo que cambia en cada escena."
+  "_fuente": "Plantillas extraídas del proyecto real de alacranes (escenas.json, 215 prompts): inicio y final comunes por tipo; {descripcion} es lo que cambia en cada escena.",
+  "tira_niveles": {
+    "tarjeta_ancho": 820,
+    "tarjeta_alto": 560,
+    "radio": 40,
+    "borde_color": "#FFFFFF",
+    "borde_grosor": 8,
+    "relleno_color": "#B9B3A8",
+    "relleno_ruido": 0.06,
+    "alto_lienzo": 1080,
+    "separacion": 120,
+    "y_tarjeta": 260,
+    "sujeto_ancho": 0.8,
+    "sombra_sujeto": true,
+    "drama_hacia_derecha": 0.35,
+    "brillo_villano": "#FF2A2A",
+    "brillo_radio": 46,
+    "pixel_bloque": 40,
+    "texto": {
+      "formato": "Nivel {n}",
+      "tamano": 104,
+      "color": "#FFFFFF",
+      "contorno_color": "#000000",
+      "contorno_grosor": 9,
+      "fuentes": [
+        "C:/Windows/Fonts/arialbd.ttf",
+        "C:/Windows/Fonts/segoeuib.ttf",
+        "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
+        "/System/Library/Fonts/Supplemental/Arial Bold.ttf"
+      ]
+    },
+    "fondo": {
+      "tipo": "niebla",
+      "color_a": "#060D18",
+      "color_b": "#1D3B5E",
+      "semilla": 7
+    }
+  }
 }

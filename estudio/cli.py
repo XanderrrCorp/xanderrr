@@ -112,8 +112,11 @@ def _cmd_generar_imagenes(a: argparse.Namespace) -> int:
     c = CarpetaProyecto.abrir(a.slug)
     config = ConfigCostos.cargar()
     ids = [int(x) for x in a.ids.split(",")] if a.ids else None
+    solo = [x.strip() for x in a.assets.split(",")] if a.assets else None
+    if a.niveles:
+        solo = [n.asset for n in c.cargar_escenas().niveles]
     antes = c.libro(config).total_cop()
-    r = generar_imagenes(c, primeras=a.primeras, ids=ids, nombre_proveedor=a.proveedor,
+    r = generar_imagenes(c, primeras=a.primeras, ids=ids, solo_assets=solo, nombre_proveedor=a.proveedor,
                          permiso=a.permiso, config=config)
     print()
     print(f"Proveedor: {r.proveedor} · modelo {r.modelo}")
@@ -144,6 +147,29 @@ def _cmd_generar_imagenes(a: argparse.Namespace) -> int:
         print(f"FRENO: {r.frenado}", file=sys.stderr)
         return 3
     return 1 if r.fallidas else 0
+
+
+def _cmd_armar_tira(a: argparse.Namespace) -> int:
+    from .tira import armar_tira
+
+    c = CarpetaProyecto.abrir(a.slug)
+    p = c.cargar()
+    armada = armar_tira(c.cargar_escenas(), cargar_estilo(p.estilo), c.ruta, seed=p.semilla)
+    print(f"Tira de {len(armada.centros_x)} niveles en {c.ruta / 'assets' / 'tira'}")
+    return 0
+
+
+def _cmd_clip_tira(a: argparse.Namespace) -> int:
+    import imageio_ffmpeg
+
+    from .tira import armar_tira, clip_tira
+
+    c = CarpetaProyecto.abrir(a.slug)
+    p = c.cargar()
+    armada = armar_tira(c.cargar_escenas(), cargar_estilo(p.estilo), c.ruta, seed=p.semilla)
+    destino = clip_tira(armada, c.ruta / "render" / "clip_tira.mp4", imageio_ffmpeg.get_ffmpeg_exe())
+    print(f"Clip: {destino}")
+    return 0
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -188,7 +214,16 @@ def main(argv: list[str] | None = None) -> int:
     g.add_argument("--ids", help="ids de escena separados por coma")
     g.add_argument("--proveedor", help="gemini | simulado (por defecto, config/proveedores.json)")
     g.add_argument("--permiso", action="store_true", help="permite pasar el máximo y el tope de llamadas")
+    g.add_argument("--assets", help="solo estos assets, separados por coma")
+    g.add_argument("--niveles", action="store_true", help="solo los assets de la tira de niveles")
     g.set_defaults(fn=_cmd_generar_imagenes)
+
+    t = sub.add_parser("armar-tira", help="arma la tira de niveles (sección 15) con código")
+    t.add_argument("--slug", required=True)
+    t.set_defaults(fn=_cmd_armar_tira)
+    k2 = sub.add_parser("clip-tira", help="clip de prueba: desliza del nivel 1 al último y revela al villano")
+    k2.add_argument("--slug", required=True)
+    k2.set_defaults(fn=_cmd_clip_tira)
 
     a = ap.parse_args(argv)
     try:

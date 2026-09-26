@@ -647,3 +647,31 @@ Cuando la narración vuelve sobre algo anterior ("¿te acuerdas del dato…?"), 
 | 14.3 a 14.7 y 14.9: alineación por palabra, curvas, silencios, música y sonido con variación, subtítulos | Fase 2 |
 | 14.2, 14.8 y 14.10: ritmo variable, respiros, referencias, detector de patrones | Fase 3 |
 | 14.12 Comprobación final | Fase 5 |
+
+---
+
+## 15. Componente «Tira de niveles» (tier list)
+
+Componente reutilizable para videos de formato escala («del más inofensivo al más peligroso»). Sirve para cualquier tema (alacranes, arañas, serpientes, perros, insectos).
+
+### 15.1 Definición
+- Se activa cuando el guion tiene formato escala: `escenas.json` incluye una lista `niveles` con, para cada nivel: número, nombre, asset del sujeto y si es el villano.
+- El estilo define el diseño en `estilo.json` (bloque `tira_niveles`): tamaño y radio de las tarjetas, color y grosor del borde, textura dentro de la tarjeta (en «Enciclopedia + mascota»: piedra gris), fondo detrás (niebla azul oscura), tipografía y estilo del texto «Nivel N» (blanco con contorno negro) y color del brillo del villano.
+
+### 15.2 Construcción (con código, sin generador de imágenes)
+- Usa los recortes sin fondo de cada sujeto (un asset por nivel, generado una vez).
+- Arma cada tarjeta y la tira completa con Pillow. El texto «Nivel N» se dibuja con código, nunca dentro de la imagen generada.
+- Genera: la tira completa normal, la tira con la tarjeta del villano pixelada y cada tarjeta suelta (normal y pixelada) para animarlas por separado.
+- Tarjetas más dramáticas hacia la derecha; la del villano con brillo rojo alrededor del borde.
+
+### 15.3 Uso en la edición
+- Efecto `tira_deslizar_a_nivel`: la tira se desliza horizontalmente y se detiene centrada en el nivel indicado. El Director de edición lo usa en cada `transicion_de_seccion` hacia un nivel nuevo, con sonido de barrido.
+- En el gancho, la tira completa pasa de izquierda a derecha con el villano pixelado.
+- Antes de revelar al villano, la tira se detiene en su tarjeta pixelada con un temblor leve.
+- En la revelación: `revelar_pixelado` con destello rojo y golpe grave, con silencio breve antes del golpe (14.5).
+- Todos los movimientos siguen la sección 14 (curvas suaves, anticipación al corte).
+
+### 15.4 Reglas
+- El villano nunca aparece sin pixelar antes de su escena de revelación: ni en la tira, ni en cabeceras, ni en el presentador.
+- La tira tiene entre 4 y 8 niveles.
+- Criterio de aceptación: con el proyecto de alacranes, generar las 3 versiones de la tira y un clip de prueba donde se desliza del nivel 1 al 6 y revela al villano.

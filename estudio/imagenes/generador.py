@@ -111,6 +111,7 @@ def tope_llamadas(esc: EscenasV2, config: ConfigCostos, reintentos: int) -> int:
 
 
 def generar_imagenes(carpeta: CarpetaProyecto, *, primeras: int | None = None, ids: list[int] | None = None,
+                     solo_assets: list[str] | None = None,
                      proveedor: Proveedor | None = None, nombre_proveedor: str | None = None,
                      permiso: bool = False, config: ConfigCostos | None = None,
                      avisar: Callable[[str], None] = print) -> Reporte:
@@ -132,7 +133,7 @@ def generar_imagenes(carpeta: CarpetaProyecto, *, primeras: int | None = None, i
     manifiesto: dict = leer_json(ruta_manifiesto) if ruta_manifiesto.exists() else {}
     reporte = Reporte(proveedor.nombre, proveedor.modelo)
 
-    seleccion = _seleccion(esc, primeras, ids)
+    seleccion = [] if solo_assets is not None else _seleccion(esc, primeras, ids)
     assets = {a.id: a for a in esc.assets}
     asset_personaje = next((a for a in esc.assets if a.tipo == "personaje"), None)
 
@@ -148,6 +149,11 @@ def generar_imagenes(carpeta: CarpetaProyecto, *, primeras: int | None = None, i
             if r in assets and assets[r] not in necesarios:
                 necesarios.append(assets[r])
 
+    if solo_assets is not None:
+        faltan = [x for x in solo_assets if x not in assets]
+        if faltan:
+            raise ValueError(f"assets no declarados: {faltan}")
+        necesarios = [assets[x] for x in solo_assets]
     trabajos: list[Trabajo] = []
     for a in necesarios:
         trabajos.append(Trabajo(f"asset:{a.id}", prompts.prompt_de_asset(a, estilo, personaje), [],

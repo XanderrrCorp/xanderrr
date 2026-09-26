@@ -3,7 +3,7 @@ name = "estudio"
 version = "0.1.0"
 description = "Estudio de producción de video para Buscanichos"
 requires-python = ">=3.11"
-dependencies = ["pydantic>=2.6", "pillow>=10", "requests>=2.31"]
+dependencies = ["pydantic>=2.6", "pillow>=10", "requests>=2.31", "numpy>=1.24", "imageio-ffmpeg>=0.5"]
 
 # rembg (quitar fondos) es opcional y pesado: pip install rembg
 

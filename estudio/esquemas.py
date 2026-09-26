@@ -49,6 +49,44 @@ class FondoMontaje(Modelo):
     valor: str
 
 
+class TextoTira(Modelo):
+    formato: str = "Nivel {n}"
+    tamano: int = Field(96, gt=8)
+    color: str = "#FFFFFF"
+    contorno_color: str = "#000000"
+    contorno_grosor: int = Field(8, ge=0)
+    fuentes: list[str] = []          # rutas candidatas, en orden (Windows, Linux, macOS)
+
+
+class FondoTira(Modelo):
+    tipo: Literal["niebla", "color", "transparente"] = "niebla"
+    color_a: str = "#060D18"          # lo más oscuro
+    color_b: str = "#1D3B5E"          # la niebla
+    semilla: int = 7
+
+
+class TiraNiveles(Modelo):
+    """Diseño de la tira de niveles (sección 15). Todo en píxeles del lienzo."""
+    tarjeta_ancho: int = Field(820, gt=0)
+    tarjeta_alto: int = Field(560, gt=0)
+    radio: int = Field(40, ge=0)
+    borde_color: str = "#FFFFFF"
+    borde_grosor: int = Field(8, ge=0)
+    relleno_color: str = "#B9B3A8"   # piedra gris
+    relleno_ruido: float = Field(0.06, ge=0, le=0.5)
+    alto_lienzo: int = Field(1080, gt=0)
+    separacion: int = Field(120, ge=0)
+    y_tarjeta: int = Field(260, ge=0)
+    sujeto_ancho: float = Field(0.8, gt=0, le=1)
+    sombra_sujeto: bool = True
+    drama_hacia_derecha: float = Field(0.35, ge=0, le=1)
+    brillo_villano: str = "#FF2A2A"
+    brillo_radio: int = Field(46, ge=0)
+    pixel_bloque: int = Field(40, gt=1)
+    texto: TextoTira = TextoTira()
+    fondo: FondoTira = FondoTira()
+
+
 class Subtitulos(Modelo):
     estilo: str
     posicion: str
@@ -78,6 +116,7 @@ class Estilo(Modelo):
     imagenes_fijas_por_video: int = Field(0, ge=0)
     # Plantillas de los assets reutilizables (personaje base, etc.) por tipo de asset.
     plantillas_assets: dict[str, str] = {}
+    tira_niveles: TiraNiveles | None = None
 
     @model_validator(mode="before")
     @classmethod
@@ -271,6 +310,13 @@ class AssetDef(Modelo):
     quitar_fondo: bool = False
 
 
+class Nivel(Modelo):
+    numero: int = Field(ge=1)
+    nombre: str
+    asset: str
+    villano: bool = False
+
+
 class EscenasV2(Modelo):
     version: Literal[2] = 2
     video: str
@@ -279,6 +325,8 @@ class EscenasV2(Modelo):
     idioma: str = "es"
     relacion_aspecto: str = "16:9"
     assets: list[AssetDef] = []
+    # Formato escala (sección 15): del más inofensivo al más peligroso.
+    niveles: list[Nivel] = []
     escenas: list[Escena] = Field(min_length=1)
 
     @model_validator(mode="after")
@@ -295,6 +343,16 @@ class EscenasV2(Modelo):
             for ref in e.visual.referencias:
                 if ref not in ids_assets:
                     raise ValueError(f"escena {e.id}: referencia '{ref}' no es un asset declarado")
+        if self.niveles:
+            if not 4 <= len(self.niveles) <= 8:
+                raise ValueError(f"la tira de niveles debe tener entre 4 y 8 niveles (tiene {len(self.niveles)})")
+            if [n.numero for n in self.niveles] != list(range(1, len(self.niveles) + 1)):
+                raise ValueError("los niveles deben ir numerados 1, 2, 3... en orden")
+            if sum(n.villano for n in self.niveles) != 1:
+                raise ValueError("la tira de niveles necesita exactamente un villano")
+            for n in self.niveles:
+                if n.asset not in ids_assets:
+                    raise ValueError(f"nivel {n.numero}: el asset '{n.asset}' no está declarado")
         return self
 
     def errores_contra_estilo(self, estilo: Estilo) -> list[str]:

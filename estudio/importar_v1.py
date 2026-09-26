@@ -231,7 +231,25 @@ def convertir(v1: dict[str, Any] | list[Any], estilo: Estilo, canal: str | None 
             res.errores.append(f"escena {eid}: narración vacía")
         anterior = seccion
 
+    # Formato escala (sección 15): assets con nombre "Nivel N · X" forman la tira;
+    # el nivel más alto es el villano.
+    niveles = []
+    for a in assets:
+        m = re.match(r"\s*nivel\s+(\d+)\s*[·:\-]?\s*(.*)", a.get("nombre") or "", re.IGNORECASE)
+        if m:
+            nombre = m.group(2).strip() or a["id"]
+            marcado = bool(re.search(r"\(\s*villano\s*\)", nombre, re.IGNORECASE))
+            nombre = re.sub(r"\s*\(\s*villano\s*\)", "", nombre, flags=re.IGNORECASE).strip()
+            niveles.append({"numero": int(m.group(1)), "nombre": nombre, "asset": a["id"], "villano": marcado})
+    niveles.sort(key=lambda n: n["numero"])
+    if niveles and not any(n["villano"] for n in niveles):
+        niveles[-1]["villano"] = True
+    if niveles and not 4 <= len(niveles) <= 8:
+        res.avisos.append(f"{len(niveles)} niveles en los assets: la tira necesita de 4 a 8, no se arma")
+        niveles = []
+
     doc = {
+        "niveles": niveles,
         "video": video or datos.get("video") or datos.get("titulo") or "Sin título",
         "canal": canal or datos.get("canal") or "sin-canal",
         "estilo": estilo.id,
