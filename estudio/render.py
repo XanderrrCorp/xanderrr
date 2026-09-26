@@ -22,7 +22,8 @@ from .proyecto import CarpetaProyecto
 from .tira import _barrido, _golpe, _zumbido, armar_tira, niebla, pixelar, quitar_fondo_liso
 
 W, H, FPS, SR = 1920, 1080, 30, 48000
-FUENTES = ["C:/Windows/Fonts/arialbd.ttf", "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
+# Fredoka (OFL, incluida en estudio/fuentes): redondeada, de YouTube; las demás son respaldo
+FUENTES = [str(Path(__file__).parent / "fuentes" / "Fredoka-SemiBold.ttf"), "C:/Windows/Fonts/arialbd.ttf", "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
            "/System/Library/Fonts/Supplemental/Arial Bold.ttf", "DejaVuSans-Bold.ttf"]
 
 
@@ -379,6 +380,33 @@ def _signos_pregunta(img: Image.Image, ef: dict, tt: float, fin: float) -> Image
     return img
 
 
+def _globo_pregunta(img: Image.Image, loc: float) -> Image.Image:
+    """Globo de pensamiento con «?» sobre el presentador, que entra con rebote."""
+    if "globo" not in _ICONO:
+        g = Image.new("RGBA", (420, 360), (0, 0, 0, 0))
+        d = ImageDraw.Draw(g)
+        nubes = [(60, 40, 250, 200), (160, 20, 360, 190), (40, 110, 220, 250), (170, 100, 380, 250), (110, 60, 300, 240)]
+        for caja in nubes:                                     # borde negro
+            d.ellipse((caja[0] - 6, caja[1] - 6, caja[2] + 6, caja[3] + 6), fill=(20, 16, 12, 255))
+        for caja in nubes:
+            d.ellipse(caja, fill=(255, 255, 255, 255))
+        for cx, cy, r in ((300, 290, 26), (345, 335, 15)):     # burbujitas hacia la cabeza
+            d.ellipse((cx - r - 5, cy - r - 5, cx + r + 5, cy + r + 5), fill=(20, 16, 12, 255))
+            d.ellipse((cx - r, cy - r, cx + r, cy + r), fill=(255, 255, 255, 255))
+        f = _fuente(150)
+        c = d.textbbox((0, 0), "?", font=f)
+        d.text((210 - (c[0] + c[2]) / 2, 140 - (c[1] + c[3]) / 2), "?", font=f, fill=(20, 16, 12, 255))
+        _ICONO["globo"] = g
+    esc = _sale(loc / 0.12) * (1 + 0.18 * math.exp(-loc * 8) * math.cos(loc * 15))
+    if esc < 0.05:
+        return img
+    g = _ICONO["globo"]
+    im = g.resize((max(1, int(g.width * esc)), max(1, int(g.height * esc))), Image.Resampling.BICUBIC)
+    img = img.copy()
+    img.paste(im, (int(W * 0.30 - im.width / 2), int(H * 0.25 - im.height / 2 + 4 * math.sin(loc * 3))), im)
+    return img
+
+
 class LectorClips:
     """Lee cuadro a cuadro los clips del presentador con FFmpeg (sin cargarlos enteros en memoria)."""
 
@@ -410,6 +438,53 @@ class LectorClips:
             self.proc.kill()
             self.proc.wait()
         self.proc = None
+
+
+def _lupa(img: Image.Image, ef: dict, ubic: tuple, tt: float) -> Image.Image:
+    """Círculo con el detalle ampliado, unido con una línea al lugar exacto, y una flecha roja."""
+    loc = tt - ef["en"]
+    if not ubic or loc < 0:
+        return img
+    x0, y0, x1, y1 = _caja_px(ubic, ef["caja"])
+    dx, dy = (x0 + x1) / 2, (y0 + y1) / 2
+    lado = max(90, max(x1 - x0, y1 - y0) * 1.25)
+    R = 190
+    hacia = -1 if dx > W / 2 else 1
+    lx = min(max(dx + hacia * 560, R + 60), W - R - 60)
+    ly = min(max(dy - 170, R + 120), H - 210 - R)
+    capa = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    d = ImageDraw.Draw(capa)
+    # 1) aro pequeño sobre el detalle
+    r0 = max(26, lado * 0.35) * _sale(loc / 0.18)
+    d.ellipse((dx - r0, dy - r0, dx + r0, dy + r0), outline=(90, 90, 90, 255), width=4)
+    # 2) línea que sale hacia la lupa
+    p = _sale((loc - 0.1) / 0.22)
+    if p > 0:
+        v = np.array([lx - dx, ly - dy])
+        n = v / (np.linalg.norm(v) + 1e-6)
+        a = np.array([dx, dy]) + n * r0
+        b = np.array([lx, ly]) - n * R
+        d.line([tuple(a), tuple(a + (b - a) * p)], fill=(90, 90, 90, 255), width=4)
+    img = img.convert("RGBA")
+    img.alpha_composite(capa)
+    # 3) la lupa con el zoom
+    esc = _sale((loc - 0.25) / 0.14) * (1 + 0.12 * math.exp(-max(0, loc - 0.25) * 8) * math.cos(max(0, loc - 0.25) * 16))
+    if esc > 0.05:
+        zona = img.convert("RGB").crop((int(dx - lado / 2), int(dy - lado / 2), int(dx + lado / 2), int(dy + lado / 2)))
+        rr = max(4, int(R * esc))
+        zoom = zona.resize((2 * rr, 2 * rr), Image.Resampling.LANCZOS)
+        m = Image.new("L", zoom.size, 0)
+        ImageDraw.Draw(m).ellipse((0, 0, 2 * rr - 1, 2 * rr - 1), fill=255)
+        lupa = Image.new("RGBA", (2 * rr + 20, 2 * rr + 20), (0, 0, 0, 0))
+        ImageDraw.Draw(lupa).ellipse((0, 0, 2 * rr + 19, 2 * rr + 19), fill=(255, 255, 255, 255))
+        lupa.paste(zoom, (10, 10), m)
+        ImageDraw.Draw(lupa).ellipse((1, 1, 2 * rr + 18, 2 * rr + 18), outline=(90, 90, 90, 255), width=4)
+        img.alpha_composite(lupa, (int(lx - rr - 10), int(ly - rr - 10)))
+    img = img.convert("RGB")
+    # 4) flecha roja hacia la lupa
+    caja_lupa = [(lx - R) / W, (ly - R) / H, (lx + R) / W, (ly + R) / H]
+    return _flecha(img, {"en": ef["en"] + 0.45, "caja": caja_lupa, "desde": "izquierda" if hacia < 0 else "derecha"},
+                   (0, 0, W, H), tt)
 
 
 # ------------------------------------------------------------------ textos
@@ -689,11 +764,13 @@ def renderizar(carpeta: CarpetaProyecto, ffmpeg: str, destino: Path | None = Non
                     if tt >= t_k:
                         s = s + (esc_k - s) * _sale((tt - t_k) / 0.07)
                 foco = foco_r
-            if "oscurecer_fondo" in ef or "circulo_rojo" in ef or "flecha" in ef:
+            if "oscurecer_fondo" in ef or "circulo_rojo" in ef or "flecha" in ef or "lupa" in ef:
                 ubic = escenario.ubicacion.get(c["id"])
                 base = capa_foco.aplicar(base, c, ef, ubic, tt)
                 if "flecha" in ef:
                     base = _flecha(base, ef["flecha"], ubic, tt)
+                if "lupa" in ef:
+                    base = _lupa(base, ef["lupa"], ubic, tt)
             dx = dy = 0.0
             if "temblor_leve" in ef:
                 a = ef["temblor_leve"].get("amplitud", 3)
@@ -714,6 +791,8 @@ def renderizar(carpeta: CarpetaProyecto, ffmpeg: str, destino: Path | None = Non
             cuadro = lector.cuadro(r, tt - r["en"])
             if cuadro is not None:
                 img = cuadro.copy()
+                if r.get("globo"):
+                    img = _globo_pregunta(img, tt - r["en"] - 0.25)
         if "icono_advertencia" in ef and not en_reaccion:
             img = _poner_icono(img, ef["icono_advertencia"], tt)
         if "etiqueta" in ef and not en_reaccion:
@@ -725,7 +804,8 @@ def renderizar(carpeta: CarpetaProyecto, ffmpeg: str, destino: Path | None = Non
             if t["inicio"] <= tt < t["fin"]:
                 k = ("T", t["texto"])
                 if k not in cache_txt:
-                    cache_txt[k] = _texto_img(t["texto"], 80, 9, (255, 236, 90))
+                    titulo = t["texto"].capitalize() if t["texto"].isupper() else t["texto"]
+                    cache_txt[k] = _texto_img(titulo, 92, 11)          # título arriba: blanco con borde negro
                 ti = cache_txt[k]
                 a = _suave((tt - t["inicio"]) / 0.12)
                 if a < 1:
@@ -739,7 +819,7 @@ def renderizar(carpeta: CarpetaProyecto, ffmpeg: str, destino: Path | None = Non
             if sb["inicio"] <= tt < sb["fin"]:
                 k = ("S", sb["texto"])
                 if k not in cache_txt:
-                    cache_txt[k] = _texto_img(sb["texto"], 64, 7)
+                    cache_txt[k] = _texto_img(sb["texto"], 66, 8)
                 si = cache_txt[k]
                 img.paste(si, ((W - si.width) // 2, H - 150 - si.height // 2), si)
                 break

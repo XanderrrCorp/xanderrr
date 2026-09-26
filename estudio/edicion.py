@@ -284,9 +284,10 @@ def _reacciones(estilo: Estilo, escenas: list, clips: list, raiz: Path, revelaci
             continue                                    # nunca la misma reacción dos veces seguidas
         elegidos.append((i, t0, pose))
         c = clips[i]
+        pregunta = pose == "pensativo" or "?" in escenas[i].narracion or (i and "?" in escenas[i - 1].narracion)
         c["efectos"].append({"efecto": "reaccion_presentador", "en": round(t0, 3), "dur": d,
                              "archivo": f"assets/presentador/{pose}.mp4", "desde": round(rng.uniform(0.3, 1.2), 2),
-                             "pose": pose})
+                             "pose": pose, "globo": bool(pregunta)})
         c["razon"] += f"; corte de {d:.0f} s al presentador reaccionando ({pose})" + (f": {por_que}" if por_que else "")
         sonido = pr.sonidos.get(pose)
         if sonido and sfx is not None:
@@ -367,7 +368,7 @@ def construir_edl(carpeta: CarpetaProyecto) -> dict:
     ultimo_circulo = ultima_flecha = ultimo_icono = ultima_pregunta = -99.0
     secciones_con_circulo: set = set()
     tope_recurso = perfil.uso_maximo_por_recurso
-    usos_cambio = {"reencuadre": 0, "icono_advertencia": 0, "flecha": 0, "etiqueta": 0}
+    usos_cambio = {"reencuadre": 0, "icono_advertencia": 0, "flecha": 0, "etiqueta": 0, "lupa": 0}
     respiros_por_minuto: dict[int, int] = {}
     for idx, e in enumerate(escenas):
         ini, fin = round(inicios[idx], 3), round(finales[idx], 3)
@@ -497,16 +498,22 @@ def construir_edl(carpeta: CarpetaProyecto) -> dict:
                         and (f.get("tipo") == "detalle" or e.intencion == "explicacion"):
                     x0, y0, x1, y1 = f["caja"]
                     lado = "izquierda" if (x0 + x1) / 2 > 0.5 else "derecha"
-                    efectos.append({"efecto": "flecha", "en": t0, "caja": f["caja"], "desde": lado})
+                    # detalle chico (garras, aguijón, ojos): lupa con zoom; si no, flecha
+                    if area < 0.08 and usos_cambio["lupa"] <= usos_cambio["flecha"]:
+                        efectos.append({"efecto": "lupa", "en": t0, "caja": f["caja"]})
+                        usos_cambio["lupa"] += 1
+                        razon = (razon + "; " if razon else "") + f"Lupa con el detalle «{f.get('palabra') or ''}»"
+                    else:
+                        efectos.append({"efecto": "flecha", "en": t0, "caja": f["caja"], "desde": lado})
+                        usos_cambio["flecha"] += 1
+                        razon = (razon + "; " if razon else "") + f"Flecha que señala «{f.get('palabra') or 'el detalle'}»"
                     ultima_flecha = t0
-                    usos_cambio["flecha"] += 1
-                    _sfx(sfx, "pop", t0, idx, "Pop suave con la flecha")
-                    razon = (razon + "; " if razon else "") + f"Flecha que señala «{f.get('palabra') or 'el detalle'}»"
+                    _sfx(sfx, "pop", t0, idx, "Pop suave con la flecha o la lupa")
             respiro = False
             # algo nuevo en pantalla cada interrupcion_de_patron_cada_seg (el corte cuenta): se
             # llenan los huecos del plano rotando recursos para que ninguno pase del uso máximo
             cada = perfil.interrupcion_de_patron_cada_seg
-            ya = sorted([x["en"] for x in efectos if x["efecto"] in ("circulo_rojo", "flecha", "zoom_golpe")]
+            ya = sorted([x["en"] for x in efectos if x["efecto"] in ("circulo_rojo", "flecha", "lupa", "zoom_golpe")]
                         + [tt for x in efectos if x["efecto"] == "rafaga" for tt in x["tiempos"]])
             puntos, cursor = [], ini
             for m in ya + [fin]:
@@ -629,7 +636,7 @@ def validar(edl: dict, perfil=None) -> list[str]:
         dur = c["fin"] - c["inicio"]
         cambia = any(x["efecto"] in ("reencuadre", "zoom_golpe", "tira_deslizar_a_nivel", "revelar_pixelado",
                                      "rafaga", "circulo_rojo", "flecha", "icono_advertencia", "signos_pregunta",
-                                     "reaccion_presentador", "etiqueta") for x in c["efectos"])
+                                     "reaccion_presentador", "etiqueta", "lupa") for x in c["efectos"])
         if dur > MAX_SIN_CAMBIO and not cambia and not c.get("respiro"):
             avisos.append(f"{c['id']}: {dur:.1f} s sin cambio visual")
     for a, b in zip(clips, clips[1:]):

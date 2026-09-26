@@ -35,6 +35,8 @@ EFECTOS = (
     "reaccion_presentador",
     # etiqueta con la palabra clave de la escena, que entra con un pop
     "etiqueta",
+    # círculo con el detalle ampliado, unido con una línea al lugar exacto
+    "lupa",
 )
 # "sfx" no es un efecto visual, pero se sugiere en la misma lista (ver 3.1).
 EFECTOS_SUGERIBLES = EFECTOS + ("sfx",)

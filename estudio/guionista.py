@@ -92,8 +92,9 @@ Duración: unos {encargo.minutos:g} minutos de voz = entre {int(palabras * 0.93)
   (por ejemplo en el gancho), pon "muestra_villano": true: el sistema lo pixelará.
 - Marca con "revelacion_villano": true la escena donde se ve al villano por primera vez en su
   nivel (normalmente la que describe su aspecto, justo después de «Nivel N. ...»).
-- En 8 a 14 momentos clave (giros, datos fuertes) pon "texto_pantalla" (2 a 5 palabras en
-  MAYÚSCULAS) y "palabra": la palabra de la narración en la que debe aparecer.
+- En 8 a 14 momentos clave (giros, datos fuertes) pon "texto_pantalla": un título corto de 2 a 6
+  palabras escrito normal, como lo diría una persona («Puede posarse en tu cabeza», «Es aterrador»),
+  y "palabra": la palabra de la narración en la que debe aparecer.
 - En cada escena pon "palabra_clave": la palabra MÁS importante de esa narración, copiada tal cual
   (un sustantivo o número dicho en palabras: «veneno», «colchón», «trescientos»). Sale como etiqueta.
 
@@ -180,7 +181,7 @@ def a_escenas(datos: dict, estilo: Estilo, canal: str) -> tuple[dict, dict, str]
         if e.get("muestra_villano") and accion == "generar":
             direccion["pixelar_pendiente"].append(i)
         if e.get("texto_pantalla"):
-            direccion["textos"][str(i)] = {"texto": str(e["texto_pantalla"]).upper()[:40],
+            direccion["textos"][str(i)] = {"texto": str(e["texto_pantalla"]).strip()[:48],
                                            "palabra": e.get("palabra") or ""}
     direccion["pixelar_pendiente"] = [i for i in direccion["pixelar_pendiente"]
                                       if i < direccion.get("villano_revelacion", 10 ** 6)]
