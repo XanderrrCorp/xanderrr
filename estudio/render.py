@@ -368,6 +368,52 @@ def _sonido(tipo: str, variante: int, ffmpeg: str | None) -> tuple[np.ndarray, s
     return _sfx(tipo, variante).astype(np.float32), None
 
 
+def _envolvente(x: np.ndarray, ventana_s: float = 0.25) -> np.ndarray:
+    """Qué tan fuerte suena la voz, suavizado (para bajar la música debajo de ella)."""
+    n = max(1, int(SR * ventana_s))
+    e = np.sqrt(np.convolve(x * x, np.ones(n) / n, mode="same"))
+    return np.clip(e / (np.percentile(e[e > 1e-4], 90) if np.any(e > 1e-4) else 1), 0, 1)
+
+
+def _mezclar_musica(musica: list, voz: np.ndarray, total: int, ffmpeg: str, usados: list) -> np.ndarray:
+    from . import biblioteca
+
+    pista = np.zeros(total, np.float32)
+    fundido = int(SR * 0.6)
+    for m in musica:
+        ruta = biblioteca.raiz() / m["archivo"]
+        if not ruta.exists():
+            continue
+        x = biblioteca.leer_audio(ruta, ffmpeg, SR)
+        i0, i1 = int(m["inicio"] * SR), min(total, int(m["fin"] * SR))
+        largo = i1 - i0
+        seg = x[int(m.get("desde", 0) * SR):]
+        if len(seg) < largo:                   # pista corta: se une consigo misma con un fundido largo
+            reps = [seg]
+            while sum(len(r) for r in reps) < largo + fundido:
+                reps.append(seg)
+            unido = reps[0]
+            for r in reps[1:]:
+                f = min(fundido * 3, len(r) // 2, len(unido) // 2)
+                cruz = unido[-f:] * np.linspace(1, 0, f) + r[:f] * np.linspace(0, 1, f)
+                unido = np.concatenate([unido[:-f], cruz, r[f:]])
+            seg = unido
+        seg = seg[:largo].astype(np.float32).copy()
+        f = min(fundido, len(seg) // 2)
+        if f:
+            seg[:f] *= np.linspace(0, 1, f)
+            seg[-f:] *= np.linspace(1, 0, f)
+        ganancia = np.full(len(seg), m.get("volumen", 0.2), np.float32)
+        for a, b in m.get("caidas", []):           # la música se cae antes de la revelación
+            ca, cb = int(a * SR) - i0, int(b * SR) - i0
+            if 0 <= ca < len(seg):
+                ganancia[ca:max(ca, min(len(seg), cb + int(SR * 0.9)))] *= 0.08
+        pista[i0:i0 + len(seg)] += seg * ganancia
+        usados.append(m["archivo"])
+    # ducking: la música baja cuando habla la voz
+    return pista * (1 - 0.6 * _envolvente(voz[:total]))
+
+
 def mezclar_audio(raiz: Path, edl: dict, ffmpeg: str | None = None) -> np.ndarray:
     total = int(edl["duracion_total"] * SR) + SR
     mezcla = np.zeros(total, np.float32)
@@ -377,6 +423,10 @@ def mezclar_audio(raiz: Path, edl: dict, ffmpeg: str | None = None) -> np.ndarra
         i = int(v["inicio"] * SR)
         mezcla[i:i + len(x)] += x[: total - i]
     usados = []
+    voz = mezcla.copy()
+    musica = edl["pistas"].get("musica") or []
+    if musica and ffmpeg:
+        mezcla += _mezclar_musica(musica, voz, total, ffmpeg, usados)
     for s in edl["pistas"]["sfx"]:
         tipo, var = s["variante"].rsplit("_", 1)
         x, archivo = _sonido(s.get("tipo") or tipo, int(var), ffmpeg)

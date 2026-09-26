@@ -8,7 +8,7 @@ import sys
 import webbrowser
 from pathlib import Path
 
-from fastapi import FastAPI, File, HTTPException, UploadFile
+from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.responses import FileResponse, HTMLResponse
 from pydantic import BaseModel, Field
 
@@ -241,6 +241,86 @@ def regenerar(slug: str, escena_id: int, cuerpo: Instruccion):
 def video(slug: str, p: Permiso = Permiso()):
     c = _proyecto(slug)
     return _lanzar(slug, "video", lambda t: pipeline.paso_video(c, t, permiso=p.permiso))
+
+
+# ------------------------------------------------------------------ biblioteca de audio (sección 6)
+
+@app.get("/api/biblioteca")
+def ver_biblioteca():
+    from . import biblioteca
+
+    return biblioteca.resumen()
+
+
+@app.post("/api/biblioteca")
+async def subir_audio(archivo: UploadFile = File(...), clase: str = Form(...), tipo: str = Form(...),
+                      fuente: str = Form(...), licencia: str = Form(...), detalle_licencia: str = Form(""),
+                      atribucion: str = Form("")):
+    from . import biblioteca
+
+    datos = await archivo.read()
+    if len(datos) > 60 * 1024 * 1024:
+        raise HTTPException(400, "El archivo pesa más de 60 MB")
+    try:
+        biblioteca.registrar(datos, archivo.filename or "audio.wav", clase, tipo, fuente, licencia,
+                             detalle_licencia, atribucion)
+    except ValueError as ex:
+        raise HTTPException(400, str(ex)) from ex
+    return biblioteca.resumen()
+
+
+class DeEntrada(BaseModel):
+    nombre: str
+    clase: str
+    tipo: str
+    fuente: str
+    licencia: str
+    detalle_licencia: str = ""
+    atribucion: str = ""
+
+
+@app.post("/api/biblioteca/entrada")
+def registrar_entrada(d: DeEntrada):
+    from . import biblioteca
+
+    try:
+        biblioteca.registrar_de_entrada(d.nombre, clase=d.clase, tipo=d.tipo, fuente=d.fuente, licencia=d.licencia,
+                                        detalle_licencia=d.detalle_licencia, atribucion=d.atribucion)
+    except (ValueError, FileNotFoundError) as ex:
+        raise HTTPException(400, str(ex)) from ex
+    return biblioteca.resumen()
+
+
+@app.delete("/api/biblioteca/{huella}")
+def borrar_audio(huella: str):
+    from . import biblioteca
+
+    try:
+        biblioteca.quitar(huella)
+    except KeyError as ex:
+        raise HTTPException(404) from ex
+    return biblioteca.resumen()
+
+
+@app.get("/api/biblioteca/{huella}/escuchar")
+def escuchar(huella: str):
+    from . import biblioteca
+
+    a = next((x for x in biblioteca.indice() if x["huella"] == huella), None)
+    if not a:
+        raise HTTPException(404)
+    return FileResponse(biblioteca.raiz() / a["archivo"])
+
+
+@app.post("/api/biblioteca/abrir-entrada")
+def abrir_entrada():
+    from . import biblioteca
+
+    d = biblioteca.raiz() / "entrada"
+    d.mkdir(parents=True, exist_ok=True)
+    if os.name == "nt":
+        os.startfile(d)  # type: ignore[attr-defined]
+    return {"carpeta": str(d)}
 
 
 @app.post("/api/abrir-carpeta")

@@ -203,6 +203,116 @@ async function regenerar(id) {
   await accion(`escenas/${id}/regenerar`, { instruccion });
 }
 
+/* ------------------------------------------------------------ biblioteca de audio */
+const NOMBRES_AUDIO = {
+  golpe_grave: 'Golpe grave · giros y revelación', pop: 'Pop · cuando entra un dato clave',
+  barrido: 'Barrido (whoosh) · cambios de sección', latido: 'Latido · ráfagas de tensión',
+  subida_tension: 'Subida de tensión · antes de la revelación', zumbido: 'Zumbido grave · amenaza',
+  alerta: 'Alerta corta · advertencias', comico: 'Cómico · humor',
+  tension: 'Tensión', misterio: 'Misterio', epico: 'Épico', alivio: 'Alivio', curiosidad: 'Curiosidad', final: 'Final',
+};
+let BIB = null;
+
+async function irBiblioteca() {
+  clearInterval(SONDEO); ACTUAL = null; location.hash = 'sonidos';
+  BIB = await api('/api/biblioteca');
+  const fila = (clase, t) => {
+    const n = BIB.cuenta[`${clase}:${t}`] || 0;
+    return `<div class="fila-audio"><span>${esc(NOMBRES_AUDIO[t] || t)}</span>
+      <span class="chip ${n >= 3 ? 'ok' : n ? 'aviso' : ''}">${n ? n + (n === 1 ? ' archivo' : ' archivos') : 'falta'}</span></div>`;
+  };
+  const opciones = (lista) => lista.map(t => `<option value="${t}">${esc(NOMBRES_AUDIO[t] || t)}</option>`).join('');
+  app.innerHTML = `
+    <div class="fila"><button class="fantasma mini" onclick="irInicio()">‹ Tus videos</button></div>
+    <h1>Música y efectos de sonido</h1>
+    <p class="tenue">Xandart no descarga audio por su cuenta. Tú bajas los archivos de una fuente con licencia
+      (por ejemplo la <b>Biblioteca de audio de YouTube</b>, en YouTube Studio → Biblioteca de audio) y aquí los registras
+      con su fuente y su licencia. Mientras falte un tipo, el video usa un sonido provisional.</p>
+    <div class="rejilla dos">
+      <section class="tarjeta"><h2>Efectos</h2>${BIB.tipos_sfx.map(t => fila('sfx', t)).join('')}
+        <p class="tenue" style="font-size:13px">Ideal: 3 o 4 variantes de cada uno, para que no se repita el mismo sonido.</p></section>
+      <section class="tarjeta"><h2>Música (por estado de ánimo)</h2>${BIB.animos_musica.map(t => fila('musica', t)).join('')}</section>
+    </div>
+    <section class="tarjeta" style="margin-top:16px">
+      <h2>Agregar archivos</h2>
+      <label>Archivos (.mp3, .wav…) · puedes escoger varios del mismo tipo</label>
+      <input id="b-archivos" type="file" multiple accept=".wav,.mp3,.ogg,.flac,.m4a,.aac,audio/*">
+      <div class="rejilla dos">
+        <div><label>Es</label><select id="b-clase" onchange="tiposAudio()"><option value="sfx">Efecto de sonido</option><option value="musica">Música</option></select></div>
+        <div><label>Tipo</label><select id="b-tipo">${opciones(BIB.tipos_sfx)}</select></div>
+      </div>
+      <label>¿De dónde sale? (enlace o nombre de la fuente)</label>
+      <input id="b-fuente" placeholder="YouTube Studio · Biblioteca de audio">
+      <label>Licencia</label>
+      <select id="b-licencia" onchange="camposLicencia()">${Object.entries(BIB.licencias).map(([k, v]) => `<option value="${k}">${esc(v)}</option>`).join('')}</select>
+      <div id="b-extra"></div>
+      <div class="fila fin"><button class="primario" onclick="subirAudios()">Registrar</button></div>
+      <p class="tenue" style="font-size:13px">También puedes soltar archivos en la carpeta de entrada
+        <button class="mini" onclick="api('/api/biblioteca/abrir-entrada',{method:'POST'})">Abrir carpeta</button>
+        y registrarlos aquí abajo con estos mismos datos.</p>
+      ${BIB.entrada.length ? `<div class="entrada">${BIB.entrada.map(n => `<div class="fila-audio"><span>${esc(n)}</span>
+        <button class="mini" onclick="registrarEntrada('${esc(n).replace(/'/g, "\\'")}')">Registrar con estos datos</button></div>`).join('')}</div>` : ''}
+    </section>
+    <h2 style="margin-top:24px">Registrados (${BIB.archivos.length})</h2>
+    <div class="lista-audio">${BIB.archivos.map(a => `
+      <div class="tarjeta audio-item">
+        <div><b>${esc(NOMBRES_AUDIO[a.tipo] || a.tipo)}</b> <span class="tenue">· ${esc(a.nombre_original)}</span>
+          ${a.revisar_licencia ? '<span class="chip aviso">licencia por revisar: no se usa</span>' : ''}</div>
+        <audio controls preload="none" src="/api/biblioteca/${a.huella}/escuchar"></audio>
+        <div class="tenue" style="font-size:13px">${esc(BIB.licencias[a.licencia] || a.licencia)}${a.detalle_licencia ? ' · ' + esc(a.detalle_licencia) : ''}
+          · fuente: ${esc(a.fuente)}${a.atribucion ? ' · atribución: «' + esc(a.atribucion) + '»' : ''}</div>
+        <div class="fila fin"><button class="mini fantasma" onclick="borrarAudio('${a.huella}')">Quitar</button></div>
+      </div>`).join('') || '<p class="tenue">Todavía no hay archivos.</p>'}</div>`;
+  camposLicencia();
+}
+
+function tiposAudio() {
+  const lista = $('#b-clase').value === 'sfx' ? BIB.tipos_sfx : BIB.animos_musica;
+  $('#b-tipo').innerHTML = lista.map(t => `<option value="${t}">${esc(NOMBRES_AUDIO[t] || t)}</option>`).join('');
+}
+
+function camposLicencia() {
+  const l = $('#b-licencia').value;
+  let html = '';
+  if (l === 'otra') html += '<label>Detalle de la licencia</label><input id="b-detalle" placeholder="Qué dice la licencia y dónde está">';
+  if (l === 'cc_by' || l === 'youtube_audio_library_atribucion')
+    html += '<label>Texto de atribución (va en la descripción del video)</label><input id="b-atribucion" placeholder="Música: Título de Autor (licencia)">';
+  $('#b-extra').innerHTML = html;
+}
+
+function datosAudio() {
+  return { clase: $('#b-clase').value, tipo: $('#b-tipo').value, fuente: $('#b-fuente').value.trim(),
+    licencia: $('#b-licencia').value, detalle_licencia: ($('#b-detalle') || {}).value || '',
+    atribucion: ($('#b-atribucion') || {}).value || '' };
+}
+
+async function subirAudios() {
+  const archivos = [...$('#b-archivos').files];
+  if (!archivos.length) return alert('Escoge uno o más archivos');
+  const d = datosAudio();
+  const errores = [];
+  for (const f of archivos) {
+    const fd = new FormData();
+    fd.append('archivo', f);
+    Object.entries(d).forEach(([k, v]) => fd.append(k, v));
+    const r = await fetch('/api/biblioteca', { method: 'POST', body: fd });
+    if (!r.ok) errores.push(`${f.name}: ${(await r.json().catch(() => ({}))).detail || r.status}`);
+  }
+  if (errores.length) alert('No se registraron:\n' + errores.join('\n'));
+  irBiblioteca();
+}
+
+async function registrarEntrada(nombre) {
+  try { await api('/api/biblioteca/entrada', { method: 'POST', cuerpo: { nombre, ...datosAudio() } }); irBiblioteca(); }
+  catch (e) { alert(e.message); }
+}
+
+async function borrarAudio(huella) {
+  if (!confirm('¿Quitar este archivo de la biblioteca?')) return;
+  await api(`/api/biblioteca/${huella}`, { method: 'DELETE' });
+  irBiblioteca();
+}
+
 /* ------------------------------------------------------------ ajustes */
 function abrirAjustes() {
   const c = (ESTADO && ESTADO.claves) || {};
@@ -227,4 +337,5 @@ async function sesionClaude() {
   catch (e) { alert(e.message); }
 }
 
-(location.hash.length > 1 ? (async () => { ESTADO = await api('/api/estado'); abrir(location.hash.slice(1)); })() : irInicio());
+(location.hash === '#sonidos' ? irBiblioteca()
+  : location.hash.length > 1 ? (async () => { ESTADO = await api('/api/estado'); abrir(location.hash.slice(1)); })() : irInicio());

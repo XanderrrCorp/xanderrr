@@ -208,6 +208,66 @@ def _equilibrar_movimientos(clips: list, perfil, rng: random.Random, maximo: flo
             c["razon"] += "; corte en vez de otro fundido para no repetir la transición tres veces (14.10)"
 
 
+# estado de ánimo alternativo si la biblioteca no tiene el pedido
+CERCANOS = {"tension": ["misterio", "epico"], "misterio": ["tension", "curiosidad"], "epico": ["tension", "final"],
+            "alivio": ["curiosidad", "final"], "curiosidad": ["misterio", "alivio"], "final": ["alivio", "epico"]}
+
+
+def _animo_de_seccion(escenas: list, k: int, n: int) -> str:
+    intenciones = [e.intencion for e in escenas]
+    media = sum(e.intensidad for e in escenas) / len(escenas)
+    if k == 0:
+        return "misterio"
+    if k == n - 1 and ("cierre" in intenciones or "llamado_accion" in intenciones):
+        return "final"
+    if "revelacion" in intenciones:
+        return "epico"
+    if intenciones.count("alivio") * 2 >= len(intenciones):
+        return "alivio"
+    return "tension" if media >= 3.2 or "tension_creciente" in intenciones else "curiosidad"
+
+
+def _musica(escenas: list, clips: list, revelacion: int | None, total: float, rng: random.Random) -> list:
+    """Una pista por sección según su ánimo, sin repetir la misma pista seguida. Los
+    cambios empiezan un poco antes del corte (J) y terminan un poco después (L) (14.5).
+    Sin música registrada con licencia, el video va sin música."""
+    from . import biblioteca
+
+    disponibles = {a: [p.relative_to(biblioteca.raiz()).as_posix() for p in biblioteca.utilizables("musica", a)]
+                   for a in biblioteca.ANIMOS_MUSICA}
+    if not any(disponibles.values()):
+        return []
+    secciones: list[list] = []
+    for e, c in zip(escenas, clips):
+        if not secciones or secciones[-1][0][0].seccion != e.seccion:
+            secciones.append([])
+        secciones[-1].append((e, c))
+    caida = None
+    if revelacion:
+        c_rev = next((c for e, c in zip(escenas, clips) if e.id == revelacion), None)
+        if c_rev:
+            caida = (round(c_rev["inicio"] + 0.55 - rng.uniform(0.3, 0.8), 3), round(c_rev["inicio"] + 0.55, 3))
+    salida, ultima = [], None
+    for k, sec in enumerate(secciones):
+        animo = _animo_de_seccion([e for e, _ in sec], k, len(secciones))
+        elegido = animo if disponibles[animo] else next((a for a in CERCANOS[animo] if disponibles[a]), None) \
+            or next(a for a in biblioteca.ANIMOS_MUSICA if disponibles[a])
+        opciones = [p for p in disponibles[elegido] if p != ultima] or disponibles[elegido]
+        pista = rng.choice(opciones)
+        ultima = pista
+        ini = max(0.0, sec[0][1]["inicio"] - (0.4 if k else 0))
+        fin = min(total, sec[-1][1]["fin"] + (0.6 if k < len(secciones) - 1 else 0))
+        clip = {"id": f"m{k:02d}", "inicio": round(ini, 3), "fin": round(fin, 3), "archivo": pista,
+                "volumen": 0.2, "ducking": True, "animo": elegido, "desde": 0.0,
+                "razon": f"Sección «{sec[0][0].seccion}»: música de {elegido}"
+                         + (f" (no hay de {animo})" if elegido != animo else "")}
+        if caida and ini <= caida[0] < fin:
+            clip["caidas"] = [caida]
+            clip["razon"] += "; cae antes de la revelación"
+        salida.append(clip)
+    return salida
+
+
 def construir_edl(carpeta: CarpetaProyecto) -> dict:
     proyecto = carpeta.cargar()
     from .estilos import cargar_estilo
@@ -433,6 +493,7 @@ def construir_edl(carpeta: CarpetaProyecto) -> dict:
             acum += len(tr)
             t1 = a + (b - a) * acum / largo
             subtitulos.append({"inicio": round(t0, 3), "fin": round(max(t1, t0 + 0.2), 3), "texto": tr})
+    musica = _musica(escenas, clips, revelacion, total, rng)
     _equilibrar_movimientos(clips, perfil, rng, estilo.movimiento_maximo)
     vivos = _recortar_sonidos(sfx, len(clips), total, perfil, rng)
     pistas_sfx = _pistas_sfx(vivos, rng)
@@ -440,7 +501,7 @@ def construir_edl(carpeta: CarpetaProyecto) -> dict:
            "pistas": {"fondo": [{"id": "f1", "inicio": 0, "fin": total, "tipo": "textura",
                                  "archivo": "assets/papel_arrugado.png"}],
                       "escenas": clips, "elementos": [], "textos": textos, "subtitulos": subtitulos,
-                      "voz": [{"inicio": 0, "archivo": "audio/voz.wav"}], "musica": [], "sfx": pistas_sfx},
+                      "voz": [{"inicio": 0, "archivo": "audio/voz.wav"}], "musica": musica, "sfx": pistas_sfx},
            "historial": [{"version": 1, "autor": "director_edicion_reglas", "cambio": "primera EDL",
                           "razon": "Construida desde las intenciones, la voz real y direccion.json"}]}
     EDL.model_validate(edl)
