@@ -31,6 +31,8 @@ EFECTOS = (
     "rafaga",
     # signos de pregunta que aparecen con rebote cuando la voz le pregunta algo al espectador
     "signos_pregunta",
+    # corte de ~2 s al presentador reaccionando (la voz sigue)
+    "reaccion_presentador",
 )
 # "sfx" no es un efecto visual, pero se sugiere en la misma lista (ver 3.1).
 EFECTOS_SUGERIBLES = EFECTOS + ("sfx",)
@@ -111,6 +113,11 @@ class Presentador(Modelo):
     persona: str = Field(description="Descripción fija de la persona inventada (en inglés)")
     escenario: str = Field(description="Descripción fija del lugar (en inglés)")
     poses: list[PoseCanal] = []
+    # intención de la escena -> pose con la que reacciona; solo aparece en esas intenciones
+    reacciones: dict[str, str] = {}
+    duracion_reaccion_seg: float = Field(2.0, gt=0.5, le=4)
+    separacion_minima_seg: float = Field(40, ge=5)
+    maximo_por_video: int = Field(8, ge=0)
     # YouTube pide marcar «contenido alterado o sintético» cuando aparece una persona realista hecha con IA
     requiere_divulgacion_contenido_sintetico: bool = True
 
@@ -564,6 +571,9 @@ class Proyecto(Modelo):
     semilla: int = Field(default_factory=lambda: random.randrange(2**31))
     permiso_superar_maximo: bool = False
     notas: list[str] = []
+    # se activa si el video usa al presentador realista hecho con IA: al subirlo hay que
+    # marcar «contenido alterado o sintético» en YouTube
+    requiere_divulgacion_contenido_sintetico: bool = False
 
     @model_validator(mode="after")
     def _pasos_completos(self) -> "Proyecto":

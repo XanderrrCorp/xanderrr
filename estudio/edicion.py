@@ -227,6 +227,44 @@ def _animo_de_seccion(escenas: list, k: int, n: int) -> str:
     return "tension" if media >= 3.2 or "tension_creciente" in intenciones else "curiosidad"
 
 
+def _reacciones(estilo: Estilo, escenas: list, clips: list, raiz: Path, revelacion: int | None,
+                rng: random.Random) -> int:
+    """Cortes de ~2 s al presentador reaccionando (la voz sigue). Solo en las intenciones
+    que el estilo manda, con prioridad en su orden (revelación, giro, humor…), separados
+    por separacion_minima_seg, nunca en escenas seguidas y como máximo maximo_por_video."""
+    pr = estilo.presentador
+    if pr is None or not pr.reacciones or pr.maximo_por_video == 0:
+        return 0
+    disponibles = {pose for pose in set(pr.reacciones.values()) if (raiz / "assets" / "presentador" / f"{pose}.mp4").exists()}
+    if not disponibles:
+        return 0
+    orden = list(pr.reacciones)
+    d = pr.duracion_reaccion_seg
+    candidatos = []
+    for i, (e, c) in enumerate(zip(escenas, clips)):
+        pose = pr.reacciones.get(e.intencion)
+        if pose not in disponibles:
+            continue
+        # en la revelación, justo después de que se despixela el villano; en las demás, al empezar
+        t0 = c["inicio"] + (1.5 if (revelacion and e.id == revelacion) else rng.uniform(0.25, 0.5))
+        if c["fin"] - t0 < d + 0.3:
+            continue
+        candidatos.append((orden.index(e.intencion), rng.random(), i, t0, pose))
+    elegidos: list[tuple[int, float]] = []
+    for _, _, i, t0, pose in sorted(candidatos):
+        if len(elegidos) >= pr.maximo_por_video:
+            break
+        if any(abs(t0 - t) < pr.separacion_minima_seg or abs(i - j) <= 1 for j, t in elegidos):
+            continue
+        elegidos.append((i, t0))
+        c = clips[i]
+        c["efectos"].append({"efecto": "reaccion_presentador", "en": round(t0, 3), "dur": d,
+                             "archivo": f"assets/presentador/{pose}.mp4", "desde": round(rng.uniform(0.3, 1.2), 2),
+                             "pose": pose})
+        c["razon"] += f"; corte de {d:.0f} s al presentador reaccionando ({pose})"
+    return len(elegidos)
+
+
 def _musica(escenas: list, clips: list, revelacion: int | None, total: float, rng: random.Random) -> list:
     """Una pista por sección según su ánimo, sin repetir la misma pista seguida. Los
     cambios empiezan un poco antes del corte (J) y terminan un poco después (L) (14.5).
@@ -500,6 +538,12 @@ def construir_edl(carpeta: CarpetaProyecto) -> dict:
             acum += len(tr)
             t1 = a + (b - a) * acum / largo
             subtitulos.append({"inicio": round(t0, 3), "fin": round(max(t1, t0 + 0.2), 3), "texto": tr})
+    reacciones = _reacciones(estilo, escenas, clips, carpeta.ruta, revelacion, rng)
+    if reacciones:
+        p = carpeta.cargar()
+        if not p.requiere_divulgacion_contenido_sintetico:
+            p.requiere_divulgacion_contenido_sintetico = True
+            carpeta.guardar(p)
     musica = _musica(escenas, clips, revelacion, total, rng)
     _equilibrar_movimientos(clips, perfil, rng, estilo.movimiento_maximo)
     vivos = _recortar_sonidos(sfx, len(clips), total, perfil, rng)
@@ -525,8 +569,8 @@ def validar(edl: dict, perfil=None) -> list[str]:
     for c in clips:
         dur = c["fin"] - c["inicio"]
         cambia = any(x["efecto"] in ("reencuadre", "zoom_golpe", "tira_deslizar_a_nivel", "revelar_pixelado",
-                                     "rafaga", "circulo_rojo", "flecha", "icono_advertencia", "signos_pregunta")
-                     for x in c["efectos"])
+                                     "rafaga", "circulo_rojo", "flecha", "icono_advertencia", "signos_pregunta",
+                                     "reaccion_presentador") for x in c["efectos"])
         if dur > MAX_SIN_CAMBIO and not cambia and not c.get("respiro"):
             avisos.append(f"{c['id']}: {dur:.1f} s sin cambio visual")
     for a, b in zip(clips, clips[1:]):

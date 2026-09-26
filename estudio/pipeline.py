@@ -117,6 +117,9 @@ def _copiar_mascota(c: CarpetaProyecto, estilo_id: str) -> None:
     from .poses import copiar_a_proyecto
 
     copiar_a_proyecto(estilo_id, c.ruta)     # poses del canal: gratis, ya pagadas una vez
+    from .poses import copiar_presentador
+
+    copiar_presentador(estilo_id, c.ruta)    # reacciones animadas del presentador
 
 
 def importar_guion(v1: dict | list, canal: str = "animales-peligrosos",
@@ -315,6 +318,9 @@ def paso_video(c: CarpetaProyecto, t: Trabajo, permiso: bool = False) -> Path:
     direccion = c.ruta / "direccion.json"
     if not direccion.exists() or "focos_revisados" not in leer_json(direccion):
         _ubicar_focos(c, t)
+    from .poses import copiar_presentador
+
+    copiar_presentador(c.cargar().estilo, c.ruta)
     t.avisar("Editando: cortes, movimientos, textos y subtítulos…")
     edl = construir_edl(c)
     avisos = validar(edl, _perfil(c))
@@ -349,7 +355,8 @@ def resumen(c: CarpetaProyecto) -> dict:
     datos = {"slug": c.ruta.name, "titulo": p.titulo, "minutos": round(p.duracion_objetivo_seg / 60, 1),
              "pasos": {k: v.estado for k, v in p.pasos.items()},
              "costo": formato_cop(c.libro(config).total_cop()), "escenas": [], "guion": None,
-             "video": None, "trabajo": None, "prueba": None}
+             "video": None, "trabajo": None, "prueba": None,
+             "divulgacion": p.requiere_divulgacion_contenido_sintetico}
     if c.archivo_escenas.exists():
         esc = c.cargar_escenas()
         man = leer_json(c.ruta / "imagenes" / "manifiesto.json") if (c.ruta / "imagenes" / "manifiesto.json").exists() else {}

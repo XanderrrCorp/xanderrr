@@ -202,6 +202,21 @@
         "uso": "Amenazas",
         "descripcion": "He pulls back in alarm, both palms raised toward the camera, eyes wide"
       }
-    ]
+    ],
+    "reacciones": {
+      "revelacion": "shock",
+      "giro": "sorpresa",
+      "humor": "risa",
+      "amenaza": "alarmado",
+      "advertencia": "serio",
+      "pregunta_al_espectador": "pensativo",
+      "alivio": "alivio",
+      "tension_creciente": "susurro",
+      "dato_impactante": "sorpresa",
+      "explicacion": "senalando"
+    },
+    "duracion_reaccion_seg": 2.0,
+    "separacion_minima_seg": 40,
+    "maximo_por_video": 8
   }
 }

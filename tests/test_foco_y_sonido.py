@@ -87,3 +87,24 @@ def test_poses_del_canal_se_pagan_una_vez_y_se_copian(tmp_path, monkeypatch):
     proyecto = tmp_path / "video"
     assert set(poses.copiar_a_proyecto("enciclopedia_mascota", proyecto)) == set(r1["generadas"])
     assert (proyecto / "assets" / "poses" / "senalando_susto.png").exists()
+
+
+def test_reacciones_del_presentador_con_limites(tmp_path):
+    from estudio.edicion import _reacciones
+    from estudio.esquemas import Escena
+    from estudio.estilos import cargar_estilo
+
+    estilo = cargar_estilo("enciclopedia_mascota")
+    (tmp_path / "assets" / "presentador").mkdir(parents=True)
+    for pose in ("sorpresa", "shock", "risa"):
+        (tmp_path / "assets" / "presentador" / f"{pose}.mp4").write_bytes(b"x")
+    intenciones = ["giro", "giro", "explicacion", "humor"] * 20
+    escenas = [Escena.model_validate({"id": i + 1, "seccion": "A", "narracion": "x", "intencion": it, "intensidad": 3,
+                                      "visual": {"accion": "solo_edicion"}}) for i, it in enumerate(intenciones)]
+    clips = [{"id": f"c{i}", "inicio": i * 5.0, "fin": i * 5.0 + 5, "efectos": [], "razon": ""} for i in range(len(escenas))]
+    n = _reacciones(estilo, escenas, clips, tmp_path, None, random.Random(3))
+    usados = [(i, e) for i, c in enumerate(clips) for e in c["efectos"]]
+    assert n == len(usados) and 1 <= n <= estilo.presentador.maximo_por_video
+    tiempos = sorted(e["en"] for _, e in usados)
+    assert all(b - a >= estilo.presentador.separacion_minima_seg for a, b in zip(tiempos, tiempos[1:]))
+    assert all(e["pose"] in ("sorpresa", "risa") for _, e in usados)         # solo intenciones del estilo

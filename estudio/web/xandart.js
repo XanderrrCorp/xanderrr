@@ -117,7 +117,9 @@ async function pintar() {
         <a href="/archivos/${v.slug}/render/final.srt?descargar=true"><button>Subtítulos (SRT)</button></a>
         <button onclick="api('/api/abrir-carpeta',{method:'POST'})">Abrir carpeta de videos</button>
       </div>
-      <p class="tenue" style="font-size:13px">También quedó guardado en tu carpeta Videos › Xandart.</p></section>`;
+      <p class="tenue" style="font-size:13px">También quedó guardado en tu carpeta Videos › Xandart.</p>
+      ${v.divulgacion ? `<div class="error">Este video tiene al presentador hecho con IA. Al subirlo a YouTube, en
+        «Detalles», marca <b>«Contenido alterado o sintético: Sí»</b>. No afecta la monetización.</div>` : ''}</section>`;
   }
   if (guionOk && !enCurso) {
     const e = v.estimacion_imagenes || {};

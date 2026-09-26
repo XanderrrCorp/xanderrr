@@ -183,3 +183,19 @@ def generar_presentador(estilo_id: str, ids: list[str] | None = None, *, permiso
         salida["costo_cop"] += config.a_cop(res.uso.costo_usd)
         avisar(f"  {pose.id}: lista · {formato_cop(config.a_cop(res.uso.costo_usd))}")
     return salida
+
+
+def copiar_presentador(estilo_id: str, carpeta_proyecto: Path) -> list[str]:
+    """Copia gratis los clips animados del presentador a assets/presentador/<pose>.mp4.
+    Si hay varias versiones de una pose (distintos modelos), usa la más reciente."""
+    clips = carpeta_presentador(estilo_id) / "clips"
+    idx = leer_json(clips / "clips.json") if (clips / "clips.json").exists() else {}
+    por_pose: dict[str, tuple[str, str]] = {}
+    for archivo, datos in idx.items():
+        if (clips / archivo).exists() and datos.get("generado", "") >= por_pose.get(datos["pose"], ("", ""))[1]:
+            por_pose[datos["pose"]] = (archivo, datos.get("generado", ""))
+    destino = carpeta_proyecto / "assets" / "presentador"
+    for pose, (archivo, _) in por_pose.items():
+        destino.mkdir(parents=True, exist_ok=True)
+        shutil.copy(clips / archivo, destino / f"{pose}.mp4")
+    return sorted(por_pose)

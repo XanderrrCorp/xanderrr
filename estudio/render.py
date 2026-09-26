@@ -342,6 +342,39 @@ def _signos_pregunta(img: Image.Image, ef: dict, tt: float, fin: float) -> Image
     return img
 
 
+class LectorClips:
+    """Lee cuadro a cuadro los clips del presentador con FFmpeg (sin cargarlos enteros en memoria)."""
+
+    def __init__(self, raiz: Path, ffmpeg: str):
+        self.raiz, self.ffmpeg = raiz, ffmpeg
+        self.clave, self.proc, self.leidos, self.ultimo = None, None, 0, None
+
+    def cuadro(self, ef: dict, loc: float) -> Image.Image | None:
+        clave = (ef["archivo"], ef["en"])
+        if clave != self.clave:
+            self.cerrar()
+            filtro = f"scale={W}:{H}:force_original_aspect_ratio=increase,crop={W}:{H},fps={FPS}"
+            self.proc = subprocess.Popen([self.ffmpeg, "-v", "error", "-ss", str(ef.get("desde", 0)), "-i",
+                                          str(self.raiz / ef["archivo"]), "-t", str(ef["dur"] + 0.5), "-vf", filtro,
+                                          "-f", "rawvideo", "-pix_fmt", "rgb24", "-"], stdout=subprocess.PIPE)
+            self.clave, self.leidos, self.ultimo = clave, 0, None
+        quiero = int(loc * FPS)
+        while self.leidos <= quiero:
+            datos = self.proc.stdout.read(W * H * 3)
+            if len(datos) < W * H * 3:
+                break                                    # el clip se acabó: se repite el último cuadro
+            self.ultimo = Image.frombytes("RGB", (W, H), datos)
+            self.leidos += 1
+        return self.ultimo
+
+    def cerrar(self):
+        if self.proc:
+            self.proc.stdout.close()
+            self.proc.kill()
+            self.proc.wait()
+        self.proc = None
+
+
 # ------------------------------------------------------------------ textos
 
 def _texto_img(texto: str, tam: int, contorno: int, color=(255, 255, 255)) -> Image.Image:
@@ -543,6 +576,7 @@ def renderizar(carpeta: CarpetaProyecto, ffmpeg: str, destino: Path | None = Non
                              "-pix_fmt", "yuv420p", str(video_tmp)], stdin=subprocess.PIPE)
     temblor = random.Random(proyecto.semilla)
     capa_foco = Foco()
+    lector = LectorClips(raiz, ffmpeg)
     ultimo: Image.Image | None = None
     ci = 0
     for n in range(n0, n1):
@@ -621,9 +655,15 @@ def renderizar(carpeta: CarpetaProyecto, ffmpeg: str, destino: Path | None = Non
                 img = Image.blend(img, Image.new("RGB", (W, H), (255, 42, 42)), 0.55 * math.exp(-dt * 6))
         if any(img is v for v in escenario.cache.values()):
             img = img.copy()           # nunca escribir sobre el cuadro guardado en caché
-        if "icono_advertencia" in ef:
+        r = ef.get("reaccion_presentador")
+        en_reaccion = bool(r and r["en"] <= tt < r["en"] + r["dur"])
+        if en_reaccion:
+            cuadro = lector.cuadro(r, tt - r["en"])
+            if cuadro is not None:
+                img = cuadro.copy()
+        if "icono_advertencia" in ef and not en_reaccion:
             img = _poner_icono(img, ef["icono_advertencia"], tt)
-        if "signos_pregunta" in ef:
+        if "signos_pregunta" in ef and not en_reaccion:
             img = _signos_pregunta(img, ef["signos_pregunta"], tt, c["fin"])
         # --- textos en pantalla
         for t in textos:
@@ -652,6 +692,7 @@ def renderizar(carpeta: CarpetaProyecto, ffmpeg: str, destino: Path | None = Non
         ultimo = img
         if n % (FPS * 30) == 0:
             avisar(f"  render {tt / 60:.1f} / {total / 60:.1f} min")
+    lector.cerrar()
     proc.stdin.close()
     proc.wait()
 
