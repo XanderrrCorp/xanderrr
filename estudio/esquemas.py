@@ -25,6 +25,8 @@ EFECTOS = (
     "fundido_corto", "destello", "destello_rojo", "pixelar", "revelar_pixelado",
     "entrada_rebote", "temblor_leve", "tinte_rojo", "oscurecer_fondo",
     "tira_deslizar_a_nivel", "lado_a_lado", "flecha", "circulo_rojo", "icono_advertencia",
+    # cambio de encuadre a mitad de un plano largo (cuenta como cambio visual real, 4.3)
+    "reencuadre",
 )
 # "sfx" no es un efecto visual, pero se sugiere en la misma lista (ver 3.1).
 EFECTOS_SUGERIBLES = EFECTOS + ("sfx",)
@@ -117,6 +119,8 @@ class Estilo(Modelo):
     # Plantillas de los assets reutilizables (personaje base, etc.) por tipo de asset.
     plantillas_assets: dict[str, str] = {}
     tira_niveles: TiraNiveles | None = None
+    # Cómo dibuja el motor cada modo de montaje del estilo (sección 6).
+    comportamiento_montaje: dict[str, Literal["recorte", "recuadro", "pantalla_completa"]] = {}
 
     @model_validator(mode="before")
     @classmethod
@@ -146,6 +150,9 @@ class Estilo(Modelo):
         for k, plantilla in self.plantillas_assets.items():
             if "no text" not in plantilla.lower():
                 raise ValueError(f"la plantilla del asset '{k}' debe pedir 'no text' (regla 11)")
+        sin_modo = set(self.comportamiento_montaje) - set(self.modos_de_montaje_permitidos)
+        if sin_modo:
+            raise ValueError(f"comportamiento_montaje usa modos no permitidos: {sorted(sin_modo)}")
         desconocidos = set(self.mezcla_recomendada) - set(ids)
         if desconocidos:
             raise ValueError(f"mezcla_recomendada usa tipos inexistentes: {sorted(desconocidos)}")

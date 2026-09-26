@@ -186,6 +186,32 @@ def _cmd_generar_voz(a: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_editar(a: argparse.Namespace) -> int:
+    from .edicion import construir_edl, validar
+
+    c = CarpetaProyecto.abrir(a.slug)
+    edl = construir_edl(c)
+    avisos = validar(edl)
+    p = edl["pistas"]
+    print(f"EDL: {edl['duracion_total'] / 60:.2f} min · {len(p['escenas'])} clips · {len(p['textos'])} textos · "
+          f"{len(p['subtitulos'])} subtítulos · {len(p['sfx'])} efectos de sonido")
+    for x in avisos:
+        print(f"  validador: {x}")
+    return 1 if avisos else 0
+
+
+def _cmd_render(a: argparse.Namespace) -> int:
+    import imageio_ffmpeg
+
+    from .render import renderizar
+
+    c = CarpetaProyecto.abrir(a.slug)
+    destino = c.ruta / "render" / (a.salida or "final.mp4")
+    r = renderizar(c, imageio_ffmpeg.get_ffmpeg_exe(), destino, desde=a.desde, hasta=a.hasta)
+    print(f"Video: {r}")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(prog="estudio", description="Estudio de producción · Buscanichos")
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -243,6 +269,16 @@ def main(argv: list[str] | None = None) -> int:
     vz.add_argument("--slug", required=True)
     vz.add_argument("--permiso", action="store_true")
     vz.set_defaults(fn=_cmd_generar_voz)
+
+    ed = sub.add_parser("editar", help="Director de edición por reglas: construye y valida edl.json")
+    ed.add_argument("--slug", required=True)
+    ed.set_defaults(fn=_cmd_editar)
+    rd = sub.add_parser("render", help="renderiza edl.json a MP4 (voz y efectos mezclados y normalizados)")
+    rd.add_argument("--slug", required=True)
+    rd.add_argument("--desde", type=float, default=0.0)
+    rd.add_argument("--hasta", type=float)
+    rd.add_argument("--salida")
+    rd.set_defaults(fn=_cmd_render)
 
     a = ap.parse_args(argv)
     try:

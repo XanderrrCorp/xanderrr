@@ -123,5 +123,9 @@
       "color_b": "#1D3B5E",
       "semilla": 7
     }
+  },
+  "comportamiento_montaje": {
+    "recorte_sobre_papel": "recorte",
+    "recuadro_sobre_papel": "recuadro"
   }
 }
