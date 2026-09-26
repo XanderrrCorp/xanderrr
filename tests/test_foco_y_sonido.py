@@ -108,3 +108,6 @@ def test_reacciones_del_presentador_con_limites(tmp_path):
     tiempos = sorted(e["en"] for _, e in usados)
     assert all(b - a >= estilo.presentador.separacion_minima_seg for a, b in zip(tiempos, tiempos[1:]))
     assert all(e["pose"] in ("sorpresa", "risa") for _, e in usados)         # solo intenciones del estilo
+    from collections import Counter
+
+    assert max(Counter(e["pose"] for _, e in usados).values()) <= estilo.presentador.maximo_por_pose

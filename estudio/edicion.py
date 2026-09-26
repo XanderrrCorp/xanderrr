@@ -250,13 +250,19 @@ def _reacciones(estilo: Estilo, escenas: list, clips: list, raiz: Path, revelaci
         if c["fin"] - t0 < d + 0.3:
             continue
         candidatos.append((orden.index(e.intencion), rng.random(), i, t0, pose))
-    elegidos: list[tuple[int, float]] = []
+    elegidos: list[tuple[int, float, str]] = []
     for _, _, i, t0, pose in sorted(candidatos):
         if len(elegidos) >= pr.maximo_por_video:
             break
-        if any(abs(t0 - t) < pr.separacion_minima_seg or abs(i - j) <= 1 for j, t in elegidos):
+        if any(abs(t0 - t) < pr.separacion_minima_seg or abs(i - j) <= 1 for j, t, _ in elegidos):
             continue
-        elegidos.append((i, t0))
+        if sum(1 for *_, p in elegidos if p == pose) >= pr.maximo_por_pose:
+            continue
+        vecinos = sorted(elegidos + [(i, t0, pose)], key=lambda x: x[1])
+        k = next(n for n, x in enumerate(vecinos) if x[0] == i)
+        if any(0 <= n < len(vecinos) and n != k and vecinos[n][2] == pose for n in (k - 1, k + 1)):
+            continue                                    # nunca la misma reacción dos veces seguidas
+        elegidos.append((i, t0, pose))
         c = clips[i]
         c["efectos"].append({"efecto": "reaccion_presentador", "en": round(t0, 3), "dur": d,
                              "archivo": f"assets/presentador/{pose}.mp4", "desde": round(rng.uniform(0.3, 1.2), 2),

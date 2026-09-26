@@ -118,6 +118,7 @@ class Presentador(Modelo):
     duracion_reaccion_seg: float = Field(2.0, gt=0.5, le=4)
     separacion_minima_seg: float = Field(40, ge=5)
     maximo_por_video: int = Field(8, ge=0)
+    maximo_por_pose: int = Field(2, ge=1)       # la misma reacción repetida se ve mecánica
     # YouTube pide marcar «contenido alterado o sintético» cuando aparece una persona realista hecha con IA
     requiere_divulgacion_contenido_sintetico: bool = True
 

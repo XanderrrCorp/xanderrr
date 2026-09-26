@@ -21,5 +21,53 @@
     "costo_usd": 0.1,
     "trabajo": "01a0e002-49c3-7f33-b7b8-d60356d303c2",
     "generado": "2026-09-26T23:18:17+00:00"
+  },
+  "susurro__wan2.7-i2v.mp4": {
+    "pose": "susurro",
+    "modelo": "Wan-AI/wan2.7-i2v",
+    "segundos": 5,
+    "costo_usd": 0.1,
+    "trabajo": "01a0e003-2448-7f33-8e09-768152ced974",
+    "generado": "2026-09-26T23:19:21+00:00"
+  },
+  "risa__wan2.7-i2v.mp4": {
+    "pose": "risa",
+    "modelo": "Wan-AI/wan2.7-i2v",
+    "segundos": 5,
+    "costo_usd": 0.1,
+    "trabajo": "01a0e004-21d8-7f33-8dd8-1da79e2a75d3",
+    "generado": "2026-09-26T23:20:16+00:00"
+  },
+  "alivio__wan2.7-i2v.mp4": {
+    "pose": "alivio",
+    "modelo": "Wan-AI/wan2.7-i2v",
+    "segundos": 5,
+    "costo_usd": 0.1,
+    "trabajo": "01a0e004-f81d-7f33-8c9a-f38c7feda1ca",
+    "generado": "2026-09-26T23:21:01+00:00"
+  },
+  "senalando__wan2.7-i2v.mp4": {
+    "pose": "senalando",
+    "modelo": "Wan-AI/wan2.7-i2v",
+    "segundos": 5,
+    "costo_usd": 0.1,
+    "trabajo": "01a0e005-a687-7f33-8f74-f02cb0951e6b",
+    "generado": "2026-09-26T23:22:06+00:00"
+  },
+  "pensativo__wan2.7-i2v.mp4": {
+    "pose": "pensativo",
+    "modelo": "Wan-AI/wan2.7-i2v",
+    "segundos": 5,
+    "costo_usd": 0.1,
+    "trabajo": "01a0e006-a569-7f33-8750-c23aa06583e4",
+    "generado": "2026-09-26T23:23:01+00:00"
+  },
+  "alarmado__wan2.7-i2v.mp4": {
+    "pose": "alarmado",
+    "modelo": "Wan-AI/wan2.7-i2v",
+    "segundos": 5,
+    "costo_usd": 0.1,
+    "trabajo": "01a0e007-7c03-7f33-8a87-027b8e96b6b6",
+    "generado": "2026-09-26T23:24:18+00:00"
   }
 }

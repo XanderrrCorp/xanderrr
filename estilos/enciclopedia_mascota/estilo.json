@@ -217,6 +217,7 @@
     },
     "duracion_reaccion_seg": 2.0,
     "separacion_minima_seg": 40,
-    "maximo_por_video": 8
+    "maximo_por_video": 8,
+    "maximo_por_pose": 2
   }
 }
