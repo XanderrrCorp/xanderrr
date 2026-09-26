@@ -35,7 +35,10 @@ def test_instruccion_usa_tipos_del_estilo_y_duracion(estilo):
     txt = instruccion(Encargo("insectos", "la cucaracha no es peligrosa", "chinche besucona", 9), estilo)
     for t in estilo.ids_tipos:
         assert t in txt
-    assert "chinche besucona" in txt and "1456" in txt and "1675" in txt   # 9 min × 60 × 2,9 ± 7 %
+    from estudio.guionista import PALABRAS_POR_SEGUNDO
+
+    palabras = int(9 * 60 * PALABRAS_POR_SEGUNDO)                          # ritmo real de la voz configurada
+    assert "chinche besucona" in txt and str(int(palabras * 0.93)) in txt and str(int(palabras * 1.07)) in txt
 
 
 def test_a_escenas(estilo):

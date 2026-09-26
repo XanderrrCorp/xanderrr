@@ -228,7 +228,7 @@ def _animo_de_seccion(escenas: list, k: int, n: int) -> str:
 
 
 def _reacciones(estilo: Estilo, escenas: list, clips: list, raiz: Path, revelacion: int | None,
-                rng: random.Random) -> int:
+                rng: random.Random, elegidas: list | None = None) -> int:
     """Cortes de ~2 s al presentador reaccionando (la voz sigue). Solo en las intenciones
     que el estilo manda, con prioridad en su orden (revelación, giro, humor…), separados
     por separacion_minima_seg, nunca en escenas seguidas y como máximo maximo_por_video."""
@@ -241,7 +241,27 @@ def _reacciones(estilo: Estilo, escenas: list, clips: list, raiz: Path, revelaci
     orden = list(pr.reacciones)
     d = pr.duracion_reaccion_seg
     candidatos = []
+    if elegidas:
+        # Claude eligió los momentos leyendo el guion: la reacción entra justo DESPUÉS de que
+        # la frase cae (al empezar la escena siguiente) o, si no cabe, al final de la misma
+        por_id = {e.id: k for k, e in enumerate(escenas)}
+        for prioridad, r in enumerate(elegidas):
+            k = por_id.get(r["escena"])
+            if k is None or r["pose"] not in disponibles:
+                continue
+            opciones = []
+            if k + 1 < len(clips) and clips[k + 1]["modo"] != "tira":
+                opciones.append((k + 1, clips[k + 1]["inicio"] + 0.08))
+            if revelacion and escenas[k].id == revelacion:
+                opciones.insert(0, (k, clips[k]["inicio"] + 1.5))
+            opciones.append((k, clips[k]["fin"] - d - 0.15))
+            for i, t0 in opciones:
+                if t0 >= clips[i]["inicio"] + 0.05 and clips[i]["fin"] - t0 >= d + 0.1:
+                    candidatos.append((prioridad, 0.0, i, t0, r["pose"], r.get("razon", "")))
+                    break
     for i, (e, c) in enumerate(zip(escenas, clips)):
+        if elegidas:
+            break
         pose = pr.reacciones.get(e.intencion)
         if pose not in disponibles:
             continue
@@ -249,9 +269,9 @@ def _reacciones(estilo: Estilo, escenas: list, clips: list, raiz: Path, revelaci
         t0 = c["inicio"] + (1.5 if (revelacion and e.id == revelacion) else rng.uniform(0.25, 0.5))
         if c["fin"] - t0 < d + 0.3:
             continue
-        candidatos.append((orden.index(e.intencion), rng.random(), i, t0, pose))
+        candidatos.append((orden.index(e.intencion), rng.random(), i, t0, pose, ""))
     elegidos: list[tuple[int, float, str]] = []
-    for _, _, i, t0, pose in sorted(candidatos):
+    for _, _, i, t0, pose, por_que in sorted(candidatos):
         if len(elegidos) >= pr.maximo_por_video:
             break
         if any(abs(t0 - t) < pr.separacion_minima_seg or abs(i - j) <= 1 for j, t, _ in elegidos):
@@ -267,7 +287,7 @@ def _reacciones(estilo: Estilo, escenas: list, clips: list, raiz: Path, revelaci
         c["efectos"].append({"efecto": "reaccion_presentador", "en": round(t0, 3), "dur": d,
                              "archivo": f"assets/presentador/{pose}.mp4", "desde": round(rng.uniform(0.3, 1.2), 2),
                              "pose": pose})
-        c["razon"] += f"; corte de {d:.0f} s al presentador reaccionando ({pose})"
+        c["razon"] += f"; corte de {d:.0f} s al presentador reaccionando ({pose})" + (f": {por_que}" if por_que else "")
     return len(elegidos)
 
 
@@ -344,7 +364,7 @@ def construir_edl(carpeta: CarpetaProyecto) -> dict:
     ultimo_circulo = ultima_flecha = ultimo_icono = ultima_pregunta = -99.0
     secciones_con_circulo: set = set()
     tope_recurso = perfil.uso_maximo_por_recurso
-    usos_cambio = {"reencuadre": 0, "icono_advertencia": 0, "flecha": 0}
+    usos_cambio = {"reencuadre": 0, "icono_advertencia": 0, "flecha": 0, "etiqueta": 0}
     respiros_por_minuto: dict[int, int] = {}
     for idx, e in enumerate(escenas):
         ini, fin = round(inicios[idx], 3), round(finales[idx], 3)
@@ -413,9 +433,9 @@ def construir_edl(carpeta: CarpetaProyecto) -> dict:
             if mov_nombre == "zoom_golpe" and previo_golpe:
                 mov_nombre = "zoom_lento"
             sutil = False
-            if mov_nombre is None and rng.random() < 0.6:
+            if mov_nombre is None and rng.random() < 0.8:
                 mov_nombre, sutil = "zoom_lento", True    # la gramática no pide nada: un respiro muy leve
-            elif mov_nombre and rng.random() < 0.12 and mov_nombre not in ("zoom_golpe", "entrada_rebote"):
+            elif mov_nombre and rng.random() < 0.07 and mov_nombre not in ("zoom_golpe", "entrada_rebote"):
                 mov_nombre = None      # algunas quietas para que se noten las demás
             if mov_nombre == "zoom_golpe":
                 foco = [round(rng.uniform(0.42, 0.58), 3), round(rng.uniform(0.40, 0.54), 3)]
@@ -477,30 +497,60 @@ def construir_edl(carpeta: CarpetaProyecto) -> dict:
                     efectos.append({"efecto": "flecha", "en": t0, "caja": f["caja"], "desde": lado})
                     ultima_flecha = t0
                     usos_cambio["flecha"] += 1
+                    _sfx(sfx, "pop", t0, idx, "Pop suave con la flecha")
                     razon = (razon + "; " if razon else "") + f"Flecha que señala «{f.get('palabra') or 'el detalle'}»"
             respiro = False
-            if dur > MAX_SIN_CAMBIO and not any(x["efecto"] in ("rafaga", "circulo_rojo", "flecha") for x in efectos):
-                # 4.3: un cambio visual real a mitad del plano, repartiendo los recursos para
-                # que ninguno pase de uso_maximo_por_recurso (14.10)
-                cuota = lambda r: usos_cambio[r] / (idx + 1) < tope_recurso
-                minuto = int(ini // 60)
-                if (e.intencion in ("amenaza", "advertencia", "tension_creciente") and cuota("icono_advertencia")
-                        and ini - ultimo_icono >= 15):
-                    ultimo_icono = ini
-                    efectos.append({"efecto": "icono_advertencia", "en": round(ini + dur * rng.uniform(0.38, 0.52), 3),
-                                    "lado": rng.choice(["izquierda", "derecha"])})
-                    usos_cambio["icono_advertencia"] += 1
-                    razon = (razon + "; " if razon else "") + "Aparece el ícono de advertencia a mitad del plano"
-                elif (not cuota("reencuadre") and dur <= 6.0
-                      and respiros_por_minuto.get(minuto, 0) < perfil.respiros_max_por_minuto):
+            # algo nuevo en pantalla cada interrupcion_de_patron_cada_seg (el corte cuenta): se
+            # llenan los huecos del plano rotando recursos para que ninguno pase del uso máximo
+            cada = perfil.interrupcion_de_patron_cada_seg
+            ya = sorted([x["en"] for x in efectos if x["efecto"] in ("circulo_rojo", "flecha", "zoom_golpe")]
+                        + [tt for x in efectos if x["efecto"] == "rafaga" for tt in x["tiempos"]])
+            puntos, cursor = [], ini
+            for m in ya + [fin]:
+                while m - cursor > cada + 0.4:
+                    punto = cursor + rng.uniform(cada - 0.5, cada + 0.2)
+                    if fin - punto < 0.9 or m - punto < 0.6:
+                        break
+                    puntos.append(round(punto, 3))
+                    cursor = punto
+                cursor = max(cursor, m)
+            tiene_texto = str(e.id) in (direccion.get("textos") or {})
+            en_clip: set = set()
+            minuto = int(ini // 60)
+            for punto in puntos:
+                opciones = ["reencuadre"]
+                if e.palabra_clave and not tiene_texto:
+                    opciones.append("etiqueta")
+                if e.intencion in ("amenaza", "advertencia", "tension_creciente") and punto - ultimo_icono >= 15:
+                    opciones.append("icono_advertencia")
+                opciones = [o for o in opciones if o not in en_clip]
+                con_cupo = [o for o in opciones if usos_cambio[o] / (idx + 1) < tope_recurso]
+                if not con_cupo and dur <= 6.0 and not respiro \
+                        and respiros_por_minuto.get(minuto, 0) < perfil.respiros_max_por_minuto:
                     respiro = True
                     respiros_por_minuto[minuto] = respiros_por_minuto.get(minuto, 0) + 1
-                    razon = (razon + "; " if razon else "") + "Respiro: plano largo sin cambio para dar contraste (14.2)"
-                else:
-                    efectos.append({"efecto": "reencuadre", "en": round(ini + dur * rng.uniform(0.42, 0.58), 3),
-                                    "escala": round(rng.uniform(1.12, 1.18), 3),
+                    razon = (razon + "; " if razon else "") + "Respiro: plano sin cambio para dar contraste (14.2)"
+                    continue
+                elegibles = con_cupo or opciones
+                if not elegibles:
+                    continue
+                o = min(elegibles, key=lambda r: (usos_cambio[r] / (idx + 1), rng.random()))
+                en_clip.add(o)
+                usos_cambio[o] += 1
+                if o == "reencuadre":
+                    efectos.append({"efecto": "reencuadre", "en": punto, "escala": round(rng.uniform(1.12, 1.18), 3),
                                     "punto_foco": [round(rng.uniform(0.38, 0.62), 3), round(rng.uniform(0.38, 0.55), 3)]})
-                    usos_cambio["reencuadre"] += 1
+                elif o == "etiqueta":
+                    t_clave = _en_texto(e.narracion, e.palabra_clave, e.tiempo.real_inicio, e.tiempo.real_fin)
+                    t_et = round(t_clave if abs(t_clave - punto) < 1.2 and t_clave < fin - 0.8 else punto, 3)
+                    efectos.append({"efecto": "etiqueta", "en": t_et, "texto": e.palabra_clave.upper(),
+                                    "lado": rng.choice(["izquierda", "derecha"]), "giro": round(rng.uniform(-7, 7), 1)})
+                    _sfx(sfx, "pop", t_et, idx, f"Pop con la etiqueta «{e.palabra_clave}»: entra un dato clave")
+                    razon = (razon + "; " if razon else "") + f"Etiqueta con la palabra clave «{e.palabra_clave}»"
+                else:
+                    ultimo_icono = punto
+                    efectos.append({"efecto": "icono_advertencia", "en": punto, "lado": rng.choice(["izquierda", "derecha"])})
+                    razon = (razon + "; " if razon else "") + "Aparece el ícono de advertencia"
             # signos de pregunta cuando la voz le pregunta algo al espectador (no seguidos)
             pregunta = e.intencion == "pregunta_al_espectador" or "?" in e.narracion
             if pregunta and ini - ultima_pregunta >= 10 and dur >= 1.2:
@@ -544,7 +594,7 @@ def construir_edl(carpeta: CarpetaProyecto) -> dict:
             acum += len(tr)
             t1 = a + (b - a) * acum / largo
             subtitulos.append({"inicio": round(t0, 3), "fin": round(max(t1, t0 + 0.2), 3), "texto": tr})
-    reacciones = _reacciones(estilo, escenas, clips, carpeta.ruta, revelacion, rng)
+    reacciones = _reacciones(estilo, escenas, clips, carpeta.ruta, revelacion, rng, direccion.get("reacciones"))
     if reacciones:
         p = carpeta.cargar()
         if not p.requiere_divulgacion_contenido_sintetico:
@@ -576,7 +626,7 @@ def validar(edl: dict, perfil=None) -> list[str]:
         dur = c["fin"] - c["inicio"]
         cambia = any(x["efecto"] in ("reencuadre", "zoom_golpe", "tira_deslizar_a_nivel", "revelar_pixelado",
                                      "rafaga", "circulo_rojo", "flecha", "icono_advertencia", "signos_pregunta",
-                                     "reaccion_presentador") for x in c["efectos"])
+                                     "reaccion_presentador", "etiqueta") for x in c["efectos"])
         if dur > MAX_SIN_CAMBIO and not cambia and not c.get("respiro"):
             avisos.append(f"{c['id']}: {dur:.1f} s sin cambio visual")
     for a, b in zip(clips, clips[1:]):

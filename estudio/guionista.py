@@ -17,7 +17,14 @@ from . import claude_cli
 from .config import escribir_json, leer_json
 from .esquemas import INTENCIONES, EscenasV2, Estilo
 
-PALABRAS_POR_SEGUNDO = 2.9          # medido con la voz del dueño en MiniMax
+def _palabras_por_segundo() -> float:
+    """Ritmo real de la voz (depende de la velocidad configurada), de config/costos.json."""
+    from .config import ConfigCostos
+
+    return float(ConfigCostos.cargar().consumo.get("palabras_por_segundo_voz", 2.9))
+
+
+PALABRAS_POR_SEGUNDO = _palabras_por_segundo()
 
 
 @dataclass
@@ -87,6 +94,8 @@ Duración: unos {encargo.minutos:g} minutos de voz = entre {int(palabras * 0.93)
   nivel (normalmente la que describe su aspecto, justo después de «Nivel N. ...»).
 - En 8 a 14 momentos clave (giros, datos fuertes) pon "texto_pantalla" (2 a 5 palabras en
   MAYÚSCULAS) y "palabra": la palabra de la narración en la que debe aparecer.
+- En cada escena pon "palabra_clave": la palabra MÁS importante de esa narración, copiada tal cual
+  (un sustantivo o número dicho en palabras: «veneno», «colchón», «trescientos»). Sale como etiqueta.
 
 == INTENCIONES (una por escena) ==
 {", ".join(INTENCIONES)}
@@ -97,10 +106,23 @@ Responde SOLO con un objeto JSON, sin texto antes ni después:
   "niveles": [{{"numero": 1, "nombre": "...", "sujeto": "english description of the animal for a card: species, colors, pose, magnified, whole body visible and centered", "villano": false}}, ...],
   "escenas": [{{"seccion": "Gancho", "narracion": "...", "intencion": "gancho", "intensidad": 3,
                "accion": "generar", "tipo": "{ejemplo}", "descripcion": "...", "con_mascota": true,
-               "muestra_villano": false, "revelacion_villano": false, "texto_pantalla": null, "palabra": null}},
+               "muestra_villano": false, "revelacion_villano": false, "texto_pantalla": null, "palabra": null,
+               "palabra_clave": "..."}},
               {{"seccion": "Nivel 1 · ...", "narracion": "Nivel uno. ...", "intencion": "transicion_de_seccion",
                "intensidad": 2, "accion": "reusar", "reusar": "nivel:1"}}, ...]}}
 Antes de responder, cuenta las palabras de todas las narraciones y ajusta al rango pedido."""
+
+
+def _clave_en(clave, narracion: str) -> str | None:
+    """La palabra clave solo si está tal cual en la narración (si no, se descarta)."""
+    import re
+
+    if not clave or not isinstance(clave, str):
+        return None
+    for w in re.findall(r"[\wáéíóúñü]+", narracion):
+        if w.lower() == clave.strip().lower():
+            return w
+    return None
 
 
 def a_escenas(datos: dict, estilo: Estilo, canal: str) -> tuple[dict, dict, str]:
@@ -150,7 +172,8 @@ def a_escenas(datos: dict, estilo: Estilo, canal: str) -> tuple[dict, dict, str]
                         "intencion": intencion, "intensidad": max(1, min(5, int(e.get("intensidad") or 3))),
                         "tiempo": {"estimado_inicio": round(t, 2),
                                    "estimado_duracion": round(max(1.5, len(e["narracion"].split()) / PALABRAS_POR_SEGUNDO), 2)},
-                        "visual": vis, "notas_edicion": notas})
+                        "visual": vis, "notas_edicion": notas,
+                        "palabra_clave": _clave_en(e.get("palabra_clave"), e["narracion"])})
         t += escenas[-1]["tiempo"]["estimado_duracion"]
         if e.get("revelacion_villano") and "villano_revelacion" not in direccion:
             direccion["villano_revelacion"] = i

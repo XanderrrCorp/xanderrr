@@ -27,8 +27,8 @@
     "modelo": "speech-2.6-hd",
     "voz_id": "moss_audio_ebf2f8a2-b928-11f1-8f51-7270dd4a9232",
     "idioma": "Spanish",
-    "velocidad": 1.12,
+    "velocidad": 1.2,
     "variable_clave": "MINIMAX_API_KEY",
-    "_nota": "voz_id es la voz clonada del dueño (no es secreto). La clave va como credencial Bearer del entorno para api.minimax.io o en .env. Medido: ~2,9 palabras por segundo a velocidad 1; a 1,12 (más ágil, pedido del dueño) ~3,25."
+    "_nota": "voz_id es la voz clonada del dueño (no es secreto). La clave va como credencial Bearer del entorno para api.minimax.io o en .env. Medido: ~2,9 palabras por segundo a velocidad 1; a 1,2 (ritmo ágil de YouTube, pedido del dueño) ~3,5."
   }
 }

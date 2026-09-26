@@ -304,6 +304,43 @@ def _poner_icono(img: Image.Image, ef: dict, tt: float) -> Image.Image:
     return img
 
 
+def _etiqueta_img(texto: str) -> Image.Image:
+    """Etiqueta tipo sticker: fondo blanco, borde negro grueso, letra negra en negrita."""
+    f = _fuente(64)
+    d0 = ImageDraw.Draw(Image.new("RGBA", (1, 1)))
+    caja = d0.textbbox((0, 0), texto, font=f)
+    tw, th = caja[2] - caja[0], caja[3] - caja[1]
+    pad_x, pad_y, borde = 34, 20, 7
+    im = Image.new("RGBA", (tw + 2 * pad_x + 16, th + 2 * pad_y + 16), (0, 0, 0, 0))
+    d = ImageDraw.Draw(im)
+    d.rounded_rectangle((10, 12, im.width - 4, im.height - 2), radius=22, fill=(0, 0, 0, 90))      # sombra
+    d.rounded_rectangle((4, 4, im.width - 10, im.height - 10), radius=22, fill=(255, 255, 255, 255),
+                        outline=(20, 16, 12, 255), width=borde)
+    d.text((4 + pad_x - caja[0], 4 + pad_y - caja[1]), texto, font=f, fill=(20, 16, 12, 255))
+    return im
+
+
+def _poner_etiqueta(img: Image.Image, ef: dict, tt: float, fin: float) -> Image.Image:
+    loc = tt - ef["en"]
+    if loc < 0:
+        return img
+    clave = ("etq", ef["texto"])
+    if clave not in _ICONO:
+        _ICONO[clave] = _etiqueta_img(ef["texto"])
+    base = _ICONO[clave]
+    esc = _sale(loc / 0.1) * (1.0 + 0.22 * math.exp(-loc * 9) * math.cos(loc * 17))
+    if tt > fin - 0.2:
+        esc *= max(0.0, (fin - tt) / 0.2)
+    if esc < 0.05:
+        return img
+    im = base.resize((max(1, int(base.width * esc)), max(1, int(base.height * esc))), Image.Resampling.BICUBIC)
+    im = im.rotate(ef.get("giro", 0), expand=True, resample=Image.Resampling.BICUBIC)
+    cx = W * (0.2 if ef.get("lado") == "izquierda" else 0.8)
+    img = img.copy()
+    img.paste(im, (int(cx - im.width / 2), int(H * 0.2 - im.height / 2)), im)
+    return img
+
+
 def _signo(tam: int, color) -> Image.Image:
     f = _fuente(tam)
     d0 = ImageDraw.Draw(Image.new("RGBA", (1, 1)))
@@ -663,6 +700,8 @@ def renderizar(carpeta: CarpetaProyecto, ffmpeg: str, destino: Path | None = Non
                 img = cuadro.copy()
         if "icono_advertencia" in ef and not en_reaccion:
             img = _poner_icono(img, ef["icono_advertencia"], tt)
+        if "etiqueta" in ef and not en_reaccion:
+            img = _poner_etiqueta(img, ef["etiqueta"], tt, c["fin"])
         if "signos_pregunta" in ef and not en_reaccion:
             img = _signos_pregunta(img, ef["signos_pregunta"], tt, c["fin"])
         # --- textos en pantalla

@@ -33,6 +33,8 @@ EFECTOS = (
     "signos_pregunta",
     # corte de ~2 s al presentador reaccionando (la voz sigue)
     "reaccion_presentador",
+    # etiqueta con la palabra clave de la escena, que entra con un pop
+    "etiqueta",
 )
 # "sfx" no es un efecto visual, pero se sugiere en la misma lista (ver 3.1).
 EFECTOS_SUGERIBLES = EFECTOS + ("sfx",)

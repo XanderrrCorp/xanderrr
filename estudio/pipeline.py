@@ -320,7 +320,13 @@ def paso_video(c: CarpetaProyecto, t: Trabajo, permiso: bool = False) -> Path:
         _ubicar_focos(c, t)
     from .poses import copiar_presentador
 
-    copiar_presentador(c.cargar().estilo, c.ruta)
+    if copiar_presentador(c.cargar().estilo, c.ruta):
+        try:
+            from .reacciones import elegir_reacciones
+
+            elegir_reacciones(c.ruta, avisar=t.avisar)
+        except Exception as ex:  # noqa: BLE001 — sin Claude se usan las reglas por intención
+            t.avisar(f"Reacciones por reglas (Claude no respondió: {str(ex)[:120]})")
     t.avisar("Editando: cortes, movimientos, textos y subtítulos…")
     edl = construir_edl(c)
     avisos = validar(edl, _perfil(c))
