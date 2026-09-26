@@ -103,6 +103,8 @@ def test_prompts_salen_del_estilo(tmp_path, monkeypatch, estilo):
     """Punto 6: cambiar estilo.json cambia el prompt sin tocar código."""
     esc = convertir(leer_json(V1), estilo).escenas
     e1 = esc.escenas[0]
+    # una descripción escrita por el Director visual (no un prompt importado tal cual)
+    e1 = e1.model_copy(update={"visual": e1.visual.model_copy(update={"prompt_literal": False})})
     p1 = prompts.prompt_de_escena(e1, estilo, "MASCOTA")
     inicio = estilo.tipo(e1.visual.tipo).plantilla_prompt.split("{")[0]
     assert inicio and p1.startswith(inicio)
