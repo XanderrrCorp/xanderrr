@@ -105,6 +105,16 @@ class PoseCanal(Modelo):
     mira_a: Literal["derecha", "izquierda", "frente"] = "frente"
 
 
+class Presentador(Modelo):
+    nombre_canal: str
+    logo: str = Field(description="Ruta del logo dentro de assets/ del estilo")
+    persona: str = Field(description="Descripción fija de la persona inventada (en inglés)")
+    escenario: str = Field(description="Descripción fija del lugar (en inglés)")
+    poses: list[PoseCanal] = []
+    # YouTube pide marcar «contenido alterado o sintético» cuando aparece una persona realista hecha con IA
+    requiere_divulgacion_contenido_sintetico: bool = True
+
+
 class Estilo(Modelo):
     id: str
     nombre: str
@@ -134,6 +144,8 @@ class Estilo(Modelo):
     comportamiento_montaje: dict[str, Literal["recorte", "recuadro", "pantalla_completa"]] = {}
     # Poses del personaje del canal: se generan UNA vez y todos los videos las reutilizan
     poses_canal: list["PoseCanal"] = []
+    # Presentador realista (persona INVENTADA) para reacciones cortas en giro, revelación y humor
+    presentador: "Presentador | None" = None
 
     @model_validator(mode="before")
     @classmethod

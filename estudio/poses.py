@@ -100,3 +100,84 @@ def copiar_a_proyecto(estilo_id: str, carpeta_proyecto: Path) -> list[str]:
             shutil.copy(f, d)
             copiadas.append(pid)
     return copiadas
+
+
+# ------------------------------------------------------------------ presentador realista
+
+def carpeta_presentador(estilo_id: str) -> Path:
+    return carpeta_estilos() / estilo_id / "assets" / "presentador"
+
+
+def generar_presentador(estilo_id: str, ids: list[str] | None = None, *, permiso: bool = False,
+                        nombre_proveedor: str | None = None, avisar=print, cara: Path | None = None) -> dict:
+    """Poses del presentador (persona inventada), una sola vez. La primera pose fija la
+    cara, la ropa y el lugar; las demás la llevan como referencia para ser la MISMA
+    persona en el mismo sitio. El logo del canal va siempre como referencia."""
+    estilo = cargar_estilo(estilo_id)
+    pr = estilo.presentador
+    if pr is None:
+        raise ValueError(f"el estilo '{estilo_id}' no tiene presentador")
+    plantilla = estilo.plantillas_assets.get("presentador")
+    if not plantilla:
+        raise ValueError("falta plantillas_assets.presentador en el estilo")
+    logo = carpeta_estilos() / estilo_id / "assets" / pr.logo
+    if not logo.exists():
+        raise FileNotFoundError(f"falta el logo del canal ({pr.logo})")
+    config = ConfigCostos.cargar()
+    proveedor = crear_proveedor(config, leer_config("proveedores.json")["imagenes"], nombre_proveedor)
+    destino = carpeta_presentador(estilo_id)
+    destino.mkdir(parents=True, exist_ok=True)
+    libro = LibroCostos(destino, config)
+    ruta_idx = destino / "poses.json"
+    idx = leer_json(ruta_idx) if ruta_idx.exists() else {}
+    salida = {"generadas": [], "ya_estaban": [], "fallidas": {}, "costo_cop": 0.0}
+    primera = pr.poses[0].id if pr.poses else None
+    for pose in pr.poses:
+        if ids and pose.id not in ids:
+            continue
+        refs = [logo]
+        descripcion = pose.descripcion
+        if pose.id == primera and cara is not None:
+            # rehacer la primera pose conservando una cara ya aprobada
+            refs.append(cara)
+            descripcion = "The same face as the man in the second reference image, with the new clothes. " + descripcion
+        if pose.id != primera:
+            base = destino / f"{primera}.png"
+            if not base.exists():
+                salida["fallidas"][pose.id] = f"primero hay que generar y aprobar «{primera}»"
+                continue
+            refs.append(base)
+            descripcion = ("The exact same man as in the second reference image: same face, same beard, same hair, "
+                           "same clothes and the same room, sign and microphone. " + descripcion)
+        prompt = prompts.armar(plantilla, estilo, "", descripcion, persona=pr.persona, escenario=pr.escenario)
+        h = hashlib.sha256(f"{proveedor.modelo}|{prompt}".encode())
+        for r in refs:
+            h.update(hashlib.sha256(r.read_bytes()).digest())
+        huella = h.hexdigest()[:16]
+        archivo = destino / f"{pose.id}.png"
+        if idx.get(pose.id, {}).get("huella") == huella and archivo.exists():
+            salida["ya_estaban"].append(pose.id)
+            continue
+        try:
+            libro.autorizar(proveedor.estimar_usd(prompt, refs), permiso=permiso)
+        except FrenoPresupuesto as ex:
+            salida["fallidas"][pose.id] = str(ex)
+            break
+        avisar(f"Generando al presentador: «{pose.id}»…")
+        try:
+            res = proveedor.generar(prompt, refs)
+        except ErrorProveedor as ex:
+            salida["fallidas"][pose.id] = str(ex)
+            continue
+        libro.registrar(modulo="presentador", proveedor=res.proveedor, modelo=res.modelo,
+                        unidades={**res.uso.unidades(), "referencias": len(refs)}, costo_usd=res.uso.costo_usd,
+                        detalle=pose.id)
+        archivo.write_bytes(res.png)
+        idx[pose.id] = {"archivo": archivo.name, "huella": huella, "prompt": prompt, "uso": pose.uso,
+                        "proveedor": res.proveedor, "modelo": res.modelo, "costo_usd": res.uso.costo_usd,
+                        "generada": datetime.now(timezone.utc).isoformat(timespec="seconds")}
+        escribir_json(ruta_idx, idx)
+        salida["generadas"].append(pose.id)
+        salida["costo_cop"] += config.a_cop(res.uso.costo_usd)
+        avisar(f"  {pose.id}: lista · {formato_cop(config.a_cop(res.uso.costo_usd))}")
+    return salida
