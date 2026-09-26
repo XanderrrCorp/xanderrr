@@ -1,0 +1,35 @@
+{
+  "senalando_susto": {
+    "archivo": "senalando_susto.png",
+    "huella": "602a774de435692e",
+    "prompt": "2D cartoon character, full body, thick clean black outlines, flat soft cel shading, simple and expressive design. The same character as the reference image: a cartoon man with a round smooth white head, big expressive eyes, straw hat, open red plaid short-sleeve shirt over a white t-shirt, khaki cargo pants and green rubber boots. Standing in three-quarter view turned to the right, right arm fully extended pointing with the index finger to the right side of the frame, other hand covering his open mouth, eyes wide open in fear, eyebrows raised, knees slightly bent. Isolated on a flat solid medium-gray background (#808080), no shadow on the floor, no other objects, no text, no letters.",
+    "uso": "Al lado de una foto real: el personaje la señala asustado",
+    "mira_a": "derecha",
+    "proveedor": "together",
+    "modelo": "google/flash-image-2.5",
+    "costo_usd": 0.0403,
+    "generada": "2026-09-26T22:50:04+00:00"
+  },
+  "senalando_asco": {
+    "archivo": "senalando_asco.png",
+    "huella": "249ed0f613fb59c5",
+    "prompt": "2D cartoon character, full body, thick clean black outlines, flat soft cel shading, simple and expressive design. The same character as the reference image: a cartoon man with a round smooth white head, big expressive eyes, straw hat, open red plaid short-sleeve shirt over a white t-shirt, khaki cargo pants and green rubber boots. Standing in three-quarter view turned to the right, right arm extended pointing with the index finger to the right side of the frame, leaning back away from it, disgusted face with tongue out and wrinkled nose, other hand held up as if saying stop. Isolated on a flat solid medium-gray background (#808080), no shadow on the floor, no other objects, no text, no letters.",
+    "uso": "Al lado de algo asqueroso: el personaje lo señala con asco",
+    "mira_a": "derecha",
+    "proveedor": "together",
+    "modelo": "google/flash-image-2.5",
+    "costo_usd": 0.0403,
+    "generada": "2026-09-26T22:50:12+00:00"
+  },
+  "senalando_sorpresa": {
+    "archivo": "senalando_sorpresa.png",
+    "huella": "10307c6fe79c1cf0",
+    "prompt": "2D cartoon character, full body, thick clean black outlines, flat soft cel shading, simple and expressive design. The same character as the reference image: a cartoon man with a round smooth white head, big expressive eyes, straw hat, open red plaid short-sleeve shirt over a white t-shirt, khaki cargo pants and green rubber boots. Standing in three-quarter view turned to the right, right arm extended pointing with the index finger to the right side of the frame, amazed face with big round eyes and open smiling mouth, other hand on his hat. Isolated on a flat solid medium-gray background (#808080), no shadow on the floor, no other objects, no text, no letters.",
+    "uso": "Al lado de un dato o foto sorprendente",
+    "mira_a": "derecha",
+    "proveedor": "together",
+    "modelo": "google/flash-image-2.5",
+    "costo_usd": 0.0403,
+    "generada": "2026-09-26T22:50:21+00:00"
+  }
+}

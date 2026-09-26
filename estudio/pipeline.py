@@ -114,6 +114,9 @@ def _copiar_mascota(c: CarpetaProyecto, estilo_id: str) -> None:
     if mascota.exists():
         (c.ruta / "assets").mkdir(parents=True, exist_ok=True)
         shutil.copy(mascota, c.ruta / "assets" / "mascota_base.png")
+    from .poses import copiar_a_proyecto
+
+    copiar_a_proyecto(estilo_id, c.ruta)     # poses del canal: gratis, ya pagadas una vez
 
 
 def importar_guion(v1: dict | list, canal: str = "animales-peligrosos",

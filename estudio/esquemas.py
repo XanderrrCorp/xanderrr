@@ -29,6 +29,8 @@ EFECTOS = (
     "reencuadre",
     # ráfaga de acercamientos cortos al ritmo de un latido: solo en tension_creciente
     "rafaga",
+    # signos de pregunta que aparecen con rebote cuando la voz le pregunta algo al espectador
+    "signos_pregunta",
 )
 # "sfx" no es un efecto visual, pero se sugiere en la misma lista (ver 3.1).
 EFECTOS_SUGERIBLES = EFECTOS + ("sfx",)
@@ -96,6 +98,13 @@ class Subtitulos(Modelo):
     posicion: str
 
 
+class PoseCanal(Modelo):
+    id: str
+    descripcion: str = Field(description="Qué hace el personaje (en inglés, va al prompt)")
+    uso: str = Field("", description="Cuándo se usa en el video")
+    mira_a: Literal["derecha", "izquierda", "frente"] = "frente"
+
+
 class Estilo(Modelo):
     id: str
     nombre: str
@@ -123,6 +132,8 @@ class Estilo(Modelo):
     tira_niveles: TiraNiveles | None = None
     # Cómo dibuja el motor cada modo de montaje del estilo (sección 6).
     comportamiento_montaje: dict[str, Literal["recorte", "recuadro", "pantalla_completa"]] = {}
+    # Poses del personaje del canal: se generan UNA vez y todos los videos las reutilizan
+    poses_canal: list["PoseCanal"] = []
 
     @model_validator(mode="before")
     @classmethod

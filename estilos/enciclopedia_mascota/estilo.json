@@ -84,7 +84,8 @@
   "_variables_plantilla": "{bloque_estilo} = bloque de estilo; {personaje} = bloqueo literal del personaje del canal; {descripcion} = lo que muestra la escena (visual.prompt); {sujeto} {accion} {lugar} = campos opcionales si el Director visual los separa.",
   "plantillas_assets": {
     "personaje": "2D cartoon character, full body, front view, standing relaxed with arms at his sides, neutral friendly expression, thick clean black outlines, flat soft cel shading, simple and expressive design. {personaje}. {descripcion}. Isolated on a flat solid medium-gray background (#808080), no shadow on the floor, no other objects, no text, no letters.",
-    "_defecto": "Semi-realistic digital illustration, highly detailed, fine black ink outlines, rich painterly shading with visible texture on every plate of the exoskeleton, glossy highlights, natural anatomical proportions, crisp and sharp. {descripcion}. Isolated on a flat solid medium-gray background (#808080), no shadow on the floor, no other objects, no text, no letters. Aspect ratio 16:9."
+    "_defecto": "Semi-realistic digital illustration, highly detailed, fine black ink outlines, rich painterly shading with visible texture on every plate of the exoskeleton, glossy highlights, natural anatomical proportions, crisp and sharp. {descripcion}. Isolated on a flat solid medium-gray background (#808080), no shadow on the floor, no other objects, no text, no letters. Aspect ratio 16:9.",
+    "pose": "2D cartoon character, full body, thick clean black outlines, flat soft cel shading, simple and expressive design. The same character as the reference image: {personaje}. {descripcion}. Isolated on a flat solid medium-gray background (#808080), no shadow on the floor, no other objects, no text, no letters."
   },
   "_fuente": "Plantillas extraídas del proyecto real de alacranes (escenas.json, 215 prompts): inicio y final comunes por tipo; {descripcion} es lo que cambia en cada escena.",
   "tira_niveles": {
@@ -127,5 +128,25 @@
   "comportamiento_montaje": {
     "recorte_sobre_papel": "recorte",
     "recuadro_sobre_papel": "recuadro"
-  }
+  },
+  "poses_canal": [
+    {
+      "id": "senalando_susto",
+      "mira_a": "derecha",
+      "uso": "Al lado de una foto real: el personaje la señala asustado",
+      "descripcion": "Standing in three-quarter view turned to the right, right arm fully extended pointing with the index finger to the right side of the frame, other hand covering his open mouth, eyes wide open in fear, eyebrows raised, knees slightly bent"
+    },
+    {
+      "id": "senalando_asco",
+      "mira_a": "derecha",
+      "uso": "Al lado de algo asqueroso: el personaje lo señala con asco",
+      "descripcion": "Standing in three-quarter view turned to the right, right arm extended pointing with the index finger to the right side of the frame, leaning back away from it, disgusted face with tongue out and wrinkled nose, other hand held up as if saying stop"
+    },
+    {
+      "id": "senalando_sorpresa",
+      "mira_a": "derecha",
+      "uso": "Al lado de un dato o foto sorprendente",
+      "descripcion": "Standing in three-quarter view turned to the right, right arm extended pointing with the index finger to the right side of the frame, amazed face with big round eyes and open smiling mouth, other hand on his hat"
+    }
+  ]
 }

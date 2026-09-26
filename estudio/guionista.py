@@ -64,6 +64,8 @@ Duración: unos {encargo.minutos:g} minutos de voz = entre {int(palabras * 0.93)
   el ritmo NO debe ser parejo. Si una idea es larga, pártela en dos escenas.
 - En la primera escena con imagen propia de cada nivel, di el nombre del animal (no solo «ella» o
   «este»): el video lo encierra en un círculo rojo justo cuando lo nombras.
+- Hazle al espectador 3 a 5 preguntas directas repartidas en el video («¿tú lo sabías?», «¿adivinas
+  cuál es?»), cada una en su propia escena con intención pregunta_al_espectador.
 - Números SIEMPRE en palabras («trescientos millones», «veinte años»).
 - Solo hechos verdaderos. En salud: sin dosis ni medicamentos; orienta a ir al médico o a urgencias.
 - Nombres compuestos separados como se dicen. Nada de siglas deletreadas.

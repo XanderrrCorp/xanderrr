@@ -304,6 +304,44 @@ def _poner_icono(img: Image.Image, ef: dict, tt: float) -> Image.Image:
     return img
 
 
+def _signo(tam: int, color) -> Image.Image:
+    f = _fuente(tam)
+    d0 = ImageDraw.Draw(Image.new("RGBA", (1, 1)))
+    caja = d0.textbbox((0, 0), "?", font=f, stroke_width=max(4, tam // 14))
+    im = Image.new("RGBA", (caja[2] - caja[0] + 20, caja[3] - caja[1] + 20), (0, 0, 0, 0))
+    ImageDraw.Draw(im).text((10 - caja[0], 10 - caja[1]), "?", font=f, fill=color,
+                            stroke_width=max(4, tam // 14), stroke_fill=(20, 16, 12))
+    return im
+
+
+def _signos_pregunta(img: Image.Image, ef: dict, tt: float, fin: float) -> Image.Image:
+    """2 o 3 «?» grandes que aparecen escalonados con rebote, se mecen y se van al final."""
+    r = random.Random(ef.get("semilla", 0))
+    colores = [(255, 214, 51), (255, 255, 255), (255, 94, 94)]
+    lugares = [(0.31, 0.27), (0.69, 0.23), (0.34, 0.56), (0.66, 0.53)]
+    r.shuffle(lugares)
+    img = img.copy()
+    for k in range(ef.get("cantidad", 2)):
+        loc = tt - ef["en"] - 0.14 * k
+        if loc < 0:
+            continue
+        tam = r.randint(210, 290)
+        clave = ("?", tam, k % 3)
+        if clave not in _ICONO:
+            _ICONO[clave] = _signo(tam, colores[k % 3])
+        base = _ICONO[clave]
+        esc = _sale(loc / 0.12) * (1.0 + 0.3 * math.exp(-loc * 8) * math.cos(loc * 15))
+        esc *= 1 - _suave((tt - (fin - 0.25)) / 0.25) if tt > fin - 0.25 else 1
+        if esc < 0.05:
+            continue
+        giro = r.uniform(-16, 16) + 7 * math.sin(loc * 3.2 + k)
+        im = base.resize((max(1, int(base.width * esc)), max(1, int(base.height * esc))), Image.Resampling.BICUBIC)
+        im = im.rotate(giro, expand=True, resample=Image.Resampling.BICUBIC)
+        x, y = lugares[k]
+        img.paste(im, (int(x * W - im.width / 2), int(y * H - im.height / 2 + 6 * math.sin(loc * 2.5 + k))), im)
+    return img
+
+
 # ------------------------------------------------------------------ textos
 
 def _texto_img(texto: str, tam: int, contorno: int, color=(255, 255, 255)) -> Image.Image:
@@ -585,6 +623,8 @@ def renderizar(carpeta: CarpetaProyecto, ffmpeg: str, destino: Path | None = Non
             img = img.copy()           # nunca escribir sobre el cuadro guardado en caché
         if "icono_advertencia" in ef:
             img = _poner_icono(img, ef["icono_advertencia"], tt)
+        if "signos_pregunta" in ef:
+            img = _signos_pregunta(img, ef["signos_pregunta"], tt, c["fin"])
         # --- textos en pantalla
         for t in textos:
             if t["inicio"] <= tt < t["fin"]:

@@ -297,7 +297,7 @@ def construir_edl(carpeta: CarpetaProyecto) -> dict:
     clips, textos, subtitulos, sfx = [], [], [], []
     previo_golpe = previo_rafaga = previo_circulo = False
     nivel_actual = 0
-    ultimo_circulo = ultima_flecha = ultimo_icono = -99.0
+    ultimo_circulo = ultima_flecha = ultimo_icono = ultima_pregunta = -99.0
     secciones_con_circulo: set = set()
     tope_recurso = perfil.uso_maximo_por_recurso
     usos_cambio = {"reencuadre": 0, "icono_advertencia": 0, "flecha": 0}
@@ -457,6 +457,13 @@ def construir_edl(carpeta: CarpetaProyecto) -> dict:
                                     "escala": round(rng.uniform(1.12, 1.18), 3),
                                     "punto_foco": [round(rng.uniform(0.38, 0.62), 3), round(rng.uniform(0.38, 0.55), 3)]})
                     usos_cambio["reencuadre"] += 1
+            # signos de pregunta cuando la voz le pregunta algo al espectador (no seguidos)
+            pregunta = e.intencion == "pregunta_al_espectador" or "?" in e.narracion
+            if pregunta and ini - ultima_pregunta >= 10 and dur >= 1.2:
+                efectos.append({"efecto": "signos_pregunta", "en": round(ini + rng.uniform(0.1, 0.3), 3),
+                                "cantidad": rng.choice([2, 3]), "semilla": rng.randint(0, 10 ** 6)})
+                ultima_pregunta = ini
+                razon = (razon + "; " if razon else "") + "Signos de pregunta: la voz le pregunta al espectador"
             sonido = regla.get("sonido")
             if sonido == "alerta":
                 _sfx(sfx, "alerta", ini + 0.1, idx, "Alerta corta: advertencia")
@@ -518,7 +525,8 @@ def validar(edl: dict, perfil=None) -> list[str]:
     for c in clips:
         dur = c["fin"] - c["inicio"]
         cambia = any(x["efecto"] in ("reencuadre", "zoom_golpe", "tira_deslizar_a_nivel", "revelar_pixelado",
-                                     "rafaga", "circulo_rojo", "flecha", "icono_advertencia") for x in c["efectos"])
+                                     "rafaga", "circulo_rojo", "flecha", "icono_advertencia", "signos_pregunta")
+                     for x in c["efectos"])
         if dur > MAX_SIN_CAMBIO and not cambia and not c.get("respiro"):
             avisos.append(f"{c['id']}: {dur:.1f} s sin cambio visual")
     for a, b in zip(clips, clips[1:]):

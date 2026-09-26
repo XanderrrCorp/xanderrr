@@ -68,3 +68,22 @@ def test_biblioteca_registra_fuente_y_licencia(tmp_path, monkeypatch):
         biblioteca.registrar(b"RIFF1", "otra.wav", "sfx", "pop", "x", "cc0")                  # repetido
     otro = biblioteca.registrar(b"RIFF2", "raro.mp3", "sfx", "pop", "un amigo", "otra", detalle_licencia="me lo pasó")
     assert otro["revisar_licencia"] and not biblioteca.utilizables("sfx", "pop")               # no se usa sin revisar
+
+
+def test_poses_del_canal_se_pagan_una_vez_y_se_copian(tmp_path, monkeypatch):
+    import shutil
+
+    from estudio import estilos, poses
+    from estudio.config import RAIZ
+
+    shutil.copytree(RAIZ / "estilos" / "enciclopedia_mascota", tmp_path / "enciclopedia_mascota")
+    shutil.rmtree(tmp_path / "enciclopedia_mascota" / "assets" / "poses", ignore_errors=True)
+    monkeypatch.setattr(estilos, "carpeta_estilos", lambda: tmp_path)
+    monkeypatch.setattr(poses, "carpeta_estilos", lambda: tmp_path)
+    r1 = poses.generar_poses("enciclopedia_mascota", nombre_proveedor="simulado", avisar=lambda *_: None)
+    assert r1["generadas"] and not r1["fallidas"]
+    r2 = poses.generar_poses("enciclopedia_mascota", nombre_proveedor="simulado", avisar=lambda *_: None)
+    assert not r2["generadas"] and set(r2["ya_estaban"]) == set(r1["generadas"])     # no se vuelve a pagar
+    proyecto = tmp_path / "video"
+    assert set(poses.copiar_a_proyecto("enciclopedia_mascota", proyecto)) == set(r1["generadas"])
+    assert (proyecto / "assets" / "poses" / "senalando_susto.png").exists()
