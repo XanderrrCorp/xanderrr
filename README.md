@@ -59,3 +59,18 @@ y la proyección para todas las imágenes del video. Deja una hoja de contacto e
 - Para ensayar sin gastar: `--proveedor simulado`.
 - El proveedor y el modelo se cambian en `config/proveedores.json`; las tarifas,
   en `config/costos.json`.
+
+## De guion a video completo
+
+```bash
+python -m estudio generar-imagenes --slug X          # todas las escenas (reanudable, con freno)
+python -m estudio generar-imagenes --slug X --niveles  # sujetos de la tira de niveles
+python -m estudio armar-tira --slug X                # tira de niveles (sección 15)
+python -m estudio generar-voz --slug X               # voz MiniMax + tiempos reales por escena
+python -m estudio editar --slug X                    # Director de edición → edl.json + validador
+python -m estudio render --slug X                    # MP4 1080p + SRT en proyectos/X/render/
+python -m estudio render --slug X --desde 40 --hasta 60 --salida tramo.mp4   # tramo de prueba
+```
+
+`direccion.json` (opcional, en la carpeta del proyecto) guarda las decisiones puntuales del director:
+la escena de revelación del villano, las zonas a pixelar antes de ella y los textos en pantalla.
