@@ -118,6 +118,7 @@ TIPOS = {
     ".txt": "text/plain; charset=utf-8", ".md": "text/plain; charset=utf-8",
     ".html": "text/html; charset=utf-8", ".css": "text/css; charset=utf-8",
     ".js": "application/javascript", ".vtt": "text/vtt",
+    ".webmanifest": "application/manifest+json",
     ".srt": "text/plain; charset=utf-8",
 }
 

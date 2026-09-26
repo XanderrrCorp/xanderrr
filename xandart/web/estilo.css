@@ -12,38 +12,38 @@
      sueltos y repintarla obligaba a ir persiguiendolos uno a uno. */
 
   /* superficies, de mas al fondo a mas cerca */
-  --bg: #0a0b0e;
-  --panel: #14161c;
-  --hueco: #191c24;          /* campos, tarjetas y cajas dentro de un panel */
-  --boton: #1e222a;
-  --hover: #1d212a;          /* fila del raton encima */
-  --marcado: #202a44;        /* fila elegida: el fondo lleva el acento dentro */
-  --resalte: #26304d;        /* la palabra que suena en la revision de audio */
-  --lienzo: #0c0e12;         /* detras de una imagen que aun no ha cargado */
+  --bg: #0b0a10;
+  --panel: #14121c;
+  --hueco: #1a1724;          /* campos, tarjetas y cajas dentro de un panel */
+  --boton: #211d2d;
+  --hover: #221e2f;          /* fila del raton encima */
+  --marcado: #2a2150;        /* fila elegida: el fondo lleva el acento dentro */
+  --resalte: #33285e;        /* la palabra que suena en la revision de audio */
+  --lienzo: #0d0b13;         /* detras de una imagen que aun no ha cargado */
   --negro: #000;             /* video y visor: negro de verdad, no casi negro */
   --papel: #f4f2ec;          /* papel: se queda claro en los dos temas */
   --blanco: #fff;
 
   /* lineas */
-  --linea: #252932;
-  --linea-suave: #1e222a;    /* separador dentro de una lista */
+  --linea: #2a2638;
+  --linea-suave: #211d2d;    /* separador dentro de una lista */
 
   /* texto */
-  --texto: #e9ecf2;
-  --tenue: #98a1b0;
-  --tenue2: #5f6878;
-  --sobre-acento: #0a0b0e;   /* texto encima de un fondo de acento o de 'ok' */
+  --texto: #eeebf5;
+  --tenue: #a29cb4;
+  --tenue2: #6c6680;
+  --sobre-acento: #0b0a10;   /* texto encima de un fondo de acento o de 'ok' */
 
   /* significado */
-  --acento: #6c8cff;
-  --acento2: #b16cff;
+  --acento: #8b6cff;
+  --acento2: #ff5f8f;
   --ok: #3ddc97;
   --aviso: #f5c451;
   --malo: #ff5d5d;
 
   /* cajas de estado: fondo, texto y borde de cada una */
-  --info-fondo: #161c2e;
-  --acento-borde: #2c3a63;
+  --info-fondo: #1b1630;
+  --acento-borde: #3e3170;
   --aviso-fondo: #241d10;
   --aviso-texto: #f3d9a4;
   --aviso-borde: #4a3b1a;
@@ -60,17 +60,23 @@
   --volcado-texto: #e2b8be;
 
   /* barras y puntos de estado */
-  --surco: #20242c;
-  --surco-alto: #2a303c;
-  --punto-pendiente: #3a4150;
+  --surco: #231f2f;
+  --surco-alto: #2f2a3e;
+  --punto-pendiente: #5a5470;
   --punto-bloqueado: #262b34;
 
   /* velos de las capas que tapan la pantalla */
-  --velo: rgba(6, 7, 10, .92);
-  --velo-suave: rgba(10, 11, 14, .82);
+  --velo: rgba(7, 6, 11, .92);
+  --velo-suave: rgba(11, 10, 16, .82);
   --sombra: 0 14px 40px rgba(0, 0, 0, .6);
 
-  --alto: 46px;            /* alto de la cabecera */
+  /* XANDART: el degradado de la marca (logo, boton principal, detalles) */
+  --degradado: linear-gradient(135deg, #8b6cff 0%, #c56cf0 50%, #ff5f8f 100%);
+  --brillo-acento: rgba(139, 108, 255, .28);
+  --halo: radial-gradient(1200px 520px at 15% -10%, rgba(139, 108, 255, .16), transparent 60%),
+          radial-gradient(900px 480px at 100% 0%, rgba(255, 95, 143, .10), transparent 55%);
+
+  --alto: 52px;            /* alto de la cabecera */
   --lateral: 360px;
   --toque: 40px;           /* lado minimo de un mando que se pulsa con el dedo */
   --margen-panel: 20px;    /* respiro lateral del panel; se estrecha en movil */
@@ -83,7 +89,8 @@ html, body { height: 100%; }
 @supports (height: 100dvh) { html, body { height: 100dvh; } }
 body {
   margin: 0; background: var(--bg); color: var(--texto);
-  font: 14px/1.5 ui-sans-serif, system-ui, "Segoe UI", sans-serif;
+  font: 14px/1.5 "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
   overflow: hidden;                       /* el scroll vive dentro de #panel */
   /* Columna: cabecera, pestanas y cuerpo. Antes el cuerpo era
      calc(100% - alto - 38px), con el alto de las pestanas escrito a mano: en
@@ -2433,3 +2440,143 @@ button.avisa:hover:not(:disabled) { border-color: var(--aviso); }
 }
 .previa-feedback .aportadas { margin: 6px 0 8px; }
 .previa-feedback .zona-suelta { padding: 9px 11px; font-size: 12px; }
+
+
+/* ================================================================== XANDART
+   La capa de marca y el pulido para PC y celular. Va al final a proposito:
+   pisa lo de arriba sin tocarlo, y todo el color sigue saliendo de :root. */
+
+body { background: var(--halo), var(--bg); background-attachment: fixed; }
+
+/* ---- la cabecera: logo + nombre, en los dos tamaños */
+#cabecera {
+  background: color-mix(in srgb, var(--panel) 82%, transparent);
+  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  padding: 0 16px; padding-top: env(safe-area-inset-top, 0px);
+  height: calc(var(--alto) + env(safe-area-inset-top, 0px));
+}
+#cabecera h1.marca {
+  display: flex; align-items: center; gap: 9px;
+  font-size: 18px; letter-spacing: -.01em; text-transform: none; color: var(--texto);
+}
+.marca-logo { width: 30px; height: 30px; flex: 0 0 auto; border-radius: 9px; box-shadow: 0 4px 14px var(--brillo-acento); }
+.marca-nombre {
+  font-weight: 800; background: var(--degradado);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+/* en el celular el logo SE QUEDA (antes la cabecera se quedaba sin marca) */
+@media (max-width: 620px) {
+  #cabecera h1.marca { display: flex; font-size: 17px; }
+  #cabecera { padding-left: 12px; padding-right: 12px; }
+}
+#btn-config { margin-left: auto; }
+#btn-config { width: 34px; height: 34px; padding: 0; border-radius: 10px; font-size: 16px; }
+
+/* ---- botones */
+button { border-radius: 9px; transition: border-color .15s, background .15s, transform .08s; }
+button:active:not(:disabled) { transform: scale(.98); }
+button.primario {
+  background: var(--degradado); border-color: transparent; color: var(--blanco);
+  box-shadow: 0 6px 20px var(--brillo-acento);
+}
+button.primario:hover:not(:disabled) { border-color: transparent; filter: brightness(1.08); }
+input:focus, select:focus, textarea:focus {
+  border-color: var(--acento); box-shadow: 0 0 0 3px var(--brillo-acento);
+}
+
+/* ---- titulos de pantalla */
+.light-cab h2 { font-size: 22px; letter-spacing: -.01em; }
+
+/* ---- la portada: que diga en diez segundos que es esto */
+.portada-xandart {
+  position: relative; overflow: hidden;
+  margin: 4px 0 26px; padding: 28px 28px 24px;
+  border: 1px solid var(--linea); border-radius: 18px;
+  background: linear-gradient(160deg, var(--hueco), var(--panel));
+}
+.portada-xandart::before {
+  content: ""; position: absolute; inset: -40% -10% auto auto; width: 60%; height: 140%;
+  background: var(--degradado); opacity: .10; filter: blur(60px); pointer-events: none;
+}
+.portada-xandart h2 {
+  font-size: clamp(24px, 3.4vw, 36px); line-height: 1.12; letter-spacing: -.02em;
+  max-width: 20ch;
+}
+.portada-xandart h2 em {
+  font-style: normal; background: var(--degradado);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.portada-xandart p { color: var(--tenue); max-width: 60ch; margin: 10px 0 18px; font-size: 15px; }
+.portada-xandart .pasos-portada {
+  display: grid; gap: 10px; grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin: 0; padding: 0; list-style: none; counter-reset: paso;
+}
+.portada-xandart .pasos-portada li {
+  counter-increment: paso; padding: 12px 14px; border-radius: 12px;
+  background: color-mix(in srgb, var(--bg) 55%, transparent); border: 1px solid var(--linea);
+  font-size: 13px; color: var(--tenue);
+}
+.portada-xandart .pasos-portada li b { display: block; color: var(--texto); font-size: 14px; margin-bottom: 2px; }
+.portada-xandart .pasos-portada li::before {
+  content: counter(paso); display: inline-grid; place-items: center;
+  width: 22px; height: 22px; margin-bottom: 8px; border-radius: 7px;
+  background: var(--degradado); color: var(--blanco); font-size: 12px; font-weight: 700;
+}
+.portada-xandart .acciones { margin-top: 18px; display: flex; gap: 10px; flex-wrap: wrap; }
+.portada-xandart .acciones button { padding: 10px 18px; font-size: 15px; }
+@media (max-width: 900px) {
+  .portada-xandart .pasos-portada { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 620px) {
+  .portada-xandart { padding: 20px 16px 18px; border-radius: 14px; margin-bottom: 18px; }
+  .portada-xandart p { font-size: 14px; }
+  .portada-xandart .acciones button { flex: 1 1 100%; }
+}
+
+/* ---- tarjetas de la galeria */
+.galeria-estilos .ficha-estilo {
+  border-radius: 14px; transition: border-color .15s, transform .15s, box-shadow .15s;
+}
+.galeria-estilos .ficha-estilo:hover {
+  transform: translateY(-2px); box-shadow: 0 10px 28px var(--brillo-acento);
+}
+.galeria-estilos .ficha-estilo.nuevo .mas {
+  font-size: 44px; font-weight: 300; background: var(--degradado);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+@media (max-width: 620px) {
+  /* dos por fila en el celular: una sola tarjeta ocupaba la pantalla entera */
+  .galeria-estilos { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+}
+
+/* ---- la barra de pasos
+   En el celular sigue abajo de borde a borde (el pulgar llega). En PC deja de
+   ser una barra de movil estirada a 1440 px: pastilla centrada y flotante. */
+.nav-light {
+  background: color-mix(in srgb, var(--panel) 88%, transparent);
+  backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+}
+.nav-light .parada.activa { color: var(--texto); }
+.nav-light .parada:disabled { color: var(--tenue2); opacity: 1; }
+.nav-light .parada.activa svg { color: var(--acento); }
+.nav-light .parada.activa .etiqueta { font-weight: 700; }
+@media (min-width: 1024px) {
+  /* las barras que se anclan ENCIMA de la de pasos leen este alto */
+  :root { --alto-nav: 72px; }
+  .nav-light {
+    bottom: 12px;
+    width: min(720px, calc(100% - 32px)); margin: auto auto 12px;
+    border: 1px solid var(--linea); border-radius: 16px;
+    box-shadow: var(--sombra); padding-bottom: 0;
+  }
+  .nav-light .parada { flex-direction: row; justify-content: center; gap: 8px; min-height: 44px; padding: 6px; border-radius: 12px; }
+  .nav-light .parada .etiqueta { font-size: 13px; }
+  .nav-light .parada svg { width: 19px; height: 19px; }
+  .nav-light .parada.activa { background: var(--marcado); }
+  .nav-light .parada:hover:not(:disabled):not(.activa) { background: var(--hover); }
+}
+
+/* ---- celular: los campos a 16 px (con menos, el iPhone hace zoom al tocar) */
+@media (pointer: coarse) {
+  input, select, textarea { font-size: 16px; }
+}

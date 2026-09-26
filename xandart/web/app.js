@@ -5250,9 +5250,29 @@ function irALight(vista, extra) {
 
 /* ------------------------------------------------------------- la galería */
 
+/* LA PORTADA DE XANDART. Sale mientras no haya ningún vídeo: dice en diez
+   segundos qué es esto y cuál es el primer paso. Con vídeos ya hechos estorba,
+   y se quita sola. */
+function portadaXandart(hayEstilos) {
+  return h('section', { clase: 'portada-xandart' },
+    h('h2', {}, 'De una idea a un video que ', h('em', {}, 'engancha')),
+    h('p', {}, 'Escribe el tema o pega tu guion. Xandart arma un gancho fuerte, '
+      + 'la voz, las imágenes y el montaje con ritmo, y te dice lo que cuesta '
+      + 'antes de gastar un peso.'),
+    h('ol', { clase: 'pasos-portada' },
+      h('li', {}, h('b', {}, 'Estilo'), 'cómo se ve y cómo suena tu canal'),
+      h('li', {}, h('b', {}, 'Encargo'), 'el tema, el ángulo y la duración'),
+      h('li', {}, h('b', {}, 'Guion y voz'), 'gancho en los primeros segundos'),
+      h('li', {}, h('b', {}, 'Imágenes y video'), 'montaje con ritmo que retiene')),
+    hayEstilos ? null : h('div', { clase: 'acciones' },
+      h('button', { clase: 'primario', onclick: () => irALight('crear') },
+        'Crear mi primer estilo')));
+}
+
 function vistaGaleriaLight() {
   const caja = h('div', {});
   const fichas = presetsLight();
+  if (!videosLight().length) caja.appendChild(portadaXandart(fichas.length > 0));
   caja.appendChild(h('div', { clase: 'light-cab' },
     h('h2', {}, 'Tus estilos'),
     h('span', { clase: 'meta' }, fichas.length
@@ -10408,7 +10428,7 @@ const INICIO = { abierta: false, paso: 0, arrancando: false, accesoFallido: '' }
    `estadoConfig()` (las claves y las cuentas del CLI, que son las mismas que
    ve Configuración). */
 const TARJETAS_INICIO = [
-  { id: 'bienvenida', titulo: 'Bienvenido a AS Video Studio', pinta: tarjetaBienvenidaInicio },
+  { id: 'bienvenida', titulo: 'Bienvenido a Xandart', pinta: tarjetaBienvenidaInicio },
   { id: 'claude', titulo: '1 · Tu cuenta de Claude', pinta: tarjetaClaudeInicio },
   { id: 'openai', titulo: '2 · La clave de OpenAI (imágenes)', pinta: tarjetaOpenAIInicio },
   { id: 'cartesia', titulo: '3 · La clave de Cartesia (voz)', pinta: tarjetaCartesiaInicio },
@@ -10520,9 +10540,9 @@ function campoClaveInicio(placeholder, guardar) {
 function tarjetaBienvenidaInicio() {
   return [
     h('div', { clase: 'pista' },
-      'Esto convierte lo que escribas —unas notas, un artículo, tu propio guion— '
-      + 'en un vídeo de animación narrada, en varios pasos con revisión entre '
-      + 'ellos. Para que pueda hacerlo necesita hablar con cinco servicios, y '
+      'Xandart convierte lo que escribas —unas notas, un artículo, tu propio guion— '
+      + 'en un vídeo de animación narrada, pensado para enganchar desde el primer '
+      + 'segundo, en varios pasos con revisión entre ellos. Para que pueda hacerlo necesita hablar con cinco servicios, y '
       + 'cada uno pide su llave. Esta guía te lleva a por ellas una a una, con el '
       + 'enlace de cada sitio.'),
     h('ol', { clase: 'inicio-pasos' },
@@ -10534,7 +10554,7 @@ function tarjetaBienvenidaInicio() {
         + 'pueden dejar para luego; las otras tres hacen falta.')),
     h('div', { clase: 'caja-info' },
       'Abajo a la derecha hay una burbuja: es el asistente. Sabe cómo funciona '
-      + 'todo esto y ve lo que está pasando en tu Estudio, así que cuando algo '
+      + 'todo esto y ve lo que está pasando en Xandart, así que cuando algo '
       + 'falle o no sepas seguir, pregúntale. Contesta con tu propia cuenta de '
       + 'Claude, que es lo primero que vamos a dejar puesto.'),
     h('div', { clase: 'meta' },
