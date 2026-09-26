@@ -30,9 +30,13 @@ def _proyecto(slug: str) -> CarpetaProyecto:
 
 # ------------------------------------------------------------------ página
 
+# la página nunca se guarda en la memoria del navegador: tras actualizar Xandart se ve lo nuevo
+SIN_CACHE = {"Cache-Control": "no-store, max-age=0"}
+
+
 @app.get("/", response_class=HTMLResponse)
 def portada():
-    return (WEB / "index.html").read_text(encoding="utf-8")
+    return HTMLResponse((WEB / "index.html").read_text(encoding="utf-8"), headers=SIN_CACHE)
 
 
 @app.get("/web/{nombre}")
@@ -40,7 +44,7 @@ def recurso(nombre: str):
     ruta = (WEB / nombre).resolve()
     if ruta.parent != WEB.resolve() or not ruta.exists():
         raise HTTPException(404)
-    return FileResponse(ruta)
+    return FileResponse(ruta, headers=SIN_CACHE)
 
 
 @app.get("/archivos/{slug}/{ruta:path}")
