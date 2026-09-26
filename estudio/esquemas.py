@@ -1,0 +1,396 @@
+"""Contratos de datos del Estudio (sección 3 y 12 de la especificación).
+
+Todo lo que depende del estilo (tipos de escena, modos de montaje, plantillas)
+se valida contra el `estilo.json` elegido, nunca contra listas fijas del código.
+Lo que sí es fijo por especificación: intenciones (4.1) y catálogo de efectos (6).
+"""
+from __future__ import annotations
+
+from typing import Any, Literal
+
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+
+INTENCIONES = (
+    "gancho", "pregunta_al_espectador", "giro", "revelacion", "dato_impactante",
+    "explicacion", "comparacion", "tension_creciente", "amenaza", "alivio", "humor",
+    "consejo_practico", "advertencia", "llamado_accion", "transicion_de_seccion", "cierre",
+)
+Intencion = Literal[INTENCIONES]  # type: ignore[valid-type]
+
+EFECTOS = (
+    "zoom_lento", "alejamiento_lento", "paneo_lento", "zoom_golpe", "corte", "corte_seco",
+    "fundido_corto", "destello", "destello_rojo", "pixelar", "revelar_pixelado",
+    "entrada_rebote", "temblor_leve", "tinte_rojo", "oscurecer_fondo",
+    "tira_deslizar_a_nivel", "lado_a_lado", "flecha", "circulo_rojo", "icono_advertencia",
+)
+# "sfx" no es un efecto visual, pero se sugiere en la misma lista (ver 3.1).
+EFECTOS_SUGERIBLES = EFECTOS + ("sfx",)
+
+
+class Modelo(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+
+# ---------------------------------------------------------------- estilo.json
+
+class TipoEscena(Modelo):
+    id: str
+    descripcion: str = ""
+    plantilla_prompt: str
+    quitar_fondo: bool
+    modo_montaje: str
+
+
+class FondoMontaje(Modelo):
+    tipo: Literal["color", "textura"]
+    valor: str
+
+
+class Subtitulos(Modelo):
+    estilo: str
+    posicion: str
+
+
+class Estilo(Modelo):
+    id: str
+    nombre: str
+    descripcion: str
+    miniatura: str | None = None
+    con_personaje: bool | Literal["opcional"]
+    bloque_estilo: str
+    personaje_por_defecto: str | None = None
+    tipos_de_escena: list[TipoEscena] = Field(min_length=1)
+    mezcla_recomendada: dict[str, float]
+    fondo_montaje: FondoMontaje
+    modos_de_montaje_permitidos: list[str] = Field(min_length=1)
+    gramatica_edicion: str
+    perfil_edicion: str
+    movimiento_maximo: float = Field(0.05, gt=0, le=0.05)
+    subtitulos: Subtitulos
+    musica_por_defecto: list[str] = []
+    costo_relativo: float = Field(1.0, gt=0)
+    # Para el estimador (sección 2): proporción de escenas que llevan imagen nueva.
+    proporcion_imagenes_unicas: float = Field(0.6, gt=0, le=1)
+    proporcion_minima_unicas: float = Field(0.4, gt=0, le=1)
+    imagenes_fijas_por_video: int = Field(0, ge=0)
+
+    @property
+    def ids_tipos(self) -> set[str]:
+        return {t.id for t in self.tipos_de_escena}
+
+    def tipo(self, id_tipo: str) -> TipoEscena | None:
+        return next((t for t in self.tipos_de_escena if t.id == id_tipo), None)
+
+    @model_validator(mode="after")
+    def _coherencia(self) -> "Estilo":
+        ids = [t.id for t in self.tipos_de_escena]
+        if len(ids) != len(set(ids)):
+            raise ValueError("tipos_de_escena tiene ids repetidos")
+        for t in self.tipos_de_escena:
+            if t.modo_montaje not in self.modos_de_montaje_permitidos:
+                raise ValueError(f"tipo '{t.id}' usa modo '{t.modo_montaje}' no permitido por el estilo")
+            if "no text" not in t.plantilla_prompt.lower():
+                raise ValueError(f"la plantilla de '{t.id}' debe pedir 'no text' (regla 11)")
+        desconocidos = set(self.mezcla_recomendada) - set(ids)
+        if desconocidos:
+            raise ValueError(f"mezcla_recomendada usa tipos inexistentes: {sorted(desconocidos)}")
+        suma = sum(self.mezcla_recomendada.values())
+        if abs(suma - 1.0) > 0.01:
+            raise ValueError(f"mezcla_recomendada debe sumar 1 (suma {suma:.2f})")
+        if self.proporcion_minima_unicas > self.proporcion_imagenes_unicas:
+            raise ValueError("proporcion_minima_unicas no puede superar proporcion_imagenes_unicas")
+        if self.con_personaje is True and not self.personaje_por_defecto:
+            raise ValueError("un estilo con personaje necesita personaje_por_defecto")
+        return self
+
+
+# -------------------------------------------------------- perfil_edicion.json
+
+class PerfilEdicion(Modelo):
+    fuente: list[str] = []
+    segundos_promedio_por_imagen: float = Field(gt=0)
+    interrupcion_de_patron_cada_seg: float = Field(gt=0)
+    efectos_por_minuto: float = Field(ge=0)
+    sfx_por_minuto: float = Field(ge=0)
+    cambios_de_musica: str
+    texto_en_pantalla_por_minuto: float = Field(ge=0)
+    densidad_primeros_30s: Literal["baja", "media", "alta"]
+    notas: str = ""
+
+
+# ---------------------------------------------------------- perfil_canal.json
+
+class Personaje(Modelo):
+    bloqueo: str = Field(description="Descripción literal que se copia igual en cada prompt")
+    imagen_referencia: str | None = None
+
+
+class PerfilCanal(Modelo):
+    id: str
+    nombre: str
+    idioma: str = "es"
+    voz: dict[str, Any] = {}
+    estilo: str
+    personaje: Personaje | None = None
+    paleta: list[str] = []
+    tipografias: list[str] = []
+    efectos_preferidos: list[str] = []
+    efectos_prohibidos: list[str] = []
+    duracion_objetivo_seg: tuple[float, float] = (480, 660)
+    perfil_edicion: str | None = None
+    musica_por_animo: dict[str, list[str]] = {}
+
+    @field_validator("efectos_preferidos", "efectos_prohibidos")
+    @classmethod
+    def _efectos_validos(cls, v: list[str]) -> list[str]:
+        malos = [e for e in v if e not in EFECTOS]
+        if malos:
+            raise ValueError(f"efectos fuera del catálogo: {malos}")
+        return v
+
+
+# ------------------------------------------------------- escenas.json (v2)
+
+class Tiempo(Modelo):
+    estimado_inicio: float | None = Field(None, ge=0)
+    estimado_duracion: float | None = Field(None, gt=0)
+    real_inicio: float | None = Field(None, ge=0)
+    real_fin: float | None = Field(None, ge=0)
+    alineacion_confiable: bool | None = None
+
+    @model_validator(mode="after")
+    def _orden(self) -> "Tiempo":
+        if self.real_inicio is not None and self.real_fin is not None and self.real_fin <= self.real_inicio:
+            raise ValueError("real_fin debe ser mayor que real_inicio")
+        return self
+
+
+class Visual(Modelo):
+    accion: Literal["generar", "reusar", "componer"]
+    tipo: str
+    prompt: str | None = None
+    archivo: str | None = None
+    quitar_fondo: bool = False
+    referencias: list[str] = []
+    reusar_de: int | str | None = None
+
+    @model_validator(mode="after")
+    def _reuso(self) -> "Visual":
+        if self.accion == "reusar" and self.reusar_de is None:
+            raise ValueError("accion 'reusar' requiere reusar_de")
+        if self.accion == "generar" and not self.prompt:
+            raise ValueError("accion 'generar' requiere prompt")
+        return self
+
+
+class EfectoSugerido(BaseModel):
+    model_config = ConfigDict(extra="allow")  # parámetros propios de cada efecto
+    efecto: str
+
+    @field_validator("efecto")
+    @classmethod
+    def _en_catalogo(cls, v: str) -> str:
+        if v not in EFECTOS_SUGERIBLES:
+            raise ValueError(f"efecto '{v}' no está en el catálogo")
+        return v
+
+
+class Escena(Modelo):
+    id: int
+    seccion: str
+    narracion: str = Field(min_length=1)
+    intencion: Intencion
+    intensidad: int = Field(ge=1, le=5)
+    tiempo: Tiempo = Tiempo()
+    visual: Visual
+    efectos_sugeridos: list[EfectoSugerido] = []
+    revision_humana: list[str] = Field(default=[], description="Motivos para revisión humana (p. ej. dato médico)")
+
+
+class AssetDef(Modelo):
+    id: str
+    tipo: str
+    prompt: str | None = None
+    archivo: str
+    quitar_fondo: bool = False
+
+
+class EscenasV2(Modelo):
+    version: Literal[2] = 2
+    video: str
+    canal: str
+    estilo: str | None = None
+    idioma: str = "es"
+    relacion_aspecto: str = "16:9"
+    assets: list[AssetDef] = []
+    escenas: list[Escena] = Field(min_length=1)
+
+    @model_validator(mode="after")
+    def _referencias(self) -> "EscenasV2":
+        ids = [e.id for e in self.escenas]
+        if len(ids) != len(set(ids)):
+            raise ValueError("escenas con id repetido")
+        ids_assets = {a.id for a in self.assets}
+        conjunto = set(ids)
+        for e in self.escenas:
+            r = e.visual.reusar_de
+            if r is not None and r not in conjunto and r not in ids_assets:
+                raise ValueError(f"escena {e.id}: reusar_de={r!r} no existe")
+            for ref in e.visual.referencias:
+                if ref not in ids_assets:
+                    raise ValueError(f"escena {e.id}: referencia '{ref}' no es un asset declarado")
+        return self
+
+    def errores_contra_estilo(self, estilo: Estilo) -> list[str]:
+        """Reglas 12.5: solo tipos de escena del estilo elegido."""
+        errores = []
+        for e in self.escenas:
+            if e.visual.tipo not in estilo.ids_tipos:
+                errores.append(f"escena {e.id}: tipo '{e.visual.tipo}' no existe en el estilo '{estilo.id}'")
+        return errores
+
+
+# ------------------------------------------------------------- edl.json
+
+class Movimiento(Modelo):
+    tipo: str
+    de: float = 1.0
+    a: float = 1.0
+
+    @field_validator("tipo")
+    @classmethod
+    def _catalogo(cls, v: str) -> str:
+        if v not in EFECTOS:
+            raise ValueError(f"movimiento '{v}' no está en el catálogo")
+        return v
+
+
+class Tramo(Modelo):
+    inicio: float = Field(ge=0)
+    fin: float = Field(gt=0)
+    razon: str | None = None
+
+    @model_validator(mode="after")
+    def _orden(self):
+        if self.fin <= self.inicio:
+            raise ValueError(f"fin ({self.fin}) debe ser mayor que inicio ({self.inicio})")
+        return self
+
+
+class ClipFondo(Tramo):
+    id: str
+    tipo: Literal["color", "textura"]
+    archivo: str | None = None
+    valor: str | None = None
+
+
+class ClipEscena(Tramo):
+    id: str
+    escena: int
+    archivo: str
+    modo: str
+    movimiento: Movimiento | None = None
+    transicion_entrada: str = "corte"
+    efectos: list[EfectoSugerido] = []
+    reuso_intencional: bool = False
+
+
+class Elemento(Tramo):
+    id: str
+    tipo: str
+    valor: str
+    posicion: str
+
+
+class Texto(Tramo):
+    id: str
+    texto: str
+    estilo: str
+    posicion: str = "centro"
+
+
+class Subtitulo(Tramo):
+    texto: str
+
+
+class PistaVoz(Modelo):
+    inicio: float = Field(0, ge=0)
+    archivo: str
+
+
+class ClipMusica(Tramo):
+    id: str
+    archivo: str
+    volumen: float = Field(0.18, ge=0, le=1)
+    ducking: bool = True
+
+
+class ClipSfx(Modelo):
+    id: str
+    inicio: float = Field(ge=0)
+    archivo: str
+    volumen: float = Field(0.7, ge=0, le=1)
+    razon: str | None = None
+
+
+class Pistas(Modelo):
+    fondo: list[ClipFondo] = []
+    escenas: list[ClipEscena] = []
+    elementos: list[Elemento] = []
+    textos: list[Texto] = []
+    subtitulos: list[Subtitulo] = []
+    voz: list[PistaVoz] = []
+    musica: list[ClipMusica] = []
+    sfx: list[ClipSfx] = []
+
+
+class CambioHistorial(Modelo):
+    version: int
+    autor: str
+    cambio: str
+    razon: str
+
+
+class EDL(Modelo):
+    version: int = Field(ge=1)
+    duracion_total: float = Field(gt=0)
+    pistas: Pistas
+    historial: list[CambioHistorial] = []
+
+    @model_validator(mode="after")
+    def _ids_estables(self) -> "EDL":
+        vistos: set[str] = set()
+        for nombre in ("fondo", "escenas", "elementos", "textos", "musica", "sfx"):
+            for item in getattr(self.pistas, nombre):
+                if item.id in vistos:
+                    raise ValueError(f"id repetido en la EDL: {item.id}")
+                vistos.add(item.id)
+        return self
+
+
+# ---------------------------------------------------------- proyecto.json
+
+PASOS = (
+    "estratega", "guionista", "director_visual", "assets", "voz", "alineador",
+    "director_edicion", "validador", "render_preview", "revisor", "editor", "export_final",
+)
+EstadoPaso = Literal["pendiente", "en_curso", "completo", "error"]
+
+
+class Paso(Modelo):
+    estado: EstadoPaso = "pendiente"
+    salida: list[str] = []
+    actualizado: str | None = None
+    error: str | None = None
+
+
+class Proyecto(Modelo):
+    slug: str
+    titulo: str
+    canal: str
+    estilo: str
+    duracion_objetivo_seg: float = Field(gt=0)
+    creado: str
+    pasos: dict[str, Paso] = Field(default_factory=lambda: {p: Paso() for p in PASOS})
+    permiso_superar_maximo: bool = False
+    notas: list[str] = []

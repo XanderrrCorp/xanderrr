@@ -1,0 +1,16 @@
+{
+  "_nota": "Fixture SINTÉTICO con la forma supuesta de v1. No es el proyecto real de alacranes.",
+  "video": "Del alacrán que solo arde al que te manda directo a urgencias",
+  "canal": "animales-peligrosos",
+  "assets": [
+    { "id": "mascota_base", "tipo": "personaje", "prompt": "mascota", "archivo": "assets/mascota_base.png", "quitar_fondo": true }
+  ],
+  "escenas": [
+    { "id": 1, "seccion": "Gancho", "narracion": "¿Sabías que no todos los alacranes son iguales?", "tipo": "animal_fondo_gris", "prompt": "a scorpion", "duracion": 3.0, "efectos": "zoom lento" },
+    { "id": 2, "seccion": "Gancho", "narracion": "Pero aquí viene el primer giro:", "tipo": "diagrama_fondo_blanco", "prompt": "scorpion tail detail", "duracion": 2.5, "efectos": "corte seco, zoom golpe, sonido de golpe" },
+    { "id": 3, "seccion": "Gancho", "narracion": "Algunos tienen un veneno mortal.", "tipo": "amenaza_cinematografica", "prompt": "dramatic scorpion", "duracion": 3.2, "efectos": "destello rojo + brillo mágico" },
+    { "id": 4, "seccion": "Nivel 1", "narracion": "El primer nivel mide 14 centímetros.", "tipo": "mascota_fondo_gris", "prompt": "mascot pointing", "referencias": ["mascota_base"], "duracion": 3.5, "efectos": "tira de niveles" },
+    { "id": 5, "seccion": "Nivel 1", "narracion": "Su picadura arde, pero pasa rápido.", "tipo": "animal_fondo_gris", "reusar_de": 1, "duracion": 3.1 },
+    { "id": 6, "seccion": "Cierre", "narracion": "Si te pica uno de estos, ve a urgencias.", "tipo": "escena_cartoon_completa", "prompt": "mascot at hospital door", "duracion": 3.4, "efectos": "fundido" }
+  ]
+}

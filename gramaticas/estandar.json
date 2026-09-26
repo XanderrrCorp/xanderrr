@@ -1,0 +1,23 @@
+{
+  "id": "estandar",
+  "movimiento_maximo": 0.05,
+  "zoom_golpe": { "min": 0.04, "max": 0.08, "permitir_consecutivo": false },
+  "reglas": {
+    "gancho":                 { "movimiento": "zoom_lento",        "transicion": "corte",         "sonido": "subida_tension", "otros": ["ritmo_rapido"] },
+    "pregunta_al_espectador": { "movimiento": null,                "transicion": "corte",         "sonido": "pausa_musica",   "otros": ["mascota_senalando"] },
+    "giro":                   { "movimiento": "zoom_golpe",        "transicion": "corte_seco",    "sonido": "golpe_grave",    "otros": ["texto_corto"] },
+    "revelacion":             { "movimiento": "zoom_lento",        "transicion": "destello",      "sonido": "golpe_grave",    "otros": ["silencio_breve", "revelar_pixelado"] },
+    "dato_impactante":        { "movimiento": "zoom_lento",        "transicion": "corte",         "sonido": "pop",            "otros": ["dato_grande"] },
+    "explicacion":            { "movimiento": "paneo_lento",       "transicion": "corte",         "sonido": null,             "otros": ["flecha"] },
+    "comparacion":            { "movimiento": null,                "transicion": "corte",         "sonido": null,             "otros": ["lado_a_lado"] },
+    "tension_creciente":      { "movimiento": "zoom_lento",        "transicion": "corte",         "sonido": "latido",         "otros": ["oscurecer_fondo"] },
+    "amenaza":                { "movimiento": "zoom_lento",        "transicion": "corte",         "sonido": "zumbido",        "otros": ["icono_advertencia", "tinte_rojo"] },
+    "alivio":                 { "movimiento": "alejamiento_lento", "transicion": "fundido_corto", "sonido": "musica_relaja", "otros": ["mascota_aliviada"] },
+    "humor":                  { "movimiento": "entrada_rebote",    "transicion": "corte",         "sonido": "comico",         "otros": ["mascota_reaccion"] },
+    "consejo_practico":       { "movimiento": null,                "transicion": "corte",         "sonido": "pop",            "otros": ["texto_consejo"] },
+    "advertencia":            { "movimiento": "zoom_golpe",        "transicion": "corte",         "sonido": "alerta",         "otros": ["icono_advertencia"] },
+    "llamado_accion":         { "movimiento": null,                "transicion": "corte",         "sonido": null,             "otros": ["mascota_pulgar"] },
+    "transicion_de_seccion":  { "movimiento": null,                "transicion": "barrido",       "sonido": "cambio_musica",  "otros": ["tira_deslizar_a_nivel"] },
+    "cierre":                 { "movimiento": "alejamiento_lento", "transicion": "fundido",       "sonido": "musica_final",   "otros": ["resumen_visual"] }
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "fuente": [],
+  "segundos_promedio_por_imagen": 3.2,
+  "interrupcion_de_patron_cada_seg": 7,
+  "efectos_por_minuto": 9,
+  "sfx_por_minuto": 6,
+  "cambios_de_musica": "por_seccion",
+  "texto_en_pantalla_por_minuto": 3,
+  "densidad_primeros_30s": "alta",
+  "notas": "Perfil inicial por defecto. Reemplazar con el aprendido de un video de referencia (Fase 8). Revelaciones con fondo rojo; mascota reacciona en cada nivel."
+}

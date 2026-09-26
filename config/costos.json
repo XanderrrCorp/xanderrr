@@ -1,0 +1,56 @@
+{
+  "trm_cop_por_usd": 3100,
+  "presupuesto_objetivo_cop": 15000,
+  "presupuesto_maximo_cop": 20000,
+  "precios_usd": {
+    "claude_por_millon_tokens": {
+      "claude-opus-5":    { "input": 5.0, "output": 25.0 },
+      "claude-sonnet-5":  { "input": 2.0, "output": 10.0 },
+      "claude-haiku-4-5": { "input": 1.0, "output": 5.0 }
+    },
+    "imagen_por_unidad": 0.02,
+    "tts_por_1000_caracteres": 0.004,
+    "animacion_por_segundo": null
+  },
+  "modelo_claude_por_modulo": {
+    "estratega": "claude-opus-5",
+    "guionista": "claude-opus-5",
+    "director_visual": "claude-opus-5",
+    "director_edicion": "claude-opus-5",
+    "revisor": "claude-opus-5"
+  },
+  "consumo_estimado": {
+    "_nota": "Estimaciones de consumo (no son precios). Calibrar con logs/costos.jsonl después de los primeros videos.",
+    "caracteres_por_segundo_narracion": 15,
+    "tokens_fijos": {
+      "estratega": { "input": 6000, "output": 2500 }
+    },
+    "tokens_por_escena": {
+      "guionista": { "input": 150, "output": 70 },
+      "director_visual": { "input": 200, "output": 90 },
+      "director_edicion": { "input": 250, "output": 70 }
+    },
+    "revisor": {
+      "vueltas": 2,
+      "fotogramas_por_hoja": 9,
+      "tokens_imagen_por_hoja": 1600,
+      "tokens_texto_por_hoja": 400,
+      "tokens_salida_por_hoja": 300,
+      "segundos_para_fotograma_extra": 4.0,
+      "proporcion_escenas_largas": 0.2
+    },
+    "tasa_reintentos_imagen": 0.1
+  },
+  "ajustes_presupuesto": {
+    "paso_proporcion_unicas": 0.05,
+    "reuso_extra_por_recortes": 0.1,
+    "umbral_mejora": 0.85
+  },
+  "ultima_revision_precios": "2026-09-26",
+  "_fuentes_precios": {
+    "claude": "Tabla de precios de la API de Anthropic (primera parte), revisada 2026-09-26",
+    "imagen_por_unidad": "Referencia del dueño (Gemini ~0,02 USD). CONFIRMAR en la documentación de Gemini antes de la primera corrida",
+    "tts_por_1000_caracteres": "Referencia del dueño (MiniMax ~0,01 USD por 2.500 caracteres). CONFIRMAR con MiniMax",
+    "animacion_por_segundo": "Pendiente: se llena en la Fase 6 al elegir proveedor"
+  }
+}
