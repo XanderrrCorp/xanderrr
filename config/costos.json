@@ -81,7 +81,7 @@
       "proporcion_escenas_largas": 0.2
     },
     "tasa_reintentos_imagen": 0.1,
-    "palabras_por_segundo_voz": 2.9
+    "palabras_por_segundo_voz": 3.25
   },
   "ajustes_presupuesto": {
     "paso_proporcion_unicas": 0.05,

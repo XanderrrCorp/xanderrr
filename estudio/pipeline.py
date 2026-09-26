@@ -98,12 +98,80 @@ def crear_video(tema: str, giro: str, villano: str, minutos: float, notas: str =
     p = c.cargar()
     p.notas = [f"giro: {giro}", f"villano: {villano}", f"notas: {notas}"]
     c.guardar(p)
+    _copiar_mascota(c, estilo_id)
+    return c
+
+
+def _copiar_mascota(c: CarpetaProyecto, estilo_id: str) -> None:
     # el personaje del canal se reutiliza (5.3): no se vuelve a pagar
     mascota = RAIZ / "estilos" / estilo_id / "assets" / "mascota_base.png"
     if mascota.exists():
         (c.ruta / "assets").mkdir(parents=True, exist_ok=True)
         shutil.copy(mascota, c.ruta / "assets" / "mascota_base.png")
-    return c
+
+
+def importar_guion(v1: dict | list, canal: str = "animales-peligrosos",
+                   estilo_id: str = ESTILO_POR_DEFECTO) -> tuple[CarpetaProyecto, list[str]]:
+    """Trae un escenas.json hecho antes (formato v1) como un video listo para imágenes."""
+    from .config import ruta_proyectos
+    from .importar_v1 import convertir, duracion_escenas
+
+    estilo = cargar_estilo(estilo_id)
+    res = convertir(v1, estilo, canal=canal)
+    if res.errores or res.escenas is None:
+        raise ValueError("No se pudo leer ese guion: " + "; ".join(res.errores[:3]))
+    esc = res.escenas
+    config = ConfigCostos.cargar()
+    dur, _ = duracion_escenas(esc, config.consumo["caracteres_por_segundo_narracion"])
+    base = slugificar(esc.video)[:40] or "video"
+    slug, n = base, 2
+    while (ruta_proyectos() / slug).exists():
+        slug, n = f"{base}-{n}", n + 1
+    c = CarpetaProyecto.crear(esc.video, esc.canal, estilo.id, dur, slug=slug)
+    c.guardar_escenas(esc)
+    _copiar_mascota(c, estilo.id)
+    c.marcar("guionista", "completo", ["escenas.json"])
+    avisos = list(res.avisos) + [f"escena {k}: efectos sin equivalente: {v}"
+                                 for k, v in res.efectos_no_reconocidos.items()]
+    return c, avisos
+
+
+def paso_prueba(c: CarpetaProyecto, t: Trabajo, n: int = 10, permiso: bool = False) -> dict:
+    """Prueba real de imágenes (Fase 1): las primeras n escenas, costo real medido
+    y proyección del video completo. No arma la tira ni marca las imágenes como listas."""
+    from .config import escribir_json
+    from .imagenes.generador import generar_imagenes, hoja_de_contacto, proyectar
+
+    config = ConfigCostos.cargar()
+    antes = c.libro(config).total_cop()
+    esc = c.cargar_escenas()
+    objetivo = sum(1 for e in esc.escenas[:n] if e.visual.accion == "generar")
+    hechas = [0]
+
+    def avisar(txt):
+        if ": lista" in txt:
+            hechas[0] += 1
+            t.progreso = min(0.95, hechas[0] / max(1, objetivo))
+        t.avisar(txt)
+
+    r = generar_imagenes(c, primeras=n, permiso=permiso, avisar=avisar, config=config)
+    if r.frenado:
+        raise RuntimeError(r.frenado)
+    claves = [k for k in r.generadas + r.ya_estaban if k.startswith("escena:")]
+    hoja = hoja_de_contacto(c, claves, c.ruta / "render" / "hoja_prueba.png")
+    pr = proyectar(c, config)
+    medio = (sum(r.costos_por_imagen.values()) / len(r.costos_por_imagen)) if r.costos_por_imagen else None
+    datos = {"escenas": n, "generadas": len(r.generadas), "ya_estaban": len(r.ya_estaban),
+             "fallidas": r.fallidas, "llamadas": r.llamadas, "proveedor": r.proveedor, "modelo": r.modelo,
+             "costo_corrida": formato_cop(c.libro(config).total_cop() - antes),
+             "costo_medio_imagen": formato_cop(config.a_cop(medio)) if medio is not None else None,
+             "proyeccion": ({"imagenes": pr.imagenes_video, "texto": formato_cop(pr.total_cop), "base": pr.base}
+                            if pr else None),
+             "hoja": "render/hoja_prueba.png" if hoja else None, "avisos": r.avisos[:5]}
+    escribir_json(c.ruta / "render" / "prueba.json", datos)
+    if r.fallidas:
+        raise RuntimeError(f"{len(r.fallidas)} imágenes fallaron: " + "; ".join(f"{k}: {v}" for k, v in list(r.fallidas.items())[:3]))
+    return datos
 
 
 def paso_guion(c: CarpetaProyecto, t: Trabajo, ejecutar=None) -> None:
@@ -141,8 +209,13 @@ def estimar_imagenes(c: CarpetaProyecto) -> dict:
         hechas = sum(1 for v in leer_json(man).values() if v.get("proveedor") != "existente")
     total = total_a_generar(esc) - (1 if (c.ruta / "assets" / "mascota_base.png").exists() else 0)
     faltan = max(0, total - hechas)
+    ya = set(leer_json(man)) if man.exists() else set()
+    prueba = sum(1 for e in esc.escenas[:10] if e.visual.accion == "generar" and f"escena:{e.id}" not in ya)
     return {"total": total, "faltan": faltan, "cop": round(config.a_cop(faltan * precio)),
-            "texto": formato_cop(config.a_cop(faltan * precio))}
+            "texto": formato_cop(config.a_cop(faltan * precio)),
+            "prueba": prueba, "prueba_texto": formato_cop(config.a_cop(prueba * precio)),
+            "maximo_texto": formato_cop(config.maximo_cop),
+            "pasa_maximo": config.a_cop(faltan * precio) + c.libro(config).total_cop() > config.maximo_cop}
 
 
 def paso_imagenes(c: CarpetaProyecto, t: Trabajo, permiso: bool = False, ejecutar_claude=None) -> None:
@@ -251,7 +324,7 @@ def resumen(c: CarpetaProyecto) -> dict:
     datos = {"slug": c.ruta.name, "titulo": p.titulo, "minutos": round(p.duracion_objetivo_seg / 60, 1),
              "pasos": {k: v.estado for k, v in p.pasos.items()},
              "costo": formato_cop(c.libro(config).total_cop()), "escenas": [], "guion": None,
-             "video": None, "trabajo": None}
+             "video": None, "trabajo": None, "prueba": None}
     if c.archivo_escenas.exists():
         esc = c.cargar_escenas()
         man = leer_json(c.ruta / "imagenes" / "manifiesto.json") if (c.ruta / "imagenes" / "manifiesto.json").exists() else {}
@@ -273,6 +346,8 @@ def resumen(c: CarpetaProyecto) -> dict:
         datos["estimacion_imagenes"] = estimar_imagenes(c)
         if (c.ruta / "guion.md").exists():
             datos["guion"] = (c.ruta / "guion.md").read_text(encoding="utf-8")
+    if (c.ruta / "render" / "prueba.json").exists():
+        datos["prueba"] = leer_json(c.ruta / "render" / "prueba.json")
     if (c.ruta / "render" / "final.mp4").exists():
         datos["video"] = "render/final.mp4"
     t = TRABAJOS.get(c.ruta.name)

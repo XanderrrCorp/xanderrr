@@ -8,7 +8,7 @@ import sys
 import webbrowser
 from pathlib import Path
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, File, HTTPException, UploadFile
 from fastapi.responses import FileResponse, HTMLResponse
 from pydantic import BaseModel, Field
 
@@ -143,6 +143,34 @@ def nuevo(n: Nuevo):
     return pipeline.resumen(c)
 
 
+def _escenas_de_archivo(nombre: str, datos: bytes):
+    """Acepta un escenas.json o un .zip que lo tenga adentro (como video_alacranes.zip)."""
+    import io
+    import json
+    import zipfile
+
+    if nombre.lower().endswith(".zip") or datos[:2] == b"PK":
+        with zipfile.ZipFile(io.BytesIO(datos)) as z:
+            candidatos = sorted((n for n in z.namelist() if n.lower().endswith("escenas.json")), key=len)
+            if not candidatos:
+                raise HTTPException(400, "Ese .zip no tiene un escenas.json adentro")
+            datos = z.read(candidatos[0])
+    try:
+        return json.loads(datos.decode("utf-8-sig"))
+    except (UnicodeDecodeError, json.JSONDecodeError) as ex:
+        raise HTTPException(400, "El archivo no es un escenas.json válido") from ex
+
+
+@app.post("/api/importar")
+async def importar(archivo: UploadFile = File(...)):
+    v1 = _escenas_de_archivo(archivo.filename or "", await archivo.read())
+    try:
+        c, avisos = pipeline.importar_guion(v1)
+    except ValueError as ex:
+        raise HTTPException(400, str(ex)) from ex
+    return {**pipeline.resumen(c), "avisos": avisos[:20]}
+
+
 @app.get("/api/videos/{slug}")
 def ver(slug: str):
     return pipeline.resumen(_proyecto(slug))
@@ -186,6 +214,17 @@ class Permiso(BaseModel):
 def imagenes(slug: str, p: Permiso = Permiso()):
     c = _proyecto(slug)
     return _lanzar(slug, "imagenes", lambda t: pipeline.paso_imagenes(c, t, permiso=p.permiso))
+
+
+class Prueba(BaseModel):
+    escenas: int = Field(10, ge=1, le=30)
+    permiso: bool = False
+
+
+@app.post("/api/videos/{slug}/prueba")
+def prueba(slug: str, p: Prueba = Prueba()):
+    c = _proyecto(slug)
+    return _lanzar(slug, "prueba", lambda t: pipeline.paso_prueba(c, t, p.escenas, permiso=p.permiso))
 
 
 class Instruccion(BaseModel):
