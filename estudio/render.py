@@ -105,6 +105,9 @@ class Escenario:
         self.papel = papel
         self.comportamiento = comportamiento     # modo del estilo -> recorte | recuadro
         self.cache: dict = {}
+        # clip -> (x, y, ancho, alto): dónde cae la imagen ORIGINAL completa en el cuadro,
+        # para llevar cajas normalizadas de la imagen (focos, flechas) a píxeles
+        self.ubicacion: dict[str, tuple[float, float, float, float]] = {}
 
     def cuadro(self, clip: dict) -> Image.Image:
         zonas = next((e["zonas"] for e in clip["efectos"] if e["efecto"] == "pixelar"), None)
@@ -124,16 +127,19 @@ class Escenario:
                 d = img.copy()
                 d.thumbnail(caja_max, Image.Resampling.LANCZOS)
                 x, y = (W - d.width) // 2, int(H * 0.50 - d.height / 2)
+                self.ubicacion[clip["id"]] = (x, y, d.width, d.height)
                 zona = np.asarray(lienzo.crop((x, y, x + d.width, y + d.height)).convert("RGB"), np.float32)
                 mult = zona * np.asarray(d, np.float32) / 255
                 lienzo.paste(Image.fromarray(mult.astype("uint8")), (x, y))
             else:
                 rec = quitar_fondo_liso(img)
-                caja = rec.getbbox()
-                if caja:
-                    rec = rec.crop(caja)
+                caja = rec.getbbox() or (0, 0, img.width, img.height)
+                rec = rec.crop(caja)
+                ancho0 = rec.width
                 rec.thumbnail(caja_max, Image.Resampling.LANCZOS)
                 x, y = (W - rec.width) // 2, int(H * 0.50 - rec.height / 2)
+                k = rec.width / ancho0
+                self.ubicacion[clip["id"]] = (x - caja[0] * k, y - caja[1] * k, img.width * k, img.height * k)
                 s, (dx, dy) = _sombra(rec, 18, 110)
                 lienzo.alpha_composite(s, (max(0, x + dx), max(0, y + dy)))
                 lienzo.alpha_composite(rec, (x, y))
@@ -145,6 +151,8 @@ class Escenario:
             conmarco.paste(d, (marco, marco))
             conmarco = conmarco.rotate(r.uniform(-1.2, 1.2), expand=True, resample=Image.Resampling.BICUBIC)
             x, y = (W - conmarco.width) // 2, int(H * 0.46 - conmarco.height / 2)
+            gx, gy = (conmarco.width - d.width) / 2, (conmarco.height - d.height) / 2
+            self.ubicacion[clip["id"]] = (x + gx, y + gy, d.width, d.height)
             s, (dx, dy) = _sombra(conmarco, 20, 130)
             lienzo.alpha_composite(s, (max(0, x + dx), max(0, y + dy)))
             lienzo.alpha_composite(conmarco, (x, y))
@@ -165,6 +173,137 @@ def _camara(img: Image.Image, s: float, foco: tuple[float, float], dx: float = 0
     return img.resize((W, H), Image.Resampling.BILINEAR, box=(cx - w / 2, cy - h / 2, cx + w / 2, cy + h / 2))
 
 
+# ------------------------------------------------------------------ foco y flechas
+
+ROJO = (226, 30, 30)
+
+
+def _caja_px(ubic: tuple, caja: list) -> tuple[float, float, float, float]:
+    ox, oy, sw, sh = ubic
+    return ox + caja[0] * sw, oy + caja[1] * sh, ox + caja[2] * sw, oy + caja[3] * sh
+
+
+def _elipse(caja_px: tuple, margen: int = 22) -> tuple[float, float, float, float]:
+    """Elipse que abraza la caja, siempre dentro del cuadro y lejos de los subtítulos."""
+    x0, y0, x1, y1 = caja_px
+    cx, cy = (x0 + x1) / 2, (y0 + y1) / 2
+    rx, ry = max(80, (x1 - x0) * 0.6), max(70, (y1 - y0) * 0.62)
+    rx, ry = min(rx, W / 2 - margen), min(ry, (H - 190) / 2 - margen)
+    cx = min(max(cx, margen + rx), W - margen - rx)
+    cy = min(max(cy, margen + ry), H - 190 - margen - ry)
+    return cx - rx, cy - ry, cx + rx, cy + ry
+
+
+class Foco:
+    """Oscurece todo menos lo nombrado y lo encierra en un círculo rojo trazado a mano."""
+
+    def __init__(self):
+        self.mascaras: dict = {}
+
+    def mascara(self, clave, elipse) -> np.ndarray:
+        if clave not in self.mascaras:
+            m = Image.new("L", (W, H), 0)
+            ImageDraw.Draw(m).ellipse(elipse, fill=255)
+            self.mascaras[clave] = np.asarray(m.filter(ImageFilter.GaussianBlur(28)), np.float32)[:, :, None] / 255
+            if len(self.mascaras) > 4:
+                self.mascaras.pop(next(iter(self.mascaras)))
+        return self.mascaras[clave]
+
+    def aplicar(self, img: Image.Image, clip: dict, ef: dict, ubic: tuple, tt: float) -> Image.Image:
+        o, c = ef.get("oscurecer_fondo"), ef.get("circulo_rojo")
+        if not ubic or not (o or c):
+            return img
+        caja = (o or c)["caja"]
+        elipse = _elipse(_caja_px(ubic, caja))
+        if o and tt >= o["en"]:
+            a = _suave((tt - o["en"]) / 0.28) * o.get("nivel", 0.62)
+            m = self.mascara((clip["id"], tuple(caja)), elipse)
+            arr = np.asarray(img, np.float32)
+            img = Image.fromarray((arr * (1 - a * (1 - m))).astype("uint8"))
+        if c and tt >= c["en"]:
+            p = _sale((tt - c["en"]) / c.get("trazo", 0.4))
+            ini = -110 + c.get("giro", 0)
+            capa = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+            d = ImageDraw.Draw(capa)
+            fin = ini + 372 * p
+            d.arc(elipse, ini, fin, fill=(255, 255, 255, 170), width=16)
+            d.arc(elipse, ini, fin, fill=ROJO + (255,), width=10)
+            # segundo trazo más fino y un poco corrido: se ve dibujado a mano
+            e2 = (elipse[0] + 7, elipse[1] - 5, elipse[2] + 4, elipse[3] - 2)
+            if p > 0.25:
+                d.arc(e2, ini + 25, ini + 25 + 330 * (p - 0.25) / 0.75, fill=ROJO + (230,), width=5)
+            img = img.convert("RGBA")
+            img.alpha_composite(capa)
+            img = img.convert("RGB")
+        return img
+
+
+def _flecha(img: Image.Image, ef: dict, ubic: tuple, tt: float) -> Image.Image:
+    if not ubic or tt < ef["en"]:
+        return img
+    x0, y0, x1, y1 = _caja_px(ubic, ef["caja"])
+    cy = (y0 + y1) / 2
+    izq = ef.get("desde", "izquierda") == "izquierda"
+    punta = np.array([x0 - 14 if izq else x1 + 14, cy])
+    direc = np.array([1.0, 0.35]) if izq else np.array([-1.0, 0.35])
+    direc /= np.linalg.norm(direc)
+    loc = tt - ef["en"]
+    largo = 340 * _sale(loc / 0.26)
+    punta = punta + direc * 5 * math.sin(loc * 7) * (loc > 0.3)      # vaivén suave
+    cola = punta - direc * largo
+    if largo < 20:
+        return img
+    normal = np.array([-direc[1], direc[0]])
+    cab = 70
+    base = punta - direc * cab
+    capa = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    d = ImageDraw.Draw(capa)
+    for grosor, color in ((32, (255, 255, 255, 210)), (20, ROJO + (255,))):
+        d.line([tuple(cola), tuple(base)], fill=color, width=grosor)
+        extra = 7 if grosor > 25 else 0
+        tri = [tuple(punta + direc * extra), tuple(base + normal * (40 + extra)), tuple(base - normal * (40 + extra))]
+        d.polygon(tri, fill=color)
+    img = img.convert("RGBA")
+    img.alpha_composite(capa)
+    return img.convert("RGB")
+
+
+def _icono_advertencia(tam: int) -> Image.Image:
+    im = Image.new("RGBA", (tam, tam), (0, 0, 0, 0))
+    d = ImageDraw.Draw(im)
+    m = tam * 0.06
+    tri = [(tam / 2, m), (tam - m, tam - m * 1.4), (m, tam - m * 1.4)]
+    d.polygon(tri, fill=(20, 16, 12, 255))
+    k = tam * 0.07
+    d.polygon([(tam / 2, m + k * 1.6), (tam - m - k * 1.5, tam - m * 1.4 - k), (m + k * 1.5, tam - m * 1.4 - k)],
+              fill=(255, 205, 40, 255))
+    f = _fuente(int(tam * 0.5))
+    caja = d.textbbox((0, 0), "!", font=f)
+    d.text(((tam - (caja[2] - caja[0])) / 2 - caja[0], tam * 0.60 - (caja[3] - caja[1]) / 2 - caja[1]), "!",
+           font=f, fill=(20, 16, 12, 255))
+    return im
+
+
+_ICONO = {}
+
+
+def _poner_icono(img: Image.Image, ef: dict, tt: float) -> Image.Image:
+    loc = tt - ef["en"]
+    if loc < 0:
+        return img
+    if "base" not in _ICONO:
+        _ICONO["base"] = _icono_advertencia(200)
+    esc = 1.0 + 0.35 * math.exp(-loc * 9) * math.cos(loc * 16) if loc < 0.8 else 1.0
+    esc *= _sale(loc / 0.12)
+    if esc < 0.05:
+        return img
+    ic = _ICONO["base"].resize((max(1, int(200 * esc)),) * 2, Image.Resampling.BICUBIC)
+    cx = W * (0.13 if ef.get("lado") == "izquierda" else 0.87)
+    img = img.copy()
+    img.paste(ic, (int(cx - ic.width / 2), int(H * 0.30 - ic.height / 2)), ic)
+    return img
+
+
 # ------------------------------------------------------------------ textos
 
 def _texto_img(texto: str, tam: int, contorno: int, color=(255, 255, 255)) -> Image.Image:
@@ -179,23 +318,57 @@ def _texto_img(texto: str, tam: int, contorno: int, color=(255, 255, 255)) -> Im
 
 # ------------------------------------------------------------------ sonido
 
+NOMBRES_VIEJOS = {"golpe": "golpe_grave", "golpe_suave": "golpe_grave"}
+
+
 def _sfx(tipo: str, variante: int) -> np.ndarray:
+    """Efectos PROVISIONALES sintetizados: se usan solo si la biblioteca no tiene
+    archivos de ese tipo. Cada variante suena un poco distinta."""
+    tipo = NOMBRES_VIEJOS.get(tipo, tipo)
     rng = np.random.default_rng(100 + variante)
     if tipo == "barrido":
-        return _barrido(SR, 0.55 + 0.1 * variante, rng)
-    if tipo == "golpe":
-        return _golpe(SR, 1.6)
+        return _barrido(SR, 0.45 + 0.08 * variante, rng)
+    if tipo == "golpe_grave":
+        return _golpe(SR, 1.2 + 0.15 * variante)
     if tipo == "zumbido":
         return _zumbido(SR, 1.2)
-    t = np.arange(int(SR * (0.35 if tipo == "golpe_suave" else 0.12))) / SR
-    if tipo == "golpe_suave":
-        f = 90 * np.exp(-t * 6) + 45
-        return np.sin(2 * math.pi * np.cumsum(f) / SR) * np.exp(-t * 11) * 0.6
-    f0 = 660 + 80 * variante
-    return np.sin(2 * math.pi * f0 * t * (1 + 1.5 * t)) * np.exp(-t * 40) * 0.5   # pop
+    t = lambda d: np.arange(int(SR * d)) / SR
+    if tipo == "latido":
+        x = t(0.42)
+        golpe = lambda t0: np.sin(2 * math.pi * (52 + 4 * variante) * (x - t0)) * np.exp(-np.clip(x - t0, 0, None) * 22) * (x >= t0)
+        return (golpe(0) + 0.6 * golpe(0.17)) * 0.8
+    if tipo == "subida_tension":
+        x = t(1.6)
+        f = 110 * (1 + 2.2 * (x / 1.6) ** 2) * (1 + 0.02 * variante)
+        ruido = rng.normal(0, 0.25, len(x))
+        return (np.sin(2 * math.pi * np.cumsum(f) / SR) * 0.4 + ruido * 0.3) * (x / 1.6) ** 2
+    if tipo == "alerta":
+        x = t(0.36)
+        f = np.where(x < 0.18, 880, 660) * (1 + 0.03 * variante)
+        return np.sign(np.sin(2 * math.pi * np.cumsum(f) / SR)) * 0.12 * np.exp(-((x % 0.18) * 9))
+    if tipo == "comico":
+        x = t(0.3)
+        f = 500 * (1 + 1.5 * np.sin(x * 40)) * (1 + 0.05 * variante)
+        return np.sin(2 * math.pi * np.cumsum(f) / SR) * np.exp(-x * 7) * 0.35
+    x = t(0.12)
+    f0 = 620 + 70 * variante
+    return np.sin(2 * math.pi * f0 * x * (1 + 1.5 * x)) * np.exp(-x * 40) * 0.5   # pop
 
 
-def mezclar_audio(raiz: Path, edl: dict) -> np.ndarray:
+def _sonido(tipo: str, variante: int, ffmpeg: str | None) -> tuple[np.ndarray, str | None]:
+    """El archivo de la biblioteca (con licencia registrada) o, si no hay, el provisional."""
+    from . import biblioteca
+
+    tipo = NOMBRES_VIEJOS.get(tipo, tipo)
+    if ffmpeg:
+        archivos = sorted(biblioteca.utilizables("sfx", tipo))
+        if archivos:
+            ruta = archivos[(variante - 1) % len(archivos)]
+            return biblioteca.leer_audio(ruta, ffmpeg, SR), ruta.relative_to(biblioteca.raiz()).as_posix()
+    return _sfx(tipo, variante).astype(np.float32), None
+
+
+def mezclar_audio(raiz: Path, edl: dict, ffmpeg: str | None = None) -> np.ndarray:
     total = int(edl["duracion_total"] * SR) + SR
     mezcla = np.zeros(total, np.float32)
     for v in edl["pistas"]["voz"]:
@@ -203,14 +376,21 @@ def mezclar_audio(raiz: Path, edl: dict) -> np.ndarray:
             x = np.frombuffer(w.readframes(w.getnframes()), "<i2").astype(np.float32) / 32768
         i = int(v["inicio"] * SR)
         mezcla[i:i + len(x)] += x[: total - i]
+    usados = []
     for s in edl["pistas"]["sfx"]:
         tipo, var = s["variante"].rsplit("_", 1)
-        x = _sfx(tipo, int(var)).astype(np.float32)
+        x, archivo = _sonido(s.get("tipo") or tipo, int(var), ffmpeg)
+        if archivo:
+            usados.append(archivo)
         tono = s.get("tono", 1.0)
         idx = np.arange(0, len(x) - 1, tono)
         x = np.interp(idx, np.arange(len(x)), x) * s.get("volumen", 0.7) * 0.6
-        i = int(s["inicio"] * SR)
+        # 14.7: la subida de tensión termina justo en el corte que anuncia
+        i = int((s["termina_en"] * SR - len(x)) if s.get("termina_en") is not None else s["inicio"] * SR)
+        if i < 0:
+            x, i = x[-i:], 0
         mezcla[i:i + len(x)] += x[: max(0, total - i)]
+    mezclar_audio.usados = usados
     return mezcla
 
 
@@ -274,6 +454,7 @@ def renderizar(carpeta: CarpetaProyecto, ffmpeg: str, destino: Path | None = Non
                              "-r", str(FPS), "-i", "-", "-c:v", "libx264", "-preset", "veryfast", "-crf", "19",
                              "-pix_fmt", "yuv420p", str(video_tmp)], stdin=subprocess.PIPE)
     temblor = random.Random(proyecto.semilla)
+    capa_foco = Foco()
     ultimo: Image.Image | None = None
     ci = 0
     for n in range(n0, n1):
@@ -314,6 +495,9 @@ def renderizar(carpeta: CarpetaProyecto, ffmpeg: str, destino: Path | None = Non
                 if mov["tipo"] == "zoom_golpe":
                     golpe = ef.get("zoom_golpe", {}).get("en", c["inicio"] + dur * 0.35) - c["inicio"]
                     s = 1.0 + (mov["a"] - 1.0) * _sale((loc - golpe) / 0.16) if loc >= golpe else 1.0
+                elif mov["tipo"] == "entrada_rebote":
+                    # leve rebote al entrar: se asienta en medio segundo
+                    s = 1.0 + (mov["de"] - 1.0) * math.exp(-loc * 6.5) * abs(math.cos(loc * 11))
                 else:
                     s = mov["de"] + (mov["a"] - mov["de"]) * _suave(p)
                 if mov["tipo"] == "paneo_lento" and "paneo_lento" in ef:
@@ -323,6 +507,18 @@ def renderizar(carpeta: CarpetaProyecto, ffmpeg: str, destino: Path | None = Non
                 r = ef["reencuadre"]
                 s = r["escala"] + 0.015 * _suave((tt - r["en"]) / max(0.5, c["fin"] - r["en"]))
                 foco = tuple(r["punto_foco"])
+            if "rafaga" in ef:
+                r = ef["rafaga"]
+                s, foco_r = 1.0, tuple(r.get("punto_foco") or (0.5, 0.5))
+                for t_k, esc_k in zip(r["tiempos"], r["escalas"]):
+                    if tt >= t_k:
+                        s = s + (esc_k - s) * _sale((tt - t_k) / 0.07)
+                foco = foco_r
+            if "oscurecer_fondo" in ef or "circulo_rojo" in ef or "flecha" in ef:
+                ubic = escenario.ubicacion.get(c["id"])
+                base = capa_foco.aplicar(base, c, ef, ubic, tt)
+                if "flecha" in ef:
+                    base = _flecha(base, ef["flecha"], ubic, tt)
             dx = dy = 0.0
             if "temblor_leve" in ef:
                 a = ef["temblor_leve"].get("amplitud", 3)
@@ -337,6 +533,8 @@ def renderizar(carpeta: CarpetaProyecto, ffmpeg: str, destino: Path | None = Non
                 img = Image.blend(img, Image.new("RGB", (W, H), (255, 42, 42)), 0.55 * math.exp(-dt * 6))
         if any(img is v for v in escenario.cache.values()):
             img = img.copy()           # nunca escribir sobre el cuadro guardado en caché
+        if "icono_advertencia" in ef:
+            img = _poner_icono(img, ef["icono_advertencia"], tt)
         # --- textos en pantalla
         for t in textos:
             if t["inicio"] <= tt < t["fin"]:
@@ -368,7 +566,13 @@ def renderizar(carpeta: CarpetaProyecto, ffmpeg: str, destino: Path | None = Non
     proc.wait()
 
     # --- audio completo, normalizado, y unión
-    mezcla = mezclar_audio(raiz, edl)[int(desde * SR):int(total * SR)]
+    mezcla = mezclar_audio(raiz, edl, ffmpeg)[int(desde * SR):int(total * SR)]
+    from . import biblioteca
+
+    creditos = biblioteca.atribuciones(getattr(mezclar_audio, "usados", []))
+    (destino.parent / "creditos_audio.txt").write_text(
+        ("Créditos de audio para la descripción del video:\n" + "\n".join(creditos) + "\n") if creditos
+        else "Este video no usa audio que pida atribución.\n", encoding="utf-8")
     wav = destino.with_suffix(".mezcla.wav")
     with wave.open(str(wav), "wb") as w:
         w.setnchannels(1)

@@ -22,6 +22,10 @@ from .importar_v1 import convertir, duracion_escenas
 from .proyecto import CarpetaProyecto, slugificar
 
 
+def _perfil(c):
+    return cargar_perfil_edicion(cargar_estilo(c.cargar().estilo))
+
+
 def _cmd_estilos(_: argparse.Namespace) -> int:
     for e in listar_estilos():
         personaje = "con personaje" if e.con_personaje is True else "sin personaje"
@@ -191,7 +195,7 @@ def _cmd_editar(a: argparse.Namespace) -> int:
 
     c = CarpetaProyecto.abrir(a.slug)
     edl = construir_edl(c)
-    avisos = validar(edl)
+    avisos = validar(edl, _perfil(c))
     p = edl["pistas"]
     print(f"EDL: {edl['duracion_total'] / 60:.2f} min · {len(p['escenas'])} clips · {len(p['textos'])} textos · "
           f"{len(p['subtitulos'])} subtítulos · {len(p['sfx'])} efectos de sonido")

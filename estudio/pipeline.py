@@ -43,6 +43,12 @@ TRABAJOS: dict[str, Trabajo] = {}
 _CERROJO = threading.Lock()
 
 
+def _perfil(c):
+    from .estilos import cargar_estilo, cargar_perfil_edicion
+
+    return cargar_perfil_edicion(cargar_estilo(c.cargar().estilo))
+
+
 def ocupado(slug: str) -> bool:
     t = TRABAJOS.get(slug)
     return bool(t and t.activo)
@@ -252,7 +258,20 @@ def paso_imagenes(c: CarpetaProyecto, t: Trabajo, permiso: bool = False, ejecuta
         from . import claude_cli
 
         ubicar_villano(c.ruta, ejecutar=ejecutar_claude or claude_cli.ejecutar)
+    _ubicar_focos(c, t, ejecutar_claude)
     c.marcar("assets", "completo", ["imagenes/", "assets/tira/"])
+
+
+def _ubicar_focos(c: CarpetaProyecto, t: Trabajo, ejecutar_claude=None) -> None:
+    """Claude mira las imágenes donde la voz nombra un animal o un detalle (círculo y
+    flechas). Si falla, el video sale igual, solo sin esos focos."""
+    from . import claude_cli
+    from .foco import ubicar_focos
+
+    try:
+        ubicar_focos(c.ruta, ejecutar=ejecutar_claude or claude_cli.ejecutar, avisar=t.avisar)
+    except Exception as ex:  # noqa: BLE001 — no es imprescindible
+        t.avisar(f"Sin círculo ni flechas esta vez: {str(ex)[:160]}")
 
 
 def regenerar_imagen(c: CarpetaProyecto, t: Trabajo, escena_id: int, instruccion: str) -> None:
@@ -290,9 +309,12 @@ def paso_video(c: CarpetaProyecto, t: Trabajo, permiso: bool = False) -> Path:
     generar_voz(c, ffmpeg(), permiso=permiso, avisar=t.avisar)
     c.marcar("voz", "completo", ["audio/voz.wav"])
     t.progreso = 0.2
+    direccion = c.ruta / "direccion.json"
+    if not direccion.exists() or "focos_revisados" not in leer_json(direccion):
+        _ubicar_focos(c, t)
     t.avisar("Editando: cortes, movimientos, textos y subtítulos…")
     edl = construir_edl(c)
-    avisos = validar(edl)
+    avisos = validar(edl, _perfil(c))
     if avisos:
         t.avisar("validador: " + "; ".join(avisos[:3]))
     c.marcar("director_edicion", "completo", ["edl.json"])

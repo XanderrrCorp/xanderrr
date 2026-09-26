@@ -59,8 +59,11 @@ Duración: unos {encargo.minutos:g} minutos de voz = entre {int(palabras * 0.93)
   comentarios, suscripción).
 
 == REGLAS DE TEXTO ==
-- Español neutro cercano, frases cortas, de tú. Cada escena cierra una idea: 7 a 18 palabras
-  (unos 3 a 5 segundos de voz). Alterna frases cortas y alguna más larga.
+- Español neutro cercano, frases cortas, de tú. Cada escena cierra una idea: 5 a 14 palabras
+  (unos 2 a 4,5 segundos de voz; nunca más de 14). Alterna escenas muy cortas con otras medianas:
+  el ritmo NO debe ser parejo. Si una idea es larga, pártela en dos escenas.
+- En la primera escena con imagen propia de cada nivel, di el nombre del animal (no solo «ella» o
+  «este»): el video lo encierra en un círculo rojo justo cuando lo nombras.
 - Números SIEMPRE en palabras («trescientos millones», «veinte años»).
 - Solo hechos verdaderos. En salud: sin dosis ni medicamentos; orienta a ir al médico o a urgencias.
 - Nombres compuestos separados como se dicen. Nada de siglas deletreadas.

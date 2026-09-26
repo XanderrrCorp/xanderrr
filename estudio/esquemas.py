@@ -27,6 +27,8 @@ EFECTOS = (
     "tira_deslizar_a_nivel", "lado_a_lado", "flecha", "circulo_rojo", "icono_advertencia",
     # cambio de encuadre a mitad de un plano largo (cuenta como cambio visual real, 4.3)
     "reencuadre",
+    # ráfaga de acercamientos cortos al ritmo de un latido: solo en tension_creciente
+    "rafaga",
 )
 # "sfx" no es un efecto visual, pero se sugiere en la misma lista (ver 3.1).
 EFECTOS_SUGERIBLES = EFECTOS + ("sfx",)
@@ -466,6 +468,10 @@ class ClipSfx(Modelo):
     variante: str | None = None
     tono: float = Field(1.0, ge=0.95, le=1.05, description="Factor de ajuste de tono (±5 %)")
     razon: str | None = None
+    # 14.7: una subida de tensión termina EXACTAMENTE en el corte o la revelación que anuncia;
+    # el motor la coloca para que acabe aquí, sea cual sea el largo del archivo
+    termina_en: float | None = None
+    tipo: str | None = None
 
 
 class Pistas(Modelo):
