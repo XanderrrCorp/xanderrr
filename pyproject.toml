@@ -3,15 +3,17 @@ name = "estudio"
 version = "0.1.0"
 description = "Estudio de producción de video para Buscanichos"
 requires-python = ">=3.11"
-dependencies = ["pydantic>=2.6", "pillow>=10", "requests>=2.31", "numpy>=1.24", "imageio-ffmpeg>=0.5"]
+dependencies = ["pydantic>=2.6", "pillow>=10", "requests>=2.31", "numpy>=1.24", "imageio-ffmpeg>=0.5",
+                "fastapi>=0.110", "uvicorn>=0.29", "python-multipart>=0.0.9"]
 
 # rembg (quitar fondos) es opcional y pesado: pip install rembg
 
 [project.optional-dependencies]
-dev = ["pytest>=8"]
+dev = ["pytest>=8", "httpx>=0.27"]
 
 [project.scripts]
 estudio = "estudio.cli:main"
+xandart = "estudio.app:main"
 
 [build-system]
 requires = ["setuptools>=68"]
@@ -19,6 +21,9 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
 include = ["estudio*"]
+
+[tool.setuptools.package-data]
+estudio = ["web/*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b0a10">
+<title>Xandart</title>
+<link rel="icon" type="image/svg+xml" href="/web/xandart.svg">
+<link rel="stylesheet" href="/web/xandart.css">
+</head>
+<body>
+<header class="cab">
+  <a class="marca" href="#" onclick="irInicio();return false">
+    <img src="/web/xandart.svg" alt="" width="32" height="32"><span>Xandart</span>
+  </a>
+  <span class="crece"></span>
+  <button class="fantasma" onclick="abrirAjustes()" title="Claves y cuenta de Claude">⚙ Ajustes</button>
+</header>
+
+<main id="app"><p class="tenue">cargando…</p></main>
+
+<dialog id="ajustes">
+  <h2>Ajustes</h2>
+  <p class="tenue">Las claves se guardan solo en este computador.</p>
+  <label>Clave de Together (imágenes)
+    <input id="k-together" type="password" placeholder="tgp_v1_…" autocomplete="off">
+  </label>
+  <div class="fila"><span id="e-together" class="estado"></span><button class="mini" onclick="probar('together')">Probar</button></div>
+  <label>Clave de MiniMax (voz)
+    <input id="k-minimax" type="password" placeholder="pega tu clave" autocomplete="off">
+  </label>
+  <div class="fila"><span id="e-minimax" class="estado"></span><button class="mini" onclick="probar('minimax')">Probar</button></div>
+  <label>Claude (escribe el guion con tu suscripción)</label>
+  <div class="fila"><span id="e-claude" class="estado"></span>
+    <button class="mini" onclick="sesionClaude()">Iniciar sesión</button>
+    <button class="mini" onclick="probar('claude')">Probar</button></div>
+  <div class="fila fin">
+    <button class="fantasma" onclick="document.getElementById('ajustes').close()">Cerrar</button>
+    <button class="primario" onclick="guardarClaves()">Guardar</button>
+  </div>
+</dialog>
+
+<script src="/web/xandart.js"></script>
+</body>
+</html>

@@ -1,0 +1,42 @@
+"""La página local: estado, crear un video (sin gastar) y seguridad de rutas."""
+import pytest
+
+pytest.importorskip("fastapi")
+pytest.importorskip("httpx")
+from fastapi.testclient import TestClient  # noqa: E402
+
+
+@pytest.fixture
+def cliente(tmp_path, monkeypatch):
+    monkeypatch.setenv("ESTUDIO_PROYECTOS", str(tmp_path / "proy"))
+    monkeypatch.setenv("HOME", str(tmp_path))
+    from estudio import app as modulo, pipeline
+
+    # el guion no se escribe de verdad: no hay Claude en las pruebas
+    monkeypatch.setattr(pipeline, "lanzar", lambda slug, paso, f: None)
+    return TestClient(modulo.app)
+
+
+def test_portada_y_estado(cliente):
+    assert "Xandart" in cliente.get("/").text
+    assert cliente.get("/web/xandart.js").status_code == 200
+    e = cliente.get("/api/estado").json()
+    assert set(e["claves"]) == {"together", "minimax"} and e["videos"] == []
+
+
+def test_crear_video_y_verlo(cliente):
+    r = cliente.post("/api/videos", json={"tema": "Arañas de la casa", "giro": "g", "villano": "v", "minutos": 9})
+    assert r.status_code == 200
+    v = r.json()
+    assert v["minutos"] == 9 and v["video"] is None
+    assert cliente.get(f"/api/videos/{v['slug']}").json()["titulo"]
+    assert [x["slug"] for x in cliente.get("/api/estado").json()["videos"]] == [v["slug"]]
+    # la mascota del canal se copia sin pagar
+    assert cliente.get(f"/archivos/{v['slug']}/assets/mascota_base.png").status_code == 200
+
+
+def test_rutas_no_salen_del_proyecto(cliente):
+    v = cliente.post("/api/videos", json={"tema": "Escorpiones", "minutos": 8}).json()
+    assert cliente.get(f"/archivos/{v['slug']}/../../etc/passwd").status_code == 404
+    assert cliente.get("/web/..%2Fapp.py").status_code == 404
+    assert cliente.get("/api/videos/no-existe").status_code == 404
