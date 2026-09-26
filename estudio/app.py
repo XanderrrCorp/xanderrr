@@ -212,9 +212,25 @@ def abrir_carpeta():
     return {"carpeta": str(destino)}
 
 
+def _ya_abierto() -> bool:
+    import socket
+
+    with socket.socket() as s:
+        s.settimeout(0.5)
+        return s.connect_ex(("127.0.0.1", PUERTO)) == 0
+
+
 def main():
     import uvicorn
 
+    if sys.stdout is None or sys.stderr is None:  # pythonw (acceso directo): sin consola
+        (RAIZ / "logs").mkdir(exist_ok=True)
+        salida = open(RAIZ / "logs" / "xandart.log", "a", encoding="utf-8", buffering=1)  # noqa: SIM115
+        sys.stdout = sys.stdout or salida
+        sys.stderr = sys.stderr or salida
+    if _ya_abierto():  # segundo clic en el acceso directo: solo abre la página
+        webbrowser.open(f"http://127.0.0.1:{PUERTO}/")
+        return
     if "--sin-navegador" not in sys.argv:
         import threading
 

@@ -2,7 +2,17 @@
 
 Módulo de producción de video (ver la especificación del Estudio). Estado: **Fase 0**.
 
-## Instalación
+## Xandart en tu PC (Windows, un clic)
+
+1. Descarga [`instalar/Instalar Xandart.bat`](https://raw.githubusercontent.com/XanderrrCorp/xanderrr/claude/new-session-uq98jd/instalar/Instalar%20Xandart.bat)
+   (clic derecho → *Guardar como*) y dale doble clic. Si Windows avisa «protegió su PC»: *Más información → Ejecutar de todas formas*.
+2. Instala Python, Xandart y Claude, crea el acceso directo **Xandart** en el escritorio y abre la página.
+3. La primera vez, en **⚙ Ajustes**: pega la clave de Together y la de MiniMax, y dale *Iniciar sesión* en Claude.
+
+Los videos salen en `Videos\Xandart`. Para actualizar: menú Inicio → *Actualizar Xandart* (no borra claves ni videos).
+Sin instalador: `pip install -e .` y `xandart` (o `python -m estudio.app`) abre la página en http://127.0.0.1:8030.
+
+## Instalación (desarrollo)
 
 ```bash
 pip install -e ".[dev]"
