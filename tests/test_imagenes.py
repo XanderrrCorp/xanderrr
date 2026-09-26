@@ -230,3 +230,14 @@ def test_together_clave_rechazada_no_se_reintenta(config, monkeypatch):
     with pytest.raises(ErrorProveedor) as ex:
         ProveedorTogether(config, "google/flash-image-2.5", sesion=sesion).generar("x. no text.", [])
     assert not ex.value.reintentable
+
+
+def test_asset_existente_se_adopta_sin_pagar(proyecto, config):
+    destino = proyecto.ruta / "assets" / "mascota_base.png"
+    destino.parent.mkdir(parents=True, exist_ok=True)
+    from PIL import Image
+    Image.new("RGB", (1344, 768)).save(destino)
+    prov = ProveedorSimulado(config)
+    r = generar_imagenes(proyecto, primeras=10, proveedor=prov, config=config, avisar=silencio)
+    assert "asset:mascota_base" in r.ya_estaban and "asset:mascota_base" not in r.generadas
+    assert prov.llamadas == 5

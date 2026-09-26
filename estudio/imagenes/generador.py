@@ -177,6 +177,16 @@ def generar_imagenes(carpeta: CarpetaProyecto, *, primeras: int | None = None, i
             continue
         huella = _huella(t, proveedor.modelo)
         previo = manifiesto.get(t.clave)
+        if previo is None and t.clave.startswith("asset:") and t.destino.exists():
+            # Asset del canal que ya existe (p. ej. la mascota de un video anterior):
+            # se adopta tal cual y no se vuelve a pagar (5.3: los assets se reutilizan).
+            manifiesto[t.clave] = {"archivo": str(t.destino.relative_to(carpeta.ruta)), "sin_fondo": None,
+                                   "huella": huella, "prompt": t.prompt, "referencias": [],
+                                   "proveedor": "existente", "modelo": "", "intentos": 0,
+                                   "costo_usd": 0.0, "aviso": None}
+            escribir_json(ruta_manifiesto, manifiesto)
+            reporte.ya_estaban.append(t.clave)
+            continue
         if previo and previo.get("huella") == huella and t.destino.exists():
             reporte.ya_estaban.append(t.clave)
             continue
