@@ -54,16 +54,31 @@ Villano (el más peligroso, último nivel): {encargo.villano or "(elige el más 
 Duración: unos {encargo.minutos:g} minutos de voz = entre {int(palabras * 0.93)} y {int(palabras * 1.07)} palabras en total.
 {("Notas del dueño: " + encargo.notas) if encargo.notas else ""}
 
-== ESTRUCTURA ==
-- Gancho (40 a 70 s): abre con el momento más fuerte y concreto, sin saludos ni «en este video».
-  Deja una pregunta abierta que se paga al final. Presenta el giro. Una escena del gancho es la
-  tira de niveles (accion "componer"). Cierra el gancho prometiendo algo para el final.
+== ESTRUCTURA (técnicas que retienen; escribe todo con palabras propias) ==
+- Gancho de contraste (40 a 70 s), sin saludos ni «en este video»:
+  1. Pregúntale al espectador qué probabilidad cree que tiene un animal de hacerle daño de verdad,
+     empezando por uno que se ve inofensivo (casi cero).
+  2. Luego uno que SE VE aterrador: el espectador creerá que es el peor. Primer giro: está entre
+     los menos peligrosos (dilo claro).
+  3. «Y ahora el verdadero susto»: anuncia que el último de la lista es alguien que no te
+     esperarías (se muestra pixelado) y que hay algo de él que no sabes. Deja la pregunta abierta.
+  4. Promete la escala: empezamos casi en cero y vamos subiendo hasta el más peligroso, y al final
+     sabrás cómo pasa y qué hacer. Una escena del gancho es la tira de niveles (accion "componer").
 - Entre 4 y 8 niveles de menos a más peligro. Cada nivel abre con una escena «Nivel N. Nombre.»
-  que es accion "reusar" con "reusar": "nivel:N". Luego 6 a 14 escenas con datos concretos,
-  curiosidades verdaderas y un consejo práctico. Cada sección abre con su tensión.
+  que es accion "reusar" con "reusar": "nivel:N". Luego 6 a 14 escenas, y en cada nivel usa:
+  una imagen mental fuerte al presentarlo, una comparación cotidiana que se recuerde, dónde vive
+  (lugares concretos), números concretos (tamaño, peso, profundidad), cómo hace daño explicado
+  paso a paso y fácil, una pregunta con respuesta seca («¿Cuántos casos hay? Cero.»), qué tan
+  frecuentes son los casos reales (sin exagerar: si son pocos, dilo), un remate del tipo «lo más
+  aterrador no es X, es Y» y un consejo práctico.
+- Cada nivel termina con una transición que deja con ganas y SUBE la escala («ahora subamos el
+  miedo», «de algo gigante pasamos a algo que cabe en tu mano, y es peor»).
+- Justo después del primer nivel, UNA sola vez: si ya este te sorprendió, dale like y suscríbete.
 - Lo más fuerte va en el último tercio. Antes de los dos últimos niveles, una frase que retenga.
-- Después del último nivel: qué hacer (lo prometido) y cierre corto (resumen, pregunta para
-  comentarios, suscripción).
+- Último nivel (el villano): «el que te dije al principio»; confírmalo corto («Sí, una chinche.»);
+  contrasta lo inocente que se ve con lo que hace; «no avisa»; lo más escalofriante al final.
+- Cierre: qué hacer (lo prometido), repaso de un vistazo «empezamos con… y terminamos con…»,
+  pregunta para comentarios y suscripción, corto.
 
 == REGLAS DE TEXTO ==
 - Español neutro cercano, frases cortas, de tú. Cada escena cierra una idea: 5 a 14 palabras
