@@ -613,6 +613,33 @@ def _instruccion(transcript, metadatos, brief, anterior, opciones, correcciones,
         "partirse en dos secciones; lo que no puede pasar es cambiar de parada "
         "sin abrir seccion, porque ahi es donde el motor pone el silencio que "
         "deja respirar el video.",
+        # XANDART: LA RETENCION, COMO SECCION Y NO COMO REGLA NUMERADA, por la
+        # misma razon que la estructura: se decide antes de escribir. Esta
+        # escrita para NO pisar las reglas 11 a 13 --el tono de gancho sigue
+        # siendo uno y al principio, y cada seccion sigue rematando la suya--:
+        # lo que anade es DONDE va la tension, no mas tension.
+        "",
+        "== LO QUE HACE QUE SE VEA HASTA EL FINAL ==",
+        "Un video se pierde en los primeros segundos o en la mitad. Escribelo "
+        "para que no pase ninguna de las dos cosas:",
+        "",
+        "  - LA PRIMERA FRASE ES EL MOMENTO MAS FUERTE. Nada de saludos, «hoy "
+        "vamos a ver», «en este video» ni presentar el canal: se abre con el "
+        "hecho mas sorprendente o la imagen mas concreta del material, dicho en "
+        "una frase corta. Quien mira decide en los primeros cinco segundos.",
+        "  - EL GANCHO DEJA UNA PREGUNTA CONCRETA ABIERTA, y esa pregunta se "
+        "contesta en la ULTIMA parada, no antes. Es lo que hace que alguien "
+        "llegue al final. Si la contestas en el minuto uno, el video acaba ahi.",
+        "  - CADA PARADA ABRE CON SU TENSION: la primera frase de cada seccion "
+        "plantea lo que esa seccion va a resolver (una duda, un riesgo, una "
+        "contradiccion). No es repetir el tono del gancho: es decir que esta en "
+        "juego ahora.",
+        "  - DE MENOS A MAS. Ordena las paradas para que la intensidad suba: lo "
+        "mas fuerte del material va en el ultimo tercio, nunca a mitad de video.",
+        "  - CONCRETO Y PARA QUIEN MIRA. Cifras, nombres, tamanos y "
+        "consecuencias en vez de adjetivos; cuando sirva, di que significa para "
+        "el que escucha. Alterna frases cortas con alguna mas larga: un ritmo "
+        "parejo adormece.",
         "",
         "== INSTRUCCION DE ESTA ITERACION ==",
         opciones["prompt_general"] or
