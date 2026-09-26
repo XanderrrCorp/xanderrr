@@ -6,6 +6,9 @@ Lo que sí es fijo por especificación: intenciones (4.1) y catálogo de efectos
 """
 from __future__ import annotations
 
+import random
+import re
+import unicodedata
 from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
@@ -116,6 +119,15 @@ class PerfilEdicion(Modelo):
     texto_en_pantalla_por_minuto: float = Field(ge=0)
     densidad_primeros_30s: Literal["baja", "media", "alta"]
     notas: str = ""
+    # 14.1 · sensación humana
+    variacion_minima_duracion: float = Field(0.3, ge=0, description="Coeficiente de variación mínimo de la duración de escenas")
+    respiros_max_por_minuto: float = Field(1, ge=0)
+    uso_maximo_por_recurso: float = Field(0.35, gt=0, le=1, description="Fracción máxima de escenas con una misma transición, movimiento o efecto")
+    recursos_exentos_de_uso_maximo: list[str] = Field(
+        default=["corte"], description="Recursos neutros que no cuentan para uso_maximo_por_recurso")
+    # Variación observada en el video de referencia (desviación estándar o coeficiente de
+    # variación por métrica), no solo promedios. Ej.: {"cv_duracion_escenas": 0.42}
+    variacion_referencia: dict[str, float] = {}
 
 
 # ---------------------------------------------------------- perfil_canal.json
@@ -204,7 +216,28 @@ class Escena(Modelo):
     tiempo: Tiempo = Tiempo()
     visual: Visual
     efectos_sugeridos: list[EfectoSugerido] = []
+    palabra_clave: str | None = Field(None, description="Palabra más importante de la frase (la marca el Director)")
+    pausa_despues_seg: float = Field(0, ge=0, le=3)
     revision_humana: list[str] = Field(default=[], description="Motivos para revisión humana (p. ej. dato médico)")
+
+    @model_validator(mode="after")
+    def _palabra_en_narracion(self) -> "Escena":
+        if self.palabra_clave is not None:
+            clave = _palabras(self.palabra_clave)
+            narr = _palabras(self.narracion)
+            n = len(clave)
+            if not clave or not any(narr[i:i + n] == clave for i in range(len(narr) - n + 1)):
+                raise ValueError(f"escena {self.id}: palabra_clave '{self.palabra_clave}' no aparece en la narración")
+        return self
+
+
+def _normalizar(texto: str) -> str:
+    t = unicodedata.normalize("NFKD", texto.lower())
+    return "".join(c for c in t if not unicodedata.combining(c))
+
+
+def _palabras(texto: str) -> list[str]:
+    return re.findall(r"\w+", _normalizar(texto))
 
 
 class AssetDef(Modelo):
@@ -256,6 +289,17 @@ class Movimiento(Modelo):
     tipo: str
     de: float = 1.0
     a: float = 1.0
+    # 14.4: nunca velocidad lineal
+    curva: Literal["ease_in_out", "ease_in", "ease_out"] = "ease_in_out"
+    # Coordenadas normalizadas (0 a 1) del sujeto importante; None = centro
+    punto_foco: tuple[float, float] | None = None
+
+    @field_validator("punto_foco")
+    @classmethod
+    def _normalizado(cls, v):
+        if v is not None and not all(0 <= c <= 1 for c in v):
+            raise ValueError("punto_foco debe estar en coordenadas normalizadas (0 a 1)")
+        return v
 
     @field_validator("tipo")
     @classmethod
@@ -293,6 +337,7 @@ class ClipEscena(Tramo):
     transicion_entrada: str = "corte"
     efectos: list[EfectoSugerido] = []
     reuso_intencional: bool = False
+    respiro: bool = False  # 14.2: única excepción a la regla de 4,5 s, hasta 6 s
 
 
 class Elemento(Tramo):
@@ -330,6 +375,8 @@ class ClipSfx(Modelo):
     inicio: float = Field(ge=0)
     archivo: str
     volumen: float = Field(0.7, ge=0, le=1)
+    variante: str | None = None
+    tono: float = Field(1.0, ge=0.95, le=1.05, description="Factor de ajuste de tono (±5 %)")
     razon: str | None = None
 
 
@@ -371,7 +418,7 @@ class EDL(Modelo):
 # ---------------------------------------------------------- proyecto.json
 
 PASOS = (
-    "estratega", "guionista", "director_visual", "assets", "voz", "alineador",
+    "estratega", "guionista", "director_visual", "assets", "voz_muestra", "voz", "alineador",
     "director_edicion", "validador", "render_preview", "revisor", "editor", "export_final",
 )
 EstadoPaso = Literal["pendiente", "en_curso", "completo", "error"]
@@ -392,5 +439,14 @@ class Proyecto(Modelo):
     duracion_objetivo_seg: float = Field(gt=0)
     creado: str
     pasos: dict[str, Paso] = Field(default_factory=lambda: {p: Paso() for p in PASOS})
+    # 14.4: aleatoriedad controlada, fija por proyecto para que el render sea repetible
+    semilla: int = Field(default_factory=lambda: random.randrange(2**31))
     permiso_superar_maximo: bool = False
     notas: list[str] = []
+
+    @model_validator(mode="after")
+    def _pasos_completos(self) -> "Proyecto":
+        # Proyectos creados antes de agregar un paso nuevo lo reciben como pendiente.
+        for paso in PASOS:
+            self.pasos.setdefault(paso, Paso())
+        return self

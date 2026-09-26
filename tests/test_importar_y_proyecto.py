@@ -54,3 +54,18 @@ def test_cli_importar_validar_estimar(capsys):
     salida = capsys.readouterr().out
     assert "OK: todos los contratos son válidos" in salida
     assert "COP" in salida and "estimada (escenas.json)" in salida
+
+
+def test_semilla_fija_y_proyectos_viejos():
+    import json
+    c = CarpetaProyecto.crear("Semilla", "canal", "enciclopedia_mascota", 600)
+    s1 = c.cargar().semilla
+    assert CarpetaProyecto.abrir(c.ruta.name).cargar().semilla == s1
+    # proyecto creado antes del anexo: sin semilla ni paso voz_muestra
+    datos = json.loads(c.archivo_proyecto.read_text())
+    del datos["semilla"]
+    del datos["pasos"]["voz_muestra"]
+    c.archivo_proyecto.write_text(json.dumps(datos))
+    s2 = c.cargar().semilla
+    assert c.cargar().semilla == s2  # se fijó la primera vez
+    assert c.cargar().pasos["voz_muestra"].estado == "pendiente"

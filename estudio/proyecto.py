@@ -65,7 +65,11 @@ class CarpetaProyecto:
         return cls(ruta)
 
     def cargar(self) -> Proyecto:
-        return Proyecto.model_validate(leer_json(self.archivo_proyecto))
+        datos = leer_json(self.archivo_proyecto)
+        p = Proyecto.model_validate(datos)
+        if "semilla" not in datos:
+            self.guardar(p)  # fija la semilla la primera vez para que el render sea repetible
+        return p
 
     def guardar(self, p: Proyecto) -> None:
         escribir_json(self.archivo_proyecto, p.model_dump(mode="json"))

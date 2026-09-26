@@ -112,3 +112,53 @@ def test_edl_tramo_invertido():
     d["pistas"]["textos"][0]["fin"] = 40.0
     with pytest.raises(ValidationError):
         EDL.model_validate(d)
+
+
+# ---- 14.1 · sensación humana
+
+def test_palabra_clave_debe_estar_en_la_narracion():
+    EscenasV2.model_validate(doc(palabra_clave="giro"))
+    EscenasV2.model_validate(doc(palabra_clave="Aqui"))  # sin tilde ni mayúscula
+    EscenasV2.model_validate(doc(palabra_clave="primer giro"))
+    with pytest.raises(ValidationError):
+        EscenasV2.model_validate(doc(palabra_clave="alacrán"))
+    with pytest.raises(ValidationError):
+        EscenasV2.model_validate(doc(palabra_clave="gir"))  # palabra completa, no fragmento
+
+
+def test_pausa_por_defecto_y_rango():
+    assert EscenasV2.model_validate(doc()).escenas[0].pausa_despues_seg == 0
+    with pytest.raises(ValidationError):
+        EscenasV2.model_validate(doc(pausa_despues_seg=-1))
+
+
+def test_movimiento_curva_y_foco():
+    d = copy.deepcopy(EDL_EJEMPLO)
+    edl = EDL.model_validate(d)
+    mov = edl.pistas.escenas[0].movimiento
+    assert mov.curva == "ease_in_out" and mov.punto_foco is None
+    assert edl.pistas.escenas[0].respiro is False
+    d["pistas"]["escenas"][0]["movimiento"].update(curva="lineal")
+    with pytest.raises(ValidationError):
+        EDL.model_validate(d)
+    d["pistas"]["escenas"][0]["movimiento"].update(curva="ease_out", punto_foco=[0.7, 1.2])
+    with pytest.raises(ValidationError):
+        EDL.model_validate(d)
+    d["pistas"]["escenas"][0]["movimiento"]["punto_foco"] = [0.7, 0.35]
+    EDL.model_validate(d)
+
+
+def test_sfx_variante_y_tono():
+    d = copy.deepcopy(EDL_EJEMPLO)
+    d["pistas"]["sfx"][0].update(variante="golpe_grave_03", tono=1.04)
+    EDL.model_validate(d)
+    d["pistas"]["sfx"][0]["tono"] = 1.2
+    with pytest.raises(ValidationError):
+        EDL.model_validate(d)
+
+
+def test_perfil_edicion_campos_nuevos(perfil):
+    assert perfil.variacion_minima_duracion == 0.3
+    assert perfil.respiros_max_por_minuto == 1
+    assert perfil.uso_maximo_por_recurso == 0.35
+    assert "corte" in perfil.recursos_exentos_de_uso_maximo

@@ -188,6 +188,8 @@ def convertir(v1: dict[str, Any] | list[Any], estilo: Estilo, canal: str | None 
                 "reusar_de": reusar,
             },
             "efectos_sugeridos": efectos,
+            "palabra_clave": e.get("palabra_clave"),
+            "pausa_despues_seg": float(e.get("pausa_despues_seg") or 0),
             "revision_humana": revision,
         })
         if not narr:

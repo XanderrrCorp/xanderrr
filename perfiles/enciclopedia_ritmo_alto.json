@@ -7,5 +7,12 @@
   "cambios_de_musica": "por_seccion",
   "texto_en_pantalla_por_minuto": 3,
   "densidad_primeros_30s": "alta",
+  "variacion_minima_duracion": 0.3,
+  "respiros_max_por_minuto": 1,
+  "uso_maximo_por_recurso": 0.35,
+  "recursos_exentos_de_uso_maximo": [
+    "corte"
+  ],
+  "variacion_referencia": {},
   "notas": "Perfil inicial por defecto. Reemplazar con el aprendido de un video de referencia (Fase 8). Revelaciones con fondo rojo; mascota reacciona en cada nivel."
 }
