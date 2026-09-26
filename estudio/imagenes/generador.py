@@ -279,6 +279,20 @@ def proyectar(carpeta: CarpetaProyecto, config: ConfigCostos | None = None) -> P
     return Proyeccion(total, medio, medio * total, config.a_cop(medio * total), base)
 
 
+def _fuente(tamano: int):
+    """Una fuente con tildes y eñes; la de Pillow por defecto no las tiene."""
+    from PIL import ImageFont
+
+    for ruta in ("C:/Windows/Fonts/segoeui.ttf", "C:/Windows/Fonts/arial.ttf",
+                 "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+                 "/System/Library/Fonts/Supplemental/Arial.ttf", "DejaVuSans.ttf", "arial.ttf"):
+        try:
+            return ImageFont.truetype(ruta, tamano)
+        except OSError:
+            continue
+    return ImageFont.load_default()
+
+
 def hoja_de_contacto(carpeta: CarpetaProyecto, claves: list[str], destino: Path, columnas: int = 2) -> Path | None:
     """Una sola imagen con las generadas, su escena, su costo y la narración."""
     from PIL import Image, ImageDraw
@@ -293,6 +307,7 @@ def hoja_de_contacto(carpeta: CarpetaProyecto, claves: list[str], destino: Path,
     filas = math.ceil(len(claves) / columnas)
     hoja = Image.new("RGB", (columnas * ancho, filas * (alto + pie)), (18, 16, 24))
     d = ImageDraw.Draw(hoja)
+    fuente = _fuente(15)
     for i, clave in enumerate(claves):
         m = manifiesto.get(clave)
         if not m:
@@ -302,8 +317,8 @@ def hoja_de_contacto(carpeta: CarpetaProyecto, claves: list[str], destino: Path,
         img.thumbnail((ancho, alto))
         hoja.paste(img, (x + (ancho - img.width) // 2, y))
         costo = formato_cop(config.a_cop(m.get("costo_usd", 0)))
-        d.text((x + 8, y + alto + 6), f"{clave} · {costo} · {m['intentos']} intento(s)", fill=(255, 210, 120))
-        d.text((x + 8, y + alto + 26), (narr.get(clave) or "")[:95], fill=(225, 222, 235))
+        d.text((x + 8, y + alto + 6), f"{clave} · {costo} · {m['intentos']} intento(s)", fill=(255, 210, 120), font=fuente)
+        d.text((x + 8, y + alto + 26), (narr.get(clave) or "")[:80], fill=(225, 222, 235), font=fuente)
     destino.parent.mkdir(parents=True, exist_ok=True)
     hoja.save(destino)
     return destino

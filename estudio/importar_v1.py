@@ -54,10 +54,12 @@ _INTENCIONES_TEXTO: list[tuple[str, str, int]] = [
 _CAMPOS_NARRACION = ("narracion", "texto", "voz", "guion", "locucion")
 _CAMPOS_TIPO = ("tipo", "tipo_visual", "tipo_escena")
 _CAMPOS_PROMPT = ("prompt", "prompt_imagen", "image_prompt")
-_CAMPOS_ARCHIVO = ("archivo", "imagen", "image", "ruta_imagen")
+_CAMPOS_ARCHIVO = ("archivo", "archivo_salida", "imagen", "image", "ruta_imagen")
 _CAMPOS_EFECTOS = ("efectos", "efecto", "efectos_texto", "edicion", "fx")
-_CAMPOS_INICIO = ("inicio", "tiempo_inicio", "start", "estimado_inicio")
-_CAMPOS_DURACION = ("duracion", "duracion_estimada", "duration", "estimado_duracion")
+_CAMPOS_INICIO = ("inicio", "inicio_seg", "tiempo_inicio", "start", "estimado_inicio")
+_CAMPOS_DURACION = ("duracion", "duracion_seg", "duracion_estimada", "duration", "estimado_duracion")
+_CAMPOS_REFERENCIAS = ("referencias", "imagen_referencia", "imagenes_referencia")
+_CAMPOS_REUSO = ("reusar_de", "reusar_imagen")
 
 
 @dataclass
@@ -121,13 +123,34 @@ def convertir(v1: dict[str, Any] | list[Any], estilo: Estilo, canal: str | None 
         res.errores.append("El archivo v1 no tiene escenas")
         return res
 
+    from .imagenes import prompts as _prompts
+
+    personaje = (estilo.personaje_por_defecto or "").strip()
+    refs_usadas = {str(r) for e in crudas for r in (_primero(e, _CAMPOS_REFERENCIAS) or [])}
     assets = []
     for a in datos.get("assets", []):
-        assets.append({
-            "id": str(a.get("id")), "tipo": a.get("tipo", "asset"), "prompt": a.get("prompt"),
-            "archivo": a.get("archivo") or f"assets/{a.get('id')}.png",
-            "quitar_fondo": bool(a.get("quitar_fondo", False)),
-        })
+        aid = str(a.get("id"))
+        archivo = a.get("archivo") or a.get("archivo_salida") or f"assets/{aid}.png"
+        tipo_a = a.get("tipo") or ("personaje" if ("mascota" in aid or "personaje" in aid or archivo in refs_usadas)
+                                   else "animal")
+        # Los assets de v1 traen el prompt completo: se envía tal cual.
+        assets.append({"id": aid, "tipo": tipo_a, "nombre": a.get("nombre"), "prompt": a.get("prompt"),
+                       "prompt_literal": bool(a.get("prompt")), "archivo": archivo,
+                       "quitar_fondo": bool(a.get("quitar_fondo", False))})
+    # rutas -> ids: v1 referencia por ruta de archivo, v2 por id
+    asset_por_archivo = {a["archivo"]: a["id"] for a in assets}
+    escena_por_archivo = {str(_primero(e, _CAMPOS_ARCHIVO)): int(_primero(e, ("id", "numero", "escena", "n"), i + 1))
+                          for i, e in enumerate(crudas) if _primero(e, _CAMPOS_ARCHIVO)}
+
+    def _a_id(ref):
+        if ref is None:
+            return None
+        r = str(ref)
+        if r in asset_por_archivo:
+            return asset_por_archivo[r]
+        if r in escena_por_archivo:
+            return escena_por_archivo[r]
+        return int(r) if r.isdigit() else r
 
     escenas, anterior, t_acum = [], None, 0.0
     for i, e in enumerate(crudas):
@@ -138,13 +161,24 @@ def convertir(v1: dict[str, Any] | list[Any], estilo: Estilo, canal: str | None 
         fuente_vis = {**e, **vis_v1}
 
         tipo = _primero(fuente_vis, _CAMPOS_TIPO)
-        if tipo is None:
+        prompt = _primero(fuente_vis, _CAMPOS_PROMPT)
+        reusar = _a_id(_primero(fuente_vis, _CAMPOS_REUSO))
+        accion = fuente_vis.get("accion") or ("reusar" if reusar is not None else "generar")
+        if tipo is None and accion == "generar":
             res.errores.append(f"escena {eid}: sin tipo visual")
             tipo = ""
-        tipo_estilo = estilo.tipo(tipo)
-        prompt = _primero(fuente_vis, _CAMPOS_PROMPT)
-        reusar = fuente_vis.get("reusar_de")
-        accion = fuente_vis.get("accion") or ("reusar" if reusar is not None else "generar")
+        tipo_estilo = estilo.tipo(tipo) if tipo else None
+        # El prompt de v1 es completo. Si encaja EXACTO en la plantilla del estilo,
+        # se guarda solo la descripción y el prompt sale del estilo; si no, se
+        # envía tal cual (prompt_literal) y se avisa.
+        literal = False
+        if prompt and tipo_estilo:
+            medio = _prompts.descomponer(prompt, tipo_estilo.plantilla_prompt, estilo, personaje)
+            if medio is None:
+                literal = True
+                res.avisos.append(f"escena {eid}: el prompt no encaja en la plantilla de '{tipo}': se enviará tal cual")
+            else:
+                prompt = medio
         quitar = fuente_vis.get("quitar_fondo")
         if quitar is None:
             quitar = tipo_estilo.quitar_fondo if tipo_estilo else False
@@ -181,16 +215,17 @@ def convertir(v1: dict[str, Any] | list[Any], estilo: Estilo, canal: str | None 
             "tiempo": {"estimado_inicio": ini, "estimado_duracion": dur,
                        "real_inicio": fuente_t.get("real_inicio"), "real_fin": fuente_t.get("real_fin")},
             "visual": {
-                "accion": accion, "tipo": tipo, "prompt": prompt,
+                "accion": accion, "tipo": tipo or None, "prompt": prompt, "prompt_literal": literal,
                 "archivo": _primero(fuente_vis, _CAMPOS_ARCHIVO) or f"imagenes/escena_{eid:03d}.png",
                 "quitar_fondo": bool(quitar),
-                "referencias": [str(r) for r in fuente_vis.get("referencias", [])],
+                "referencias": [str(_a_id(r)) for r in (_primero(fuente_vis, _CAMPOS_REFERENCIAS) or [])],
                 "reusar_de": reusar,
             },
             "efectos_sugeridos": efectos,
             "palabra_clave": e.get("palabra_clave"),
             "pausa_despues_seg": float(e.get("pausa_despues_seg") or 0),
             "revision_humana": revision,
+            "notas_edicion": str(e.get("notas_edicion") or ""),
         })
         if not narr:
             res.errores.append(f"escena {eid}: narración vacía")

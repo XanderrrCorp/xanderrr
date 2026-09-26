@@ -104,7 +104,8 @@ def test_prompts_salen_del_estilo(tmp_path, monkeypatch, estilo):
     esc = convertir(leer_json(V1), estilo).escenas
     e1 = esc.escenas[0]
     p1 = prompts.prompt_de_escena(e1, estilo, "MASCOTA")
-    assert p1.startswith(estilo.bloque_estilo)
+    inicio = estilo.tipo(e1.visual.tipo).plantilla_prompt.split("{")[0]
+    assert inicio and p1.startswith(inicio)
     datos = json.loads((RAIZ / "estilos/enciclopedia_mascota/estilo.json").read_text())
     for t in datos["tipos_de_escena"]:
         if t["id"] == e1.visual.tipo:

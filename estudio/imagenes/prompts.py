@@ -24,10 +24,14 @@ def variables_de(plantilla: str) -> set[str]:
 
 
 def _limpiar(texto: str) -> str:
-    t = re.sub(r"\s+", " ", texto)
+    """Solo arregla lo que deja una variable vacía (espacios dobles, «. .», «, ,»).
+    Un prompt completo sale intacto: la plantilla del estilo es la fuente exacta."""
+    t = re.sub(r"\s+", " ", texto).strip()
     t = re.sub(r"\s+([.,])", r"\1", t)
-    t = re.sub(r"([.,])(?:\s*[.,])+", r"\1", t)
-    return t.strip(" ,.") + "."
+    t = re.sub(r"\.(\s*\.)+", ".", t)
+    t = re.sub(r",(\s*,)+", ",", t)
+    t = re.sub(r"^[\s,.]+", "", t)
+    return t if t.endswith(".") else t + "."
 
 
 def personaje_del_proyecto(carpeta: Path, estilo: Estilo) -> str:
@@ -42,11 +46,27 @@ def personaje_del_proyecto(carpeta: Path, estilo: Estilo) -> str:
 
 def armar(plantilla: str, estilo: Estilo, personaje: str, descripcion: str, **campos: str) -> str:
     valores = _Faltantes(bloque_estilo=estilo.bloque_estilo, personaje=personaje,
-                         descripcion=(descripcion or "").strip().rstrip("."), **campos)
+                         descripcion=(descripcion or "").strip(), **campos)
     return _limpiar(plantilla.format_map(valores))
 
 
+def descomponer(prompt: str, plantilla: str, estilo: Estilo, personaje: str) -> str | None:
+    """Lo inverso de `armar`: si `prompt` es esta plantilla con algo en
+    {descripcion}, devuelve ese algo; si no encaja EXACTO, None."""
+    if plantilla.count("{descripcion}") != 1:
+        return None
+    pre, suf = plantilla.split("{descripcion}")
+    valores = _Faltantes(bloque_estilo=estilo.bloque_estilo, personaje=personaje)
+    pre, suf = pre.format_map(valores), suf.format_map(valores)
+    if not (prompt.startswith(pre) and prompt.endswith(suf) and len(prompt) > len(pre) + len(suf)):
+        return None
+    medio = prompt[len(pre):len(prompt) - len(suf)]
+    return medio if armar(plantilla, estilo, personaje, medio) == prompt else None
+
+
 def prompt_de_escena(escena: Escena, estilo: Estilo, personaje: str) -> str:
+    if escena.visual.prompt_literal:
+        return escena.visual.prompt or ""
     tipo = estilo.tipo(escena.visual.tipo)
     if tipo is None:
         raise ValueError(f"escena {escena.id}: el tipo '{escena.visual.tipo}' no existe en el estilo '{estilo.id}'")
@@ -59,6 +79,8 @@ def usa_personaje(escena: Escena, estilo: Estilo) -> bool:
 
 
 def prompt_de_asset(asset: AssetDef, estilo: Estilo, personaje: str) -> str:
+    if asset.prompt_literal:
+        return asset.prompt or ""
     plantilla = estilo.plantillas_assets.get(asset.tipo) or estilo.plantillas_assets.get("_defecto")
     if not plantilla:
         raise ValueError(f"el estilo '{estilo.id}' no tiene plantilla para assets de tipo '{asset.tipo}'")

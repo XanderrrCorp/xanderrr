@@ -1,62 +1,62 @@
 {
   "id": "enciclopedia_mascota",
   "nombre": "Enciclopedia + mascota",
-  "descripcion": "Ilustración detallada tipo enciclopedia, mascota cartoon que reacciona, recortes sobre papel arrugado, escenas mixtas y amenazas cinematográficas.",
+  "descripcion": "Cartoon 2D con mascota fija (cabeza blanca redonda, sombrero de paja, camisa roja a cuadros), animales semi-realistas muy detallados, diagramas a lápiz de color sobre blanco, escenas mixtas y amenazas cinematográficas con niebla azul. Recortes y recuadros sobre papel arrugado.",
   "miniatura": "estilos/enciclopedia_mascota/preview.png",
   "con_personaje": true,
-  "bloque_estilo": "Detailed natural-history encyclopedia illustration, fine ink linework with soft watercolor shading, accurate anatomy, muted natural palette",
-  "personaje_por_defecto": "A small original cartoon explorer mascot with a round head, big expressive eyes, khaki explorer outfit and a tiny backpack, bold clean outlines, flat colors",
+  "bloque_estilo": "Clean 2D cartoon illustration, thick clean black outlines, flat colors with soft subtle shading, highly detailed background.",
+  "personaje_por_defecto": "a cartoon man with a round smooth white head, big expressive eyes, straw hat, open red plaid short-sleeve shirt over a white t-shirt, khaki cargo pants and green rubber boots",
   "tipos_de_escena": [
     {
       "id": "animal_fondo_gris",
       "descripcion": "Animal o sujeto principal aislado para recortar",
-      "plantilla_prompt": "{bloque_estilo}. {descripcion}. Full body, isolated on a plain medium gray background. 16:9, no text.",
+      "plantilla_prompt": "Semi-realistic digital illustration, highly detailed, fine black ink outlines, rich painterly shading with visible texture on every plate of the exoskeleton, glossy highlights, natural anatomical proportions, crisp and sharp. {descripcion}. Isolated on a flat solid medium-gray background (#808080), no shadow on the floor, no other objects, no text, no letters. Aspect ratio 16:9.",
       "quitar_fondo": true,
       "modo_montaje": "recorte_sobre_papel"
     },
     {
       "id": "mascota_fondo_gris",
       "descripcion": "Mascota reaccionando, aislada para recortar",
-      "plantilla_prompt": "{personaje}. {descripcion}. Full body, isolated on a plain medium gray background. 16:9, no text.",
+      "plantilla_prompt": "2D cartoon character, full body, thick clean black outlines, flat soft cel shading, simple and expressive design. The same character as the reference image: {personaje}. {descripcion}. Isolated on a flat solid medium-gray background (#808080), no shadow on the floor, no other objects, no text, no letters.",
       "quitar_fondo": true,
       "modo_montaje": "recorte_sobre_papel"
     },
     {
       "id": "diagrama_fondo_blanco",
       "descripcion": "Detalle anatómico o explicativo tipo lámina",
-      "plantilla_prompt": "{bloque_estilo}. Scientific plate style close-up: {descripcion}. Plain white background. 16:9, no text, no labels.",
+      "plantilla_prompt": "Detailed hand-drawn digital illustration, fine ink linework, soft colored-pencil shading, clean and educational. {descripcion}. Isolated on a plain flat pure white background, lots of empty space at the top, aspect ratio 16:9, no text, no labels, no letters, no numbers.",
       "quitar_fondo": true,
       "modo_montaje": "recorte_sobre_papel"
     },
     {
       "id": "escena_cartoon_completa",
       "descripcion": "Escena completa con la mascota en un lugar",
-      "plantilla_prompt": "{personaje}. {descripcion}. Cartoon scene with a simple background. 16:9, no text.",
+      "plantilla_prompt": "{bloque_estilo} {descripcion}. Open composition, aspect ratio 16:9, no text, no signs, no letters, no logos.",
       "quitar_fondo": false,
       "modo_montaje": "recuadro_sobre_papel"
     },
     {
       "id": "escena_mixta",
       "descripcion": "Mascota y animal juntos en una escena",
-      "plantilla_prompt": "{bloque_estilo}. {descripcion}. The mascot in the scene: {personaje}. 16:9, no text.",
+      "plantilla_prompt": "Mixed-style illustration: soft 2D cartoon background with clean black outlines and flat colors, and in the foreground a highly detailed semi-realistic animal drawn with fine ink outlines and rich painterly shading, much more detailed than the background. {descripcion}. Aspect ratio 16:9, no text, no signs, no letters, no logos.",
       "quitar_fondo": false,
       "modo_montaje": "recuadro_sobre_papel"
     },
     {
       "id": "amenaza_cinematografica",
       "descripcion": "Plano dramático del peligro",
-      "plantilla_prompt": "{bloque_estilo}, cinematic dramatic lighting, low angle, deep shadows. {descripcion}. 16:9, no text.",
+      "plantilla_prompt": "Semi-realistic digital illustration, highly detailed, fine black ink outlines, rich painterly shading with visible texture on every plate of the exoskeleton, glossy highlights, natural anatomical proportions, crisp and sharp. {descripcion}. Dark moody background of deep blue fog with twisted dark silhouettes of branches, cinematic lighting with a cold rim light on the subject, shallow depth of field, aspect ratio 16:9, no text, no letters.",
       "quitar_fondo": false,
       "modo_montaje": "recuadro_sobre_papel"
     }
   ],
   "mezcla_recomendada": {
-    "animal_fondo_gris": 0.3,
-    "mascota_fondo_gris": 0.15,
-    "diagrama_fondo_blanco": 0.15,
-    "escena_cartoon_completa": 0.15,
-    "escena_mixta": 0.15,
-    "amenaza_cinematografica": 0.1
+    "animal_fondo_gris": 0.0,
+    "mascota_fondo_gris": 0.228,
+    "diagrama_fondo_blanco": 0.368,
+    "escena_cartoon_completa": 0.153,
+    "escena_mixta": 0.186,
+    "amenaza_cinematografica": 0.065
   },
   "fondo_montaje": {
     "tipo": "textura",
@@ -78,12 +78,13 @@
     "curiosidad"
   ],
   "costo_relativo": 1.0,
-  "proporcion_imagenes_unicas": 0.6,
+  "proporcion_imagenes_unicas": 0.73,
   "proporcion_minima_unicas": 0.4,
-  "imagenes_fijas_por_video": 6,
+  "imagenes_fijas_por_video": 7,
   "_variables_plantilla": "{bloque_estilo} = bloque de estilo; {personaje} = bloqueo literal del personaje del canal; {descripcion} = lo que muestra la escena (visual.prompt); {sujeto} {accion} {lugar} = campos opcionales si el Director visual los separa.",
   "plantillas_assets": {
-    "personaje": "{personaje}. Character reference sheet: full body, front view, neutral friendly pose. Isolated on a plain medium gray background. 16:9, no text.",
-    "_defecto": "{bloque_estilo}. {descripcion}. Isolated on a plain medium gray background. 16:9, no text."
-  }
+    "personaje": "2D cartoon character, full body, front view, standing relaxed with arms at his sides, neutral friendly expression, thick clean black outlines, flat soft cel shading, simple and expressive design. {personaje}. {descripcion}. Isolated on a flat solid medium-gray background (#808080), no shadow on the floor, no other objects, no text, no letters.",
+    "_defecto": "Semi-realistic digital illustration, highly detailed, fine black ink outlines, rich painterly shading with visible texture on every plate of the exoskeleton, glossy highlights, natural anatomical proportions, crisp and sharp. {descripcion}. Isolated on a flat solid medium-gray background (#808080), no shadow on the floor, no other objects, no text, no letters. Aspect ratio 16:9."
+  },
+  "_fuente": "Plantillas extraídas del proyecto real de alacranes (escenas.json, 215 prompts): inicio y final comunes por tipo; {descripcion} es lo que cambia en cada escena."
 }

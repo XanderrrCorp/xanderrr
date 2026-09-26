@@ -55,7 +55,6 @@ class Subtitulos(Modelo):
 
 
 class Estilo(Modelo):
-    model_config = ConfigDict(extra="forbid", populate_by_name=True)
     id: str
     nombre: str
     descripcion: str
@@ -79,7 +78,14 @@ class Estilo(Modelo):
     imagenes_fijas_por_video: int = Field(0, ge=0)
     # Plantillas de los assets reutilizables (personaje base, etc.) por tipo de asset.
     plantillas_assets: dict[str, str] = {}
-    variables_plantilla: str | None = Field(None, alias="_variables_plantilla")
+
+    @model_validator(mode="before")
+    @classmethod
+    def _sin_comentarios(cls, datos):
+        # las claves que empiezan por "_" son notas para humanos dentro del JSON
+        if isinstance(datos, dict):
+            return {k: v for k, v in datos.items() if not str(k).startswith("_")}
+        return datos
 
     @property
     def ids_tipos(self) -> set[str]:
@@ -185,9 +191,14 @@ class Tiempo(Modelo):
 
 
 class Visual(Modelo):
-    accion: Literal["generar", "reusar", "componer"]
-    tipo: str
+    # solo_edicion: no se genera imagen (animación de la tira, texto en pantalla...)
+    accion: Literal["generar", "reusar", "componer", "solo_edicion"]
+    tipo: str | None = None
+    # Lo que muestra la escena. Va en {descripcion} de la plantilla del estilo.
     prompt: str | None = None
+    # true = `prompt` ya es el prompt completo y se envía tal cual (no se pasa por
+    # la plantilla). Solo para prompts importados que no encajan en el estilo.
+    prompt_literal: bool = False
     archivo: str | None = None
     quitar_fondo: bool = False
     referencias: list[str] = []
@@ -199,6 +210,8 @@ class Visual(Modelo):
             raise ValueError("accion 'reusar' requiere reusar_de")
         if self.accion == "generar" and not self.prompt:
             raise ValueError("accion 'generar' requiere prompt")
+        if self.accion == "generar" and not self.tipo:
+            raise ValueError("accion 'generar' requiere tipo")
         return self
 
 
@@ -226,6 +239,7 @@ class Escena(Modelo):
     palabra_clave: str | None = Field(None, description="Palabra más importante de la frase (la marca el Director)")
     pausa_despues_seg: float = Field(0, ge=0, le=3)
     revision_humana: list[str] = Field(default=[], description="Motivos para revisión humana (p. ej. dato médico)")
+    notas_edicion: str = ""
 
     @model_validator(mode="after")
     def _palabra_en_narracion(self) -> "Escena":
@@ -250,7 +264,9 @@ def _palabras(texto: str) -> list[str]:
 class AssetDef(Modelo):
     id: str
     tipo: str
+    nombre: str | None = None
     prompt: str | None = None
+    prompt_literal: bool = False
     archivo: str
     quitar_fondo: bool = False
 
@@ -285,7 +301,7 @@ class EscenasV2(Modelo):
         """Reglas 12.5: solo tipos de escena del estilo elegido."""
         errores = []
         for e in self.escenas:
-            if e.visual.tipo not in estilo.ids_tipos:
+            if e.visual.tipo is not None and e.visual.tipo not in estilo.ids_tipos:
                 errores.append(f"escena {e.id}: tipo '{e.visual.tipo}' no existe en el estilo '{estilo.id}'")
         return errores
 
