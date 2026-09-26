@@ -77,6 +77,8 @@ def animar(estilo_id: str, pose: str, modelo: str = "Wan-AI/wan2.7-i2v", *, perm
     if not url:
         raise RuntimeError(f"el video terminó pero no trae enlace: {d}")
     costo = float(salida.get("cost") or d.get("cost") or precio)
+    # el enlace corto sale en api.together.ai; el mismo camino sirve en api.together.xyz
+    url = url.replace("://api.together.ai/", "://api.together.xyz/")
     video = sesion.get(url, timeout=300)
     video.raise_for_status()
     destino.parent.mkdir(parents=True, exist_ok=True)

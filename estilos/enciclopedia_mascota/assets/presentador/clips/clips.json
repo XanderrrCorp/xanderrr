@@ -1,0 +1,9 @@
+{
+  "sorpresa__wan2.7-i2v.mp4": {
+    "pose": "sorpresa",
+    "modelo": "Wan-AI/wan2.7-i2v",
+    "segundos": 5,
+    "costo_usd": 0.1,
+    "generado": "2026-09-26T23:15:14+00:00"
+  }
+}
