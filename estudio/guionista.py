@@ -73,7 +73,9 @@ Duración: unos {encargo.minutos:g} minutos de voz = entre {int(palabras * 0.93)
   aterrador no es X, es Y» y un consejo práctico.
 - Cada nivel termina con una transición que deja con ganas y SUBE la escala («ahora subamos el
   miedo», «de algo gigante pasamos a algo que cabe en tu mano, y es peor»).
-- Justo después del primer nivel, UNA sola vez: si ya este te sorprendió, dale like y suscríbete.
+- Llamado a suscribirse UNA sola vez, hacia el minuto 1: justo después del gancho, cuando ya
+  presentaste al primer animal y dejaste una intriga («por cierto, si ya este te sorprendió, dale
+  like y suscríbete»); enseguida vuelve a la intriga («sí, vamos con la razón…»). Nunca al inicio.
 - Lo más fuerte va en el último tercio. Antes de los dos últimos niveles, una frase que retenga.
 - Último nivel (el villano): «el que te dije al principio»; confírmalo corto («Sí, una chinche.»);
   contrasta lo inocente que se ve con lo que hace; «no avisa»; lo más escalofriante al final.
