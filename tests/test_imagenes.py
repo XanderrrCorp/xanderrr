@@ -209,3 +209,21 @@ def test_proveedor_por_defecto_es_together(config, monkeypatch):
     from estudio.imagenes.proveedores import ProveedorTogether, crear_proveedor
     monkeypatch.setenv("TOGETHER_API_KEY", "x")
     assert isinstance(crear_proveedor(config, leer_config("proveedores.json")["imagenes"]), ProveedorTogether)
+
+
+def test_together_sin_clave_local_deja_que_el_proxy_la_ponga(config, monkeypatch):
+    from estudio.imagenes.proveedores import ProveedorTogether
+    monkeypatch.delenv("TOGETHER_API_KEY", raising=False)
+    monkeypatch.setattr("estudio.imagenes.proveedores.clave_api", lambda n: None)
+    sesion = _Sesion([_Resp(200, {"data": [{"b64_json": _png()}]})])
+    ProveedorTogether(config, "google/flash-image-2.5", sesion=sesion).generar("x. no text.", [])
+    assert "Authorization" not in sesion.pedidos[0][1]
+
+
+def test_together_clave_rechazada_no_se_reintenta(config, monkeypatch):
+    from estudio.imagenes.proveedores import ProveedorTogether
+    monkeypatch.setenv("TOGETHER_API_KEY", "mala")
+    sesion = _Sesion([_Resp(401, {"error": "invalid"})])
+    with pytest.raises(ErrorProveedor) as ex:
+        ProveedorTogether(config, "google/flash-image-2.5", sesion=sesion).generar("x. no text.", [])
+    assert not ex.value.reintentable

@@ -9,8 +9,9 @@ proyección para el video completo (~222 imágenes). Con ese número el dueño d
 si seguir.
 
 ## Requisitos (los configura el dueño en el entorno)
-- Variable de entorno `TOGETHER_API_KEY` (nunca escribirla en el repo: es público).
-- Dominio `api.together.xyz` permitido en el acceso a red.
+- Credencial del entorno tipo Bearer para `api.together.xyz` (el proxy inyecta `Authorization`; el código
+  no necesita la clave). Alternativa: variable `TOGETHER_API_KEY`. Nunca escribirla en el repo: es público.
+- Si `api.together.xyz` sigue bloqueado, añadirlo también en el acceso a red del entorno.
 - El `escenas.json` de alacranes: lo adjunta en el chat (queda en /root/.claude/uploads/...).
 
 ## Pasos

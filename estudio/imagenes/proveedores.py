@@ -182,9 +182,9 @@ class ProveedorTogether:
             raise PrecioFaltante(f"imagenes_por_modelo:{modelo}.precio_por_imagen")
         self.precio = float(t["precio_por_imagen"])
         self.modelo, self.ancho, self.alto, self.tiempo_max_s = modelo, ancho, alto, tiempo_max_s
+        # Sin clave local se asume que la inyecta el proxy del entorno (credencial
+        # "Bearer" configurada para api.together.xyz): no se manda cabecera propia.
         self.clave = clave_api(variable_clave)
-        if not self.clave:
-            raise ErrorProveedor(f"Falta {variable_clave} en .env", reintentable=False)
         self.sesion = sesion or requests.Session()
 
     def estimar_usd(self, prompt: str, referencias: list[Path]) -> float:
@@ -197,14 +197,19 @@ class ProveedorTogether:
             cuerpo["reference_images"] = [
                 f"data:{TIPOS_MIME.get(r.suffix.lower(), 'image/png')};base64,"
                 + base64.b64encode(r.read_bytes()).decode() for r in referencias]
-        r = self.sesion.post(TOGETHER_URL, headers={"Authorization": f"Bearer {self.clave}",
-                                                    "Content-Type": "application/json"},
+        cabeceras = {"Content-Type": "application/json"}
+        if self.clave:
+            cabeceras["Authorization"] = f"Bearer {self.clave}"
+        r = self.sesion.post(TOGETHER_URL, headers=cabeceras,
                              data=json.dumps(cuerpo), timeout=self.tiempo_max_s)
         if r.status_code == 429 or r.status_code >= 500:
             espera = _espera_sugerida(r)
             if espera:
                 time.sleep(min(espera, 60))
             raise ErrorProveedor(f"HTTP {r.status_code}: {r.text[:300]}", reintentable=True)
+        if r.status_code in (401, 403):
+            raise ErrorProveedor(f"HTTP {r.status_code}: Together no aceptó la clave. Revisa TOGETHER_API_KEY "
+                                 "en .env o la credencial del entorno para api.together.xyz", reintentable=False)
         if r.status_code >= 400:
             raise ErrorProveedor(f"HTTP {r.status_code}: {r.text[:300]}", reintentable=False)
         datos = (r.json().get("data") or [{}])[0]
