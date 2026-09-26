@@ -9,6 +9,11 @@ $Rama    = 'claude/new-session-uq98jd'
 $Zip     = "https://github.com/XanderrrCorp/xanderrr/archive/refs/heads/$Rama.zip"
 $Destino = Join-Path $env:LOCALAPPDATA 'Xandart'
 $Venv    = Join-Path $Destino '.venv'
+$Uv      = Join-Path $Destino 'herramientas\uv.exe'
+# Python propio y portátil dentro de la carpeta de Xandart: no usa el instalador
+# de Windows (que falla con el error 1603 si hay otro Python) ni pide administrador.
+$env:UV_PYTHON_INSTALL_DIR = Join-Path $Destino 'python'
+$env:UV_PYTHON_PREFERENCE  = 'only-managed'
 
 function Paso($texto) { Write-Host "`n==> $texto" -ForegroundColor Magenta }
 function RefrescarPath {
@@ -17,39 +22,23 @@ function RefrescarPath {
                 (Join-Path $env:USERPROFILE '.local\bin')
 }
 
-function BuscarPython {
-    foreach ($v in '3.12', '3.13', '3.11') {
-        try { $r = & py "-$v" -c 'import sys; print(sys.executable)' 2>$null; if ($LASTEXITCODE -eq 0 -and $r) { return $r.Trim() } } catch {}
-    }
-    foreach ($c in @("$env:LOCALAPPDATA\Programs\Python\Python312\python.exe",
-                     "$env:LOCALAPPDATA\Programs\Python\Python313\python.exe",
-                     "$env:LOCALAPPDATA\Programs\Python\Python311\python.exe")) {
-        if (Test-Path $c) { return $c }
-    }
-    return $null
-}
-
 Write-Host '  XANDART' -ForegroundColor Magenta
 Write-Host '  Instalando... no cierres esta ventana (tarda unos 5 minutos).'
 
 # ---------------------------------------------------------------- 1. Python
-Paso '1/5 Python'
-$Python = BuscarPython
-if (-not $Python) {
-    $hecho = $false
-    if (Get-Command winget -ErrorAction SilentlyContinue) {
-        winget install -e --id Python.Python.3.12 --scope user --silent --accept-package-agreements --accept-source-agreements
-        RefrescarPath; $Python = BuscarPython; $hecho = [bool]$Python
-    }
-    if (-not $hecho) {
-        $inst = Join-Path $env:TEMP 'python-3.12-instalador.exe'
-        Invoke-WebRequest 'https://www.python.org/ftp/python/3.12.7/python-3.12.7-amd64.exe' -OutFile $inst
-        Start-Process $inst -Wait -ArgumentList '/quiet', 'InstallAllUsers=0', 'PrependPath=1', 'Include_launcher=1'
-        RefrescarPath; $Python = BuscarPython
-    }
-    if (-not $Python) { throw 'No se pudo instalar Python. Instálalo desde python.org (marca "Add to PATH") y corre de nuevo el instalador.' }
+Paso '1/5 Python (portátil, solo para Xandart)'
+New-Item -ItemType Directory -Force (Split-Path $Uv) | Out-Null
+if (-not (Test-Path $Uv)) {
+    $tmpUv = Join-Path $env:TEMP ('uv-' + [guid]::NewGuid())
+    New-Item -ItemType Directory -Force $tmpUv | Out-Null
+    Invoke-WebRequest 'https://github.com/astral-sh/uv/releases/latest/download/uv-x86_64-pc-windows-msvc.zip' -OutFile "$tmpUv\uv.zip"
+    Expand-Archive "$tmpUv\uv.zip" -DestinationPath $tmpUv -Force
+    Copy-Item (Get-ChildItem $tmpUv -Recurse -Filter uv.exe | Select-Object -First 1).FullName $Uv
+    Remove-Item $tmpUv -Recurse -Force -ErrorAction SilentlyContinue
 }
-Write-Host "   listo: $Python"
+& $Uv python install 3.12
+if ($LASTEXITCODE -ne 0) { throw 'No se pudo bajar Python (revisa tu internet y corre de nuevo).' }
+Write-Host '   listo'
 
 # ---------------------------------------------------------------- 2. Xandart
 Paso '2/5 Descargando Xandart'
@@ -67,9 +56,12 @@ Write-Host "   listo: $Destino"
 
 # ---------------------------------------------------------------- 3. dependencias
 Paso '3/5 Instalando lo que necesita (imágenes, video, página)'
-if (-not (Test-Path "$Venv\Scripts\python.exe")) { & $Python -m venv $Venv }
-& "$Venv\Scripts\python.exe" -m pip install --upgrade pip --quiet --disable-pip-version-check
-& "$Venv\Scripts\python.exe" -m pip install -e $Destino --quiet --disable-pip-version-check
+if (-not (Test-Path "$Venv\Scripts\pythonw.exe")) {
+    if (Test-Path $Venv) { Remove-Item $Venv -Recurse -Force }
+    & $Uv venv --python 3.12 $Venv
+    if ($LASTEXITCODE -ne 0) { throw 'No se pudo preparar el entorno de Xandart.' }
+}
+& $Uv pip install --python "$Venv\Scripts\python.exe" -e $Destino
 if ($LASTEXITCODE -ne 0) { throw 'Falló la instalación de las dependencias (revisa tu internet y corre de nuevo).' }
 Write-Host '   listo'
 
