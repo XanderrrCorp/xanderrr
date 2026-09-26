@@ -36,7 +36,7 @@ def _huella(prompt: str, modelo: str, referencia: Path) -> str:
 
 
 def generar_poses(estilo_id: str, ids: list[str] | None = None, *, permiso: bool = False,
-                  nombre_proveedor: str | None = None, avisar=print) -> dict:
+                  nombre_proveedor: str | None = None, avisar=print, rehacer: list[str] | None = None) -> dict:
     """Genera las poses que falten (o las pedidas). Las que ya están no se vuelven a pagar."""
     estilo = cargar_estilo(estilo_id)
     base = carpeta_estilos() / estilo_id / "assets" / "mascota_base.png"
@@ -59,7 +59,7 @@ def generar_poses(estilo_id: str, ids: list[str] | None = None, *, permiso: bool
         prompt = prompts.armar(plantilla, estilo, estilo.personaje_por_defecto or "", pose.descripcion)
         huella = _huella(prompt, proveedor.modelo, base)
         archivo = destino / f"{pose.id}.png"
-        if idx.get(pose.id, {}).get("huella") == huella and archivo.exists():
+        if archivo.exists() and pose.id in idx and not (rehacer and pose.id in rehacer):
             salida["ya_estaban"].append(pose.id)
             continue
         try:
@@ -109,7 +109,8 @@ def carpeta_presentador(estilo_id: str) -> Path:
 
 
 def generar_presentador(estilo_id: str, ids: list[str] | None = None, *, permiso: bool = False,
-                        nombre_proveedor: str | None = None, avisar=print, cara: Path | None = None) -> dict:
+                        nombre_proveedor: str | None = None, avisar=print, cara: Path | None = None,
+                        rehacer: list[str] | None = None) -> dict:
     """Poses del presentador (persona inventada), una sola vez. La primera pose fija la
     cara, la ropa y el lugar; las demás la llevan como referencia para ser la MISMA
     persona en el mismo sitio. El logo del canal va siempre como referencia."""
@@ -155,7 +156,8 @@ def generar_presentador(estilo_id: str, ids: list[str] | None = None, *, permiso
             h.update(hashlib.sha256(r.read_bytes()).digest())
         huella = h.hexdigest()[:16]
         archivo = destino / f"{pose.id}.png"
-        if idx.get(pose.id, {}).get("huella") == huella and archivo.exists():
+        # una pose ya hecha (y aprobada) nunca se rehace sola: solo si se pide con rehacer
+        if archivo.exists() and pose.id in idx and not (rehacer and pose.id in rehacer):
             salida["ya_estaban"].append(pose.id)
             continue
         try:
