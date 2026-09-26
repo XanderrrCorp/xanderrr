@@ -381,6 +381,21 @@ def _ya_abierto() -> bool:
         return s.connect_ex(("127.0.0.1", PUERTO)) == 0
 
 
+def _cerrar_puerto() -> None:
+    """Último recurso en Windows: cierra el proceso que ocupa el puerto de Xandart
+    (un Xandart muy viejo que no sabe apagarse solo)."""
+    import time
+
+    salida = subprocess.run(["netstat", "-ano", "-p", "TCP"], capture_output=True, text=True,
+                            creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0)).stdout
+    for linea in salida.splitlines():
+        partes = linea.split()
+        if len(partes) >= 5 and partes[1].endswith(f":{PUERTO}") and partes[3].upper() in ("LISTENING", "ESCUCHANDO"):
+            subprocess.run(["taskkill", "/F", "/T", "/PID", partes[4]], capture_output=True,
+                           creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
+    time.sleep(1.5)
+
+
 def main():
     import uvicorn
 
@@ -411,6 +426,8 @@ def main():
             time.sleep(0.5)
             if not _ya_abierto():
                 break
+        if _ya_abierto() and os.name == "nt":
+            _cerrar_puerto()
     if "--sin-navegador" not in sys.argv:
         import threading
 
