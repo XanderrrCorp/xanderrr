@@ -7,24 +7,48 @@
   "bloque_estilo": "Detailed natural-history encyclopedia illustration, fine ink linework with soft watercolor shading, accurate anatomy, muted natural palette",
   "personaje_por_defecto": "A small original cartoon explorer mascot with a round head, big expressive eyes, khaki explorer outfit and a tiny backpack, bold clean outlines, flat colors",
   "tipos_de_escena": [
-    { "id": "animal_fondo_gris", "descripcion": "Animal o sujeto principal aislado para recortar",
-      "plantilla_prompt": "{bloque_estilo}. {sujeto}, {accion}, full body, isolated on a plain medium gray background. 16:9, no text.",
-      "quitar_fondo": true, "modo_montaje": "recorte_sobre_papel" },
-    { "id": "mascota_fondo_gris", "descripcion": "Mascota reaccionando, aislada para recortar",
-      "plantilla_prompt": "{personaje}, {accion}, full body, isolated on a plain medium gray background. 16:9, no text.",
-      "quitar_fondo": true, "modo_montaje": "recorte_sobre_papel" },
-    { "id": "diagrama_fondo_blanco", "descripcion": "Detalle anatómico o explicativo tipo lámina",
-      "plantilla_prompt": "{bloque_estilo}. Scientific plate style close-up of {sujeto}, {accion}, on a plain white background. 16:9, no text, no labels.",
-      "quitar_fondo": true, "modo_montaje": "recorte_sobre_papel" },
-    { "id": "escena_cartoon_completa", "descripcion": "Escena completa con la mascota en un lugar",
-      "plantilla_prompt": "{personaje}, {accion} in {lugar}, cartoon scene with simple background. 16:9, no text.",
-      "quitar_fondo": false, "modo_montaje": "recuadro_sobre_papel" },
-    { "id": "escena_mixta", "descripcion": "Mascota y animal juntos en una escena",
-      "plantilla_prompt": "{bloque_estilo}. {sujeto} and {personaje}, {accion} in {lugar}. 16:9, no text.",
-      "quitar_fondo": false, "modo_montaje": "recuadro_sobre_papel" },
-    { "id": "amenaza_cinematografica", "descripcion": "Plano dramático del peligro",
-      "plantilla_prompt": "{bloque_estilo}, cinematic dramatic lighting, low angle, deep shadows. {sujeto}, {accion} in {lugar}. 16:9, no text.",
-      "quitar_fondo": false, "modo_montaje": "recuadro_sobre_papel" }
+    {
+      "id": "animal_fondo_gris",
+      "descripcion": "Animal o sujeto principal aislado para recortar",
+      "plantilla_prompt": "{bloque_estilo}. {descripcion}. Full body, isolated on a plain medium gray background. 16:9, no text.",
+      "quitar_fondo": true,
+      "modo_montaje": "recorte_sobre_papel"
+    },
+    {
+      "id": "mascota_fondo_gris",
+      "descripcion": "Mascota reaccionando, aislada para recortar",
+      "plantilla_prompt": "{personaje}. {descripcion}. Full body, isolated on a plain medium gray background. 16:9, no text.",
+      "quitar_fondo": true,
+      "modo_montaje": "recorte_sobre_papel"
+    },
+    {
+      "id": "diagrama_fondo_blanco",
+      "descripcion": "Detalle anatómico o explicativo tipo lámina",
+      "plantilla_prompt": "{bloque_estilo}. Scientific plate style close-up: {descripcion}. Plain white background. 16:9, no text, no labels.",
+      "quitar_fondo": true,
+      "modo_montaje": "recorte_sobre_papel"
+    },
+    {
+      "id": "escena_cartoon_completa",
+      "descripcion": "Escena completa con la mascota en un lugar",
+      "plantilla_prompt": "{personaje}. {descripcion}. Cartoon scene with a simple background. 16:9, no text.",
+      "quitar_fondo": false,
+      "modo_montaje": "recuadro_sobre_papel"
+    },
+    {
+      "id": "escena_mixta",
+      "descripcion": "Mascota y animal juntos en una escena",
+      "plantilla_prompt": "{bloque_estilo}. {descripcion}. The mascot in the scene: {personaje}. 16:9, no text.",
+      "quitar_fondo": false,
+      "modo_montaje": "recuadro_sobre_papel"
+    },
+    {
+      "id": "amenaza_cinematografica",
+      "descripcion": "Plano dramático del peligro",
+      "plantilla_prompt": "{bloque_estilo}, cinematic dramatic lighting, low angle, deep shadows. {descripcion}. 16:9, no text.",
+      "quitar_fondo": false,
+      "modo_montaje": "recuadro_sobre_papel"
+    }
   ],
   "mezcla_recomendada": {
     "animal_fondo_gris": 0.3,
@@ -34,15 +58,32 @@
     "escena_mixta": 0.15,
     "amenaza_cinematografica": 0.1
   },
-  "fondo_montaje": { "tipo": "textura", "valor": "assets/papel_arrugado.png" },
-  "modos_de_montaje_permitidos": ["recorte_sobre_papel", "recuadro_sobre_papel"],
+  "fondo_montaje": {
+    "tipo": "textura",
+    "valor": "assets/papel_arrugado.png"
+  },
+  "modos_de_montaje_permitidos": [
+    "recorte_sobre_papel",
+    "recuadro_sobre_papel"
+  ],
   "gramatica_edicion": "gramaticas/estandar.json",
   "perfil_edicion": "perfiles/enciclopedia_ritmo_alto.json",
   "movimiento_maximo": 0.05,
-  "subtitulos": { "estilo": "blanco_contorno_negro", "posicion": "abajo_centro" },
-  "musica_por_defecto": ["tension", "curiosidad"],
+  "subtitulos": {
+    "estilo": "blanco_contorno_negro",
+    "posicion": "abajo_centro"
+  },
+  "musica_por_defecto": [
+    "tension",
+    "curiosidad"
+  ],
   "costo_relativo": 1.0,
   "proporcion_imagenes_unicas": 0.6,
   "proporcion_minima_unicas": 0.4,
-  "imagenes_fijas_por_video": 6
+  "imagenes_fijas_por_video": 6,
+  "_variables_plantilla": "{bloque_estilo} = bloque de estilo; {personaje} = bloqueo literal del personaje del canal; {descripcion} = lo que muestra la escena (visual.prompt); {sujeto} {accion} {lugar} = campos opcionales si el Director visual los separa.",
+  "plantillas_assets": {
+    "personaje": "{personaje}. Character reference sheet: full body, front view, neutral friendly pose. Isolated on a plain medium gray background. 16:9, no text.",
+    "_defecto": "{bloque_estilo}. {descripcion}. Isolated on a plain medium gray background. 16:9, no text."
+  }
 }

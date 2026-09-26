@@ -36,3 +36,26 @@ python -m estudio costos --slug alacranes
 | `proyectos/` | Proyectos locales (fuera de git) |
 
 Ningún tipo de escena, plantilla de prompt ni modo de montaje está escrito en el código: todo se lee del estilo.
+
+## Prueba real de imágenes (Fase 1): 10 escenas de alacranes
+
+En tu PC, con la clave de Gemini en `.env` (`GEMINI_API_KEY=...`):
+
+```bash
+pip install -e ".[dev]"
+python -m estudio importar-v1 RUTA/escenas.json --slug alacranes --canal animales-peligrosos
+python -m estudio generar-imagenes --slug alacranes --primeras 10
+```
+
+Al terminar muestra el costo real de la corrida en pesos (con las imágenes de
+referencia incluidas, tomado de lo que devuelve la API), el costo medio por imagen
+y la proyección para todas las imágenes del video. Deja una hoja de contacto en
+`proyectos/alacranes/render/hoja_imagenes.png` y cada llamada en
+`proyectos/alacranes/logs/costos.jsonl`.
+
+- Volver a correr el comando no vuelve a pagar lo que ya está hecho.
+- Si se llega al máximo de 20.000 COP (o al tope de llamadas del video) se para
+  y lo dice; `--permiso` es el permiso explícito para seguir.
+- Para ensayar sin gastar: `--proveedor simulado`.
+- El proveedor y el modelo se cambian en `config/proveedores.json`; las tarifas,
+  en `config/costos.json`.

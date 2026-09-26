@@ -55,6 +55,7 @@ class Subtitulos(Modelo):
 
 
 class Estilo(Modelo):
+    model_config = ConfigDict(extra="forbid", populate_by_name=True)
     id: str
     nombre: str
     descripcion: str
@@ -76,6 +77,9 @@ class Estilo(Modelo):
     proporcion_imagenes_unicas: float = Field(0.6, gt=0, le=1)
     proporcion_minima_unicas: float = Field(0.4, gt=0, le=1)
     imagenes_fijas_por_video: int = Field(0, ge=0)
+    # Plantillas de los assets reutilizables (personaje base, etc.) por tipo de asset.
+    plantillas_assets: dict[str, str] = {}
+    variables_plantilla: str | None = Field(None, alias="_variables_plantilla")
 
     @property
     def ids_tipos(self) -> set[str]:
@@ -94,6 +98,9 @@ class Estilo(Modelo):
                 raise ValueError(f"tipo '{t.id}' usa modo '{t.modo_montaje}' no permitido por el estilo")
             if "no text" not in t.plantilla_prompt.lower():
                 raise ValueError(f"la plantilla de '{t.id}' debe pedir 'no text' (regla 11)")
+        for k, plantilla in self.plantillas_assets.items():
+            if "no text" not in plantilla.lower():
+                raise ValueError(f"la plantilla del asset '{k}' debe pedir 'no text' (regla 11)")
         desconocidos = set(self.mezcla_recomendada) - set(ids)
         if desconocidos:
             raise ValueError(f"mezcla_recomendada usa tipos inexistentes: {sorted(desconocidos)}")

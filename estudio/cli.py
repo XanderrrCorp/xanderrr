@@ -7,6 +7,8 @@
     python -m estudio estimar --minutos 10 --estilo enciclopedia_mascota
     python -m estudio validar --slug alacranes
     python -m estudio costos --slug alacranes
+    python -m estudio generar-imagenes --slug alacranes --primeras 10
+    python -m estudio generar-imagenes --slug prueba --primeras 10 --proveedor simulado
 """
 from __future__ import annotations
 
@@ -100,6 +102,46 @@ def _cmd_costos(a: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_generar_imagenes(a: argparse.Namespace) -> int:
+    from .imagenes.generador import generar_imagenes, hoja_de_contacto, proyectar
+
+    c = CarpetaProyecto.abrir(a.slug)
+    config = ConfigCostos.cargar()
+    ids = [int(x) for x in a.ids.split(",")] if a.ids else None
+    antes = c.libro(config).total_cop()
+    r = generar_imagenes(c, primeras=a.primeras, ids=ids, nombre_proveedor=a.proveedor,
+                         permiso=a.permiso, config=config)
+    print()
+    print(f"Proveedor: {r.proveedor} · modelo {r.modelo}")
+    print(f"Generadas: {len(r.generadas)} · ya estaban: {len(r.ya_estaban)} · reusadas: {len(r.reusadas)} "
+          f"· fallidas: {len(r.fallidas)} · llamadas pagadas: {r.llamadas}")
+    for k, v in r.fallidas.items():
+        print(f"  fallida {k}: {v}")
+    for av in r.avisos:
+        print(f"  aviso: {av}")
+    for pend in r.pendientes:
+        print(f"  pendiente: {pend}")
+    gastado = c.libro(config).total_cop() - antes
+    print(f"Costo real de esta corrida: {formato_cop(gastado)} ({r.costo_usd:.4f} USD)")
+    if r.costos_por_imagen:
+        medio = sum(r.costos_por_imagen.values()) / len(r.costos_por_imagen)
+        print(f"Costo medio por imagen en esta corrida: {medio:.4f} USD · {formato_cop(config.a_cop(medio))}")
+    print(f"Total del proyecto hasta ahora: {formato_cop(c.libro(config).total_cop())}")
+    pr = proyectar(c, config)
+    if pr:
+        print(f"Proyección de imágenes del video completo ({pr.base}): {pr.imagenes_video} imágenes x "
+              f"{pr.costo_medio_usd:.4f} USD = {pr.total_usd:.2f} USD · {formato_cop(pr.total_cop)}")
+    claves = r.generadas + r.ya_estaban
+    hoja = hoja_de_contacto(c, [k for k in claves if k.startswith("escena:")] or claves,
+                            c.ruta / "render" / "hoja_imagenes.png")
+    if hoja:
+        print(f"Hoja de contacto: {hoja}")
+    if r.frenado:
+        print(f"FRENO: {r.frenado}", file=sys.stderr)
+        return 3
+    return 1 if r.fallidas else 0
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(prog="estudio", description="Estudio de producción · Buscanichos")
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -135,6 +177,14 @@ def main(argv: list[str] | None = None) -> int:
     k = sub.add_parser("costos", help="muestra el libro de costos del proyecto")
     k.add_argument("--slug", required=True)
     k.set_defaults(fn=_cmd_costos)
+
+    g = sub.add_parser("generar-imagenes", help="genera las imágenes de las escenas (reanudable, con freno)")
+    g.add_argument("--slug", required=True)
+    g.add_argument("--primeras", type=int, help="solo las N primeras escenas")
+    g.add_argument("--ids", help="ids de escena separados por coma")
+    g.add_argument("--proveedor", help="gemini | simulado (por defecto, config/proveedores.json)")
+    g.add_argument("--permiso", action="store_true", help="permite pasar el máximo y el tope de llamadas")
+    g.set_defaults(fn=_cmd_generar_imagenes)
 
     a = ap.parse_args(argv)
     try:

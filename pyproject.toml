@@ -3,7 +3,9 @@ name = "estudio"
 version = "0.1.0"
 description = "Estudio de producción de video para Buscanichos"
 requires-python = ">=3.11"
-dependencies = ["pydantic>=2.6"]
+dependencies = ["pydantic>=2.6", "pillow>=10", "requests>=2.31"]
+
+# rembg (quitar fondos) es opcional y pesado: pip install rembg
 
 [project.optional-dependencies]
 dev = ["pytest>=8"]

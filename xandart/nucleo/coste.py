@@ -45,10 +45,12 @@ try:
     from .proyecto import (Proyecto, ahora, escribir_json, leer_json,
                            leer_jsonl, lock_de)
     from .estado import PASOS, PASOS_POR_ID
+    from . import freno
 except ImportError:  # ejecutado con la carpeta nucleo directamente en sys.path
     from proyecto import (Proyecto, ahora, escribir_json, leer_json,
                           leer_jsonl, lock_de)
     from estado import PASOS, PASOS_POR_ID
+    import freno
 
 RAIZ_ESTUDIO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # la tabla de tarifas se puede desviar con ESTUDIO_TARIFAS por el mismo motivo
@@ -693,8 +695,20 @@ def _medir_previsualizacion(original):
     return medido
 
 
+def _frenar(usd_estimado, que):
+    """El freno en pesos, ANTES de la llamada (ver nucleo/freno.py)."""
+    actual = contexto_actual()
+    freno.autorizar(actual.medidor if actual else None, usd_estimado, que)
+
+
+def _usd_tts(caracteres):
+    precio = tarifa_caracter()
+    return (precio or 0.0) * caracteres
+
+
 def _medir_toma_real(original):
     def medido(texto, cfg, *args, **kwargs):
+        _frenar(_usd_tts(len(texto or "")), "la toma de voz")
         resultado = original(texto, cfg, *args, **kwargs)
         # se anota DESPUES y con el texto que se envio: si la llamada revienta
         # no hay recuento fiable y preferimos un hueco a un numero inventado
@@ -722,6 +736,8 @@ def _medir_toma_por_contexto(original):
     fiable, y un hueco es mejor que un numero inventado.
     """
     def medido(trozos, cfg, *args, **kwargs):
+        trozos = list(trozos or [])
+        _frenar(_usd_tts(sum(len(str(t or "")) for t in trozos)), "la toma de voz")
         resultado = original(trozos, cfg, *args, **kwargs)
         cfg = cfg if isinstance(cfg, dict) else {}
         piezas = list(trozos or [])
@@ -746,6 +762,9 @@ def _medir_claude(operacion):
 
 def _medir_imagen(original):
     def medido(prompt, referencias, *args, **kwargs):
+        actual = contexto_actual()
+        if actual is not None:
+            freno.autorizar(actual.medidor, freno.usd_medio_por_imagen(actual.medidor), "la imagen")
         png, meta = original(prompt, referencias, *args, **kwargs)
         meta = meta if isinstance(meta, dict) else {}
         calidad = kwargs.get("quality") or meta.get("quality") or "low"

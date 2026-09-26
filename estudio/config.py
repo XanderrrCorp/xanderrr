@@ -13,6 +13,29 @@ def ruta_proyectos() -> Path:
     return Path(os.environ.get("ESTUDIO_PROYECTOS") or RAIZ / "proyectos")
 
 
+def _leer_env() -> dict[str, str]:
+    """Lee `.env` de la raíz sin dependencias. Las variables del sistema mandan."""
+    valores: dict[str, str] = {}
+    ruta = RAIZ / ".env"
+    if ruta.exists():
+        for linea in ruta.read_text(encoding="utf-8").splitlines():
+            linea = linea.strip()
+            if not linea or linea.startswith("#") or "=" not in linea:
+                continue
+            k, v = linea.split("=", 1)
+            valores[k.strip()] = v.strip().strip('"').strip("'")
+    return valores
+
+
+def clave_api(nombre: str) -> str | None:
+    """Clave de un proveedor: primero el entorno, luego `.env`. Nunca del código."""
+    return os.environ.get(nombre) or _leer_env().get(nombre) or None
+
+
+def leer_config(nombre: str) -> dict[str, Any]:
+    return leer_json(RAIZ / "config" / nombre)
+
+
 def leer_json(ruta: Path) -> Any:
     with open(ruta, encoding="utf-8") as f:
         return json.load(f)

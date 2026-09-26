@@ -1,0 +1,11 @@
+{
+  "_nota": "Proveedor y modelo de cada servicio. Cambiar aquí no requiere tocar código. Las claves van en .env.",
+  "imagenes": {
+    "proveedor": "gemini",
+    "modelo": "gemini-2.5-flash-image",
+    "relacion_aspecto": "16:9",
+    "reintentos_por_escena": 2,
+    "tiempo_max_s": 120,
+    "variable_clave": "GEMINI_API_KEY"
+  }
+}
