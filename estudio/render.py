@@ -458,6 +458,22 @@ def _sfx(tipo: str, variante: int) -> np.ndarray:
         x = t(0.3)
         f = 500 * (1 + 1.5 * np.sin(x * 40)) * (1 + 0.05 * variante)
         return np.sin(2 * math.pi * np.cumsum(f) / SR) * np.exp(-x * 7) * 0.35
+    if tipo == "piano_miedo":
+        # nota grave de piano con un semitono encima (disonante) que queda sonando
+        x = t(3.2)
+        base = 55 * (1 + 0.02 * variante)
+        nota = sum(a * np.sin(2 * math.pi * base * r * x) * np.exp(-x * (1.1 + 0.6 * k))
+                   for k, (r, a) in enumerate([(1, 1.0), (2, 0.5), (3, 0.25), (16 / 15, 0.7), (32 / 15, 0.3)]))
+        golpe = rng.normal(0, 1, len(x)) * np.exp(-x * 60) * 0.3
+        return (nota * 0.35 + golpe) * np.minimum(1, x / 0.004)
+    if tipo == "stinger_terror":
+        # golpe de terror: impacto grave + chillido disonante de cuerdas que se apaga
+        x = t(2.4)
+        boom = np.sin(2 * math.pi * (48 * np.exp(-x * 2) + 28) * x) * np.exp(-x * 2.5)
+        chillido = sum(np.sin(2 * math.pi * f * x * (1 + 0.004 * np.sin(2 * math.pi * 6 * x)))
+                       for f in (880 * (1 + 0.01 * variante), 932, 1245)) * np.exp(-x * 1.8) * 0.12
+        ruido = rng.normal(0, 1, len(x)) * np.exp(-x * 25) * 0.4
+        return (boom * 0.7 + chillido + ruido) * 0.8
     x = t(0.12)
     f0 = 620 + 70 * variante
     return np.sin(2 * math.pi * f0 * x * (1 + 1.5 * x)) * np.exp(-x * 40) * 0.5   # pop

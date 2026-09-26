@@ -121,6 +121,8 @@ class Presentador(Modelo):
     separacion_minima_seg: float = Field(40, ge=5)
     maximo_por_video: int = Field(8, ge=0)
     maximo_por_pose: int = Field(2, ge=1)       # la misma reacción repetida se ve mecánica
+    # reacción -> efecto de sonido que la acompaña (golpe de terror, nota de piano de miedo…)
+    sonidos: dict[str, str] = {}
     # YouTube pide marcar «contenido alterado o sintético» cuando aparece una persona realista hecha con IA
     requiere_divulgacion_contenido_sintetico: bool = True
 

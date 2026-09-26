@@ -211,6 +211,7 @@ const NOMBRES_AUDIO = {
   barrido: 'Barrido (whoosh) · cambios de sección', latido: 'Latido · ráfagas de tensión',
   subida_tension: 'Subida de tensión · antes de la revelación', zumbido: 'Zumbido grave · amenaza',
   alerta: 'Alerta corta · advertencias', comico: 'Cómico · humor',
+  stinger_terror: 'Golpe de terror (stinger) · shock y revelación', piano_miedo: 'Nota de piano de miedo · susurro, serio',
   tension: 'Tensión', misterio: 'Misterio', epico: 'Épico', alivio: 'Alivio', curiosidad: 'Curiosidad', final: 'Final',
 };
 let BIB = null;

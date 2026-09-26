@@ -218,6 +218,15 @@
     "duracion_reaccion_seg": 2.0,
     "separacion_minima_seg": 40,
     "maximo_por_video": 8,
-    "maximo_por_pose": 2
+    "maximo_por_pose": 2,
+    "sonidos": {
+      "shock": "stinger_terror",
+      "alarmado": "stinger_terror",
+      "susurro": "piano_miedo",
+      "serio": "piano_miedo",
+      "pensativo": "piano_miedo",
+      "sorpresa": "piano_miedo",
+      "risa": "comico"
+    }
   }
 }

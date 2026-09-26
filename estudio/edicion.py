@@ -35,10 +35,10 @@ FPS = 30
 ADELANTO = 3 / FPS
 MAX_SIN_CAMBIO = 4.5
 # prioridad al recortar efectos de sonido por frecuencia: se quitan primero los bajos
-PRIORIDAD = {"golpe_grave": 6, "subida_tension": 5, "barrido": 4, "alerta": 3, "pop": 3, "comico": 3,
-             "zumbido": 2, "latido": 2}
+PRIORIDAD = {"golpe_grave": 6, "stinger_terror": 6, "subida_tension": 5, "piano_miedo": 5, "barrido": 4,
+             "alerta": 3, "pop": 3, "comico": 3, "zumbido": 2, "latido": 2}
 VOLUMEN = {"barrido": 0.42, "golpe_grave": 0.9, "pop": 0.32, "zumbido": 0.33, "latido": 0.55,
-           "subida_tension": 0.45, "alerta": 0.4, "comico": 0.45}
+           "subida_tension": 0.45, "alerta": 0.4, "comico": 0.45, "stinger_terror": 0.75, "piano_miedo": 0.6}
 VARIANTES = 4
 # recursos estructurales (tira, pixelado) que no cuentan para uso_maximo_por_recurso
 ESTRUCTURALES = {"tira_deslizar_a_nivel", "pixelar", "revelar_pixelado", "destello_rojo", "paneo_lento", "zoom_golpe"}
@@ -228,7 +228,7 @@ def _animo_de_seccion(escenas: list, k: int, n: int) -> str:
 
 
 def _reacciones(estilo: Estilo, escenas: list, clips: list, raiz: Path, revelacion: int | None,
-                rng: random.Random, elegidas: list | None = None) -> int:
+                rng: random.Random, elegidas: list | None = None, sfx: list | None = None) -> int:
     """Cortes de ~2 s al presentador reaccionando (la voz sigue). Solo en las intenciones
     que el estilo manda, con prioridad en su orden (revelación, giro, humor…), separados
     por separacion_minima_seg, nunca en escenas seguidas y como máximo maximo_por_video."""
@@ -288,6 +288,9 @@ def _reacciones(estilo: Estilo, escenas: list, clips: list, raiz: Path, revelaci
                              "archivo": f"assets/presentador/{pose}.mp4", "desde": round(rng.uniform(0.3, 1.2), 2),
                              "pose": pose})
         c["razon"] += f"; corte de {d:.0f} s al presentador reaccionando ({pose})" + (f": {por_que}" if por_que else "")
+        sonido = pr.sonidos.get(pose)
+        if sonido and sfx is not None:
+            _sfx(sfx, sonido, t0 + 0.05, i, f"{sonido.replace('_', ' ')} con la reacción de {pose}")
     return len(elegidos)
 
 
@@ -594,7 +597,7 @@ def construir_edl(carpeta: CarpetaProyecto) -> dict:
             acum += len(tr)
             t1 = a + (b - a) * acum / largo
             subtitulos.append({"inicio": round(t0, 3), "fin": round(max(t1, t0 + 0.2), 3), "texto": tr})
-    reacciones = _reacciones(estilo, escenas, clips, carpeta.ruta, revelacion, rng, direccion.get("reacciones"))
+    reacciones = _reacciones(estilo, escenas, clips, carpeta.ruta, revelacion, rng, direccion.get("reacciones"), sfx)
     if reacciones:
         p = carpeta.cargar()
         if not p.requiere_divulgacion_contenido_sintetico:
