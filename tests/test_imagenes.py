@@ -53,7 +53,7 @@ def test_cambiar_el_prompt_regenera_solo_esa(proyecto, config):
 
 def test_referencia_del_personaje(proyecto, config):
     generar_imagenes(proyecto, primeras=10, proveedor=ProveedorSimulado(config), config=config, avisar=silencio)
-    m = json.loads((proyecto.ruta / "imagenes" / "manifiesto.json").read_text())
+    m = json.loads((proyecto.ruta / "imagenes" / "manifiesto.json").read_text(encoding="utf-8"))
     assert m["escena:4"]["referencias"] == ["mascota_base.png"]   # tipo con {personaje}
     assert m["escena:1"]["referencias"] == []                     # animal solo
 
@@ -108,7 +108,7 @@ def test_prompts_salen_del_estilo(tmp_path, monkeypatch, estilo):
     p1 = prompts.prompt_de_escena(e1, estilo, "MASCOTA")
     inicio = estilo.tipo(e1.visual.tipo).plantilla_prompt.split("{")[0]
     assert inicio and p1.startswith(inicio)
-    datos = json.loads((RAIZ / "estilos/enciclopedia_mascota/estilo.json").read_text())
+    datos = json.loads((RAIZ / "estilos/enciclopedia_mascota/estilo.json").read_text(encoding="utf-8"))
     for t in datos["tipos_de_escena"]:
         if t["id"] == e1.visual.tipo:
             t["plantilla_prompt"] = "PLANTILLA NUEVA {descripcion}. 16:9, no text."
@@ -118,7 +118,7 @@ def test_prompts_salen_del_estilo(tmp_path, monkeypatch, estilo):
 
 
 def test_ningun_tipo_de_escena_escrito_en_el_codigo(estilo):
-    codigo = "\n".join(p.read_text() for p in (RAIZ / "estudio").rglob("*.py"))
+    codigo = "\n".join(p.read_text(encoding="utf-8") for p in (RAIZ / "estudio").rglob("*.py"))
     for tipo in estilo.ids_tipos | set(estilo.modos_de_montaje_permitidos):
         assert not re.search(rf"['\"]{tipo}['\"]", codigo), f"'{tipo}' está escrito en el código"
 

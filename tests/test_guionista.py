@@ -76,8 +76,8 @@ def test_tipo_inventado_se_rechaza(estilo):
 
 def test_ubicar_villano(tmp_path, estilo):
     doc, direccion, _ = a_escenas(_datos(), estilo, "c")
-    (tmp_path / "escenas.json").write_text(json.dumps(doc))
-    (tmp_path / "direccion.json").write_text(json.dumps(direccion))
+    (tmp_path / "escenas.json").write_text(json.dumps(doc), encoding="utf-8")
+    (tmp_path / "direccion.json").write_text(json.dumps(direccion), encoding="utf-8")
     falso = lambda prompt, **kw: ('{"1": [[0.6, 0.3, 0.9, 1.2]]}', {})
     d = ubicar_villano(tmp_path, ejecutar=falso)
     assert d["pixelar"] == {"1": [[0.6, 0.3, 0.9, 1.0]]}

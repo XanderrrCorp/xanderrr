@@ -9,7 +9,7 @@ def test_registra_en_jsonl(tmp_path, config):
     e = libro.registrar(modulo="guionista", proveedor="anthropic", modelo="claude-opus-5",
                         unidades={"input": 1000, "output": 500}, costo_usd=0.1)
     assert e["costo_cop"] == pytest.approx(310)
-    assert (tmp_path / "logs" / "costos.jsonl").read_text().count("\n") == 1
+    assert (tmp_path / "logs" / "costos.jsonl").read_text(encoding="utf-8").count("\n") == 1
     assert libro.total_cop() == pytest.approx(310)
 
 

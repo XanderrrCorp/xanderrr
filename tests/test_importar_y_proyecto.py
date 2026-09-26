@@ -62,10 +62,10 @@ def test_semilla_fija_y_proyectos_viejos():
     s1 = c.cargar().semilla
     assert CarpetaProyecto.abrir(c.ruta.name).cargar().semilla == s1
     # proyecto creado antes del anexo: sin semilla ni paso voz_muestra
-    datos = json.loads(c.archivo_proyecto.read_text())
+    datos = json.loads(c.archivo_proyecto.read_text(encoding="utf-8"))
     del datos["semilla"]
     del datos["pasos"]["voz_muestra"]
-    c.archivo_proyecto.write_text(json.dumps(datos))
+    c.archivo_proyecto.write_text(json.dumps(datos), encoding="utf-8")
     s2 = c.cargar().semilla
     assert c.cargar().semilla == s2  # se fijó la primera vez
     assert c.cargar().pasos["voz_muestra"].estado == "pendiente"
