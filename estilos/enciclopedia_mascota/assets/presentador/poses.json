@@ -38,5 +38,45 @@
     "modelo": "google/flash-image-2.5",
     "costo_usd": 0.0403,
     "generada": "2026-09-26T23:03:33+00:00"
+  },
+  "pensativo": {
+    "archivo": "pensativo.png",
+    "huella": "03b4fe4ee48c1397",
+    "prompt": "Photorealistic 16:9 video frame from a nature YouTube channel, medium shot from the waist up, eye-level camera, shallow depth of field, soft warm natural window light, natural skin texture, shot on a cinema camera. An invented young Latin American man about 23 years old, warm olive-tan skin, a thin neat mustache and a small trimmed goatee on the chin (no full beard), short black hair, thick natural eyebrows, brown eyes, slim build, urban streetwear style: an oversized plain white t-shirt without any print or brand, a turquoise baseball cap with a mesh back worn backwards and without any logo, a thick shiny silver chain necklace with a pendant, small silver stud earrings, a silver bracelet and silver rings, no tattoos on the face or neck. The exact same man as in the second reference image: same face, same beard, same hair, same clothes and the same room, sign and microphone. He looks thoughtful, hand on his chin, eyes up and to the side, as if doing the math. Setting: a modern home YouTube studio with its own look: a deep forest-green accent wall with vertical wooden slat panels, a warm amber LED strip glowing behind the slats, a lit glass terrarium with tropical plants and moss on a low dark wooden cabinet at the right, a framed entomology display of pinned beetles and butterflies on the wall, no window, no curtains, no bookshelf; on the cabinet behind him on the LEFT side of the frame stands a round wooden sign that reproduces the channel logo from the reference image (a cute cartoon tarantula wearing an explorer pith helmet inside a green circle), logo only, without any letters, softly lit; in the lower right foreground a black podcast microphone on a black boom arm, pointed at his mouth. He is an invented person who does not resemble any real or famous person. No subtitles, no text, no letters anywhere.",
+    "uso": "Preguntas al espectador",
+    "proveedor": "together",
+    "modelo": "google/flash-image-2.5",
+    "costo_usd": 0.0403,
+    "generada": "2026-09-26T23:06:15+00:00"
+  },
+  "alarmado": {
+    "archivo": "alarmado.png",
+    "huella": "6b721c250648e9c2",
+    "prompt": "Photorealistic 16:9 video frame from a nature YouTube channel, medium shot from the waist up, eye-level camera, shallow depth of field, soft warm natural window light, natural skin texture, shot on a cinema camera. An invented young Latin American man about 23 years old, warm olive-tan skin, a thin neat mustache and a small trimmed goatee on the chin (no full beard), short black hair, thick natural eyebrows, brown eyes, slim build, urban streetwear style: an oversized plain white t-shirt without any print or brand, a turquoise baseball cap with a mesh back worn backwards and without any logo, a thick shiny silver chain necklace with a pendant, small silver stud earrings, a silver bracelet and silver rings, no tattoos on the face or neck. The exact same man as in the second reference image: same face, same beard, same hair, same clothes and the same room, sign and microphone. He pulls back in alarm, both palms raised toward the camera, eyes wide. Setting: a modern home YouTube studio with its own look: a deep forest-green accent wall with vertical wooden slat panels, a warm amber LED strip glowing behind the slats, a lit glass terrarium with tropical plants and moss on a low dark wooden cabinet at the right, a framed entomology display of pinned beetles and butterflies on the wall, no window, no curtains, no bookshelf; on the cabinet behind him on the LEFT side of the frame stands a round wooden sign that reproduces the channel logo from the reference image (a cute cartoon tarantula wearing an explorer pith helmet inside a green circle), logo only, without any letters, softly lit; in the lower right foreground a black podcast microphone on a black boom arm, pointed at his mouth. He is an invented person who does not resemble any real or famous person. No subtitles, no text, no letters anywhere.",
+    "uso": "Amenazas",
+    "proveedor": "together",
+    "modelo": "google/flash-image-2.5",
+    "costo_usd": 0.0403,
+    "generada": "2026-09-26T23:06:27+00:00"
+  },
+  "risa": {
+    "archivo": "risa.png",
+    "huella": "456cbecc31d58d2b",
+    "prompt": "Photorealistic 16:9 video frame from a nature YouTube channel, medium shot from the waist up, eye-level camera, shallow depth of field, soft warm natural window light, natural skin texture, shot on a cinema camera. An invented young Latin American man about 23 years old, warm olive-tan skin, a thin neat mustache and a small trimmed goatee on the chin (no full beard), short black hair, thick natural eyebrows, brown eyes, slim build, urban streetwear style: an oversized plain white t-shirt without any print or brand, a turquoise baseball cap with a mesh back worn backwards and without any logo, a thick shiny silver chain necklace with a pendant, small silver stud earrings, a silver bracelet and silver rings, no tattoos on the face or neck. The exact same man as in the second reference image: same face, same beard, same hair, same clothes and the same room, sign and microphone. He laughs out loud naturally, eyes squinting, head tilted back slightly, one hand on his chest. Setting: a modern home YouTube studio with its own look: a deep forest-green accent wall with vertical wooden slat panels, a warm amber LED strip glowing behind the slats, a lit glass terrarium with tropical plants and moss on a low dark wooden cabinet at the right, a framed entomology display of pinned beetles and butterflies on the wall, no window, no curtains, no bookshelf; on the cabinet behind him on the LEFT side of the frame stands a round wooden sign that reproduces the channel logo from the reference image (a cute cartoon tarantula wearing an explorer pith helmet inside a green circle), logo only, without any letters, softly lit; in the lower right foreground a black podcast microphone on a black boom arm, pointed at his mouth. He is an invented person who does not resemble any real or famous person. No subtitles, no text, no letters anywhere.",
+    "uso": "Momentos chistosos",
+    "proveedor": "together",
+    "modelo": "google/flash-image-2.5",
+    "costo_usd": 0.0403,
+    "generada": "2026-09-26T23:06:46+00:00"
+  },
+  "alivio": {
+    "archivo": "alivio.png",
+    "huella": "8c141a0e81a287e8",
+    "prompt": "Photorealistic 16:9 video frame from a nature YouTube channel, medium shot from the waist up, eye-level camera, shallow depth of field, soft warm natural window light, natural skin texture, shot on a cinema camera. An invented young Latin American man about 23 years old, warm olive-tan skin, a thin neat mustache and a small trimmed goatee on the chin (no full beard), short black hair, thick natural eyebrows, brown eyes, slim build, urban streetwear style: an oversized plain white t-shirt without any print or brand, a turquoise baseball cap with a mesh back worn backwards and without any logo, a thick shiny silver chain necklace with a pendant, small silver stud earrings, a silver bracelet and silver rings, no tattoos on the face or neck. The exact same man as in the second reference image: same face, same beard, same hair, same clothes and the same room, sign and microphone. He exhales with relief, hand on his chest, relaxed shoulders and a small smile. Setting: a modern home YouTube studio with its own look: a deep forest-green accent wall with vertical wooden slat panels, a warm amber LED strip glowing behind the slats, a lit glass terrarium with tropical plants and moss on a low dark wooden cabinet at the right, a framed entomology display of pinned beetles and butterflies on the wall, no window, no curtains, no bookshelf; on the cabinet behind him on the LEFT side of the frame stands a round wooden sign that reproduces the channel logo from the reference image (a cute cartoon tarantula wearing an explorer pith helmet inside a green circle), logo only, without any letters, softly lit; in the lower right foreground a black podcast microphone on a black boom arm, pointed at his mouth. He is an invented person who does not resemble any real or famous person. No subtitles, no text, no letters anywhere.",
+    "uso": "Alivio después del peligro",
+    "proveedor": "together",
+    "modelo": "google/flash-image-2.5",
+    "costo_usd": 0.0403,
+    "generada": "2026-09-26T23:06:57+00:00"
   }
 }
