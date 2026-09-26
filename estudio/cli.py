@@ -172,6 +172,20 @@ def _cmd_clip_tira(a: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_generar_voz(a: argparse.Namespace) -> int:
+    import imageio_ffmpeg
+
+    from .voz import generar_voz
+
+    c = CarpetaProyecto.abrir(a.slug)
+    config = ConfigCostos.cargar()
+    antes = c.libro(config).total_cop()
+    r = generar_voz(c, imageio_ffmpeg.get_ffmpeg_exe(), config=config, permiso=a.permiso)
+    print(f"Voz: {r['duracion'] / 60:.2f} min en {r['grupos']} oraciones · {r['archivo']}")
+    print(f"Costo de esta corrida: {formato_cop(c.libro(config).total_cop() - antes)}")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(prog="estudio", description="Estudio de producción · Buscanichos")
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -224,6 +238,11 @@ def main(argv: list[str] | None = None) -> int:
     k2 = sub.add_parser("clip-tira", help="clip de prueba: desliza del nivel 1 al último y revela al villano")
     k2.add_argument("--slug", required=True)
     k2.set_defaults(fn=_cmd_clip_tira)
+
+    vz = sub.add_parser("generar-voz", help="voz con MiniMax y tiempos reales por escena")
+    vz.add_argument("--slug", required=True)
+    vz.add_argument("--permiso", action="store_true")
+    vz.set_defaults(fn=_cmd_generar_voz)
 
     a = ap.parse_args(argv)
     try:
