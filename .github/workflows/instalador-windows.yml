@@ -1,0 +1,55 @@
+# Prueba el instalador de un clic en un Windows limpio, como lo correria el usuario.
+name: Instalador Windows
+on:
+  push:
+    paths: ["instalar/**", "pyproject.toml", "estudio/**", ".github/workflows/instalador-windows.yml"]
+  workflow_dispatch:
+
+jobs:
+  instalar:
+    runs-on: windows-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Correr el .bat solo (baja el script de GitHub, como el usuario)
+        shell: cmd
+        run: |
+          mkdir "%TEMP%\solo"
+          copy "instalar\Instalar Xandart.bat" "%TEMP%\solo\"
+          echo.| call "%TEMP%\solo\Instalar Xandart.bat"
+
+      - name: Revisar lo instalado
+        shell: powershell
+        run: |
+          $d = Join-Path $env:LOCALAPPDATA 'Xandart'
+          foreach ($f in "$d\.venv\Scripts\pythonw.exe", "$d\herramientas\uv.exe", "$d\estudio\app.py",
+                         "$([Environment]::GetFolderPath('Desktop'))\Xandart.lnk",
+                         "$([Environment]::GetFolderPath('Programs'))\Xandart\Actualizar Xandart.lnk") {
+            if (-not (Test-Path $f)) { throw "Falta $f" } else { "ok $f" }
+          }
+          if (Test-Path "$d\cache") { throw 'quedo la cache' }
+          $ok = $false
+          foreach ($i in 1..30) {
+            try { $r = Invoke-RestMethod http://127.0.0.1:8030/api/estado; $ok = $true; break } catch { Start-Sleep 2 }
+          }
+          if (-not $ok) { Get-Content "$d\logs\xandart.log" -ErrorAction SilentlyContinue; throw 'La pagina no abrio' }
+          $r | ConvertTo-Json -Depth 4
+          if (-not $r.claude) { Write-Host 'AVISO: Claude no quedo instalado' }
+          Invoke-WebRequest http://127.0.0.1:8030/ -UseBasicParsing | Select-Object StatusCode
+
+      - name: Pruebas de Xandart en Windows
+        shell: powershell
+        run: |
+          $d = Join-Path $env:LOCALAPPDATA 'Xandart'
+          & "$d\herramientas\uv.exe" pip install --python "$d\.venv\Scripts\python.exe" pytest httpx
+          Set-Location $d
+          & "$d\.venv\Scripts\python.exe" -m pytest -q
+          if ($LASTEXITCODE -ne 0) { throw 'fallaron pruebas' }
+
+      - name: Actualizar (segunda corrida no borra claves)
+        shell: cmd
+        run: |
+          echo TOGETHER_API_KEY=prueba> "%LOCALAPPDATA%\Xandart\.env"
+          echo.| call "instalar\Instalar Xandart.bat"
+          findstr /c:"TOGETHER_API_KEY=prueba" "%LOCALAPPDATA%\Xandart\.env"

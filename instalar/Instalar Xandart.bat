@@ -7,9 +7,12 @@ if exist "%~dp0instalar.ps1" (
 ) else (
   powershell -NoProfile -ExecutionPolicy Bypass -Command "[Net.ServicePointManager]::SecurityProtocol='Tls12'; $s = (Invoke-RestMethod 'https://raw.githubusercontent.com/XanderrrCorp/xanderrr/claude/new-session-uq98jd/instalar/instalar.ps1').TrimStart([char]0xFEFF); & ([scriptblock]::Create($s))"
 )
-if errorlevel 1 (
-  echo.
-  echo Algo fallo. Toma una foto de esta ventana y mandasela a Claude.
-)
+set ERR=%ERRORLEVEL%
 echo.
+if not "%ERR%"=="0" (
+  echo Algo fallo. Toma una foto de esta ventana y mandasela a Claude.
+) else (
+  echo Listo. Ya puedes cerrar esta ventana.
+)
 pause
+exit /b %ERR%
