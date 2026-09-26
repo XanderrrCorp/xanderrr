@@ -66,6 +66,10 @@ def _estimar_proyecto(c: CarpetaProyecto) -> int:
     if c.archivo_escenas.exists():
         dur, fuente = duracion_escenas(c.cargar_escenas(), config.consumo["caracteres_por_segundo_narracion"])
     print(f"Duración usada: {dur:.0f} s ({fuente})")
+    rango = config.datos.get("duracion_video_seg") or {}
+    if rango and not (rango["minimo"] <= dur <= rango["maximo"]):
+        print(f"AVISO: el video dura {dur / 60:.1f} min y la regla es de {rango['minimo'] / 60:.0f} a "
+              f"{rango['maximo'] / 60:.0f} min. Acórtalo antes de generar.")
     est = estimar(dur, estilo, perfil, config, gastado_cop=c.libro(config).total_cop())
     print(est.resumen())
     return 0
