@@ -321,12 +321,14 @@ function abrirAjustes() {
   const c = (ESTADO && ESTADO.claves) || {};
   $('#e-together').textContent = c.together ? 'guardada' : 'falta';
   $('#e-minimax').textContent = c.minimax ? 'guardada' : 'falta';
+  $('#e-pexels').textContent = c.pexels ? 'guardada' : 'falta (opcional)';
   $('#e-claude').textContent = ESTADO && ESTADO.claude ? 'instalado' : 'no instalado';
   $('#ajustes').showModal();
 }
 async function guardarClaves() {
-  ESTADO = await api('/api/claves', { method: 'POST', cuerpo: { together: $('#k-together').value, minimax: $('#k-minimax').value } });
-  $('#k-together').value = $('#k-minimax').value = '';
+  ESTADO = await api('/api/claves', { method: 'POST', cuerpo: { together: $('#k-together').value, minimax: $('#k-minimax').value,
+    pexels: $('#k-pexels').value } });
+  $('#k-together').value = $('#k-minimax').value = $('#k-pexels').value = '';
   abrirAjustes();
 }
 async function probar(servicio) {

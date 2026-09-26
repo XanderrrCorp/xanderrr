@@ -265,7 +265,21 @@ def paso_imagenes(c: CarpetaProyecto, t: Trabajo, permiso: bool = False, ejecuta
 
         ubicar_villano(c.ruta, ejecutar=ejecutar_claude or claude_cli.ejecutar)
     _ubicar_focos(c, t, ejecutar_claude)
+    _stock(c, t, ejecutar_claude)
     c.marcar("assets", "completo", ["imagenes/", "assets/tira/"])
+
+
+def _stock(c: CarpetaProyecto, t: Trabajo, ejecutar_claude=None) -> None:
+    """Fotos y videos reales verificados (Pexels). Sin clave o si falla, el video sale igual."""
+    from . import claude_cli
+    from .stock import SinClavePexels, preparar_stock
+
+    try:
+        preparar_stock(c.ruta, ejecutar=ejecutar_claude or claude_cli.ejecutar, avisar=t.avisar)
+    except SinClavePexels:
+        t.avisar("Sin fotos reales: falta la clave de Pexels en ⚙ Ajustes (es gratis)")
+    except Exception as ex:  # noqa: BLE001 — no es imprescindible
+        t.avisar(f"Sin fotos reales esta vez: {str(ex)[:160]}")
 
 
 def _ubicar_focos(c: CarpetaProyecto, t: Trabajo, ejecutar_claude=None) -> None:
@@ -318,6 +332,7 @@ def paso_video(c: CarpetaProyecto, t: Trabajo, permiso: bool = False) -> Path:
     direccion = c.ruta / "direccion.json"
     if not direccion.exists() or "focos_revisados" not in leer_json(direccion):
         _ubicar_focos(c, t)
+    _stock(c, t)                               # reanudable: solo busca los niveles que falten
     from .poses import copiar_presentador
 
     if copiar_presentador(c.cargar().estilo, c.ruta):

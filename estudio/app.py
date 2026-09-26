@@ -69,7 +69,8 @@ def estado():
                     videos.append({k: r[k] for k in ("slug", "titulo", "minutos", "pasos", "costo", "video")})
                 except Exception:  # noqa: BLE001 — un proyecto roto no tumba la lista
                     continue
-    return {"claves": {"together": bool(clave_api("TOGETHER_API_KEY")), "minimax": bool(clave_api("MINIMAX_API_KEY"))},
+    return {"claves": {"together": bool(clave_api("TOGETHER_API_KEY")), "minimax": bool(clave_api("MINIMAX_API_KEY")),
+                       "pexels": bool(clave_api("PEXELS_API_KEY"))},
             "claude": bool(claude_cli.ejecutable()), "videos": videos,
             "carpeta_videos": str(pipeline.carpeta_videos())}
 
@@ -77,6 +78,7 @@ def estado():
 class Claves(BaseModel):
     together: str | None = None
     minimax: str | None = None
+    pexels: str | None = None
 
 
 @app.post("/api/claves")
@@ -86,6 +88,8 @@ def guardar_claves(c: Claves):
         valores["TOGETHER_API_KEY"] = c.together.strip()
     if c.minimax and c.minimax.strip():
         valores["MINIMAX_API_KEY"] = c.minimax.strip()
+    if c.pexels and c.pexels.strip():
+        valores["PEXELS_API_KEY"] = c.pexels.strip()
     (RAIZ / ".env").write_text("".join(f"{k}={v}\n" for k, v in valores.items()), encoding="utf-8")
     return estado()
 
@@ -98,6 +102,10 @@ def probar(servicio: str):
         if servicio == "together":
             r = requests.get("https://api.together.xyz/v1/models", timeout=30,
                              headers={"Authorization": f"Bearer {clave_api('TOGETHER_API_KEY')}"})
+            return {"ok": r.status_code == 200, "detalle": "funciona" if r.status_code == 200 else f"HTTP {r.status_code}"}
+        if servicio == "pexels":
+            r = requests.get("https://api.pexels.com/v1/search", params={"query": "scorpion", "per_page": 1}, timeout=30,
+                             headers={"Authorization": clave_api("PEXELS_API_KEY") or ""})
             return {"ok": r.status_code == 200, "detalle": "funciona" if r.status_code == 200 else f"HTTP {r.status_code}"}
         if servicio == "minimax":
             from .config import ConfigCostos, leer_config

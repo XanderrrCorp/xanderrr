@@ -407,6 +407,48 @@ def _globo_pregunta(img: Image.Image, loc: float) -> Image.Image:
     return img
 
 
+_MONTAJE: dict = {}
+
+
+def _montaje_foto(raiz: Path, papel: Image.Image, ef: dict, loc: float) -> Image.Image:
+    """Foto REAL en marco rojo sobre el papel, con la mascota señalándola desde la izquierda."""
+    clave = (ef["archivo"], ef.get("pose"))
+    if clave not in _MONTAJE:
+        foto = Image.open(raiz / ef["archivo"]).convert("RGB")
+        ancho = int(W * 0.58)
+        foto = foto.resize((ancho, int(ancho * foto.height / foto.width)), Image.Resampling.LANCZOS)
+        if foto.height > H * 0.74:                                  # fotos altas: se recortan al centro
+            alto = int(H * 0.74)
+            y0 = (foto.height - alto) // 2
+            foto = foto.crop((0, y0, ancho, y0 + alto))
+        borde = 12
+        marco = Image.new("RGB", (foto.width + 2 * borde, foto.height + 2 * borde), (226, 30, 30))
+        marco.paste(foto, (borde, borde))
+        pose = None
+        if ef.get("pose") and (raiz / ef["pose"]).exists():
+            pose = quitar_fondo_liso(Image.open(raiz / ef["pose"]).convert("RGB"))
+            caja = pose.getbbox()
+            if caja:
+                pose = pose.crop(caja)
+            pose.thumbnail((int(W * 0.34), int(H * 0.78)), Image.Resampling.LANCZOS)
+        _MONTAJE.clear()
+        _MONTAJE[clave] = (marco, pose)
+    marco, pose = _MONTAJE[clave]
+    img = papel.copy().convert("RGBA")
+    # la foto entra con un pequeño rebote y se acerca muy despacio
+    esc = (0.92 + 0.08 * _sale(loc / 0.2)) * (1 + 0.025 * _suave(loc / 3.5))
+    m = marco.resize((int(marco.width * esc), int(marco.height * esc)), Image.Resampling.BILINEAR).convert("RGBA")
+    mx, my = int(W * 0.62 - m.width / 2), int(H * 0.46 - m.height / 2)
+    sombra, (sx, sy) = _sombra(m, 18, 110)
+    img.alpha_composite(sombra, (max(0, mx + sx), max(0, my + sy)))
+    img.alpha_composite(m, (mx, my))
+    if pose is not None:
+        entra = _sale(loc / 0.28)
+        px = int(-pose.width + (W * 0.02 + pose.width) * entra)
+        img.alpha_composite(pose, (max(-pose.width + 1, px), int(H * 0.52 - pose.height / 2)))
+    return img.convert("RGB")
+
+
 class LectorClips:
     """Lee cuadro a cuadro los clips del presentador con FFmpeg (sin cargarlos enteros en memoria)."""
 
@@ -793,6 +835,13 @@ def renderizar(carpeta: CarpetaProyecto, ffmpeg: str, destino: Path | None = Non
                 img = cuadro.copy()
                 if r.get("globo"):
                     img = _globo_pregunta(img, tt - r["en"] - 0.25)
+        v_real, f_real = ef.get("video_real"), ef.get("foto_real")
+        if not en_reaccion and v_real and v_real["en"] <= tt < v_real["en"] + v_real["dur"]:
+            cuadro = lector.cuadro(v_real, tt - v_real["en"])
+            if cuadro is not None:
+                img, en_reaccion = cuadro.copy(), True
+        if not en_reaccion and f_real and f_real["en"] <= tt < f_real["en"] + f_real["dur"]:
+            img, en_reaccion = _montaje_foto(raiz, papel, f_real, tt - f_real["en"]), True
         if "icono_advertencia" in ef and not en_reaccion:
             img = _poner_icono(img, ef["icono_advertencia"], tt)
         if "etiqueta" in ef and not en_reaccion:

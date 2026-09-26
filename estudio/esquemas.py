@@ -37,6 +37,8 @@ EFECTOS = (
     "etiqueta",
     # círculo con el detalle ampliado, unido con una línea al lugar exacto
     "lupa",
+    # lo REAL (Pexels, verificado): foto en marco rojo con la mascota señalando, o video a pantalla completa
+    "foto_real", "video_real",
 )
 # "sfx" no es un efecto visual, pero se sugiere en la misma lista (ver 3.1).
 EFECTOS_SUGERIBLES = EFECTOS + ("sfx",)

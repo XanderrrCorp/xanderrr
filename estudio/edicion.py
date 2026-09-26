@@ -227,6 +227,76 @@ def _animo_de_seccion(escenas: list, k: int, n: int) -> str:
     return "tension" if media >= 3.2 or "tension_creciente" in intenciones else "curiosidad"
 
 
+ASCO = ("asco", "sucio", "sucia", "basura", "excremento", "heces", "caca", "vómito", "vomita", "podrido", "coladera")
+
+
+def _stock(esc: EscenasV2, escenas: list, clips: list, raiz: Path, revelacion: int | None, rng: random.Random,
+           sfx: list, maximo: int = 6, separacion: float = 30.0) -> int:
+    """De vez en cuando (no siempre), cuando la voz nombra a un animal que tiene fotos o
+    videos reales VERIFICADOS, se muestra lo real: la foto en un marco rojo con la mascota
+    señalándola, o el video a pantalla completa. Una vez por animal, separadas y sin pisar
+    el círculo, la lupa ni al presentador. El villano, solo después de su revelación."""
+    from .foco import claves_de_nombre, palabra_en
+
+    ruta = raiz / "assets" / "stock" / "stock.json"
+    if not ruta.exists():
+        return 0
+    aprobados = [a for a in leer_json(ruta)["archivos"] if a.get("verificado") and (raiz / a["archivo"]).exists()]
+    if not aprobados:
+        return 0
+    niveles = [n.model_dump() for n in esc.niveles]
+    claves = claves_de_nombre(niveles)
+    villano = next((n.numero for n in esc.niveles if n.villano), None)
+    poses = {p.stem: p for p in (raiz / "assets" / "poses").glob("*.png")}
+    usados_nivel: set = set()
+    tiempos: list[float] = []
+    ultimo_tipo = rng.choice(["foto", "video"])
+    for i, (e, c) in enumerate(zip(escenas, clips)):
+        if len(tiempos) >= maximo or c["modo"] == "tira":
+            continue
+        if any(x["efecto"] in ("circulo_rojo", "lupa", "flecha", "pixelar", "rafaga", "reaccion_presentador")
+               for x in c["efectos"]):
+            continue
+        for n in esc.niveles:
+            if n.numero in usados_nivel or n.numero not in claves:
+                continue
+            if n.numero == villano and (revelacion is None or e.id <= revelacion):
+                continue
+            palabra = palabra_en(e.narracion, claves[n.numero])
+            if not palabra:
+                continue
+            t0 = _en_texto(e.narracion, palabra, e.tiempo.real_inicio, e.tiempo.real_fin)
+            t0 = max(c["inicio"] + 0.1, t0 - 0.1)
+            dur = min(c["fin"] - t0, 3.2)
+            if dur < 1.8 or any(abs(t0 - t) < separacion for t in tiempos):
+                continue
+            propios = [a for a in aprobados if a["nivel"] == n.numero]
+            tipo = "foto" if ultimo_tipo == "video" else "video"
+            elegido = next((a for a in propios if a["tipo"] == tipo), None) or (propios[0] if propios else None)
+            if not elegido:
+                continue
+            if elegido["tipo"] == "video":
+                c["efectos"].append({"efecto": "video_real", "en": round(t0, 3), "dur": round(dur, 3),
+                                     "archivo": elegido["archivo"], "desde": round(rng.uniform(0.3, 1.5), 2),
+                                     "origen": elegido["url_origen"]})
+                c["razon"] += f"; video REAL de {n.nombre} (verificado) al nombrarlo"
+            else:
+                clave = "senalando_asco" if any(w in e.narracion.lower() for w in ASCO) else \
+                    "senalando_susto" if e.intencion in ("amenaza", "advertencia", "tension_creciente", "revelacion") \
+                    else "senalando_sorpresa"
+                pose = poses.get(clave) or next(iter(poses.values()), None)
+                c["efectos"].append({"efecto": "foto_real", "en": round(t0, 3), "dur": round(dur, 3),
+                                     "archivo": elegido["archivo"], "origen": elegido["url_origen"],
+                                     "pose": pose.relative_to(raiz).as_posix() if pose else None})
+                c["razon"] += f"; foto REAL de {n.nombre} (verificada) con la mascota señalándola"
+            _sfx(sfx, "pop", t0, i, f"Pop al mostrar a {n.nombre} de verdad")
+            ultimo_tipo = elegido["tipo"]
+            usados_nivel.add(n.numero)
+            tiempos.append(t0)
+            break
+    return len(tiempos)
+
+
 def _reacciones(estilo: Estilo, escenas: list, clips: list, raiz: Path, revelacion: int | None,
                 rng: random.Random, elegidas: list | None = None, sfx: list | None = None) -> int:
     """Cortes de ~2 s al presentador reaccionando (la voz sigue). Solo en las intenciones
@@ -256,6 +326,8 @@ def _reacciones(estilo: Estilo, escenas: list, clips: list, raiz: Path, revelaci
                 opciones.insert(0, (k, clips[k]["inicio"] + 1.5))
             opciones.append((k, clips[k]["fin"] - d - 0.15))
             for i, t0 in opciones:
+                if any(x["efecto"] in ("foto_real", "video_real") for x in clips[i]["efectos"]):
+                    continue
                 if t0 >= clips[i]["inicio"] + 0.05 and clips[i]["fin"] - t0 >= d + 0.1:
                     candidatos.append((prioridad, 0.0, i, t0, r["pose"], r.get("razon", "")))
                     break
@@ -263,7 +335,7 @@ def _reacciones(estilo: Estilo, escenas: list, clips: list, raiz: Path, revelaci
         if elegidas:
             break
         pose = pr.reacciones.get(e.intencion)
-        if pose not in disponibles:
+        if pose not in disponibles or any(x["efecto"] in ("foto_real", "video_real") for x in c["efectos"]):
             continue
         # en la revelación, justo después de que se despixela el villano; en las demás, al empezar
         t0 = c["inicio"] + (1.5 if (revelacion and e.id == revelacion) else rng.uniform(0.25, 0.5))
@@ -604,6 +676,7 @@ def construir_edl(carpeta: CarpetaProyecto) -> dict:
             acum += len(tr)
             t1 = a + (b - a) * acum / largo
             subtitulos.append({"inicio": round(t0, 3), "fin": round(max(t1, t0 + 0.2), 3), "texto": tr})
+    _stock(esc, escenas, clips, carpeta.ruta, revelacion, rng, sfx)
     reacciones = _reacciones(estilo, escenas, clips, carpeta.ruta, revelacion, rng, direccion.get("reacciones"), sfx)
     if reacciones:
         p = carpeta.cargar()
@@ -636,7 +709,8 @@ def validar(edl: dict, perfil=None) -> list[str]:
         dur = c["fin"] - c["inicio"]
         cambia = any(x["efecto"] in ("reencuadre", "zoom_golpe", "tira_deslizar_a_nivel", "revelar_pixelado",
                                      "rafaga", "circulo_rojo", "flecha", "icono_advertencia", "signos_pregunta",
-                                     "reaccion_presentador", "etiqueta", "lupa") for x in c["efectos"])
+                                     "reaccion_presentador", "etiqueta", "lupa", "foto_real", "video_real")
+                     for x in c["efectos"])
         if dur > MAX_SIN_CAMBIO and not cambia and not c.get("respiro"):
             avisos.append(f"{c['id']}: {dur:.1f} s sin cambio visual")
     for a, b in zip(clips, clips[1:]):
