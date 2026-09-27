@@ -50,8 +50,10 @@ def _sin_cupo(texto: str) -> bool:
 
 
 def ejecutar(prompt: str, *, cwd: Path | None = None, herramientas: list[str] | None = None,
-             modelo: str | None = None, tiempo_max_s: int = 1200, lanzar=subprocess.run) -> tuple[str, dict]:
-    """Devuelve (texto de la respuesta, sobre JSON del CLI)."""
+             modelo: str | None = None, tiempo_max_s: int = 1200, pensamiento: int | None = None,
+             lanzar=subprocess.run) -> tuple[str, dict]:
+    """Devuelve (texto de la respuesta, sobre JSON del CLI). `pensamiento` limita los tokens de
+    razonamiento (MAX_THINKING_TOKENS): con mucho razonamiento el guion tardaba ~14 minutos."""
     exe = ejecutable()
     if not exe:
         raise SinSesion("No encuentro el programa de Claude (Claude Code). Vuelve a correr el instalador de Xandart.")
@@ -63,6 +65,8 @@ def ejecutar(prompt: str, *, cwd: Path | None = None, herramientas: list[str] | 
     else:
         cmd += ["--disallowedTools", "Bash,Write,Edit,WebFetch,WebSearch,Task"]
     entorno = {k: v for k, v in os.environ.items() if k not in PAGO_POR_USO}
+    if pensamiento is not None:
+        entorno["MAX_THINKING_TOKENS"] = str(int(pensamiento))
     try:
         r = lanzar(cmd, cwd=str(cwd) if cwd else None, env=entorno, capture_output=True, text=True,
                    encoding="utf-8", timeout=tiempo_max_s, **SIN_VENTANA)

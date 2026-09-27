@@ -394,14 +394,35 @@ def a_escenas(datos: dict, estilo: Estilo, canal: str) -> tuple[dict, dict, str]
     return doc, direccion, "".join(md).rstrip() + "\n"
 
 
+def _velocidad() -> dict:
+    from .config import leer_config
+
+    return leer_config("proveedores.json").get("claude") or {}
+
+
+def _con(ejecutar, modelo, pensamiento):
+    """El mismo ejecutor con el modelo y el límite de razonamiento de cada paso (si los acepta)."""
+    if ejecutar is not claude_cli.ejecutar:
+        return ejecutar                      # en las pruebas se usa un Claude simulado
+    import functools
+
+    return functools.partial(claude_cli.ejecutar, modelo=modelo, pensamiento=pensamiento)
+
+
 def escribir_guion(encargo: Encargo, estilo: Estilo, carpeta: Path, canal: str,
-                   ejecutar=claude_cli.ejecutar, avisar=print, en_paralelo: int = 3,
+                   ejecutar=claude_cli.ejecutar, avisar=print, en_paralelo: int | None = None,
                    catalogo: list[dict] | None = None, niveles_fijos: list[dict] | None = None) -> dict:
     """Dos pasos para que ninguna respuesta sea enorme (y no pase del tiempo máximo):
     1) la historia en texto (título, niveles y lo que dice la voz, escena por escena);
     2) por sección, y varias a la vez, la intención, la imagen y los textos de cada escena."""
     from concurrent.futures import ThreadPoolExecutor
 
+    v = _velocidad()
+    en_paralelo = en_paralelo or int(v.get("secciones_en_paralelo", 8))
+    base = ejecutar
+    ejecutar = _con(base, v.get("modelo_historia"), v.get("pensamiento_historia_tokens"))
+    ejecutar_detalles = _con(base, v.get("modelo_detalles"), v.get("pensamiento_detalles_tokens"))
+    tolerancia = float(v.get("tolerancia_largo", 0.15))
     prompt = instruccion(encargo, estilo, niveles_fijos)
     error = ""
     borrador = carpeta / "_borrador_guion"
@@ -435,8 +456,9 @@ def escribir_guion(encargo: Encargo, estilo: Estilo, carpeta: Path, canal: str,
     palabras = sum(len(x.split()) for _, ls in historia["secciones"] for x in ls)
     objetivo = encargo.minutos * 60 * PALABRAS_POR_SEGUNDO
     avisar(f"Historia: {palabras} palabras (objetivo {int(objetivo)}).")
-    if abs(palabras - objetivo) / objetivo > 0.10:
-        # Xandart cuenta las palabras (no Claude): si se aleja más de 10 %, un solo ajuste
+    if abs(palabras - objetivo) / objetivo > tolerancia:
+        # Xandart cuenta las palabras (no Claude): si se aleja mucho, un solo ajuste (es otra
+        # vuelta completa de la historia, por eso solo cuando de verdad hace falta)
         texto2, _ = ejecutar(prompt + f"\n\n== AJUSTA EL LARGO ==\nEsta es tu historia, con {palabras} palabras. Debe tener "
                                       f"entre {int(objetivo * 0.95)} y {int(objetivo * 1.05)}. "
                                       f"{'Alárgala con más datos concretos y escenas' if palabras < objetivo else 'Acórtala'} "
@@ -462,7 +484,7 @@ def escribir_guion(encargo: Encargo, estilo: Estilo, carpeta: Path, canal: str,
             guardada = borrador / f"seccion_{k:02d}.json"
             if guardada.exists():
                 return leer_json(guardada)
-            hecha = _detalles(historia, k, estilo, carpeta, ejecutar, avisar, catalogo)
+            hecha = _detalles(historia, k, estilo, carpeta, ejecutar_detalles, avisar, catalogo)
             escribir_json(guardada, hecha)
             return hecha
 
