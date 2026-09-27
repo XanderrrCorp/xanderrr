@@ -228,14 +228,21 @@ async function irBiblioteca() {
   app.innerHTML = `
     <div class="fila"><button class="fantasma mini" onclick="irInicio()">‹ Tus videos</button></div>
     <h1>Música y efectos de sonido</h1>
-    <p class="tenue">Xandart no descarga audio por su cuenta. Tú bajas los archivos de una fuente con licencia
-      (por ejemplo la <b>Biblioteca de audio de YouTube</b>, en YouTube Studio → Biblioteca de audio) y aquí los registras
-      con su fuente y su licencia. Mientras falte un tipo, el video usa un sonido provisional.</p>
+    <p class="tenue">Los efectos se llenan con un botón desde <b>Freesound</b>, solo con licencia CC0. La música y cualquier
+      otro archivo los registras tú aquí, con su fuente y su licencia (por ejemplo, de la <b>Biblioteca de audio de YouTube</b>).
+      Mientras falte un tipo, el video usa un sonido provisional.</p>
     <div class="rejilla dos">
       <section class="tarjeta"><h2>Efectos</h2>${BIB.tipos_sfx.map(t => fila('sfx', t)).join('')}
         <p class="tenue" style="font-size:13px">Ideal: 3 o 4 variantes de cada uno, para que no se repita el mismo sonido.</p></section>
       <section class="tarjeta"><h2>Música (por estado de ánimo)</h2>${BIB.animos_musica.map(t => fila('musica', t)).join('')}</section>
     </div>
+    <section class="tarjeta" style="margin-top:16px">
+      <h2>Llenar automáticamente</h2>
+      <p class="tenue">Xandart busca en <b>Freesound</b> solo sonidos con licencia <b>CC0</b> (dominio público: se pueden usar
+        en YouTube monetizado sin dar créditos) y completa 4 variantes de cada efecto. Guarda el enlace, el autor y la licencia
+        de cada uno. Después los escuchas aquí abajo y quitas el que no te guste.</p>
+      <div class="fila"><button class="primario" id="b-freesound" onclick="llenarFreesound()">Llenar efectos desde Freesound</button></div>
+    </section>
     <section class="tarjeta" style="margin-top:16px">
       <h2>Agregar archivos</h2>
       <label>Archivos (.mp3, .wav…) · puedes escoger varios del mismo tipo</label>
@@ -310,6 +317,17 @@ async function registrarEntrada(nombre) {
   catch (e) { alert(e.message); }
 }
 
+async function llenarFreesound() {
+  const b = $('#b-freesound');
+  b.disabled = true; b.textContent = 'Buscando y bajando efectos… (cerca de un minuto)';
+  try {
+    const r = await api('/api/biblioteca/freesound', { method: 'POST' });
+    const total = Object.values(r.agregados || {}).reduce((a, n) => a + n, 0);
+    alert(total ? `Listo: se agregaron ${total} efectos CC0.` : 'Ya estaban completos todos los efectos.');
+  } catch (e) { alert(e.message); }
+  irBiblioteca();
+}
+
 async function borrarAudio(huella) {
   if (!confirm('¿Quitar este archivo de la biblioteca?')) return;
   await api(`/api/biblioteca/${huella}`, { method: 'DELETE' });
@@ -322,13 +340,14 @@ function abrirAjustes() {
   $('#e-together').textContent = c.together ? 'guardada' : 'falta';
   $('#e-minimax').textContent = c.minimax ? 'guardada' : 'falta';
   $('#e-pexels').textContent = c.pexels ? 'guardada' : 'falta (opcional)';
+  $('#e-freesound').textContent = c.freesound ? 'guardada' : 'falta (opcional)';
   $('#e-claude').textContent = ESTADO && ESTADO.claude ? 'instalado' : 'no instalado';
   $('#ajustes').showModal();
 }
 async function guardarClaves() {
   ESTADO = await api('/api/claves', { method: 'POST', cuerpo: { together: $('#k-together').value, minimax: $('#k-minimax').value,
-    pexels: $('#k-pexels').value } });
-  $('#k-together').value = $('#k-minimax').value = $('#k-pexels').value = '';
+    pexels: $('#k-pexels').value, freesound: $('#k-freesound').value } });
+  $('#k-together').value = $('#k-minimax').value = $('#k-pexels').value = $('#k-freesound').value = '';
   abrirAjustes();
 }
 async function probar(servicio) {

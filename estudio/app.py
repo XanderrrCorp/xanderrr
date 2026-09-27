@@ -104,7 +104,7 @@ def estado():
                 except Exception:  # noqa: BLE001 — un proyecto roto no tumba la lista
                     continue
     return {"claves": {"together": bool(clave_api("TOGETHER_API_KEY")), "minimax": bool(clave_api("MINIMAX_API_KEY")),
-                       "pexels": bool(clave_api("PEXELS_API_KEY"))},
+                       "pexels": bool(clave_api("PEXELS_API_KEY")), "freesound": bool(clave_api("FREESOUND_API_KEY"))},
             "claude": bool(claude_cli.ejecutable()), "videos": videos,
             "carpeta_videos": str(pipeline.carpeta_videos())}
 
@@ -113,6 +113,7 @@ class Claves(BaseModel):
     together: str | None = None
     minimax: str | None = None
     pexels: str | None = None
+    freesound: str | None = None
 
 
 @app.post("/api/claves")
@@ -124,6 +125,8 @@ def guardar_claves(c: Claves):
         valores["MINIMAX_API_KEY"] = c.minimax.strip()
     if c.pexels and c.pexels.strip():
         valores["PEXELS_API_KEY"] = c.pexels.strip()
+    if c.freesound and c.freesound.strip():
+        valores["FREESOUND_API_KEY"] = c.freesound.strip()
     (RAIZ / ".env").write_text("".join(f"{k}={v}\n" for k, v in valores.items()), encoding="utf-8")
     return estado()
 
@@ -140,6 +143,10 @@ def probar(servicio: str):
         if servicio == "pexels":
             r = requests.get("https://api.pexels.com/v1/search", params={"query": "scorpion", "per_page": 1}, timeout=30,
                              headers={"Authorization": clave_api("PEXELS_API_KEY") or ""})
+            return {"ok": r.status_code == 200, "detalle": "funciona" if r.status_code == 200 else f"HTTP {r.status_code}"}
+        if servicio == "freesound":
+            r = requests.get("https://freesound.org/apiv2/search/text/", params={"query": "pop", "page_size": 1},
+                             headers={"Authorization": f"Token {clave_api('FREESOUND_API_KEY') or ''}"}, timeout=30)
             return {"ok": r.status_code == 200, "detalle": "funciona" if r.status_code == 200 else f"HTTP {r.status_code}"}
         if servicio == "minimax":
             from .config import ConfigCostos, leer_config
@@ -319,6 +326,20 @@ class DeEntrada(BaseModel):
     licencia: str
     detalle_licencia: str = ""
     atribucion: str = ""
+
+
+@app.post("/api/biblioteca/freesound")
+def llenar_freesound():
+    """Completa los efectos que falten con sonidos CC0 de Freesound (tarda cerca de un minuto)."""
+    from . import biblioteca, freesound
+
+    try:
+        agregados = freesound.llenar(avisar=lambda *_: None)
+    except freesound.SinClaveFreesound as ex:
+        raise HTTPException(400, str(ex)) from ex
+    except Exception as ex:  # noqa: BLE001
+        raise HTTPException(502, f"Freesound no respondió bien: {str(ex)[:200]}") from ex
+    return {**biblioteca.resumen(), "agregados": agregados}
 
 
 @app.post("/api/biblioteca/entrada")
