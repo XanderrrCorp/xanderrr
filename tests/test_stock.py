@@ -100,3 +100,48 @@ def test_sin_fotos_en_pexels_gemini_hace_una_recreacion_revisada(tmp_path, monke
     assert a["sintetica"] and a["verificado"] and "no es una foto real" in a["licencia"]
     assert (tmp_path / a["archivo"]).exists()
     assert stock.creditos(tmp_path) == ""                       # no se acredita como foto de Pexels
+
+
+def test_pexels_como_escena_y_ajuste_al_presupuesto(monkeypatch):
+    """Antes de generar: las escenas que solo muestran al animal usan tomas reales verificadas;
+    las demás reusan imágenes cercanas hasta caber en el máximo. El texto no cambia."""
+    from estudio import pipeline
+    from estudio.proyecto import CarpetaProyecto
+
+    monkeypatch.setenv("PEXELS_API_KEY", "clave-prueba")
+    c = CarpetaProyecto.crear("Peces", "animales-peligrosos", "enciclopedia_mascota", 540)
+    nombres = ["Delfín rosado", "Piraña", "Anaconda", "Candirú"]
+    niveles = [{"numero": k, "nombre": n, "asset": f"tira_{k}", "villano": k == 4} for k, n in enumerate(nombres, 1)]
+    assets = [{"id": f"tira_{k}", "tipo": "tarjeta", "archivo": f"assets/tira/tira_{k}.png"} for k in range(1, 5)]
+    escenas, i = [], 0
+    for k, n in enumerate(nombres, 1):
+        for j in range(12):
+            i += 1
+            tipo = "animal_fondo_gris" if j % 2 else "escena_cartoon_completa"
+            texto = f"La {n.lower()} vive en el río y hace algo raro número {j}." if j % 2 else f"Dato suelto {i}."
+            escenas.append({"id": i, "seccion": f"Nivel {k} · {n}", "narracion": texto,
+                            "intencion": "explicacion" if j else "transicion_de_seccion", "intensidad": 2,
+                            "visual": {"accion": "generar", "tipo": tipo, "prompt": "x"}})
+    escribir = __import__("estudio.config", fromlist=["escribir_json"]).escribir_json
+    escribir(c.archivo_escenas, {"version": 2, "video": "peces", "canal": "animales-peligrosos",
+                                 "estilo": "enciclopedia_mascota", "assets": assets, "niveles": niveles,
+                                 "escenas": escenas})
+    escribir(c.ruta / "direccion.json", {"villano_revelacion": 40})
+
+    def claude(prompt, cwd=None, herramientas=None):
+        if "búsqueda" in prompt:
+            return json.dumps({str(k): f"animal {k}" for k in range(1, 5)}), {}
+        return '{"aprobados": [{"numero": 1, "razon": "sí"}, {"numero": 4, "razon": "video"}]}', {}
+
+    monkeypatch.setattr(stock.requests, "get", SesionFalsa().get)
+    monkeypatch.setattr(pipeline, "_cuadro_de_video", lambda raiz, archivo: archivo.replace(".mp4", ".jpg"))
+    antes = pipeline.estimar_imagenes(c)["faltan"]
+    r = pipeline.ajustar_al_presupuesto(c, ejecutar_claude=claude)
+    esc = c.cargar_escenas()
+    assert r["pexels"] > 0 and r["faltan"] < antes
+    assert [e.narracion for e in esc.escenas] == [e["narracion"] for e in escenas]          # el texto no cambia
+    reales = [e for e in esc.escenas if isinstance(e.visual.reusar_de, str) and e.visual.reusar_de.startswith("pexels_")]
+    # el villano (nivel 4) no aparece real antes de su revelación (escena 40)
+    assert all(not e.seccion.startswith("Nivel 4") or e.id > 40 for e in reales)
+    ids = sorted(e.id for e in reales)
+    assert all(b - a >= 2 for a, b in zip(ids, ids[1:]))                                      # nunca seguidas

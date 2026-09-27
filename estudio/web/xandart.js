@@ -129,8 +129,8 @@ async function pintar() {
     if (!imgOk) {
       cuerpo += `<section class="tarjeta"><h2>Revisa el guion</h2>
         <p class="tenue">Puedes cambiar el texto de cualquier escena tocándolo. Cuando te guste, aprueba y se hacen las imágenes.</p>
-        ${e.pasa_maximo ? `<div class="error">Ojo: todas las imágenes de este guion (${e.faltan}) pasan del máximo de ${esc(e.maximo_texto)} por video. Xandart se frena al llegar al máximo y te pide permiso para seguir.
-          <div class="fila"><button class="primario" onclick="ajustarPresupuesto()">Ajustar al presupuesto (reusar imágenes, gratis)</button></div></div>` : ''}
+        ${e.pasa_maximo ? `<div class="error">Ojo: todas las imágenes de este guion (${e.faltan}) pasan del máximo de ${esc(e.maximo_texto)} por video. Xandart se frena al llegar al máximo y te pide permiso para seguir.</div>` : ''}
+        <div class="fila"><button ${e.pasa_maximo ? 'class="primario"' : ''} onclick="ajustarPresupuesto()">Usar Pexels y ajustar al presupuesto (gratis)</button></div>
         ${pruebaHtml(v)}
         <div class="fila"><button class="primario" onclick="accion('imagenes')">Aprobar y hacer las imágenes (${e.faltan} imágenes ≈ ${esc(e.texto)})</button>
         ${e.prueba ? `<button onclick="accion('prueba')">Probar primero 10 escenas (${e.prueba} imágenes ≈ ${esc(e.prueba_texto)})</button>` : ''}
@@ -171,7 +171,7 @@ function pruebaHtml(v) {
 }
 
 function nombrePaso(p) {
-  return { guion: 'Escribiendo el guion', imagenes: 'Haciendo las imágenes', video: 'Haciendo el video', regenerar: 'Regenerando una imagen', prueba: 'Probando las primeras 10 escenas', short: 'Haciendo el short vertical' }[p] || p;
+  return { guion: 'Escribiendo el guion', imagenes: 'Haciendo las imágenes', video: 'Haciendo el video', regenerar: 'Regenerando una imagen', prueba: 'Probando las primeras 10 escenas', short: 'Haciendo el short vertical', ajustar: 'Buscando en Pexels y ajustando al presupuesto' }[p] || p;
 }
 
 function escenasHtml(v, conImagenes) {
@@ -206,11 +206,8 @@ async function accion(que, cuerpo = {}) {
 }
 
 async function ajustarPresupuesto() {
-  try {
-    const r = await api(`/api/videos/${ACTUAL}/ajustar-imagenes`, { method: 'POST' });
-    alert(`Listo: ${r.ajuste.convertidas} escenas ahora reusan una imagen cercana. Imágenes nuevas: ${r.ajuste.faltan} (≈ ${r.ajuste.texto}).`);
-    await pintar();
-  } catch (e) { alert(e.message); }
+  if (!confirm('Xandart busca fotos y videos reales en Pexels (gratis) para las escenas que solo muestran al animal, y si aún pasa el máximo, algunas escenas reusan una imagen cercana. El texto del guion no cambia. ¿Seguir?')) return;
+  await accion('ajustar-imagenes');
 }
 
 async function regenerar(id) {

@@ -13,13 +13,14 @@ from __future__ import annotations
 import math
 
 import shutil
+import subprocess
 import threading
 import time
 import traceback
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from .config import RAIZ, ConfigCostos, formato_cop, leer_config, leer_json
+from .config import RAIZ, ConfigCostos, formato_cop, leer_config, leer_json, escribir_json
 from .estilos import cargar_estilo
 from .proyecto import CarpetaProyecto, slugificar
 
@@ -239,19 +240,102 @@ PROTEGIDAS = ("gancho", "revelacion", "giro", "cierre", "llamado_accion")
 MARGEN_COP = 1200            # voz y miniatura también cuentan dentro del máximo
 
 
-def ajustar_al_presupuesto(c: CarpetaProyecto) -> dict:
+USOS_POR_TOMA = 2
+
+
+def usar_pexels_en_escenas(c: CarpetaProyecto, t=None, ejecutar_claude=None) -> int:
+    """Antes de generar: las escenas que solo muestran al animal y lo nombran usan una foto o un
+    video REAL verificado de Pexels (gratis) en vez de una imagen nueva. Cada toma se usa como
+    mucho 2 veces y nunca en escenas seguidas; el villano oculto no se muestra antes de tiempo."""
+    from . import claude_cli
+    from .esquemas import EscenasV2
+    from .foco import claves_de_nombre, palabra_en
+    from .stock import SinClavePexels, preparar_stock
+
+    avisar = t.avisar if t else print
+    try:
+        indice = preparar_stock(c.ruta, ejecutar=ejecutar_claude or claude_cli.ejecutar, avisar=avisar,
+                                recrear_faltantes=False)
+    except SinClavePexels:
+        avisar("Sin clave de Pexels: se ajusta solo reusando imágenes")
+        return 0
+    tomas = [a for a in indice["archivos"] if a.get("verificado") and not a.get("sintetica")
+             and (c.ruta / a["archivo"]).exists()]
+    if not tomas:
+        return 0
+    esc = c.cargar_escenas()
+    direccion = leer_json(c.ruta / "direccion.json") if (c.ruta / "direccion.json").exists() else {}
+    revelacion = int(direccion.get("villano_revelacion", 0)) or None
+    villano = next((n.numero for n in esc.niveles if n.villano), None)
+    ocultas = set(direccion.get("pixelar_pendiente") or []) | {int(k) for k in (direccion.get("pixelar") or {})}
+    man = leer_json(c.ruta / "imagenes" / "manifiesto.json") if (c.ruta / "imagenes" / "manifiesto.json").exists() else {}
+    claves = claves_de_nombre([n.model_dump() for n in esc.niveles])
+    solo_animal = set(cargar_estilo(c.cargar().estilo).tipos_reemplazables_por_foto_real)
+    usos = {a["archivo"]: 0 for a in tomas}
+    datos = esc.model_dump()
+    assets = {a["id"] for a in datos["assets"]}
+    videos = direccion.setdefault("video_escena", {})
+    cambiadas, ultima = 0, -9
+    for k, e in enumerate(datos["escenas"]):
+        v = e["visual"]
+        if (v["accion"] != "generar" or f"escena:{e['id']}" in man or v.get("tipo") not in solo_animal
+                or e["id"] in ocultas or e["intencion"] in PROTEGIDAS or k - ultima < 2):
+            continue
+        nivel = next((n for n in esc.niveles if e["seccion"].lower().startswith(f"nivel {n.numero} ")
+                      or n.nombre.lower() in e["seccion"].lower()), None)
+        if nivel is None or nivel.numero not in claves or not palabra_en(e["narracion"], claves[nivel.numero]):
+            continue
+        if nivel.numero == villano and (revelacion is None or e["id"] <= revelacion):
+            continue                                  # el villano va oculto hasta su revelación
+        propias = sorted((a for a in tomas if a["nivel"] == nivel.numero and usos[a["archivo"]] < USOS_POR_TOMA),
+                         key=lambda a: (usos[a["archivo"]], a["tipo"] != "video"))
+        if not propias:
+            continue
+        toma = propias[0]
+        usos[toma["archivo"]] += 1
+        foto = toma["archivo"]
+        if toma["tipo"] == "video":
+            foto = _cuadro_de_video(c.ruta, toma["archivo"])
+            videos[str(e["id"])] = {"archivo": toma["archivo"], "desde": round(0.5 + 1.2 * (usos[toma["archivo"]] - 1), 2),
+                                    "origen": toma.get("url_origen", "")}
+        aid = "pexels_" + Path(foto).stem
+        if aid not in assets:
+            datos["assets"].append({"id": aid, "tipo": "foto_pexels", "archivo": foto, "quitar_fondo": False,
+                                    "prompt": f"Pexels: {toma.get('url_origen', '')}"})
+            assets.add(aid)
+        e["visual"] = {**v, "accion": "reusar", "reusar_de": aid, "prompt": None, "tipo": None, "referencias": []}
+        e["notas_edicion"] = ((e.get("notas_edicion") or "") + f" · {toma['tipo']} real de Pexels").strip(" ·")
+        cambiadas += 1
+        ultima = k
+    c.guardar_escenas(EscenasV2.model_validate(datos))
+    escribir_json(c.ruta / "direccion.json", direccion)
+    avisar(f"{cambiadas} escenas usan fotos o videos reales de Pexels en vez de imágenes nuevas")
+    return cambiadas
+
+
+def _cuadro_de_video(raiz: Path, archivo: str) -> str:
+    """Un cuadro del video como imagen fija (para la vista del guion y el montaje)."""
+    destino = (raiz / archivo).with_suffix(".jpg")
+    if not destino.exists():
+        subprocess.run([ffmpeg(), "-v", "error", "-y", "-ss", "1", "-i", str(raiz / archivo), "-frames:v", "1",
+                        "-vf", "scale=1600:-2", str(destino)], check=True)
+    return destino.relative_to(raiz).as_posix()
+
+
+def ajustar_al_presupuesto(c: CarpetaProyecto, t=None, ejecutar_claude=None, usar_pexels: bool = True) -> dict:
     """Si las imágenes pasan el máximo, algunas escenas pasan a reusar la imagen de una escena
     anterior de la misma sección (el texto no cambia). Nunca se tocan el gancho, la revelación,
     el giro, el cierre, la primera imagen de cada sección ni las escenas del villano oculto."""
     from .esquemas import EscenasV2
 
+    pexels = usar_pexels_en_escenas(c, t, ejecutar_claude) if usar_pexels else 0
     config = ConfigCostos.cargar()
     est = estimar_imagenes(c)
     precio_cop = est["cop"] / est["faltan"] if est["faltan"] else 0
     disponible = config.maximo_cop - MARGEN_COP - c.libro(config).total_cop()
     sobran = 0 if not precio_cop else max(0, math.ceil((est["cop"] - disponible) / precio_cop))
     if sobran == 0:
-        return {"convertidas": 0, **estimar_imagenes(c)}
+        return {"pexels": pexels, "convertidas": 0, **estimar_imagenes(c)}
     esc = c.cargar_escenas()
     direccion = leer_json(c.ruta / "direccion.json") if (c.ruta / "direccion.json").exists() else {}
     ocultas = set(direccion.get("pixelar_pendiente") or []) | {int(k) for k in (direccion.get("pixelar") or {})}
@@ -287,7 +371,11 @@ def ajustar_al_presupuesto(c: CarpetaProyecto) -> dict:
                            "tipo": None, "referencias": []}
             e["notas_edicion"] = ((e.get("notas_edicion") or "") + " · reusa imagen para cuidar el presupuesto").strip(" ·")
     c.guardar_escenas(EscenasV2.model_validate(datos))
-    return {"convertidas": len(elegidas), **estimar_imagenes(c)}
+    r = {"pexels": pexels, "convertidas": len(elegidas), **estimar_imagenes(c)}
+    if t:
+        t.avisar(f"Listo: {pexels} escenas con Pexels y {len(elegidas)} que reusan una imagen cercana. "
+                 f"Imágenes nuevas: {r['faltan']} (≈ {r['texto']})")
+    return r
 
 
 def paso_imagenes(c: CarpetaProyecto, t: Trabajo, permiso: bool = False, ejecutar_claude=None) -> None:
@@ -462,6 +550,9 @@ def resumen(c: CarpetaProyecto) -> dict:
             elif e.visual.accion == "reusar" and isinstance(e.visual.reusar_de, int):
                 ref = man.get(f"escena:{e.visual.reusar_de}")
                 img = ref["archivo"] if ref else None
+            elif e.visual.accion == "reusar" and isinstance(e.visual.reusar_de, str) \
+                    and e.visual.reusar_de.startswith("pexels_"):
+                img = next((a.archivo for a in esc.assets if a.id == e.visual.reusar_de), None)
             elif e.visual.accion == "reusar" and isinstance(e.visual.reusar_de, str):
                 n = next((x for x in esc.niveles if x.asset == e.visual.reusar_de), None)
                 oculto = n and n.villano and cargar_estilo(p.estilo).ocultar_villano

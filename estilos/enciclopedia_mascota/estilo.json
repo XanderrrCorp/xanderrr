@@ -242,5 +242,10 @@
     "peligroso": "Threatening and intense: fierce eyes, visible sharp mouthparts, tense ready-to-attack pose",
     "neutral": "Unsettling and alert: big detailed eyes, slightly creepy expression",
     "inofensivo": "Harmless and calm, almost cute: soft round eyes, relaxed pose"
-  }
+  },
+  "tipos_reemplazables_por_foto_real": [
+    "animal_fondo_gris",
+    "amenaza_cinematografica",
+    "diagrama_fondo_blanco"
+  ]
 }

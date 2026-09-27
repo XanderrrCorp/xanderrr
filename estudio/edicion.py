@@ -770,6 +770,13 @@ def construir_edl(carpeta: CarpetaProyecto) -> dict:
             acum += len(tr)
             t1 = a + (b - a) * acum / largo
             subtitulos.append({"inicio": round(t0, 3), "fin": round(max(t1, t0 + 0.2), 3), "texto": tr})
+    for e, c in zip(escenas, clips):
+        v = (direccion.get("video_escena") or {}).get(str(e.id))
+        if v and (carpeta.ruta / v["archivo"]).exists():
+            # escena hecha con un video REAL verificado de Pexels: se ve a pantalla completa
+            c["efectos"].append({"efecto": "video_real", "en": c["inicio"], "dur": round(c["fin"] - c["inicio"], 3),
+                                 "archivo": v["archivo"], "desde": v.get("desde", 0.5), "origen": v.get("origen", "")})
+            c["razon"] += "; escena con video REAL de Pexels (verificado)"
     _stock(esc, escenas, clips, carpeta.ruta, revelacion, rng, sfx)
     reacciones = _reacciones(estilo, escenas, clips, carpeta.ruta, revelacion, rng, direccion.get("reacciones"), sfx)
     if reacciones:

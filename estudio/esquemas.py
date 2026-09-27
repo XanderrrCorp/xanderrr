@@ -164,6 +164,8 @@ class Estilo(Modelo):
     # True: el villano va pixelado en pantalla hasta su revelación. Es solo visual: la voz nunca
     # dice que está pixelado (al dueño no le gustó oírlo en el guion)
     ocultar_villano: bool = True
+    # tipos de escena que solo muestran al animal: se pueden cambiar por una foto o video real de Pexels
+    tipos_reemplazables_por_foto_real: list[str] = []
     poses_canal: list["PoseCanal"] = []
     # Presentador realista (persona INVENTADA) para reacciones cortas en giro, revelación y humor
     presentador: "Presentador | None" = None
