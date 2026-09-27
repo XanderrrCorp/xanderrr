@@ -36,8 +36,8 @@
         "descuento_lotes": 0.5
       },
       "google/flash-image-2.5": {
-        "precio_por_imagen": 0.3,
-        "_nota": "MEDIDO en la factura de Together, no el de lista (0,039): 26-sep ~0,32 USD por imagen con 1-2 referencias; 15-sep ~0,17 USD con 1 referencia. Se usa 0,30 para que el freno sea conservador. Recalibrar con cada factura."
+        "precio_por_imagen": 0.05,
+        "_nota": "Lista de Together: 0,039 USD por imagen (Gemini Flash Image 2.5 «Nano Banana»). La factura del 26-sep (5,07 USD por ~115 imágenes: 96 del primer video + poses + miniaturas) da ~0,044. Se usa 0,05 para cubrir las imágenes de referencia y que el freno quede un poco por encima. El 0,30 anterior fue un error de cuenta."
       }
     },
     "videos_por_modelo": {
