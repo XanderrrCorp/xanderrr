@@ -11,6 +11,7 @@ vuelve a pagar (huellas por imagen y por oración de voz).
 from __future__ import annotations
 
 import math
+import os
 
 import shutil
 import subprocess
@@ -57,6 +58,20 @@ def ocupado(slug: str) -> bool:
     return bool(t and t.activo)
 
 
+def despierto(activo: bool) -> None:
+    """En Windows: mientras un trabajo corre, el PC no se suspende (la pantalla sí puede apagarse).
+    Vale para el hilo que lo pide; al terminar se devuelve el permiso de suspender."""
+    if os.name != "nt":
+        return
+    try:
+        import ctypes
+
+        ES_CONTINUOUS, ES_SYSTEM_REQUIRED = 0x80000000, 0x00000001
+        ctypes.windll.kernel32.SetThreadExecutionState(ES_CONTINUOUS | (ES_SYSTEM_REQUIRED if activo else 0))
+    except Exception:  # noqa: BLE001 — si no se puede, el trabajo sigue igual
+        pass
+
+
 def lanzar(slug: str, paso: str, funcion) -> Trabajo:
     with _CERROJO:
         if ocupado(slug):
@@ -65,6 +80,7 @@ def lanzar(slug: str, paso: str, funcion) -> Trabajo:
         TRABAJOS[slug] = t
 
     def correr():
+        despierto(True)
         try:
             funcion(t)
             t.progreso = 1.0
@@ -75,6 +91,7 @@ def lanzar(slug: str, paso: str, funcion) -> Trabajo:
             t.registro.append(traceback.format_exc()[-1500:])
         finally:
             t.activo = False
+            despierto(False)
 
     threading.Thread(target=correr, daemon=True).start()
     return t
