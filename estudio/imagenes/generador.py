@@ -84,9 +84,16 @@ def _validar_png(datos: bytes, aspecto: str) -> tuple[bytes, str | None]:
 
 
 def _quitar_fondo(origen: Path, destino: Path) -> bool:
+    """Por defecto NO: el montaje recorta el fondo liso por su cuenta (rápido). rembg está
+    instalado para las miniaturas, pero en las escenas tardaría minutos por imagen en un PC
+    normal; solo se usa si se pide con XANDART_REMBG_ESCENAS=1."""
+    import os
+
+    if os.environ.get("XANDART_REMBG_ESCENAS") != "1":
+        return False
     try:
-        from rembg import remove  # opcional: pip install rembg
-    except ImportError:
+        from rembg import remove
+    except Exception:  # noqa: BLE001
         return False
     destino.parent.mkdir(parents=True, exist_ok=True)
     destino.write_bytes(remove(origen.read_bytes()))
@@ -254,7 +261,7 @@ def generar_imagenes(carpeta: CarpetaProyecto, *, primeras: int | None = None, i
             if aviso_calidad:
                 reporte.avisos.append(f"{t.clave}: {aviso_calidad}")
             if t.quitar_fondo and not sin_fondo:
-                reporte.avisos.append(f"{t.clave}: fondo sin quitar (instala rembg)")
+                pass                                    # el montaje recorta el fondo liso
             avisar(f"  {t.clave}: lista · {formato_usd(costo_trabajo)} · {formato_cop(config.a_cop(costo_trabajo))}")
             exito = True
             break
