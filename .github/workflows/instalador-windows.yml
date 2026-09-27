@@ -40,11 +40,12 @@ jobs:
 
       - name: Pruebas de Xandart en Windows
         shell: powershell
+        timeout-minutes: 15
         run: |
           $d = Join-Path $env:LOCALAPPDATA 'Xandart'
-          & "$d\herramientas\uv.exe" pip install --python "$d\.venv\Scripts\python.exe" pytest httpx
+          & "$d\herramientas\uv.exe" pip install --python "$d\.venv\Scripts\python.exe" pytest httpx pytest-timeout
           Set-Location $d
-          & "$d\.venv\Scripts\python.exe" -m pytest -q
+          & "$d\.venv\Scripts\python.exe" -m pytest -v --timeout=180 --durations=10
           if ($LASTEXITCODE -ne 0) { throw 'fallaron pruebas' }
 
       - name: Actualizar con Xandart abierto (cierra el viejo y no borra claves)
