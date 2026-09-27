@@ -482,6 +482,10 @@ def _montaje_foto(raiz: Path, papel: Image.Image, ef: dict, loc: float) -> Image
         borde = 12
         marco = Image.new("RGB", (foto.width + 2 * borde, foto.height + 2 * borde), (226, 30, 30))
         marco.paste(foto, (borde, borde))
+        if ef.get("sintetica"):
+            # nunca se presenta como foto real: etiqueta visible en la esquina
+            et = _texto_img("Recreación IA", 30, 5)
+            marco.paste(et, (marco.width - et.width - borde - 10, marco.height - et.height - borde - 8), et)
         pose = None
         if ef.get("pose") and (raiz / ef["pose"]).exists():
             pose = quitar_fondo_liso(Image.open(raiz / ef["pose"]).convert("RGB"))

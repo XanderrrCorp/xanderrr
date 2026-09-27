@@ -8,6 +8,10 @@
    autor, licencia y por qué se aprobó (assets/stock/stock.json).
 
 El Director de edición los usa de vez en cuando (no siempre) cuando la voz nombra al animal.
+
+5. Si Pexels no tiene ni una foto ni un video verificado de un animal, Gemini crea UNA
+   recreación ultra realista (unos 0,05 USD, dentro del freno). Claude la revisa igual que
+   las fotos; en el video lleva la etiqueta «Recreación IA», nunca se presenta como foto real.
 """
 from __future__ import annotations
 
@@ -25,6 +29,11 @@ API_VIDEOS = "https://api.pexels.com/videos/search"
 LICENCIA = "Licencia de Pexels: uso gratis, también comercial; sin atribución obligatoria (pexels.com/license)"
 FOTOS_POR_NIVEL, VIDEOS_POR_NIVEL = 10, 6
 APROBADAS_POR_NIVEL = {"foto": 2, "video": 1}
+LICENCIA_IA = "Recreación generada con IA (Gemini Flash Image 2.5 vía Together): no es una foto real"
+PROMPT_REALISTA = ("Ultra-realistic wildlife photograph of a {especie} ({busqueda}), anatomically accurate, true natural "
+                   "colors and textures, in its natural habitat, whole animal visible and centered, sharp focus on the "
+                   "animal, shallow depth of field, soft natural light, shot on a professional camera with a macro "
+                   "lens. No text, no watermark, no people, no logos. Aspect ratio 16:9.")
 
 
 class SinClavePexels(RuntimeError):
@@ -120,7 +129,48 @@ def _verificar(nivel: dict, hoja: Path, candidatos: list[dict], carpeta: Path, e
     return salida
 
 
-def preparar_stock(carpeta: Path, ejecutar=claude_cli.ejecutar, avisar=print, sesion=requests) -> dict:
+def _verificar_recreacion(nivel: dict, archivo: Path, carpeta: Path, ejecutar) -> str | None:
+    texto, _ = ejecutar(
+        f"Mira la imagen {archivo.relative_to(carpeta).as_posix()} con la herramienta Read. Debe ser una recreación "
+        f"fotográfica realista de «{nivel['nombre']}». Apruébala SOLO si la anatomía es correcta para ESA especie (patas, "
+        "antenas, alas, colores), se ve como una foto y no tiene texto, deformaciones ni partes de más. Si dudas, no.\n"
+        'Responde SOLO un JSON: {"aprobada": true|false, "razon": "<por qué>"}', cwd=carpeta, herramientas=["Read"])
+    datos = claude_cli.extraer_json(texto) or {}
+    return str(datos.get("razon", ""))[:200] if datos.get("aprobada") is True else None
+
+
+def recrear(carpeta: Path, nivel: dict, busqueda: str, ejecutar, avisar=print, proveedor=None,
+            permiso: bool = False, intentos: int = 2) -> dict | None:
+    """Recreación ultra realista cuando Pexels no tiene nada verificado del animal."""
+    from .config import ConfigCostos, leer_config
+    from .costos import LibroCostos
+    from .imagenes.proveedores import crear_proveedor
+
+    config = ConfigCostos.cargar()
+    proveedor = proveedor or crear_proveedor(config, leer_config("proveedores.json")["imagenes"])
+    libro = LibroCostos(carpeta, config)
+    prompt = PROMPT_REALISTA.format(especie=nivel["nombre"], busqueda=busqueda)
+    destino = carpeta / "assets" / "stock" / f"nivel_{nivel['numero']}_foto_ia.png"
+    for intento in range(intentos):
+        libro.autorizar(proveedor.estimar_usd(prompt, []), permiso=permiso)      # freno: nunca pasa el máximo
+        avisar(f"  Pexels no tiene «{nivel['nombre']}»: Gemini hace una recreación realista…")
+        r = proveedor.generar(prompt, [])
+        libro.registrar(modulo="imagenes", proveedor=r.proveedor, modelo=r.modelo, unidades=r.uso.unidades(),
+                        costo_usd=r.uso.costo_usd, detalle=f"recreación realista nivel {nivel['numero']}")
+        destino.write_bytes(r.png)
+        razon = _verificar_recreacion(nivel, destino, carpeta, ejecutar)
+        if razon is not None:
+            return {"archivo": destino.relative_to(carpeta).as_posix(), "tipo": "foto", "nivel": nivel["numero"],
+                    "especie": nivel["nombre"], "busqueda": busqueda, "url_origen": "", "autor": "",
+                    "autor_url": "", "pexels_id": None, "licencia": LICENCIA_IA, "verificado": True,
+                    "sintetica": True, "razon": razon, "duracion": None}
+        avisar(f"  la recreación de «{nivel['nombre']}» no pasó la revisión (intento {intento + 1})")
+    destino.unlink(missing_ok=True)
+    return None
+
+
+def preparar_stock(carpeta: Path, ejecutar=claude_cli.ejecutar, avisar=print, sesion=requests,
+                   recrear_faltantes: bool = True, proveedor=None, permiso: bool = False) -> dict:
     """Busca, verifica y baja fotos y videos reales por nivel. Reanudable: los niveles
     ya revisados no se vuelven a buscar."""
     ruta = carpeta / "assets" / "stock" / "stock.json"
@@ -138,11 +188,10 @@ def preparar_stock(carpeta: Path, ejecutar=claude_cli.ejecutar, avisar=print, se
             continue
         avisar(f"Buscando fotos y videos reales de «{n['nombre']}» ({consulta})…")
         candidatos = buscar(consulta, sesion)
-        if not candidatos:
-            indice["niveles_revisados"].append(n["numero"])
-            continue
-        hoja = _hoja(candidatos, carpeta / "assets" / "stock" / f"hoja_nivel_{n['numero']}.png", sesion)
-        aprobados = _verificar(n, hoja, candidatos, carpeta, ejecutar)
+        aprobados = {}
+        if candidatos:
+            hoja = _hoja(candidatos, carpeta / "assets" / "stock" / f"hoja_nivel_{n['numero']}.png", sesion)
+            aprobados = _verificar(n, hoja, candidatos, carpeta, ejecutar)
         cuenta = {"foto": 0, "video": 0}
         for k, razon in sorted(aprobados.items()):
             c = candidatos[k]
@@ -159,6 +208,12 @@ def preparar_stock(carpeta: Path, ejecutar=claude_cli.ejecutar, avisar=print, se
                 "especie": n["nombre"], "busqueda": consulta, "url_origen": c["url_origen"], "autor": c["autor"],
                 "autor_url": c["autor_url"], "pexels_id": c["pexels_id"], "licencia": LICENCIA,
                 "verificado": True, "razon": razon, "duracion": c.get("duracion")})
+        if not any(cuenta.values()) and recrear_faltantes:
+            (carpeta / "assets" / "stock").mkdir(parents=True, exist_ok=True)
+            hecha = recrear(carpeta, n, consulta, ejecutar, avisar, proveedor, permiso)
+            if hecha:
+                indice["archivos"].append(hecha)
+                cuenta["foto"] += 1
         indice["niveles_revisados"].append(n["numero"])
         escribir_json(ruta, indice)
         avisar(f"  «{n['nombre']}»: {cuenta['foto']} fotos y {cuenta['video']} videos verificados")
@@ -171,7 +226,7 @@ def creditos(carpeta: Path) -> str:
     ruta = carpeta / "assets" / "stock" / "stock.json"
     if not ruta.exists():
         return ""
-    usados = leer_json(ruta)["archivos"]
+    usados = [a for a in leer_json(ruta)["archivos"] if not a.get("sintetica")]
     return "\n".join(sorted({f"{a['tipo'].capitalize()} de {a['autor']} en Pexels: {a['url_origen']}" for a in usados}))
 
 

@@ -117,6 +117,9 @@ eje que se repite en todo el video (por ejemplo «la probabilidad de que te mand
 - Solo hechos verdaderos. Si los casos reales son pocos, dilo. En salud: sin dosis ni
   medicamentos; orienta a ir al médico o a urgencias.
 - Nombres compuestos separados como se dicen. Nada de siglas deletreadas.
+- La voz NUNCA dice «villano», «villano final», «nivel uno», «nivel dos», «escala» ni otras palabras
+  de cómo está armado el video: el último animal se presenta como «el último de la lista», «el que te
+  dije al principio». Villano es solo una palabra interna para ti.
 
 == FORMATO DE SALIDA (texto, no JSON) ==
 Responde SOLO con esto, sin nada antes ni después:

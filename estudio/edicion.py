@@ -339,6 +339,7 @@ def _stock(esc: EscenasV2, escenas: list, clips: list, raiz: Path, revelacion: i
                 pose = poses.get(clave) or next(iter(poses.values()), None)
                 c["efectos"].append({"efecto": "foto_real", "en": round(t0, 3), "dur": round(dur, 3),
                                      "archivo": elegido["archivo"], "origen": elegido["url_origen"],
+                                     "sintetica": bool(elegido.get("sintetica")),
                                      "pose": pose.relative_to(raiz).as_posix() if pose else None})
                 c["razon"] += f"; foto REAL de {n.nombre} (verificada) con la mascota señalándola"
             _sfx(sfx, "pop", t0, i, f"Pop al mostrar a {n.nombre} de verdad")

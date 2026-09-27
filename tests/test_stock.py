@@ -74,3 +74,29 @@ def test_sin_clave_avisa(tmp_path, monkeypatch):
     (tmp_path / "escenas.json").write_text(json.dumps({"niveles": [{"numero": 1, "nombre": "x", "asset": "a"}]}), "utf-8")
     with pytest.raises(stock.SinClavePexels):
         stock.preparar_stock(tmp_path, ejecutar=lambda *a, **k: ("{}", {}), avisar=lambda *_: None)
+
+
+def test_sin_fotos_en_pexels_gemini_hace_una_recreacion_revisada(tmp_path, monkeypatch):
+    from estudio.config import ConfigCostos
+    from estudio.imagenes.proveedores import ProveedorSimulado
+
+    monkeypatch.setenv("PEXELS_API_KEY", "clave-prueba")
+    (tmp_path / "escenas.json").write_text(json.dumps({"niveles": [{"numero": 1, "nombre": "Chinche besucona",
+                                                                     "asset": "a", "villano": False}]}), "utf-8")
+
+    class SinResultados(SesionFalsa):
+        def get(self, url, params=None, headers=None, timeout=None):
+            return Resp({"photos": [], "videos": []})
+
+    def claude(prompt, cwd=None, herramientas=None):
+        if "búsqueda" in prompt:
+            return '{"1": "kissing bug triatoma"}', {}
+        assert "nivel_1_foto_ia.png" in prompt and "Read" in herramientas
+        return '{"aprobada": true, "razon": "triatoma con anatomía correcta"}', {}
+
+    idx = stock.preparar_stock(tmp_path, ejecutar=claude, avisar=lambda *_: None, sesion=SinResultados(),
+                               proveedor=ProveedorSimulado(ConfigCostos.cargar()))
+    (a,) = idx["archivos"]
+    assert a["sintetica"] and a["verificado"] and "no es una foto real" in a["licencia"]
+    assert (tmp_path / a["archivo"]).exists()
+    assert stock.creditos(tmp_path) == ""                       # no se acredita como foto de Pexels
