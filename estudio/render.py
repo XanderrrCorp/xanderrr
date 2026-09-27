@@ -154,11 +154,14 @@ class Escenario:
             blanco = np.mean([esquina[0, 0], esquina[0, -1], esquina[-1, 0], esquina[-1, -1]]) > 232
             caja_max = (int(W * 0.84), int(H * 0.72))
             if blanco:
-                # dibujo sobre fondo blanco: se «imprime» en el papel (multiplicar)
-                d = img.copy()
-                d.thumbnail(caja_max, Image.Resampling.LANCZOS)
+                # dibujo sobre fondo blanco: se «imprime» en el papel (multiplicar). Se recorta el
+                # margen blanco y el dibujo se agranda hasta llenar el cuadro: un objeto chiquito en
+                # medio de una hoja en blanco no le dice nada al espectador
+                caja = _caja_contenido(img)
+                d = _encajar(img.crop(caja), caja_max)
+                k = d.width / (caja[2] - caja[0])
                 x, y = (W - d.width) // 2, int(H * 0.50 - d.height / 2)
-                self.ubicacion[clip["id"]] = (x, y, d.width, d.height)
+                self.ubicacion[clip["id"]] = (x - caja[0] * k, y - caja[1] * k, img.width * k, img.height * k)
                 zona = np.asarray(lienzo.crop((x, y, x + d.width, y + d.height)).convert("RGB"), np.float32)
                 mult = zona * np.asarray(d, np.float32) / 255
                 lienzo.paste(Image.fromarray(mult.astype("uint8")), (x, y))
@@ -167,7 +170,7 @@ class Escenario:
                 caja = rec.getbbox() or (0, 0, img.width, img.height)
                 rec = rec.crop(caja)
                 ancho0 = rec.width
-                rec.thumbnail(caja_max, Image.Resampling.LANCZOS)
+                rec = _encajar(rec, caja_max)
                 x, y = (W - rec.width) // 2, int(H * 0.50 - rec.height / 2)
                 k = rec.width / ancho0
                 self.ubicacion[clip["id"]] = (x - caja[0] * k, y - caja[1] * k, img.width * k, img.height * k)
@@ -194,6 +197,29 @@ class Escenario:
         if len(self.cache) > 6:
             self.cache.pop(next(iter(self.cache)))
         return final
+
+
+AGRANDAR_MAXIMO = 3.0      # más de eso ya se ve borroso
+
+
+def _caja_contenido(img: Image.Image, umbral: int = 228, margen: float = 0.04) -> tuple[int, int, int, int]:
+    """Caja de lo dibujado en una imagen de fondo blanco (con un poco de aire alrededor)."""
+    a = np.asarray(img.convert("L").resize((img.width // 4 or 1, img.height // 4 or 1)))
+    ys, xs = np.nonzero(a < umbral)
+    if len(xs) < 20:
+        return 0, 0, img.width, img.height
+    x0, x1 = np.percentile(xs, [0.5, 99.5]) * 4
+    y0, y1 = np.percentile(ys, [0.5, 99.5]) * 4
+    mx, my = (x1 - x0) * margen + 8, (y1 - y0) * margen + 8
+    return (int(max(0, x0 - mx)), int(max(0, y0 - my)), int(min(img.width, x1 + mx)), int(min(img.height, y1 + my)))
+
+
+def _encajar(im: Image.Image, caja_max: tuple[int, int]) -> Image.Image:
+    """Escala para llenar la caja sin salirse (agranda también, hasta AGRANDAR_MAXIMO)."""
+    k = min(caja_max[0] / im.width, caja_max[1] / im.height, AGRANDAR_MAXIMO)
+    if abs(k - 1) < 0.01:
+        return im.copy()
+    return im.resize((max(1, round(im.width * k)), max(1, round(im.height * k))), Image.Resampling.LANCZOS)
 
 
 def _camara(img: Image.Image, s: float, foco: tuple[float, float], dx: float = 0, dy: float = 0) -> Image.Image:

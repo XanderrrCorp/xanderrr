@@ -66,3 +66,15 @@ def test_cuadro_vertical_1080x1920_con_titulo():
     cuadro = render._cuadro_vertical(img, 0.95, titulo)
     assert cuadro.size == (render.VW, render.VH)
     assert cuadro.getpixel((540, 1000))[0] > 150              # la ventana muestra la escena
+
+
+def test_dibujo_chiquito_sobre_blanco_se_agranda():
+    from PIL import ImageDraw
+
+    img = Image.new("RGB", (1344, 768), (255, 255, 255))
+    ImageDraw.Draw(img).rectangle((620, 330, 720, 440), fill=(150, 20, 20))      # objeto de 100 px en el medio
+    papel = Image.new("RGB", (render.W, render.H), (230, 220, 200))
+    esc = render.Escenario(tmp := __import__("pathlib").Path("."), papel, {"recorte_sobre_papel": "recorte"})
+    caja = render._caja_contenido(img)
+    grande = render._encajar(img.crop(caja), (int(render.W * 0.84), int(render.H * 0.72)))
+    assert grande.height >= render.H * 0.6          # llena el cuadro en vez de quedar como una manchita
