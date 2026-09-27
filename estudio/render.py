@@ -723,8 +723,30 @@ def mezclar_audio(raiz: Path, edl: dict, ffmpeg: str | None = None) -> np.ndarra
 CALIDADES = {"normal": ("veryfast", "19", "192k"), "maxima": ("slow", "15", "320k")}
 
 
+def _salida() -> tuple[int, int, int]:
+    """Resolución y cuadros por segundo del archivo final (config/render.json); se dibuja
+    siempre en 1920×1080 y FFmpeg escala al tamaño pedido."""
+    from .config import RAIZ
+
+    ruta = RAIZ / "config" / "render.json"
+    datos = leer_json(ruta) if ruta.exists() else {}
+    return int(datos.get("ancho", 1920)), int(datos.get("alto", 1080)), int(datos.get("fps", 30))
+
+
 def renderizar(carpeta: CarpetaProyecto, ffmpeg: str, destino: Path | None = None, desde: float = 0.0,
-               hasta: float | None = None, avisar=print, calidad: str = "normal") -> Path:
+               hasta: float | None = None, avisar=print, calidad: str = "normal",
+               salida: tuple[int, int, int] | None = None) -> Path:
+    global FPS
+    ancho, alto, fps = salida or _salida()
+    anterior, FPS = FPS, fps
+    try:
+        return _renderizar(carpeta, ffmpeg, destino, desde, hasta, avisar, calidad, ancho, alto)
+    finally:
+        FPS = anterior
+
+
+def _renderizar(carpeta: CarpetaProyecto, ffmpeg: str, destino: Path | None, desde: float, hasta: float | None,
+                avisar, calidad: str, ancho: int, alto: int) -> Path:
     preset, crf, audio_kbps = CALIDADES.get(calidad, CALIDADES["normal"])
     raiz = carpeta.ruta
     edl = leer_json(raiz / "edl.json")
@@ -779,7 +801,9 @@ def renderizar(carpeta: CarpetaProyecto, ffmpeg: str, destino: Path | None = Non
 
     video_tmp = destino.with_suffix(".video.mp4")
     proc = subprocess.Popen([ffmpeg, "-y", "-loglevel", "error", "-f", "rawvideo", "-pix_fmt", "rgb24", "-s", f"{W}x{H}",
-                             "-r", str(FPS), "-i", "-", "-c:v", "libx264", "-preset", preset, "-crf", crf,
+                             "-r", str(FPS), "-i", "-",
+                             *(["-vf", f"scale={ancho}:{alto}:flags=lanczos"] if (ancho, alto) != (W, H) else []),
+                             "-c:v", "libx264", "-preset", preset, "-crf", crf,
                              "-profile:v", "high", "-g", str(FPS * 2), "-bf", "2",
                              "-pix_fmt", "yuv420p", str(video_tmp)], stdin=subprocess.PIPE)
     temblor = random.Random(proyecto.semilla)

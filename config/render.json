@@ -1,0 +1,6 @@
+{
+  "_nota": "Tamaño y cuadros por segundo del video final. Se dibuja en 1920x1080 y se escala. 1280x720 a 60 cps: movimiento más fluido (pedido del dueño). Para 1080p: ancho 1920, alto 1080, fps 30.",
+  "ancho": 1280,
+  "alto": 720,
+  "fps": 60
+}
