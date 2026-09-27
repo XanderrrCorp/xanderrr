@@ -204,7 +204,8 @@ def test_together_peticion_y_costo(tmp_path, config, monkeypatch):
     assert cab["Authorization"] == "Bearer clave-de-prueba"
     assert cuerpo["model"] == "google/flash-image-2.5" and cuerpo["response_format"] == "base64"
     assert cuerpo["reference_images"][0].startswith("data:image/png;base64,")
-    assert res.uso.costo_usd == pytest.approx(0.0403) and prov.estimar_usd("x", [ref]) == pytest.approx(0.0403)
+    precio = config.precios["imagenes_por_modelo"]["google/flash-image-2.5"]["precio_por_imagen"]   # el medido
+    assert res.uso.costo_usd == pytest.approx(precio) and prov.estimar_usd("x", [ref]) == pytest.approx(precio)
 
 
 def test_proveedor_por_defecto_es_together(config, monkeypatch):

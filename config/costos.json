@@ -36,8 +36,14 @@
         "descuento_lotes": 0.5
       },
       "google/flash-image-2.5": {
-        "precio_por_imagen": 0.0403,
-        "_nota": "Together cobra por imagen generada; las referencias no se cobran aparte. 0,0403 USD medido por el dueño: CONFIRMAR en together.ai/pricing."
+        "precio_por_imagen": 0.3,
+        "_nota": "MEDIDO en la factura de Together, no el de lista (0,039): 26-sep ~0,32 USD por imagen con 1-2 referencias; 15-sep ~0,17 USD con 1 referencia. Se usa 0,30 para que el freno sea conservador. Recalibrar con cada factura."
+      }
+    },
+    "videos_por_modelo": {
+      "Wan-AI/wan2.7-i2v": {
+        "precio_por_clip_5s": 0.7,
+        "_nota": "MEDIDO en la factura del 26-sep (~0,67 USD por clip de 5 s a 1904x1088), no el de lista (0,10)."
       }
     }
   },

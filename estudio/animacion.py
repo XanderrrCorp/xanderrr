@@ -19,8 +19,8 @@ from .costos import LibroCostos
 from .poses import carpeta_presentador
 
 URL = "https://api.together.xyz/v2/videos"
-# precio de lista de Together por clip de 5 s (sin audio), en dólares
-MODELOS = {"Wan-AI/wan2.7-i2v": 0.10, "kwaivgI/kling-2.1-standard": 0.1848}
+# precio por clip de 5 s en dólares: el MEDIDO en la factura (el de lista era 0,10 y cobró ~0,67)
+MODELOS = {"Wan-AI/wan2.7-i2v": 0.70, "kwaivgI/kling-2.1-standard": 0.70}
 # qué se mueve en cada pose: gesto corto y natural, sin hablar ni salir de cuadro
 MOVIMIENTO = {
     "sorpresa": "he reacts with genuine surprise, eyebrows rise, he leans slightly toward the camera and blinks",
