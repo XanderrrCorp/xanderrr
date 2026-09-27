@@ -97,8 +97,9 @@ SONIDO_DE_CORTE = {
 
 
 def _sonido_en_cada_corte(sfx: list, escenas: list, clips: list, rng: random.Random) -> None:
-    """Shorts: a cada escena que quedó muda se le pone un sonido en el corte, alternando
-    para que nunca suene el mismo tipo dos cortes seguidos."""
+    """A cada escena que quedó muda se le propone un sonido en el corte, alternando para que
+    nunca suene el mismo tipo dos cortes seguidos. Tienen la prioridad más baja: el recorte
+    por sfx_por_minuto del perfil decide cuántos quedan (muchos en el short, menos en el largo)."""
     con_sonido = {x["clip"] for x in sfx}
     previo = None
     for idx, (e, c) in enumerate(zip(escenas, clips)):
@@ -110,7 +111,8 @@ def _sonido_en_cada_corte(sfx: list, escenas: list, clips: list, rng: random.Ran
         opciones += ["barrido", "pop"]
         tipo = next((t for t in opciones if t != previo), "barrido")
         _sfx(sfx, tipo, c["inicio"] + rng.uniform(0.0, 0.08), idx,
-             f"Short: sonido en el corte ({tipo}) para que el ritmo no se caiga")
+             f"Sonido en el corte ({tipo}) para que el ritmo no se caiga")
+        sfx[-1]["prioridad"] = 0
         previo = tipo
 
 
@@ -760,8 +762,7 @@ def construir_edl(carpeta: CarpetaProyecto) -> dict:
             carpeta.guardar(p)
     musica = _musica(escenas, clips, revelacion, total, rng)
     _equilibrar_movimientos(clips, perfil, rng, estilo.movimiento_maximo)
-    if vertical:
-        _sonido_en_cada_corte(sfx, escenas, clips, rng)
+    _sonido_en_cada_corte(sfx, escenas, clips, rng)       # el recorte deja solo sfx_por_minuto
     vivos = _recortar_sonidos(sfx, len(clips), total, perfil, rng)
     pistas_sfx = _pistas_sfx(vivos, rng)
     edl = {"version": 1, "duracion_total": total,

@@ -3,7 +3,7 @@
   "segundos_promedio_por_imagen": 3.2,
   "interrupcion_de_patron_cada_seg": 3.5,
   "efectos_por_minuto": 9,
-  "sfx_por_minuto": 9,
+  "sfx_por_minuto": 16,
   "cambios_de_musica": "por_seccion",
   "texto_en_pantalla_por_minuto": 2,
   "densidad_primeros_30s": "alta",
@@ -14,5 +14,5 @@
     "corte"
   ],
   "variacion_referencia": {},
-  "notas": "Perfil inicial por defecto. Reemplazar con el aprendido de un video de referencia (Fase 8). Revelaciones con fondo rojo; mascota reacciona en cada nivel. Ritmo pedido por el dueño: algo nuevo en pantalla cada 3 a 4 s, sonido con intención (~9 por minuto), texto moderado."
+  "notas": "Perfil inicial por defecto. Reemplazar con el aprendido de un video de referencia (Fase 8). Revelaciones con fondo rojo; mascota reacciona en cada nivel. Ritmo pedido por el dueño: algo nuevo en pantalla cada 3 a 4 s, sonido con intención (~9 por minuto), texto moderado. Luego el dueño pidió efectos de sonido más seguidos en los largos: 16 por minuto y sonido en los cortes que quedaban mudos."
 }
