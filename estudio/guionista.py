@@ -227,6 +227,21 @@ def _detalles(historia: dict, k: int, estilo: Estilo, carpeta: Path, ejecutar, a
     raise claude_cli.ErrorClaude(f"La sección «{nombre}» no quedó válida: {error}")
 
 
+def _id_catalogo(texto: str, ids: set) -> str | None:
+    """«img012», «012», «12» o «img12» → el id del catálogo que exista."""
+    import re
+
+    t = texto.strip().strip("«»\"' ")
+    if t in ids:
+        return t
+    m = re.search(r"(\d+)", t)
+    if m:
+        cand = f"img{int(m.group(1)):03d}"
+        if cand in ids:
+            return cand
+    return None
+
+
 def _clave_en(clave, narracion: str) -> str | None:
     """La palabra clave solo si está tal cual en la narración (si no, se descarta)."""
     import re
@@ -275,16 +290,20 @@ def a_escenas(datos: dict, estilo: Estilo, canal: str) -> tuple[dict, dict, str]
             ref = str(e.get("reusar", ""))
             if ref.startswith("nivel:"):
                 vis["reusar_de"] = f"tira_{int(ref.split(':')[1])}"
-            elif ref.startswith("imagen:") and ref.split(":", 1)[1].strip() in ids_catalogo:
-                vis["reusar_de"] = ref.split(":", 1)[1].strip()          # imagen ya pagada de otro video
+            elif ref.startswith("imagen:") and _id_catalogo(ref.split(":", 1)[1], ids_catalogo):
+                vis["reusar_de"] = _id_catalogo(ref.split(":", 1)[1], ids_catalogo)   # imagen ya pagada
             else:
                 inicio = ref.split(":", 1)[-1].strip().lower()
                 previas = [j for j, x in enumerate(crudas[:i - 1], 1)
                            if x.get("accion", "generar") == "generar" and x["narracion"].lower().startswith(inicio[:40])]
-                if not previas:
-                    # no encontró a qué escena se refiere: se genera una imagen propia
-                    raise ValueError(f"escena {i}: no encuentro la escena a reusar «{ref}»")
-                vis["reusar_de"] = previas[0]
+                if previas:
+                    vis["reusar_de"] = previas[0]
+                else:
+                    # referencia rara: se reusa la última imagen propia anterior en vez de fallar
+                    anteriores = [j for j, x in enumerate(crudas[:i - 1], 1) if x.get("accion", "generar") == "generar"]
+                    if not anteriores:
+                        raise ValueError(f"escena {i}: no encuentro la escena a reusar «{ref}»")
+                    vis["reusar_de"] = anteriores[-1]
         else:
             notas = "Tira de niveles"
         intencion = e.get("intencion") if e.get("intencion") in INTENCIONES else "explicacion"
@@ -327,8 +346,16 @@ def escribir_guion(encargo: Encargo, estilo: Estilo, carpeta: Path, canal: str,
 
     prompt = instruccion(encargo, estilo)
     error = ""
-    avisar("Claude está escribiendo la historia…")
-    for intento in range(2):
+    borrador = carpeta / "_borrador_guion"
+    borrador.mkdir(parents=True, exist_ok=True)
+    historia = None
+    if (borrador / "historia.json").exists():            # se retoma lo ya escrito
+        historia = leer_json(borrador / "historia.json")
+        historia["secciones"] = [tuple(x) for x in historia["secciones"]]
+        avisar("Retomando la historia ya escrita…")
+    else:
+        avisar("Claude está escribiendo la historia…")
+    for intento in range(0 if historia else 2):
         texto, sobre = ejecutar(prompt if not error else
                                 prompt + f"\n\n== CORRIGE ==\nTu respuesta anterior falló: {error}. "
                                          "Devuelve la historia completa en el formato pedido.", cwd=carpeta)
@@ -339,7 +366,9 @@ def escribir_guion(encargo: Encargo, estilo: Estilo, carpeta: Path, canal: str,
             error = str(ex)[:300]
             avisar(f"  historia: intento {intento + 1} no válido ({error[:120]})")
     else:
-        raise claude_cli.ErrorClaude(f"La historia no quedó válida tras dos intentos: {error}")
+        if historia is None:
+            raise claude_cli.ErrorClaude(f"La historia no quedó válida tras dos intentos: {error}")
+    sobre = locals().get("sobre") or {}
     if niveles_fijos:
         # mismo tema que un video anterior: los niveles (y sus tarjetas ya hechas) se conservan
         historia["niveles"] = niveles_fijos
@@ -363,11 +392,20 @@ def escribir_guion(encargo: Encargo, estilo: Estilo, carpeta: Path, canal: str,
                 avisar(f"Historia ajustada: {palabras} palabras.")
         except ValueError:
             pass
+    escribir_json(borrador / "historia.json", {**historia, "secciones": [list(x) for x in historia["secciones"]]})
     n = len(historia["secciones"])
     avisar(f"Historia lista ({sum(len(x[1]) for x in historia['secciones'])} escenas). Claude está dirigiendo "
            f"las {n} secciones…")
     with ThreadPoolExecutor(max_workers=max(1, en_paralelo)) as pool:
-        partes = list(pool.map(lambda k: _detalles(historia, k, estilo, carpeta, ejecutar, avisar, catalogo), range(n)))
+        def seccion(k):
+            guardada = borrador / f"seccion_{k:02d}.json"
+            if guardada.exists():
+                return leer_json(guardada)
+            hecha = _detalles(historia, k, estilo, carpeta, ejecutar, avisar, catalogo)
+            escribir_json(guardada, hecha)
+            return hecha
+
+        partes = list(pool.map(seccion, range(n)))
     datos = {"titulo": historia["titulo"], "niveles": historia["niveles"], "escenas": [e for p in partes for e in p],
              "catalogo": catalogo or []}
     doc, direccion, md = a_escenas(datos, estilo, canal)
