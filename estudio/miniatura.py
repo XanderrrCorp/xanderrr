@@ -1,11 +1,11 @@
-"""Miniaturas para YouTube (1280×720), sin gastar: se arman con lo que el canal ya tiene.
+"""Miniaturas para YouTube (1280×720), sin gastar: se arman con las tarjetas de los niveles.
 
-Tres versiones para «Probar y comparar» de YouTube:
-  1. el presentador en shock + el villano con brillo y círculo rojo
-  2. la mascota asustada señalando al villano, fondo de color fuerte
-  3. el villano en primer plano sobre fondo oscuro, con flecha roja
-El texto (2 a 4 palabras) lo propone Claude y se pinta con letra limpia: la IA de
-imágenes deforma las letras, por eso nunca se le pide texto.
+Estilo del canal (referencias del dueño): fondo blanco, cuadrícula 3×2 con los animales
+grandes; arriba a la izquierda el más peligroso, más grande que los demás, con brillo rojo,
+ícono de advertencia y su frase en ROJO; los demás con su nombre en negro, del más peligroso
+al más inofensivo. Tres versiones para «Probar y comparar» de YouTube: misma cuadrícula,
+distinta frase del villano (la propone Claude). El texto se pinta con letra limpia: la IA
+de imágenes deforma las letras, por eso nunca se le pide texto.
 """
 from __future__ import annotations
 
@@ -21,21 +21,33 @@ from .estilos import cargar_estilo, carpeta_estilos
 from .tira import quitar_fondo_liso
 
 W, H = 1280, 720
-FUENTE = Path(__file__).parent / "fuentes" / "Fredoka-SemiBold.ttf"
+# Mali: redondeada, de trazo a mano, como las miniaturas de referencia del canal (OFL)
+FUENTE = Path(__file__).parent / "fuentes" / "Mali-SemiBold.ttf"
+FUENTE_FUERTE = Path(__file__).parent / "fuentes" / "Mali-Bold.ttf"
 AMARILLO, ROJO, BLANCO, NEGRO = (255, 222, 40), (230, 28, 28), (255, 255, 255), (15, 12, 10)
 
 
-def _fuente(tam: int):
+def _fuente(tam: int, fuerte: bool = False):
     from PIL import ImageFont
 
     try:
-        return ImageFont.truetype(str(FUENTE), tam)
+        return ImageFont.truetype(str(FUENTE_FUERTE if fuerte else FUENTE), tam)
     except OSError:
         return ImageFont.load_default()
 
 
 def _recorte(ruta: Path) -> Image.Image:
-    img = quitar_fondo_liso(Image.open(ruta).convert("RGB"))
+    """Recorte limpio: además del fondo que toca los bordes, quita los huecos del mismo gris
+    que quedan encerrados (entre patas y antenas), que el recorte normal no alcanza."""
+    original = Image.open(ruta).convert("RGB")
+    img = quitar_fondo_liso(original)
+    arr = np.asarray(img).copy()
+    rgb = np.asarray(original, np.int16)
+    esquinas = np.array([rgb[2, 2], rgb[2, -3], rgb[-3, 2], rgb[-3, -3]]).mean(axis=0)
+    cerca = np.abs(rgb - esquinas).max(axis=2) <= 10
+    gris = (rgb.max(axis=2) - rgb.min(axis=2)) <= 10
+    arr[cerca & gris, 3] = 0
+    img = Image.fromarray(arr, "RGBA")
     caja = img.getbbox()
     return img.crop(caja) if caja else img
 
@@ -127,100 +139,83 @@ def _fondo(c1, c2) -> Image.Image:
 def textos_para(titulo: str, villano: str, ejecutar=claude_cli.ejecutar, carpeta: Path | None = None) -> list[str]:
     texto, _ = ejecutar(
         f"Video de YouTube: «{titulo}». El animal más peligroso (el villano) es: {villano}.\n"
-        "Escribe 3 textos DISTINTOS para la miniatura, en español, de 2 a 4 palabras cada uno, que den muchas ganas "
-        "de hacer clic sin mentir (curiosidad, peligro, sorpresa). Sin emojis ni comillas. No repitas el título.\n"
+        "En la miniatura, debajo del villano va una frase corta en rojo, estilo «¡JAMÁS LO TOQUES!» o «¡NO TE LE "
+        "ACERQUES!», o un apodo que dé miedo («BÚHO DEMONIO»). Escribe 3 frases DISTINTAS, en español, de 2 a 4 "
+        "palabras, que den muchas ganas de hacer clic sin mentir. Sin emojis ni comillas.\n"
         'Responde SOLO un JSON: {"textos": ["...", "...", "..."]}', cwd=carpeta)
     datos = claude_cli.extraer_json(texto) or {}
     textos = [str(t).strip()[:40] for t in datos.get("textos", []) if str(t).strip()]
     return (textos + ["NO TE LE ACERQUES", "TE PICA DORMIDO", "EL MÁS PELIGROSO"])[:3]
 
 
-def generar(carpeta: Path, textos: list[str] | None = None, ejecutar=claude_cli.ejecutar) -> list[Path]:
+def _advertencia(tam: int) -> Image.Image:
+    im = Image.new("RGBA", (tam, tam), (0, 0, 0, 0))
+    d = ImageDraw.Draw(im)
+    m = tam * 0.05
+    d.polygon([(tam / 2, m), (tam - m, tam - m * 1.5), (m, tam - m * 1.5)], fill=NEGRO + (255,))
+    k = tam * 0.09
+    d.polygon([(tam / 2, m + k * 1.7), (tam - m - k * 1.6, tam - m * 1.5 - k), (m + k * 1.6, tam - m * 1.5 - k)],
+              fill=(255, 210, 30, 255))
+    f = _fuente(int(tam * 0.55))
+    c = d.textbbox((0, 0), "!", font=f)
+    d.text(((tam - (c[2] - c[0])) / 2 - c[0], tam * 0.60 - (c[3] - c[1]) / 2 - c[1]), "!", font=f, fill=NEGRO + (255,))
+    return im
+
+
+def _letrero(d: ImageDraw.ImageDraw, texto: str, centro: tuple[float, float], ancho_max: int, villano: bool) -> None:
+    for tam in range(62 if villano else 50, 20, -2):
+        f = _fuente(tam, fuerte=villano)
+        borde = 5 if villano else 0
+        caja = d.textbbox((0, 0), texto, font=f, stroke_width=borde)
+        if caja[2] - caja[0] <= min(ancho_max, W - 28):
+            break
+    ancho = caja[2] - caja[0]
+    x = min(max(14, centro[0] - ancho / 2), W - 14 - ancho) - caja[0]      # nunca se corta en el borde
+    y = centro[1] - (caja[3] - caja[1]) / 2 - caja[1]
+    d.text((x, y), texto, font=f, fill=(226, 20, 20) if villano else NEGRO, stroke_width=borde,
+           stroke_fill=(255, 255, 255))
+
+
+def cuadricula(carpeta: Path, frase: str, advertencia: bool = True) -> Image.Image:
     esc = leer_json(carpeta / "escenas.json")
-    proyecto = leer_json(carpeta / "proyecto.json")
-    estilo = cargar_estilo(proyecto["estilo"])
+    por_asset = {a["id"]: a for a in esc["assets"]}
+    # del más peligroso (villano) al más inofensivo
+    niveles = sorted(esc["niveles"], key=lambda n: (not n.get("villano"), -n["numero"]))[:6]
+    lienzo = Image.new("RGBA", (W, H), (255, 255, 255, 255))
+    d = ImageDraw.Draw(lienzo)
+    cols, cw, ch = 3, W / 3, H / 2
+    for k, n in enumerate(niveles):
+        cx, cy = (k % cols) * cw, (k // cols) * ch
+        ruta = carpeta / por_asset[n["asset"]]["archivo"]
+        villano = bool(n.get("villano"))
+        if ruta.exists():
+            escala = 1.18 if villano else 1.0
+            bicho = _encajar(_recorte(ruta), int(cw * 0.98 * escala), int(ch * 0.80 * escala))
+            if villano:
+                bicho = _brillo(bicho, (255, 70, 70), 28, 1.6)          # brillo rojo suave, no mancha
+            bx = int(cx + cw / 2 - bicho.width / 2)
+            by = int(cy + ch * 0.42 - bicho.height / 2)
+            lienzo.alpha_composite(bicho, (max(0, bx), max(0, by)))
+            if villano and advertencia:
+                icono = _advertencia(92)
+                lienzo.alpha_composite(icono, (int(min(cx + cw - 100, bx + bicho.width - 60)), int(max(8, by + 6))))
+        etiqueta = ("¡" + frase.upper().strip("¡!¿? ") + "!") if villano else n["nombre"]
+        _letrero(d, etiqueta, (cx + cw / 2, cy + ch * 0.88), int(cw * (1.02 if villano else 0.94)), villano)
+    return lienzo
+
+
+def generar(carpeta: Path, textos: list[str] | None = None, ejecutar=claude_cli.ejecutar) -> list[Path]:
+    """Tres miniaturas en el estilo del canal, con tres frases distintas para el villano."""
+    esc = leer_json(carpeta / "escenas.json")
     nivel = next((n for n in esc["niveles"] if n.get("villano")), esc["niveles"][-1])
-    asset = next(a for a in esc["assets"] if a["id"] == nivel["asset"])
-    villano = _recorte(carpeta / asset["archivo"])
     textos = textos or textos_para(esc.get("video", ""), nivel["nombre"], ejecutar, carpeta)
-    base_estilo = carpeta_estilos() / estilo.id / "assets"
-    salida = []
     destino = carpeta / "render" / "miniaturas"
     destino.mkdir(parents=True, exist_ok=True)
-
-    # 0) cuadrícula de todos los niveles sobre blanco; el villano arriba a la izquierda con brillo rojo
-    niveles = sorted(esc["niveles"], key=lambda n: (not n.get("villano"), -n["numero"]))[:6]
-    por_asset = {a["id"]: a for a in esc["assets"]}
-    if len(niveles) >= 4:
-        lienzo = Image.new("RGBA", (W, H), (255, 255, 255, 255))
-        cols, filas = 3, 2
-        cw, ch = W // cols, H // filas
-        for k, n in enumerate(niveles):
-            cx, cy = (k % cols) * cw, (k // cols) * ch
-            ruta = carpeta / por_asset[n["asset"]]["archivo"]
-            if not ruta.exists():
-                continue
-            bicho = _encajar(_recorte(ruta), int(cw * 0.94), int(ch * 0.74))
-            if n.get("villano"):
-                bicho = _brillo(bicho, (255, 40, 40), 18, 3)
-            lienzo.alpha_composite(bicho, (int(cx + (cw - bicho.width) / 2), int(cy + ch * 0.40 - bicho.height / 2)))
-            etiqueta = ("¡" + textos[0].upper().strip("¡!") + "!") if n.get("villano") else n["nombre"]
-            color = (225, 20, 20) if n.get("villano") else (20, 16, 12)
-            d = ImageDraw.Draw(lienzo)
-            for tam in range(52, 22, -2):
-                f = _fuente(tam)
-                caja = d.textbbox((0, 0), etiqueta, font=f, stroke_width=3 if n.get("villano") else 0)
-                if caja[2] - caja[0] <= cw - 24:
-                    break
-            tx = cx + (cw - (caja[2] - caja[0])) / 2 - caja[0]
-            d.text((tx, cy + ch * 0.83 - (caja[3] - caja[1]) / 2 - caja[1]), etiqueta, font=f, fill=color,
-                   stroke_width=3 if n.get("villano") else 0, stroke_fill=(255, 255, 255))
-        salida.append(lienzo)
-
-    # 1) presentador en shock + villano
-    shock = base_estilo / "presentador" / "shock.png"
-    if shock.exists():
-        lienzo = _fondo((60, 10, 10), (8, 4, 4))
-        foto = Image.open(shock).convert("RGB")
-        k = H / foto.height
-        foto = foto.resize((int(foto.width * k), H), Image.Resampling.LANCZOS)
-        franja = foto.crop((int(foto.width * 0.24), 0, int(foto.width * 0.24) + int(W * 0.5), H)).convert("RGBA")
-        mascara = Image.new("L", franja.size, 255)
-        dm = ImageDraw.Draw(mascara)
-        for i in range(90):                                      # funde el borde derecho de la foto
-            dm.line([(franja.width - 90 + i, 0), (franja.width - 90 + i, H)], fill=int(255 * (1 - i / 90)))
-        lienzo.paste(franja, (0, 0), mascara)
-        v = _brillo(_encajar(villano, int(W * 0.46), int(H * 0.62)), ROJO)
-        vx, vy = int(W * 0.76 - v.width / 2), int(H * 0.60 - v.height / 2)
-        lienzo.alpha_composite(v, (vx, vy))
-        _circulo(lienzo, (vx + 10, vy + 10, vx + v.width - 10, vy + v.height - 10))
-        _texto(lienzo, textos[0], (int(W * 0.47), 18, W - 24, int(H * 0.30)))
-        salida.append(lienzo)
-
-    # 2) mascota asustada señalando al villano
-    pose = base_estilo / "poses" / "senalando_susto.png"
-    lienzo = _fondo((255, 196, 0), (230, 60, 0))
-    if pose.exists():
-        m = _encajar(_recorte(pose), int(W * 0.40), int(H * 0.86))
-        lienzo.alpha_composite(_brillo(m, BLANCO, 10, 4), (-10, H - m.height - 30))
-    v = _brillo(_encajar(villano, int(W * 0.50), int(H * 0.66)), NEGRO, 16, 3)
-    vx, vy = int(W * 0.70 - v.width / 2), int(H * 0.60 - v.height / 2)
-    lienzo.alpha_composite(v, (vx, vy))
-    _texto(lienzo, textos[1], (int(W * 0.30), 14, W - 20, int(H * 0.30)), color=BLANCO)
-    salida.append(lienzo)
-
-    # 3) villano en primer plano, fondo oscuro, flecha
-    lienzo = _fondo((70, 12, 12), (0, 0, 0))
-    v = _brillo(_encajar(villano, int(W * 0.62), int(H * 0.80)), ROJO, 28, 3)
-    vx, vy = int(W * 0.60 - v.width / 2), int(H * 0.56 - v.height / 2)
-    lienzo.alpha_composite(v, (vx, vy))
-    _flecha(lienzo, (W * 0.10, H * 0.86), (vx + v.width * 0.22, vy + v.height * 0.62))
-    _texto(lienzo, textos[2], (24, 16, int(W * 0.62), int(H * 0.34)))
-    salida.append(lienzo)
-
+    for viejo in destino.glob("miniatura_*.jpg"):
+        viejo.unlink()
     rutas = []
-    for i, img in enumerate(salida, 1):
+    for i, frase in enumerate(textos[:3], 1):
         ruta = destino / f"miniatura_{i}.jpg"
-        img.convert("RGB").save(ruta, quality=92, optimize=True)
+        cuadricula(carpeta, frase, advertencia=(i != 2)).convert("RGB").save(ruta, quality=92, optimize=True)
         rutas.append(ruta)
     return rutas

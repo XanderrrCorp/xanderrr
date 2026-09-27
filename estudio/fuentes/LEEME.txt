@@ -2,3 +2,6 @@ Fredoka-SemiBold.ttf · Fredoka (Milena Brandão, Hafontia), de Google Fonts.
 Licencia: SIL Open Font License 1.1 (https://openfontlicense.org): se puede usar,
 incluir y redistribuir libremente, también en videos comerciales. Fuente:
 https://fonts.google.com/specimen/Fredoka
+
+Mali-SemiBold.ttf y Mali-Bold.ttf · Mali (Cadson Demak), de Google Fonts. Para las miniaturas.
+Licencia: SIL Open Font License 1.1. Fuente: https://fonts.google.com/specimen/Mali
