@@ -103,8 +103,7 @@ Nivel uno. <Nombre>.
 <escenas del nivel, una por línea>
 ... (una SECCION por nivel)
 SECCION: Cierre
-<escenas del cierre>
-Antes de responder, cuenta las palabras de todas las escenas y ajusta al rango pedido."""
+<escenas del cierre>"""
 
 
 def leer_historia(texto: str) -> dict:
@@ -137,7 +136,7 @@ def leer_historia(texto: str) -> dict:
     return {"titulo": titulo, "niveles": niveles, "secciones": secciones}
 
 
-def instruccion_detalles(historia: dict, k: int, estilo: Estilo) -> str:
+def instruccion_detalles(historia: dict, k: int, estilo: Estilo, catalogo: list[dict] | None = None) -> str:
     """Fase 2, por sección: intención, imagen y textos de cada escena (la narración ya está)."""
     nombre, lineas = historia["secciones"][k]
     tipos = "\n".join(f"  - {t.id}: {t.descripcion}" for t in estilo.tipos_de_escena)
@@ -163,6 +162,15 @@ def instruccion_detalles(historia: dict, k: int, estilo: Estilo) -> str:
             especiales.append('- Es el VILLANO: marca "revelacion_villano": true en la escena donde se ve por primera vez '
                               'su aspecto (normalmente justo después de «Nivel …»).')
     especiales = "\n".join(especiales)
+    bloque_catalogo = ""
+    if catalogo:
+        filas = "\n".join(f"  - {c['id']}: {c['descripcion'][:140]}" for c in catalogo)
+        bloque_catalogo = f"""
+IMÁGENES YA HECHAS (gratis): prefiere SIEMPRE una de estas si encaja con lo que dice la escena, con
+"accion": "reusar", "reusar": "imagen:<id>". Solo pide imagen nueva ("generar") si ninguna encaja de verdad.
+No pongas la misma imagen en dos escenas seguidas.
+{filas}
+"""
     return f"""Eres el director visual de un video de YouTube en español: «{historia['titulo']}».
 Niveles (de menos a más peligro):
 {niveles}
@@ -188,15 +196,16 @@ Para CADA escena, en orden, decide:
   normal, como lo diría una persona («Es aterrador»); y "palabra": la palabra de la escena donde aparece.
   En las demás, null.
 {especiales}
-
+{bloque_catalogo}
 Responde SOLO un JSON: {{"escenas": [{{"n": 1, "intencion": "...", "intensidad": 3, "accion": "generar",
 "tipo": "{ejemplo}", "descripcion": "...", "con_mascota": false, "palabra_clave": "...", "texto_pantalla": null,
 "palabra": null}}, ...]}} con exactamente {len(lineas)} escenas."""
 
 
-def _detalles(historia: dict, k: int, estilo: Estilo, carpeta: Path, ejecutar, avisar) -> list[dict]:
+def _detalles(historia: dict, k: int, estilo: Estilo, carpeta: Path, ejecutar, avisar,
+              catalogo: list[dict] | None = None) -> list[dict]:
     nombre, lineas = historia["secciones"][k]
-    prompt = instruccion_detalles(historia, k, estilo)
+    prompt = instruccion_detalles(historia, k, estilo, catalogo)
     error = ""
     for intento in range(2):
         texto, _ = ejecutar(prompt if not error else prompt + f"\n\nTu respuesta anterior falló: {error}. Corrígela.",
@@ -244,6 +253,10 @@ def a_escenas(datos: dict, estilo: Estilo, canal: str) -> tuple[dict, dict, str]
                        "archivo": f"assets/{aid}.png", "quitar_fondo": True, "prompt": n["sujeto"]})
         niveles.append({"numero": n["numero"], "nombre": n["nombre"], "asset": aid,
                         "villano": bool(n.get("villano"))})
+    for img in datos.get("catalogo") or []:
+        assets.append({"id": img["id"], "tipo": img.get("tipo") or "catalogo", "archivo": img["archivo"],
+                       "quitar_fondo": bool(img.get("quitar_fondo")), "prompt": img.get("descripcion") or img["id"]})
+    ids_catalogo = {img["id"] for img in datos.get("catalogo") or []}
     crudas = datos["escenas"]
     escenas, direccion = [], {"pixelar_pendiente": [], "textos": {}}
     t = 0.0
@@ -262,6 +275,8 @@ def a_escenas(datos: dict, estilo: Estilo, canal: str) -> tuple[dict, dict, str]
             ref = str(e.get("reusar", ""))
             if ref.startswith("nivel:"):
                 vis["reusar_de"] = f"tira_{int(ref.split(':')[1])}"
+            elif ref.startswith("imagen:") and ref.split(":", 1)[1].strip() in ids_catalogo:
+                vis["reusar_de"] = ref.split(":", 1)[1].strip()          # imagen ya pagada de otro video
             else:
                 inicio = ref.split(":", 1)[-1].strip().lower()
                 previas = [j for j, x in enumerate(crudas[:i - 1], 1)
@@ -303,7 +318,8 @@ def a_escenas(datos: dict, estilo: Estilo, canal: str) -> tuple[dict, dict, str]
 
 
 def escribir_guion(encargo: Encargo, estilo: Estilo, carpeta: Path, canal: str,
-                   ejecutar=claude_cli.ejecutar, avisar=print, en_paralelo: int = 3) -> dict:
+                   ejecutar=claude_cli.ejecutar, avisar=print, en_paralelo: int = 3,
+                   catalogo: list[dict] | None = None, niveles_fijos: list[dict] | None = None) -> dict:
     """Dos pasos para que ninguna respuesta sea enorme (y no pase del tiempo máximo):
     1) la historia en texto (título, niveles y lo que dice la voz, escena por escena);
     2) por sección, y varias a la vez, la intención, la imagen y los textos de cada escena."""
@@ -324,12 +340,36 @@ def escribir_guion(encargo: Encargo, estilo: Estilo, carpeta: Path, canal: str,
             avisar(f"  historia: intento {intento + 1} no válido ({error[:120]})")
     else:
         raise claude_cli.ErrorClaude(f"La historia no quedó válida tras dos intentos: {error}")
+    if niveles_fijos:
+        # mismo tema que un video anterior: los niveles (y sus tarjetas ya hechas) se conservan
+        historia["niveles"] = niveles_fijos
+    palabras = sum(len(x.split()) for _, ls in historia["secciones"] for x in ls)
+    objetivo = encargo.minutos * 60 * PALABRAS_POR_SEGUNDO
+    avisar(f"Historia: {palabras} palabras (objetivo {int(objetivo)}).")
+    if abs(palabras - objetivo) / objetivo > 0.10:
+        # Xandart cuenta las palabras (no Claude): si se aleja más de 10 %, un solo ajuste
+        texto2, _ = ejecutar(prompt + f"\n\n== AJUSTA EL LARGO ==\nEsta es tu historia, con {palabras} palabras. Debe tener "
+                                      f"entre {int(objetivo * 0.95)} y {int(objetivo * 1.05)}. "
+                                      f"{'Alárgala con más datos concretos y escenas' if palabras < objetivo else 'Acórtala'} "
+                                      "sin cambiar la estructura ni los niveles, y devuélvela completa en el mismo formato.\n\n"
+                                      + texto, cwd=carpeta)
+        try:
+            ajustada = leer_historia(texto2)
+            if niveles_fijos:
+                ajustada["niveles"] = niveles_fijos
+            nuevas = sum(len(x.split()) for _, ls in ajustada["secciones"] for x in ls)
+            if abs(nuevas - objetivo) < abs(palabras - objetivo):
+                historia, palabras = ajustada, nuevas
+                avisar(f"Historia ajustada: {palabras} palabras.")
+        except ValueError:
+            pass
     n = len(historia["secciones"])
     avisar(f"Historia lista ({sum(len(x[1]) for x in historia['secciones'])} escenas). Claude está dirigiendo "
            f"las {n} secciones…")
     with ThreadPoolExecutor(max_workers=max(1, en_paralelo)) as pool:
-        partes = list(pool.map(lambda k: _detalles(historia, k, estilo, carpeta, ejecutar, avisar), range(n)))
-    datos = {"titulo": historia["titulo"], "niveles": historia["niveles"], "escenas": [e for p in partes for e in p]}
+        partes = list(pool.map(lambda k: _detalles(historia, k, estilo, carpeta, ejecutar, avisar, catalogo), range(n)))
+    datos = {"titulo": historia["titulo"], "niveles": historia["niveles"], "escenas": [e for p in partes for e in p],
+             "catalogo": catalogo or []}
     doc, direccion, md = a_escenas(datos, estilo, canal)
     escribir_json(carpeta / "escenas.json", doc)
     escribir_json(carpeta / "direccion.json", direccion)

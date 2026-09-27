@@ -78,6 +78,8 @@ def test_escribir_guion_en_dos_pasos_y_reintenta(tmp_path, estilo):
 
     def falso(prompt, **kw):
         llamadas.append(prompt)
+        if "AJUSTA EL LARGO" in prompt:                        # ajuste de largo: se devuelve igual
+            return _historia_texto(datos), {}
         if "Sección «" not in prompt:                         # fase 1: la historia
             return historias.pop(0), {"usage": {"output_tokens": 10}}
         seccion = prompt.split("Sección «", 1)[1].split("»", 1)[0]
@@ -86,9 +88,9 @@ def test_escribir_guion_en_dos_pasos_y_reintenta(tmp_path, estilo):
                                        for i, e in enumerate(propias)]}), {}
 
     r = escribir_guion(Encargo("x"), estilo, tmp_path, "canal", ejecutar=falso, avisar=lambda _: None)
-    fase1 = [p for p in llamadas if "Sección «" not in p]
+    fase1 = [p for p in llamadas if "Sección «" not in p and "AJUSTA EL LARGO" not in p]
     assert r["escenas"] == 12 and len(fase1) == 2 and "CORRIGE" in fase1[1]
-    assert len(llamadas) - len(fase1) == 6                   # una llamada por sección (gancho, 4 niveles, cierre)
+    assert sum(1 for p in llamadas if "Sección «" in p) == 6  # una llamada por sección (gancho, 4 niveles, cierre)
     assert (tmp_path / "escenas.json").exists() and (tmp_path / "direccion.json").exists()
 
 
