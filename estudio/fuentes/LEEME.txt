@@ -5,3 +5,7 @@ https://fonts.google.com/specimen/Fredoka
 
 Mali-SemiBold.ttf y Mali-Bold.ttf · Mali (Cadson Demak), de Google Fonts. Para las miniaturas.
 Licencia: SIL Open Font License 1.1. Fuente: https://fonts.google.com/specimen/Mali
+
+PatrickHand-Regular.ttf · Patrick Hand (Patrick Wagesreiter), ComicNeue-Bold.ttf · Comic Neue (Craig Rozynski)
+y ArchivoBlack-Regular.ttf · Archivo Black (Omnibus-Type), de Google Fonts. Para la producción de miniaturas
+(etiquetas tipo cómic y hero_text). Licencia: SIL Open Font License 1.1.

@@ -6,10 +6,12 @@ requires-python = ">=3.11"
 dependencies = ["pydantic>=2.6", "pillow>=10", "requests>=2.31", "numpy>=1.24", "imageio-ffmpeg>=0.5",
                 "fastapi>=0.110", "uvicorn>=0.29", "python-multipart>=0.0.9"]
 
-# rembg (quitar fondos) es opcional y pesado: pip install rembg
+# rembg (quitar fondos de las miniaturas) es opcional y pesado: el instalador lo intenta
+# aparte y, si no está, se usa el recorte por color de fondo
 
 [project.optional-dependencies]
 dev = ["pytest>=8", "httpx>=0.27"]
+recorte = ["rembg[cpu]>=2.0.50"]
 
 [project.scripts]
 estudio = "estudio.cli:main"

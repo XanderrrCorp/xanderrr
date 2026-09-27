@@ -1,0 +1,17 @@
+{
+  "canal": "animales-peligrosos",
+  "nombre": "Peligro Tropical · escala 2x3",
+  "layout": "escala_2x3",
+  "bloque_estilo": "Detailed digital illustration, warm realistic colors, soft painterly shading, fine line art, highly detailed textures (scales, fur, shells).",
+  "fuente_etiquetas": "PatrickHand-Regular.ttf",
+  "fuente_hero": "ArchivoBlack-Regular.ttf",
+  "color_hero_text": "#E00000",
+  "color_etiquetas": "#111111",
+  "iconos_permitidos": ["advertencia", "prohibido", "calavera", "rayo", "interrogacion", "reloj"],
+  "color_aura_por_defecto": "#FF1A1A",
+  "referencias": [
+    {"archivo": "ref_cucaracha.jpg", "activa": true},
+    {"archivo": "ref_chinche.jpg", "activa": true},
+    {"archivo": "ref_mosca.jpg", "activa": true}
+  ]
+}

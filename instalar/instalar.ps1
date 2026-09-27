@@ -88,6 +88,9 @@ if (-not (Test-Path "$Venv\Scripts\pythonw.exe")) {
 }
 & $Uv pip install --python "$Venv\Scripts\python.exe" -e $Destino
 if ($LASTEXITCODE -ne 0) { throw 'Fallo la instalacion de las dependencias (revisa tu internet y corre de nuevo).' }
+# quitar fondos de las miniaturas (opcional: si falla, Xandart usa el recorte simple)
+& $Uv pip install --python "$Venv\Scripts\python.exe" "rembg[cpu]>=2.0.50"
+if ($LASTEXITCODE -ne 0) { Write-Host '   (no se pudo instalar rembg: las miniaturas usan el recorte simple)' }
 Remove-Item $env:UV_CACHE_DIR -Recurse -Force -ErrorAction SilentlyContinue
 Write-Host '   listo'
 

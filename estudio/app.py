@@ -26,7 +26,7 @@ def _version() -> str:
 
     h = hashlib.sha256()
     base = Path(__file__).parent
-    for f in sorted(list(base.glob("*.py")) + list(WEB.glob("*"))):
+    for f in sorted(list(base.rglob("*.py")) + list(WEB.glob("*"))):
         h.update(f.name.encode())
         h.update(f.read_bytes())
     return h.hexdigest()[:12]

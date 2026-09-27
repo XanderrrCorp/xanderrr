@@ -48,7 +48,7 @@ def quitar_fondo_liso(img: Image.Image, tolerancia: int = 38) -> Image.Image:
     try:
         from rembg import remove  # opcional
         return remove(img.convert("RGBA"))
-    except ImportError:
+    except Exception:  # noqa: BLE001 — sin rembg, o sin su modelo (se baja la primera vez): recorte simple
         pass
     base = img.convert("RGB")
     marca = (255, 0, 255)
