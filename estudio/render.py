@@ -36,6 +36,13 @@ def _fuente(tam: int):
     return ImageFont.load_default()
 
 
+def _atras(x: float) -> float:
+    """Sale rápido, se pasa un poquito y se asienta (entrada con rebote)."""
+    x = min(max(x, 0.0), 1.0)
+    c1 = 1.70158
+    return 1 + (c1 + 1) * (x - 1) ** 3 + c1 * (x - 1) ** 2
+
+
 def _suave(x: float) -> float:
     x = min(max(x, 0.0), 1.0)
     return x * x * (3 - 2 * x)
@@ -109,6 +116,29 @@ class Escenario:
         # clip -> (x, y, ancho, alto): dónde cae la imagen ORIGINAL completa en el cuadro,
         # para llevar cajas normalizadas de la imagen (focos, flechas) a píxeles
         self.ubicacion: dict[str, tuple[float, float, float, float]] = {}
+        # clip -> capas sueltas (sombra y objeto con su posición) para animar entradas y vaivén
+        self.capas: dict[str, tuple] = {}
+
+    def animado(self, clip: dict, dx: float = 0.0, dy: float = 0.0, escala: float = 1.0) -> Image.Image | None:
+        """El papel con el objeto (recorte o recuadro) movido o escalado; None si no tiene capas."""
+        capas = self.capas.get(clip["id"])
+        if capas is None:
+            return None
+        (sombra, (sx, sy)), (obj, (x, y)) = capas
+        lienzo = self.papel.copy().convert("RGBA")
+        if abs(escala - 1) > 0.002:
+            cx, cy = x + obj.width / 2, y + obj.height / 2
+            obj = obj.resize((max(1, int(obj.width * escala)), max(1, int(obj.height * escala))), Image.Resampling.BILINEAR)
+            sombra = sombra.resize((max(1, int(sombra.width * escala)), max(1, int(sombra.height * escala))),
+                                   Image.Resampling.BILINEAR)
+            x, y = cx - obj.width / 2, cy - obj.height / 2
+            sx, sy = x + (sx - capas[1][1][0]) * escala, y + (sy - capas[1][1][1]) * escala
+        lienzo.alpha_composite(sombra, (int(max(-sombra.width + 1, min(W - 1, sx + dx))), int(max(-sombra.height + 1, min(H - 1, sy + dy)))))
+        ox, oy = int(x + dx), int(y + dy)
+        if ox < W and oy < H and ox + obj.width > 0 and oy + obj.height > 0:
+            recorte = (max(0, -ox), max(0, -oy), min(obj.width, W - ox), min(obj.height, H - oy))
+            lienzo.alpha_composite(obj.crop(recorte), (max(0, ox), max(0, oy)))
+        return lienzo.convert("RGB")
 
     def cuadro(self, clip: dict) -> Image.Image:
         zonas = next((e["zonas"] for e in clip["efectos"] if e["efecto"] == "pixelar"), None)
@@ -144,6 +174,7 @@ class Escenario:
                 s, (dx, dy) = _sombra(rec, 18, 110)
                 lienzo.alpha_composite(s, (max(0, x + dx), max(0, y + dy)))
                 lienzo.alpha_composite(rec, (x, y))
+                self.capas[clip["id"]] = ((s, (x + dx, y + dy)), (rec, (x, y)))
         else:
             r = random.Random(clip["id"])
             marco = 14
@@ -157,6 +188,7 @@ class Escenario:
             s, (dx, dy) = _sombra(conmarco, 20, 130)
             lienzo.alpha_composite(s, (max(0, x + dx), max(0, y + dy)))
             lienzo.alpha_composite(conmarco, (x, y))
+            self.capas[clip["id"]] = ((s, (x + dx, y + dy)), (conmarco, (x, y)))
         final = lienzo.convert("RGB")
         self.cache[clave] = final
         if len(self.cache) > 6:
@@ -778,6 +810,25 @@ def renderizar(carpeta: CarpetaProyecto, ffmpeg: str, destino: Path | None = Non
                 img = cuadro_tira(tira["cx"][niv], False, b if b > 1 else None)
         else:
             base = escenario.cuadro(c)
+            entrada = next((ef[k] for k in ("entrada_abajo", "entrada_lado", "entrada_rebote") if k in ef), None)
+            vaiven = ef.get("vaiven")
+            if entrada or vaiven:
+                ddx = ddy = 0.0
+                esc_obj = 1.0
+                if entrada and loc < entrada.get("dur", 0.42):
+                    p = loc / entrada.get("dur", 0.42)
+                    if "entrada_abajo" in ef:
+                        ddy = (1 - _atras(p)) * H * 0.75
+                    elif "entrada_lado" in ef:
+                        ddx = (1 - _atras(p)) * W * 0.7 * (-1 if entrada.get("desde") == "izquierda" else 1)
+                    else:
+                        esc_obj = 0.5 + 0.5 * _atras(p)
+                if vaiven:
+                    ddy += math.sin(2 * math.pi * vaiven.get("hz", 0.7) * loc + vaiven.get("fase", 0)) * vaiven.get("px", 6)
+                    esc_obj *= 1 + 0.008 * math.sin(2 * math.pi * vaiven.get("hz", 0.7) * 2 * loc)
+                movido = escenario.animado(c, ddx, ddy, esc_obj)
+                if movido is not None:
+                    base = movido
             off = ef["revelar_pixelado"]["duracion"] if "revelar_pixelado" in ef else 0.0
             p = (loc - off) / max(0.3, dur - off)
             mov = c.get("movimiento")

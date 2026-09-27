@@ -41,7 +41,8 @@ VOLUMEN = {"barrido": 0.42, "golpe_grave": 0.9, "pop": 0.32, "zumbido": 0.33, "l
            "subida_tension": 0.45, "alerta": 0.4, "comico": 0.45, "stinger_terror": 0.75, "piano_miedo": 0.6}
 VARIANTES = 4
 # recursos estructurales (tira, pixelado) que no cuentan para uso_maximo_por_recurso
-ESTRUCTURALES = {"tira_deslizar_a_nivel", "pixelar", "revelar_pixelado", "destello_rojo", "paneo_lento", "zoom_golpe"}
+ESTRUCTURALES = {"tira_deslizar_a_nivel", "pixelar", "revelar_pixelado", "destello_rojo", "paneo_lento", "zoom_golpe",
+                 "vaiven"}
 DEBILES = {"el", "la", "los", "las", "un", "una", "unos", "unas", "de", "del", "a", "al", "y", "o", "en", "que",
            "por", "con", "se", "te", "tu", "su", "sus", "lo", "le", "no", "es", "más", "muy", "mi", "para", "ni"}
 
@@ -92,6 +93,16 @@ def _recortar_sonidos(sfx: list, n_clips: int, total: float, perfil, rng: random
     - sin periodicidad: 4 o más del mismo tipo a intervalos casi iguales se rompen
     Se quitan primero los de menor prioridad y, entre iguales, los más tardíos."""
     vivos = sorted(sfx, key=lambda x: x["inicio"])
+    # un mismo sonido una sola vez por escena (los latidos de una ráfaga sí van juntos)
+    vistos: set = set()
+    unicos = []
+    for x in sorted(vivos, key=lambda x: (-x["prioridad"], x["inicio"])):
+        clave = (x["tipo"], x["clip"])
+        if x["tipo"] != "latido" and clave in vistos:
+            continue
+        vistos.add(clave)
+        unicos.append(x)
+    vivos = sorted(unicos, key=lambda x: x["inicio"])
 
     def quitar(cand):
         cand.sort(key=lambda x: (x["prioridad"], -x["inicio"]))
@@ -119,7 +130,7 @@ def _recortar_sonidos(sfx: list, n_clips: int, total: float, perfil, rng: random
             peor = min(clips.values(), key=lambda g: (g[0]["prioridad"], -g[0]["inicio"]))
             for x in peor:
                 vivos.remove(x)
-    maximo = perfil.sfx_por_minuto * total / 60 * 1.25
+    maximo = perfil.sfx_por_minuto * total / 60 * 1.15
     eventos = lambda: len({(x["tipo"], x["clip"]) for x in vivos})
     while eventos() > maximo:
         quitables = [x for x in vivos if x["prioridad"] < 5]
@@ -442,6 +453,8 @@ def construir_edl(carpeta: CarpetaProyecto) -> dict:
     tope_recurso = perfil.uso_maximo_por_recurso
     usos_cambio = {"reencuadre": 0, "icono_advertencia": 0, "flecha": 0, "etiqueta": 0, "lupa": 0}
     respiros_por_minuto: dict[int, int] = {}
+    usos_entrada = {"entrada_abajo": 0, "entrada_lado": 0, "entrada_rebote": 0}
+    ultima_entrada = None
     for idx, e in enumerate(escenas):
         ini, fin = round(inicios[idx], 3), round(finales[idx], 3)
         dur = fin - ini
@@ -647,6 +660,26 @@ def construir_edl(carpeta: CarpetaProyecto) -> dict:
                 _sfx(sfx, "comico", ini + 0.15, idx, "Efecto cómico corto: momento de humor")
             elif sonido == "zumbido" and rng.random() < 0.5:
                 _sfx(sfx, "zumbido", ini + 0.3, idx, "Zumbido grave: amenaza")
+        # --- entrada del objeto al cortar (sale de abajo, de un lado o con rebote) y vaivén suave
+        if modo != "tira" and idx > 0 and archivo != clips[-1]["archivo"] and not zonas \
+                and not any(x["efecto"] == "revelar_pixelado" for x in efectos):
+            opciones = ["entrada_abajo", "entrada_lado", "entrada_rebote"]
+            con_cupo = [o for o in opciones if usos_entrada[o] / (idx + 1) < tope_recurso and o != ultima_entrada]
+            if con_cupo and rng.random() < 0.85:
+                o = min(con_cupo, key=lambda r: (usos_entrada[r], rng.random()))
+                usos_entrada[o] += 1
+                ultima_entrada = o
+                datos = {"efecto": o, "dur": round(rng.uniform(0.36, 0.48), 2)}
+                if o == "entrada_lado":
+                    datos["desde"] = rng.choice(["izquierda", "derecha"])
+                efectos.append(datos)
+                _sfx(sfx, "pop", ini + datos["dur"] * 0.7, idx, "Pop cuando la imagen entra y se asienta")
+                razon = (razon + "; " if razon else "") + {"entrada_abajo": "la imagen sale desde abajo",
+                                                           "entrada_lado": "la imagen entra de lado",
+                                                           "entrada_rebote": "la imagen aparece con rebote"}[o]
+        if modo != "tira":
+            efectos.append({"efecto": "vaiven", "hz": round(rng.uniform(0.55, 0.85), 2), "px": round(rng.uniform(4, 7), 1),
+                            "fase": round(rng.uniform(0, 6.28), 2)})
         previo_golpe = bool(movimiento and movimiento["tipo"] == "zoom_golpe")
         previo_rafaga = any(x["efecto"] == "rafaga" for x in efectos)
         previo_circulo = any(x["efecto"] == "circulo_rojo" for x in efectos)

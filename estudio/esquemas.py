@@ -39,6 +39,8 @@ EFECTOS = (
     "lupa",
     # lo REAL (Pexels, verificado): foto en marco rojo con la mascota señalando, o video a pantalla completa
     "foto_real", "video_real",
+    # entradas del objeto al cortar (sale de abajo o de un lado con rebote) y vaivén suave mientras está
+    "entrada_abajo", "entrada_lado", "vaiven",
 )
 # "sfx" no es un efecto visual, pero se sugiere en la misma lista (ver 3.1).
 EFECTOS_SUGERIBLES = EFECTOS + ("sfx",)
