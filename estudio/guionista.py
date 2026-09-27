@@ -91,6 +91,12 @@ eje que se repite en todo el video (por ejemplo «la probabilidad de que te mand
      enferma; cuando sepas cómo lo hace, vas a cambiar de opinión»; «de algo gigante pasamos a algo
      que cabe en tu mano, y kilo por kilo es muchísimo peor»).
   Nada de consejos de limpieza o de prevención en cada nivel: eso aplana el video.
+- Una o dos anécdotas del narrador en primera persona, contadas como un recuerdo suyo (el
+  explorador del canal): un momento concreto, con lugar y persona («la primera vez que vi uno fue
+  en la casa de un amigo en Cartagena; estaba sentado en el sofá y de pronto…»), lo que sintió
+  («me quedé congelado») y cómo lo lleva al dato. De 3 a 6 escenas, para abrir un nivel o antes
+  del villano. La anécdota es solo el marco: todos los datos que vienen después siguen siendo
+  verdaderos y no se inventan cifras ni casos dentro de ella.
 - Llamado a suscribirse UNA sola vez, hacia el minuto 1, pegado a la intriga del primer animal:
   «Por cierto, si hasta este primero te tomó por sorpresa, dale like y suscríbete. Sí, vamos con la
   razón…». Nunca al inicio.
@@ -188,6 +194,9 @@ def instruccion_detalles(historia: dict, k: int, estilo: Estilo, catalogo: list[
     nivel = next((n for n in historia["niveles"] if nombre.lower().startswith(f"nivel {n['numero']} ")
                   or nombre.lower().startswith(f"nivel {n['numero']}·")), None)
     especiales = []
+    especiales.append('- Si la escena es parte de una anécdota del narrador (habla en primera persona: «yo», «me», '
+                      '«mi amigo»), usa pov_personaje para lo que él vio con sus ojos, o escena_cartoon_completa con él '
+                      'en ese lugar reaccionando (por ejemplo congelado del susto en una calle).')
     if es_gancho:
         especiales.append('- Esta es la sección del GANCHO: la escena que presenta la lista de niveles lleva '
                           '"accion": "componer" (el sistema muestra la tira). Si una escena muestra al villano, pon '

@@ -42,6 +42,13 @@
       "modo_montaje": "recuadro_sobre_papel"
     },
     {
+      "id": "pov_personaje",
+      "descripcion": "Anécdota del narrador en primera persona: lo que él ve con sus propios ojos (se ven sus manos y rodillas abajo); el animal de frente, mirándolo",
+      "plantilla_prompt": "{bloque_estilo} First-person point of view through the eyes of this character: {personaje}. We only see his own body from his eyes: his white cartoon hands resting on his knees at the bottom corners of the frame, the edge of his khaki pants and the red plaid sleeves in the lower foreground, slightly out of focus. {descripcion}. The animal is drawn much more detailed and realistic than the room, looking straight at the viewer. Aspect ratio 16:9, no text, no signs, no letters, no logos.",
+      "quitar_fondo": false,
+      "modo_montaje": "recuadro_sobre_papel"
+    },
+    {
       "id": "amenaza_cinematografica",
       "descripcion": "Plano dramático del peligro",
       "plantilla_prompt": "Semi-realistic digital illustration, highly detailed, fine black ink outlines, rich painterly shading with visible texture on every plate of the exoskeleton, glossy highlights, natural anatomical proportions, crisp and sharp. {descripcion}. Dark moody background of deep blue fog with twisted dark silhouettes of branches, cinematic lighting with a cold rim light on the subject, shallow depth of field, aspect ratio 16:9, no text, no letters.",
@@ -52,10 +59,11 @@
   "mezcla_recomendada": {
     "animal_fondo_gris": 0.0,
     "mascota_fondo_gris": 0.228,
-    "diagrama_fondo_blanco": 0.368,
+    "diagrama_fondo_blanco": 0.328,
     "escena_cartoon_completa": 0.153,
     "escena_mixta": 0.186,
-    "amenaza_cinematografica": 0.065
+    "amenaza_cinematografica": 0.065,
+    "pov_personaje": 0.04
   },
   "fondo_montaje": {
     "tipo": "textura",
