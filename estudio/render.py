@@ -719,8 +719,13 @@ def mezclar_audio(raiz: Path, edl: dict, ffmpeg: str | None = None) -> np.ndarra
 
 # ------------------------------------------------------------------ render
 
+# calidad del archivo final: «normal» es rápida; «maxima» comprime menos y tarda más (para subir a YouTube)
+CALIDADES = {"normal": ("veryfast", "19", "192k"), "maxima": ("slow", "15", "320k")}
+
+
 def renderizar(carpeta: CarpetaProyecto, ffmpeg: str, destino: Path | None = None, desde: float = 0.0,
-               hasta: float | None = None, avisar=print) -> Path:
+               hasta: float | None = None, avisar=print, calidad: str = "normal") -> Path:
+    preset, crf, audio_kbps = CALIDADES.get(calidad, CALIDADES["normal"])
     raiz = carpeta.ruta
     edl = leer_json(raiz / "edl.json")
     EDL.model_validate(edl)
@@ -774,7 +779,8 @@ def renderizar(carpeta: CarpetaProyecto, ffmpeg: str, destino: Path | None = Non
 
     video_tmp = destino.with_suffix(".video.mp4")
     proc = subprocess.Popen([ffmpeg, "-y", "-loglevel", "error", "-f", "rawvideo", "-pix_fmt", "rgb24", "-s", f"{W}x{H}",
-                             "-r", str(FPS), "-i", "-", "-c:v", "libx264", "-preset", "veryfast", "-crf", "19",
+                             "-r", str(FPS), "-i", "-", "-c:v", "libx264", "-preset", preset, "-crf", crf,
+                             "-profile:v", "high", "-g", str(FPS * 2), "-bf", "2",
                              "-pix_fmt", "yuv420p", str(video_tmp)], stdin=subprocess.PIPE)
     temblor = random.Random(proyecto.semilla)
     capa_foco = Foco()
@@ -946,7 +952,8 @@ def renderizar(carpeta: CarpetaProyecto, ffmpeg: str, destino: Path | None = Non
         w.setframerate(SR)
         w.writeframes((np.clip(mezcla, -1, 1) * 32767).astype("<i2").tobytes())
     subprocess.run([ffmpeg, "-y", "-loglevel", "error", "-i", str(video_tmp), "-i", str(wav),
-                    "-af", "loudnorm=I=-14:TP=-1.5:LRA=11", "-c:v", "copy", "-c:a", "aac", "-b:a", "192k",
+                    "-af", "loudnorm=I=-14:TP=-1.5:LRA=11", "-c:v", "copy", "-c:a", "aac", "-b:a", audio_kbps,
+                    "-movflags", "+faststart",
                     "-ar", "48000", "-shortest", str(destino)], check=True)
     video_tmp.unlink(missing_ok=True)
     wav.unlink(missing_ok=True)

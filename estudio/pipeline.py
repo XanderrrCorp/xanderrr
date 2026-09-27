@@ -360,7 +360,7 @@ def paso_video(c: CarpetaProyecto, t: Trabajo, permiso: bool = False) -> Path:
                 pass
 
     t.avisar("Renderizando el video en 1080p…")
-    final = renderizar(c, ffmpeg(), c.ruta / "render" / "final.mp4", avisar=avisar)
+    final = renderizar(c, ffmpeg(), c.ruta / "render" / "final.mp4", avisar=avisar, calidad="maxima")
     destino = carpeta_videos() / f"{slugificar(c.cargar().titulo)[:60]}.mp4"
     shutil.copy(final, destino)
     shutil.copy(final.with_suffix(".srt"), destino.with_suffix(".srt"))
