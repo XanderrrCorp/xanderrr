@@ -85,7 +85,7 @@
     "curiosidad"
   ],
   "costo_relativo": 1.0,
-  "proporcion_imagenes_unicas": 0.73,
+  "proporcion_imagenes_unicas": 0.5,
   "proporcion_minima_unicas": 0.4,
   "imagenes_fijas_por_video": 7,
   "_variables_plantilla": "{bloque_estilo} = bloque de estilo; {personaje} = bloqueo literal del personaje del canal; {descripcion} = lo que muestra la escena (visual.prompt); {sujeto} {accion} {lugar} = campos opcionales si el Director visual los separa.",

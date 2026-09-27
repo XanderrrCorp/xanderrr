@@ -23,9 +23,10 @@ def test_animacion_no_cuenta_en_base(tmp_path, config):
 
 def test_freno_duro_al_maximo(tmp_path, config):
     libro = LibroCostos(tmp_path, config)
-    libro.registrar(modulo="imagenes", proveedor="gemini", modelo="m", unidades={"n": 1}, costo_usd=6.0)
+    casi = config.datos["presupuesto_maximo_cop"] / config.datos["trm_cop_por_usd"] - 0.2
+    libro.registrar(modulo="imagenes", proveedor="gemini", modelo="m", unidades={"n": 1}, costo_usd=casi)
     with pytest.raises(FrenoPresupuesto):
-        libro.autorizar(0.5)  # 18.600 + 1.550 > 20.000
+        libro.autorizar(0.5)  # a 0,2 USD del máximo, 0,5 más lo pasa
     libro.autorizar(0.5, permiso=True)
     libro.autorizar(0.1)
 

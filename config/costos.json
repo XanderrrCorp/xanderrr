@@ -1,7 +1,7 @@
 {
   "trm_cop_por_usd": 3100,
   "presupuesto_objetivo_cop": 15000,
-  "presupuesto_maximo_cop": 20000,
+  "presupuesto_maximo_cop": 16000,
   "precios_usd": {
     "claude_por_millon_tokens": {
       "claude-opus-5": {
@@ -106,5 +106,6 @@
     "minimo": 480,
     "maximo": 660,
     "_nota": "Regla del dueño (26-09-2026): videos de 8 a 11 minutos para que las imágenes quepan en el presupuesto."
-  }
+  },
+  "_nota_presupuesto": "Recarga de 16 USD para 3 videos: máximo 16.000 COP (~5,16 USD) por video, freno duro."
 }
