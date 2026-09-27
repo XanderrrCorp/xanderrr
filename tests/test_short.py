@@ -72,9 +72,7 @@ def test_dibujo_chiquito_sobre_blanco_se_agranda():
     from PIL import ImageDraw
 
     img = Image.new("RGB", (1344, 768), (255, 255, 255))
-    ImageDraw.Draw(img).rectangle((620, 330, 720, 440), fill=(150, 20, 20))      # objeto de 100 px en el medio
-    papel = Image.new("RGB", (render.W, render.H), (230, 220, 200))
-    esc = render.Escenario(tmp := __import__("pathlib").Path("."), papel, {"recorte_sobre_papel": "recorte"})
+    ImageDraw.Draw(img).rectangle((520, 260, 820, 510), fill=(150, 20, 20))      # objeto chico en medio del blanco
     caja = render._caja_contenido(img)
     grande = render._encajar(img.crop(caja), (int(render.W * 0.84), int(render.H * 0.72)))
     assert grande.height >= render.H * 0.6          # llena el cuadro en vez de quedar como una manchita
