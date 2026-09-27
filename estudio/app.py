@@ -300,6 +300,172 @@ def short(slug: str, p: Permiso = Permiso()):
     return _lanzar(slug, "short", lambda t: pipeline.paso_short(c, t, permiso=p.permiso))
 
 
+# ------------------------------------------------------------------ miniaturas (escala 2x3)
+
+def _mini_clave(slug: str) -> str:
+    return f"{slug}~miniatura"          # trabajo aparte: se puede hacer la miniatura mientras se renderiza
+
+
+def _mini_estado(slug: str) -> dict:
+    import time
+
+    from .miniaturas import servicio
+
+    datos = servicio.estado(_proyecto(slug))
+    t = pipeline.TRABAJOS.get(_mini_clave(slug))
+    datos["trabajo"] = None if t is None else {
+        "paso": t.paso, "mensaje": t.mensaje, "progreso": round(t.progreso, 3), "activo": t.activo,
+        "error": t.error, "segundos": int(time.time() - t.inicio)}
+    datos["slug"] = slug
+    return datos
+
+
+def _mini_lanzar(slug: str, paso: str, f):
+    try:
+        pipeline.lanzar(_mini_clave(slug), paso, f)
+    except RuntimeError as ex:
+        raise HTTPException(409, str(ex)) from ex
+    return _mini_estado(slug)
+
+
+@app.get("/api/videos/{slug}/miniatura")
+def mini_ver(slug: str):
+    return _mini_estado(slug)
+
+
+class MiniProducir(BaseModel):
+    permiso: bool = False
+    rehacer_plan: bool = False
+
+
+@app.post("/api/videos/{slug}/miniatura/producir")
+def mini_producir(slug: str, p: MiniProducir = MiniProducir()):
+    from .miniaturas import servicio
+
+    c = _proyecto(slug)
+    return _mini_lanzar(slug, "miniatura", lambda t: servicio.producir(c, t, permiso=p.permiso,
+                                                                         rehacer_plan=p.rehacer_plan))
+
+
+class MiniRegenerar(BaseModel):
+    instruccion: str = ""
+    permiso: bool = False
+
+
+@app.post("/api/videos/{slug}/miniatura/sujetos/{indice}/regenerar")
+def mini_regenerar(slug: str, indice: int, p: MiniRegenerar = MiniRegenerar()):
+    from .miniaturas import servicio
+
+    if not 0 <= indice < 6:
+        raise HTTPException(404)
+    c = _proyecto(slug)
+    return _mini_lanzar(slug, "regenerar", lambda t: servicio.regenerar(c, t, indice, p.instruccion, p.permiso))
+
+
+class MiniVariantes(BaseModel):
+    n: int = Field(2, ge=1, le=3)
+    permiso: bool = False
+
+
+@app.post("/api/videos/{slug}/miniatura/variantes")
+def mini_variantes(slug: str, p: MiniVariantes = MiniVariantes()):
+    from .miniaturas import servicio
+
+    c = _proyecto(slug)
+    return _mini_lanzar(slug, "variantes", lambda t: servicio.variantes_protagonista(c, t, p.n, p.permiso))
+
+
+class MiniElegir(BaseModel):
+    archivo: str
+
+
+@app.post("/api/videos/{slug}/miniatura/sujetos/{indice}/elegir")
+def mini_elegir(slug: str, indice: int, p: MiniElegir):
+    from .miniaturas import servicio
+
+    try:
+        servicio.elegir(_proyecto(slug), indice, p.archivo)
+    except (ValueError, IndexError) as ex:
+        raise HTTPException(400, str(ex)) from ex
+    return _mini_estado(slug)
+
+
+@app.put("/api/videos/{slug}/miniatura")
+def mini_editar(slug: str, cambios: dict):
+    from .miniaturas import servicio
+
+    try:
+        servicio.editar(_proyecto(slug), cambios)
+    except (ValueError, IndexError, KeyError) as ex:
+        errores = ex.errors() if hasattr(ex, "errors") else None
+        mensaje = errores[0]["msg"].removeprefix("Value error, ") if errores else str(ex)
+        raise HTTPException(400, mensaje) from ex
+    return _mini_estado(slug)
+
+
+@app.post("/api/videos/{slug}/miniatura/sujetos/{indice}/referencia")
+def mini_referencia(slug: str, indice: int):
+    from .miniaturas import servicio
+
+    try:
+        servicio.usar_como_referencia(_proyecto(slug), indice)
+    except (ValueError, IndexError) as ex:
+        raise HTTPException(400, str(ex)) from ex
+    return _mini_estado(slug)
+
+
+@app.get("/api/canales/{canal}/miniatura")
+def plantilla_ver(canal: str):
+    from .miniaturas import plantilla
+
+    return plantilla.cargar(canal).model_dump()
+
+
+@app.post("/api/canales/{canal}/miniatura/referencias")
+async def plantilla_subir(canal: str, archivo: UploadFile = File(...)):
+    from .miniaturas import plantilla
+
+    try:
+        return plantilla.agregar_referencia(canal, await archivo.read(), archivo.filename or "ref.png").model_dump()
+    except Exception as ex:  # noqa: BLE001 — imagen rota o formato raro: se explica en la página
+        raise HTTPException(400, f"No se pudo usar esa imagen: {ex}") from ex
+
+
+class Activa(BaseModel):
+    activa: bool
+
+
+@app.put("/api/canales/{canal}/miniatura/referencias/{archivo}")
+def plantilla_marcar(canal: str, archivo: str, p: Activa):
+    from .miniaturas import plantilla
+
+    try:
+        return plantilla.marcar_referencia(canal, archivo, p.activa).model_dump()
+    except KeyError as ex:
+        raise HTTPException(404) from ex
+
+
+@app.delete("/api/canales/{canal}/miniatura/referencias/{archivo}")
+def plantilla_borrar(canal: str, archivo: str):
+    from .miniaturas import plantilla
+
+    try:
+        return plantilla.quitar_referencia(canal, archivo).model_dump()
+    except KeyError as ex:
+        raise HTTPException(404) from ex
+
+
+@app.get("/canales/{canal}/referencias/{archivo}")
+def plantilla_imagen(canal: str, archivo: str):
+    from .miniaturas.plantilla import ruta_plantilla
+
+    base = (ruta_plantilla(canal) / "referencias").resolve()
+    ruta = (base / archivo).resolve()
+    if ruta.parent != base or not ruta.exists():
+        raise HTTPException(404)
+    return FileResponse(ruta)
+
+
 # ------------------------------------------------------------------ biblioteca de audio (sección 6)
 
 @app.get("/api/biblioteca")

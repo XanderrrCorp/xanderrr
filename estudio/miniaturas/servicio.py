@@ -63,9 +63,10 @@ def componer(c: CarpetaProyecto, plan: Plan | None = None) -> dict:
 
 
 def producir(c: CarpetaProyecto, t, permiso: bool = False, rehacer_plan: bool = False,
-             ejecutar=claude_cli.ejecutar, proveedor=None) -> Path:
+             ejecutar=None, proveedor=None) -> Path:
     """Plan → 6 sujetos en paralelo → recorte y composición → control de calidad (regenera lo que
     falle, máx. 2 veces por sujeto). Lo ya generado no se vuelve a pagar."""
+    ejecutar = ejecutar or claude_cli.ejecutar
     base = carpeta(c)
     base.mkdir(parents=True, exist_ok=True)
     plantilla = _plantilla(c)
@@ -110,6 +111,12 @@ def producir(c: CarpetaProyecto, t, permiso: bool = False, rehacer_plan: bool = 
     informe["aprobada"] = all(v["ok"] for v in informe["rondas"][-1]["sujetos"].values())
     escribir_json(base / "qa.json", informe)
     _guardar_plan(c, plan)
+    try:                                   # una copia junto a los videos, lista para subir
+        from ..pipeline import carpeta_videos, slugificar
+
+        shutil.copy(base / "miniatura.jpg", carpeta_videos() / f"{slugificar(c.cargar().titulo)[:60]}_miniatura.jpg")
+    except OSError:
+        pass
     t.avisar("Miniatura lista" + ("" if informe["aprobada"] else " (con observaciones del control de calidad)"))
     return base / "miniatura.jpg"
 
@@ -122,7 +129,8 @@ def _censura(c: CarpetaProyecto, plan: Plan, ejecutar) -> None:
 
 
 def regenerar(c: CarpetaProyecto, t, indice: int, instruccion: str = "", permiso: bool = False,
-              ejecutar=claude_cli.ejecutar, proveedor=None) -> None:
+              ejecutar=None, proveedor=None) -> None:
+    ejecutar = ejecutar or claude_cli.ejecutar
     plan = _plan(c)
     libro = LibroCostos(c.ruta, ConfigCostos.cargar())
     t.avisar(f"Regenerando «{plan.cells[indice].name}»…")
@@ -148,7 +156,8 @@ def variantes_protagonista(c: CarpetaProyecto, t, n: int = 2, permiso: bool = Fa
     return hechas
 
 
-def elegir(c: CarpetaProyecto, indice: int, archivo: str, ejecutar=claude_cli.ejecutar) -> dict:
+def elegir(c: CarpetaProyecto, indice: int, archivo: str, ejecutar=None) -> dict:
+    ejecutar = ejecutar or claude_cli.ejecutar
     plan = _plan(c)
     if archivo not in plan.cells[indice].variantes:
         raise ValueError("esa imagen no es de este sujeto")

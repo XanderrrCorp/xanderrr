@@ -14,7 +14,7 @@ const esc = t => String(t ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '
 
 /* ------------------------------------------------------------ inicio */
 async function irInicio() {
-  clearInterval(SONDEO); ACTUAL = null; location.hash = '';
+  clearInterval(SONDEO); if (typeof MINI_SONDEO !== 'undefined') clearInterval(MINI_SONDEO); ACTUAL = null; location.hash = '';
   ESTADO = await api('/api/estado');
   const faltan = [];
   if (!ESTADO.claves.together) faltan.push('la clave de Together');
@@ -83,6 +83,7 @@ async function importar() {
 
 /* ------------------------------------------------------------ un video */
 async function abrir(slug) {
+  if (typeof MINI_SONDEO !== 'undefined') clearInterval(MINI_SONDEO);
   ACTUAL = slug; location.hash = slug;
   await pintar();
   clearInterval(SONDEO);
@@ -144,7 +145,9 @@ async function pintar() {
     cuerpo += escenasHtml(v, imgOk);
   }
   app.innerHTML = `
-    <div class="fila"><button class="fantasma mini" onclick="irInicio()">‹ Tus videos</button><span class="crece"></span><span class="chip">Gastado: ${esc(v.costo)}</span></div>
+    <div class="fila"><button class="fantasma mini" onclick="irInicio()">‹ Tus videos</button><span class="crece"></span>
+      ${guionOk && !v.vertical ? `<button class="mini" onclick="irMiniatura('${v.slug}')">🖼 Miniatura</button>` : ''}
+      <span class="chip">Gastado: ${esc(v.costo)}</span></div>
     <h1>${esc(v.titulo)}</h1>
     <div class="pasos">${paso(1, 'Guion', guionOk, !guionOk)}${paso(2, 'Imágenes', imgOk, guionOk && !imgOk)}${paso(3, 'Video', vidOk, imgOk && !vidOk)}</div>
     ${cuerpo}`;
@@ -364,4 +367,5 @@ async function sesionClaude() {
 }
 
 (location.hash === '#sonidos' ? irBiblioteca()
+  : location.hash.startsWith('#mini/') ? (async () => { ESTADO = await api('/api/estado'); irMiniatura(location.hash.slice(6)); })()
   : location.hash.length > 1 ? (async () => { ESTADO = await api('/api/estado'); abrir(location.hash.slice(1)); })() : irInicio());

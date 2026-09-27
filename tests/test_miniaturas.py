@@ -113,3 +113,44 @@ def test_produccion_completa_con_control_de_calidad(tmp_path, monkeypatch):
     # editar textos no regenera nada
     servicio.editar(c, {"labels": {"1": "Casi del 0 %"}, "hero_text": "TE ENGAÑA", "orden": [0, 2, 1, 3, 4, 5]})
     assert prov.llamadas == 7 and servicio._plan(c).cells[1].name == "Anaconda"
+
+
+def test_api_editar_y_plantilla(tmp_path, monkeypatch):
+    import shutil
+
+    from fastapi.testclient import TestClient
+
+    from estudio import app as modulo_app
+    from estudio.miniaturas import servicio
+    from estudio.proyecto import CarpetaProyecto
+
+    base = tmp_path / "canales"
+    shutil.copytree(plantillas.carpeta_canales() / "animales-peligrosos", base / "animales-peligrosos")
+    monkeypatch.setenv("XANDART_CANALES", str(base))
+    c = CarpetaProyecto.crear("Peces", "animales-peligrosos", "enciclopedia_mascota", 540)
+    carpeta = servicio.carpeta(c)
+    (carpeta / "sujetos").mkdir(parents=True)
+    datos = json.loads(json.dumps(PLAN))
+    for k, celda in enumerate(datos["cells"]):
+        _sujeto((30 * k, 80, 150)).save(carpeta / f"sujetos/s{k}.png")
+        celda["archivo"] = f"sujetos/s{k}.png"
+        celda["variantes"] = [celda["archivo"]]
+    servicio._guardar_plan(c, Plan.model_validate(datos))
+    cli = TestClient(modulo_app.app)
+    r = cli.put(f"/api/videos/{c.ruta.name}/miniatura", json={"hero_text": "una"})
+    assert r.status_code == 400 and "2 a 5 palabras" in r.json()["detail"]
+    r = cli.put(f"/api/videos/{c.ruta.name}/miniatura", json={"orden": [1, 0, 2, 3, 4, 5], "labels": {"5": "Casi del 0 %"}})
+    plan = r.json()["plan"]
+    assert r.status_code == 200 and plan["cells"][0]["name"] == "Piraña" and plan["cells"][0]["is_hero"]
+    assert plan["cells"][5]["label"] == "Casi del 0 %" and r.json()["miniatura"]
+    # referencias de estilo: subir, apagar y borrar
+    import io
+    b = io.BytesIO()
+    _sujeto((10, 200, 10)).save(b, "PNG")
+    r = cli.post("/api/canales/animales-peligrosos/miniatura/referencias", files={"archivo": ("nueva.png", b.getvalue())})
+    assert any(x["archivo"] == "nueva.jpg" for x in r.json()["referencias"])
+    r = cli.put("/api/canales/animales-peligrosos/miniatura/referencias/nueva.jpg", json={"activa": False})
+    assert not next(x for x in r.json()["referencias"] if x["archivo"] == "nueva.jpg")["activa"]
+    r = cli.delete("/api/canales/animales-peligrosos/miniatura/referencias/nueva.jpg")
+    assert all(x["archivo"] != "nueva.jpg" for x in r.json()["referencias"])
+    assert cli.get("/canales/..%2F..%2Fetc/referencias/passwd").status_code in (400, 404, 422, 500)

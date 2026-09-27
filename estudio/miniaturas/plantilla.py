@@ -57,6 +57,8 @@ class Plantilla(BaseModel):
 
 
 def ruta_plantilla(canal: str) -> Path:
+    if not re.fullmatch(r"[a-z0-9][a-z0-9\-]{0,59}", canal or ""):
+        raise ValueError(f"nombre de canal no válido: {canal!r}")
     return carpeta_canales() / canal / "miniatura"
 
 
