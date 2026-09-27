@@ -69,9 +69,14 @@ def candidatos(escenas: dict, direccion: dict, maximo: int = 80) -> list[dict]:
     villano = next((n["numero"] for n in niveles if n.get("villano")), None)
     revelacion = int(direccion.get("villano_revelacion", 0)) or None
     salida = []
+    assets = {a["id"]: a for a in escenas.get("assets", [])}
+    tarjetas = {n["asset"] for n in niveles}
     for e in escenas["escenas"]:
-        v = e.get("visual", {})
-        if v.get("accion") != "generar" or not v.get("archivo"):
+        v = dict(e.get("visual", {}))
+        ref = v.get("reusar_de")
+        if v.get("accion") == "reusar" and isinstance(ref, str) and ref in assets and ref not in tarjetas:
+            v["archivo"] = assets[ref]["archivo"]            # imagen reutilizada (catálogo de otro video)
+        elif v.get("accion") != "generar" or not v.get("archivo"):
             continue
         oculto = revelacion is None or e["id"] < revelacion
         hallado = None
