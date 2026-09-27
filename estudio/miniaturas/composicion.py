@@ -132,26 +132,28 @@ def _pisa(col: Colocado, cajas: list[tuple[int, int, int, int]]) -> bool:
 
 
 def colocar(i: int, rec: Image.Image, plan: Plan, cajas_texto: list, banda: int) -> Colocado:
+    """Lo más grande posible en su zona, apoyado sobre su texto. Si pisa un texto (propio o
+    ajeno), primero se sube hasta quedar encima de su texto y luego se achica."""
     x0, y0, x1, y1 = _celda(i)
     zw, zh = x1 - x0, (y1 - banda) - y0
     c = plan.cells[i]
     s = min(zw / rec.width, zh / rec.height) * (LLENADO_HERO if c.is_hero else LLENADO) * c.ajuste.escala
-    for _ in range(30):
+    col = None
+    for _ in range(40):
         img = rec.resize((max(1, int(rec.width * s)), max(1, int(rec.height * s))), Image.Resampling.LANCZOS)
-        # apoyado sobre su texto y centrado en su columna; lo que sobra se sale por arriba o por los lados
         x = int((x0 + x1) / 2 - img.width / 2) + c.ajuste.dx
-        y = int(y1 - banda - img.height + 6) + c.ajuste.dy
-        if c.is_hero:
-            x = min(x, x0 + 10 + c.ajuste.dx) if img.width > zw else x
-        col = Colocado(i, img, x, y)
-        if not _pisa(col, cajas_texto):
-            return col
-        # primero se intenta subirlo un poco; si igual pisa, se achica
-        for sube in (8, 16, 28):
-            col2 = Colocado(i, img, x, y - sube)
-            if not _pisa(col2, cajas_texto) and (i < 3 or y - sube + img.height * 0.5 > FILAS[1]):
-                return col2
-        s *= 0.95
+        if c.is_hero and img.width > zw:
+            x = x0 + 10 + c.ajuste.dx               # el protagonista se sale por la izquierda, no hacia el vecino
+        apoyado = int(y1 - banda - img.height + 6)
+        candidatos = [apoyado + c.ajuste.dy]
+        if c.ajuste.dy > 0:
+            candidatos.append(apoyado)              # un ajuste manual nunca lo baja encima de su texto
+        candidatos += [apoyado - 10, apoyado - 22]
+        for y in candidatos:
+            col = Colocado(i, img, x, y)
+            if not _pisa(col, cajas_texto):
+                return col
+        s *= 0.94
     return col
 
 
