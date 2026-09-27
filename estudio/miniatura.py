@@ -146,8 +146,13 @@ def textos_para(titulo: str, villano: str, ejecutar=claude_cli.ejecutar, carpeta
         "ACERQUES!», o un apodo que dé miedo («BÚHO DEMONIO»). Escribe 3 frases DISTINTAS, en español, de 2 a 4 "
         "palabras, que den muchas ganas de hacer clic sin mentir. Sin emojis ni comillas.\n"
         'Responde SOLO un JSON: {"textos": ["...", "...", "..."]}', cwd=carpeta)
-    datos = claude_cli.extraer_json(texto) or {}
-    textos = [str(t).strip()[:40] for t in datos.get("textos", []) if str(t).strip()]
+    try:
+        datos = claude_cli.extraer_json(texto) or {}
+    except ValueError:                                     # JSON mal formado: se leen las líneas entre comillas
+        import re
+
+        datos = {"textos": re.findall(r'"([^"\n]{3,40})"', texto)[1:4]}
+    textos = [str(t).strip().strip("¡!«»") [:40] for t in datos.get("textos", []) if str(t).strip()]
     return (textos + ["NO TE LE ACERQUES", "TE PICA DORMIDO", "EL MÁS PELIGROSO"])[:3]
 
 
