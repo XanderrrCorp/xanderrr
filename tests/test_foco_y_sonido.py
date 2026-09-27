@@ -1,5 +1,6 @@
 """Foco (círculo y flechas), sonido con intención y biblioteca con licencias."""
 import random
+from pathlib import Path
 
 import pytest
 
@@ -111,3 +112,16 @@ def test_reacciones_del_presentador_con_limites(tmp_path):
     from collections import Counter
 
     assert max(Counter(e["pose"] for _, e in usados).values()) <= estilo.presentador.maximo_por_pose
+
+
+def test_ruleta_se_recorta_para_frenar_justo_en_la_tarjeta():
+    import numpy as np
+
+    from estudio import render
+
+    edl = {"duracion_total": 3.0, "pistas": {"voz": [], "musica": [], "sfx": [
+        {"id": "s0", "inicio": 1.0, "tipo": "ruleta", "archivo": "biblioteca/sfx/ruleta", "variante": "ruleta_1",
+         "volumen": 0.5, "termina_en": 1.8, "duracion_max": 0.8}]}}
+    mezcla = render.mezclar_audio(Path("."), edl, None)
+    suena = np.nonzero(np.abs(mezcla) > 1e-4)[0] / render.SR
+    assert 0.95 <= suena.min() and suena.max() <= 1.85          # solo entre el corte y el frenado

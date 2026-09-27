@@ -9,7 +9,7 @@ usa en los videos lo que tiene licencia registrada.
     biblioteca/
       indice.json
       sfx/<tipo>/<archivo>        tipos: golpe_grave, pop, zumbido, latido, subida_tension, alerta, comico, barrido,
-                                  stinger_terror, piano_miedo
+                                  stinger_terror, piano_miedo, ruleta
       musica/<animo>/<archivo>    ánimos: tension, misterio, epico, alivio, curiosidad, final
       entrada/                    carpeta para soltar archivos antes de registrarlos
 """
@@ -28,7 +28,7 @@ import numpy as np
 from .config import RAIZ, escribir_json, leer_json
 
 TIPOS_SFX = ("golpe_grave", "pop", "zumbido", "latido", "subida_tension", "alerta", "comico", "barrido",
-             "stinger_terror", "piano_miedo")
+             "stinger_terror", "piano_miedo", "ruleta")
 ANIMOS_MUSICA = ("tension", "misterio", "epico", "alivio", "curiosidad", "final")
 EXTENSIONES = (".wav", ".mp3", ".ogg", ".flac", ".m4a", ".aac")
 # Licencias que permiten usar el audio en un video de YouTube monetizado. «Otra»

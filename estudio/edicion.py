@@ -35,10 +35,11 @@ FPS = 30
 ADELANTO = 3 / FPS
 MAX_SIN_CAMBIO = 4.5
 # prioridad al recortar efectos de sonido por frecuencia: se quitan primero los bajos
-PRIORIDAD = {"golpe_grave": 6, "stinger_terror": 6, "subida_tension": 5, "piano_miedo": 5, "barrido": 4,
+PRIORIDAD = {"golpe_grave": 6, "stinger_terror": 6, "subida_tension": 5, "piano_miedo": 5, "ruleta": 5, "barrido": 4,
              "alerta": 3, "pop": 3, "comico": 3, "zumbido": 2, "latido": 2}
 VOLUMEN = {"barrido": 0.42, "golpe_grave": 0.9, "pop": 0.32, "zumbido": 0.33, "latido": 0.55,
-           "subida_tension": 0.45, "alerta": 0.4, "comico": 0.45, "stinger_terror": 0.75, "piano_miedo": 0.6}
+           "subida_tension": 0.45, "alerta": 0.4, "comico": 0.45, "stinger_terror": 0.75, "piano_miedo": 0.6,
+           "ruleta": 0.5}
 VARIANTES = 4
 # recursos estructurales (tira, pixelado) que no cuentan para uso_maximo_por_recurso
 ESTRUCTURALES = {"tira_deslizar_a_nivel", "pixelar", "revelar_pixelado", "destello_rojo", "paneo_lento", "zoom_golpe",
@@ -80,9 +81,10 @@ def _en_texto(narracion: str, palabra: str, ini: float, fin: float) -> float:
     return ini + (fin - ini) * i / max(1, len(narracion))
 
 
-def _sfx(lista: list, tipo: str, inicio: float, clip: int, razon: str, termina_en: float | None = None) -> None:
+def _sfx(lista: list, tipo: str, inicio: float, clip: int, razon: str, termina_en: float | None = None,
+         duracion_max: float | None = None) -> None:
     lista.append({"tipo": tipo, "inicio": max(0.0, inicio), "clip": clip, "razon": razon,
-                  "prioridad": PRIORIDAD.get(tipo, 1), "termina_en": termina_en})
+                  "prioridad": PRIORIDAD.get(tipo, 1), "termina_en": termina_en, "duracion_max": duracion_max})
 
 
 PERFIL_SHORT = "perfiles/short_vertical.json"
@@ -106,6 +108,12 @@ def _sonido_en_cada_corte(sfx: list, escenas: list, clips: list, rng: random.Ran
         tipos_aqui = {x["tipo"] for x in sfx if x["clip"] == idx}
         if idx in con_sonido:
             previo = next(iter(tipos_aqui))
+            continue
+        anterior = escenas[idx - 1].narracion.strip() if idx else ""
+        if anterior.endswith("?") and len(e.narracion.split()) <= 4:
+            # «¿Cuántos ataques tiene?» «Cero.»: la respuesta seca cae con un golpe
+            _sfx(sfx, "golpe_grave", c["inicio"] + 0.05, idx, "Golpe con la respuesta seca a la pregunta")
+            previo = "golpe_grave"
             continue
         opciones = list(SONIDO_DE_CORTE.get(e.intencion, ("barrido", "pop")))
         opciones += ["barrido", "pop"]
@@ -191,6 +199,8 @@ def _pistas_sfx(vivos: list, rng: random.Random) -> list:
                  "razon": s["razon"]}
         if s.get("termina_en") is not None:
             pista["termina_en"] = round(s["termina_en"], 3)
+        if s.get("duracion_max"):
+            pista["duracion_max"] = s["duracion_max"]
         pistas.append(pista)
     return pistas
 
@@ -507,7 +517,9 @@ def construir_edl(carpeta: CarpetaProyecto) -> dict:
                                 "temblor": bool(n.villano)})
                 nivel_actual = n.numero
                 razon = f"Transición al nivel {n.numero}: la tira se desliza y se detiene en su tarjeta"
-                _sfx(sfx, "barrido", ini + 0.02, idx, "Barrido que acompaña el deslizamiento de la tira")
+                frena = ini + min(0.8, dur * 0.5)          # la tira se detiene en la tarjeta (ver render)
+                _sfx(sfx, "ruleta", ini, idx, "Ruleta: la tira gira y sus clics se frenan justo en la tarjeta del nivel",
+                     termina_en=frena, duracion_max=round(frena - ini, 3))
                 if n.villano:
                     razon += "; la tarjeta del villano tiembla antes de la revelación"
                     _sfx(sfx, "zumbido", ini + 0.8, idx, "Zumbido grave: el último nivel es el peligroso")
@@ -534,7 +546,8 @@ def construir_edl(carpeta: CarpetaProyecto) -> dict:
             modo, archivo = "tira", f"assets/tira/tira_niveles{'_pixelada' if oculto else ''}.png"
             efectos.append({"efecto": "tira_deslizar_a_nivel", "pasar": True, "villano_pixelado": oculto})
             razon = "Presentación de los niveles: la tira completa pasa" + (" con el villano pixelado" if oculto else "")
-            _sfx(sfx, "barrido", ini + 0.05, idx, "Barrido de la tira completa")
+            _sfx(sfx, "ruleta", ini, idx, "Ruleta: la lista completa pasa girando y frena en el último nivel",
+                 termina_en=fin - 0.05, duracion_max=round(max(0.5, dur - 0.05), 3))
         if modo is None:
             t_estilo = estilo.tipo(tipo) if tipo in estilo.ids_tipos else None
             if t_estilo is None:

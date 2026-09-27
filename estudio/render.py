@@ -649,6 +649,26 @@ def _sfx(tipo: str, variante: int) -> np.ndarray:
                        for f in (880 * (1 + 0.01 * variante), 932, 1245)) * np.exp(-x * 1.8) * 0.12
         ruido = rng.normal(0, 1, len(x)) * np.exp(-x * 25) * 0.4
         return (boom * 0.7 + chillido + ruido) * 0.8
+    if tipo == "ruleta":
+        # ruleta de premios: clics que se van frenando y un último «clac» al detenerse
+        largo = 5.0
+        x = t(largo)
+        salida = np.zeros(len(x))
+        clic = lambda n: np.sin(2 * math.pi * (2300 + 90 * variante) * np.arange(n) / SR) * np.exp(-np.arange(n) / SR * 380)
+        ts, paso = [], 0.035
+        tt = 0.0
+        while tt < largo - 0.2:
+            ts.append(tt)
+            tt += paso
+            paso *= 1.045                                   # cada clic un poco más lento
+        for k, t0 in enumerate(ts):
+            i = int(t0 * SR)
+            n = min(int(0.03 * SR), len(x) - i)
+            salida[i:i + n] += clic(n) * (0.5 + 0.5 * k / len(ts))
+        i = int((ts[-1] + 0.02) * SR)
+        n = min(int(0.12 * SR), len(x) - i)
+        salida[i:i + n] += np.sin(2 * math.pi * 420 * np.arange(n) / SR) * np.exp(-np.arange(n) / SR * 40) * 0.8
+        return salida * 0.45
     x = t(0.12)
     f0 = 620 + 70 * variante
     return np.sin(2 * math.pi * f0 * x * (1 + 1.5 * x)) * np.exp(-x * 40) * 0.5   # pop
@@ -734,6 +754,14 @@ def mezclar_audio(raiz: Path, edl: dict, ffmpeg: str | None = None) -> np.ndarra
         tono = s.get("tono", 1.0)
         idx = np.arange(0, len(x) - 1, tono)
         x = np.interp(idx, np.arange(len(x)), x) * s.get("volumen", 0.7) * 0.6
+        if s.get("duracion_max") and len(x) > s["duracion_max"] * SR:
+            n = int(s["duracion_max"] * SR)
+            x = (x[-n:] if s.get("termina_en") is not None else x[:n]).copy()
+            f = min(len(x), int(0.03 * SR))                   # sin chasquido en el corte
+            if s.get("termina_en") is not None:
+                x[:f] *= np.linspace(0, 1, f)
+            else:
+                x[-f:] *= np.linspace(1, 0, f)
         # 14.7: la subida de tensión termina justo en el corte que anuncia
         i = int((s["termina_en"] * SR - len(x)) if s.get("termina_en") is not None else s["inicio"] * SR)
         if i < 0:

@@ -522,6 +522,9 @@ class ClipSfx(Modelo):
     # el motor la coloca para que acabe aquí, sea cual sea el largo del archivo
     termina_en: float | None = None
     tipo: str | None = None
+    # solo se usan los últimos (con termina_en) o los primeros segundos del archivo: una ruleta
+    # larga se recorta para que sus clics finales caigan justo cuando la tira se detiene
+    duracion_max: float | None = Field(None, gt=0)
 
 
 class Pistas(Modelo):

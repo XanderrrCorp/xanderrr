@@ -4,16 +4,83 @@
     "variantes_por_tipo": 4,
     "licencia_aceptada": "http://creativecommons.org/publicdomain/zero/1.0/",
     "tipos": {
-      "golpe_grave":    {"buscar": "cinematic boom impact", "duracion": [0.6, 3.5]},
-      "pop":            {"buscar": "pop", "duracion": [0.05, 0.6]},
-      "barrido":        {"buscar": "whoosh", "duracion": [0.25, 1.6]},
-      "latido":         {"buscar": "heartbeat", "duracion": [0.3, 2.0]},
-      "subida_tension": {"buscar": "riser tension", "duracion": [1.0, 5.0]},
-      "alerta":         {"buscar": "alert beep", "duracion": [0.15, 1.2]},
-      "comico":         {"buscar": "cartoon boing", "duracion": [0.2, 1.6]},
-      "zumbido":        {"buscar": "dark drone", "duracion": [1.0, 5.0]},
-      "stinger_terror": {"buscar": "horror stinger", "duracion": [0.8, 5.0]},
-      "piano_miedo":    {"buscar": "scary piano", "duracion": [1.2, 6.0]}
+      "golpe_grave": {
+        "buscar": "cinematic boom impact",
+        "duracion": [
+          0.6,
+          3.5
+        ]
+      },
+      "pop": {
+        "buscar": "pop",
+        "duracion": [
+          0.05,
+          0.6
+        ]
+      },
+      "barrido": {
+        "buscar": "whoosh",
+        "duracion": [
+          0.25,
+          1.6
+        ]
+      },
+      "latido": {
+        "buscar": "heartbeat",
+        "duracion": [
+          0.3,
+          2.0
+        ]
+      },
+      "subida_tension": {
+        "buscar": "riser tension",
+        "duracion": [
+          1.0,
+          5.0
+        ]
+      },
+      "alerta": {
+        "buscar": "alert beep",
+        "duracion": [
+          0.15,
+          1.2
+        ]
+      },
+      "comico": {
+        "buscar": "cartoon boing",
+        "duracion": [
+          0.2,
+          1.6
+        ]
+      },
+      "zumbido": {
+        "buscar": "dark drone",
+        "duracion": [
+          1.0,
+          5.0
+        ]
+      },
+      "stinger_terror": {
+        "buscar": "horror stinger",
+        "duracion": [
+          0.8,
+          5.0
+        ]
+      },
+      "piano_miedo": {
+        "buscar": "scary piano",
+        "duracion": [
+          1.2,
+          6.0
+        ]
+      },
+      "ruleta": {
+        "buscar": "prize wheel spin",
+        "duracion": [
+          1.0,
+          7.0
+        ]
+      }
     }
   }
 }
