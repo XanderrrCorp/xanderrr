@@ -138,10 +138,11 @@ async function pintar() {
     } else if (!vidOk) {
       cuerpo += `<section class="tarjeta"><h2>Revisa las imágenes</h2>
         <p class="tenue">Si alguna no te gusta, dale «Regenerar» (≈ 125 pesos). Cuando todo esté bien, haz el video.</p>
-        <div class="fila"><button class="primario" onclick="accion('video')">Hacer el video</button>
+        ${selectorFps()}
+        <div class="fila"><button class="primario" onclick="accion('video', {fps: fpsElegido()})">Hacer el video</button>
         ${e.faltan ? `<button onclick="accion('imagenes')">Completar imágenes que faltan (${e.faltan})</button>` : ''}</div></section>`;
     } else {
-      cuerpo += `<div class="fila"><button onclick="accion('video')">Volver a montar el video</button></div>`;
+      cuerpo += `${selectorFps()}<div class="fila"><button onclick="accion('video', {fps: fpsElegido()})">Volver a montar el video</button></div>`;
     }
     cuerpo += escenasHtml(v, imgOk);
   }
@@ -156,6 +157,21 @@ async function pintar() {
     /* terminó un paso: aviso discreto */
     document.title = 'Xandart · listo';
   }
+}
+
+function selectorFps() {
+  let guardado = '60';
+  try { guardado = localStorage.getItem('xandart_fps') || '60'; } catch (e) {}
+  return `<div class="fila"><span class="tenue">Fluidez:</span>
+    <label style="margin:0;font-weight:400"><input type="radio" name="fps" value="60" style="width:auto" ${guardado === '60' ? 'checked' : ''}
+      onchange="guardarFps(this.value)"> 60 cps (más fluido, tarda el doble)</label>
+    <label style="margin:0;font-weight:400"><input type="radio" name="fps" value="30" style="width:auto" ${guardado === '30' ? 'checked' : ''}
+      onchange="guardarFps(this.value)"> 30 cps (rápido)</label></div>`;
+}
+function guardarFps(v) { try { localStorage.setItem('xandart_fps', v); } catch (e) {} }
+function fpsElegido() {
+  const r = document.querySelector('input[name=fps]:checked');
+  return r ? +r.value : 60;
 }
 
 function pruebaHtml(v) {

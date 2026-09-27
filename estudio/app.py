@@ -292,10 +292,15 @@ def regenerar(slug: str, escena_id: int, cuerpo: Instruccion):
     return _lanzar(slug, "regenerar", lambda t: pipeline.regenerar_imagen(c, t, escena_id, cuerpo.instruccion))
 
 
+class HacerVideo(BaseModel):
+    permiso: bool = False
+    fps: int | None = None          # 60 = más fluido (tarda el doble), 30 = rápido
+
+
 @app.post("/api/videos/{slug}/video")
-def video(slug: str, p: Permiso = Permiso()):
+def video(slug: str, p: HacerVideo = HacerVideo()):
     c = _proyecto(slug)
-    return _lanzar(slug, "video", lambda t: pipeline.paso_video(c, t, permiso=p.permiso))
+    return _lanzar(slug, "video", lambda t: pipeline.paso_video(c, t, permiso=p.permiso, fps=p.fps))
 
 
 @app.post("/api/videos/{slug}/short")

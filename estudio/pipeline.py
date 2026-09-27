@@ -483,7 +483,7 @@ def regenerar_imagen(c: CarpetaProyecto, t: Trabajo, escena_id: int, instruccion
         raise RuntimeError(r.frenado or next(iter(r.fallidas.values())))
 
 
-def paso_video(c: CarpetaProyecto, t: Trabajo, permiso: bool = False) -> Path:
+def paso_video(c: CarpetaProyecto, t: Trabajo, permiso: bool = False, fps: int | None = None) -> Path:
     from .edicion import construir_edl, validar
     from .render import renderizar
     from .voz import generar_voz
@@ -526,8 +526,12 @@ def paso_video(c: CarpetaProyecto, t: Trabajo, permiso: bool = False) -> Path:
 
     vertical = c.cargar_escenas().relacion_aspecto == "9:16"
     t.avisar("Renderizando el short vertical…" if vertical else "Renderizando el video…")
+    from .render import _salida
+
+    ancho, alto, fps_config = _salida()
+    salida = (ancho, alto, fps if fps in (30, 60) else fps_config)
     final = renderizar(c, ffmpeg(), c.ruta / "render" / "final.mp4", avisar=avisar, calidad="maxima",
-                       vertical=vertical)
+                       vertical=vertical, salida=salida)
     destino = carpeta_videos() / f"{slugificar(c.cargar().titulo)[:60]}.mp4"
     shutil.copy(final, destino)
     shutil.copy(final.with_suffix(".srt"), destino.with_suffix(".srt"))

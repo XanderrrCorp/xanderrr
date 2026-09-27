@@ -1,6 +1,6 @@
 {
-  "_nota": "30 cuadros por segundo: el render tarda la mitad que a 60 y en ilustraciones casi no se nota. Subir a 60 solo en un PC rápido.",
+  "_nota": "Por defecto 60 cps (pedido del dueño). En la página se puede elegir 30 cps por video: tarda la mitad.",
   "ancho": 1280,
   "alto": 720,
-  "fps": 30
+  "fps": 60
 }
