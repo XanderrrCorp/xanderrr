@@ -778,7 +778,9 @@ def mezclar_audio(raiz: Path, edl: dict, ffmpeg: str | None = None) -> np.ndarra
 # ------------------------------------------------------------------ render
 
 # calidad del archivo final: «normal» es rápida; «maxima» comprime menos y tarda más (para subir a YouTube)
-CALIDADES = {"normal": ("veryfast", "19", "192k"), "maxima": ("slow", "15", "320k")}
+# «slow» apenas mejoraba sobre «medium» y le sumaba tiempo a PCs lentos; CRF 16 sigue muy por encima
+# de lo que YouTube conserva al recomprimir
+CALIDADES = {"normal": ("veryfast", "19", "192k"), "maxima": ("medium", "16", "320k")}
 
 
 # ------------------------------------------------------------------ short vertical (9:16)
