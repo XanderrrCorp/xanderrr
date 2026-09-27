@@ -371,6 +371,15 @@ def paso_video(c: CarpetaProyecto, t: Trabajo, permiso: bool = False) -> Path:
     return destino
 
 
+def paso_short(c: CarpetaProyecto, t: Trabajo, permiso: bool = False) -> Path:
+    """Short vertical (9:16) sacado del video largo: no genera imágenes, solo voz."""
+    from .short import crear_short
+
+    corto = crear_short(c.ruta, c.ruta.parent, avisar=t.avisar)
+    t.progreso = 0.05
+    return paso_video(corto, t, permiso=permiso)
+
+
 def resumen(c: CarpetaProyecto) -> dict:
     """Todo lo que la página necesita para pintar un video."""
     p = c.cargar()
@@ -379,9 +388,11 @@ def resumen(c: CarpetaProyecto) -> dict:
              "pasos": {k: v.estado for k, v in p.pasos.items()},
              "costo": formato_cop(c.libro(config).total_cop()), "escenas": [], "guion": None,
              "video": None, "trabajo": None, "prueba": None,
-             "divulgacion": p.requiere_divulgacion_contenido_sintetico}
+             "divulgacion": p.requiere_divulgacion_contenido_sintetico, "vertical": False}
     if c.archivo_escenas.exists():
         esc = c.cargar_escenas()
+        datos["vertical"] = esc.relacion_aspecto == "9:16"
+        datos["puede_short"] = bool(esc.niveles)
         man = leer_json(c.ruta / "imagenes" / "manifiesto.json") if (c.ruta / "imagenes" / "manifiesto.json").exists() else {}
         archivos = {e.id: e.visual.archivo for e in esc.escenas}
         for e in esc.escenas:

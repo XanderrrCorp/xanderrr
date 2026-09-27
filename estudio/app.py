@@ -292,6 +292,14 @@ def video(slug: str, p: Permiso = Permiso()):
     return _lanzar(slug, "video", lambda t: pipeline.paso_video(c, t, permiso=p.permiso))
 
 
+@app.post("/api/videos/{slug}/short")
+def short(slug: str, p: Permiso = Permiso()):
+    """Short vertical del nivel del villano: guion con Claude, mismas imágenes, voz y render.
+    Queda como un video más en la lista."""
+    c = _proyecto(slug)
+    return _lanzar(slug, "short", lambda t: pipeline.paso_short(c, t, permiso=p.permiso))
+
+
 # ------------------------------------------------------------------ biblioteca de audio (sección 6)
 
 @app.get("/api/biblioteca")

@@ -113,10 +113,12 @@ async function pintar() {
     cuerpo += `<section class="tarjeta"><h2>Tu video está listo</h2>
       <video controls preload="metadata" src="/archivos/${v.slug}/${v.video}"></video>
       <div class="fila">
-        <a href="/archivos/${v.slug}/${v.video}?descargar=true"><button class="primario">Descargar MP4 (1080p)</button></a>
+        <a href="/archivos/${v.slug}/${v.video}?descargar=true"><button class="primario">Descargar MP4</button></a>
         <a href="/archivos/${v.slug}/render/final.srt?descargar=true"><button>Subtítulos (SRT)</button></a>
         <button onclick="api('/api/abrir-carpeta',{method:'POST'})">Abrir carpeta de videos</button>
+        ${v.puede_short ? `<button onclick="if(confirm('Claude escribe un short vertical de unos 40 s con el nivel del villano, usando las mismas imágenes (solo se paga la voz, unos pocos pesos). ¿Lo hago?')) accion('short')">Sacar un short vertical</button>` : ''}
       </div>
+      ${v.vertical ? `<p class="tenue" style="font-size:13px">Short vertical 1080×1920. Súbelo desde el celular o desde YouTube Studio: si dura menos de 3 minutos, YouTube lo pone en Shorts solo.</p>` : ''}
       <p class="tenue" style="font-size:13px">También quedó guardado en tu carpeta Videos › Xandart.</p>
       ${v.divulgacion ? `<div class="error">Este video tiene al presentador hecho con IA. Al subirlo a YouTube, en
         «Detalles», marca <b>«Contenido alterado o sintético: Sí»</b>. No afecta la monetización.</div>` : ''}</section>`;
@@ -165,7 +167,7 @@ function pruebaHtml(v) {
 }
 
 function nombrePaso(p) {
-  return { guion: 'Escribiendo el guion', imagenes: 'Haciendo las imágenes', video: 'Haciendo el video', regenerar: 'Regenerando una imagen', prueba: 'Probando las primeras 10 escenas' }[p] || p;
+  return { guion: 'Escribiendo el guion', imagenes: 'Haciendo las imágenes', video: 'Haciendo el video', regenerar: 'Regenerando una imagen', prueba: 'Probando las primeras 10 escenas', short: 'Haciendo el short vertical' }[p] || p;
 }
 
 function escenasHtml(v, conImagenes) {
