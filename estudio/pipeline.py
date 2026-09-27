@@ -359,8 +359,10 @@ def paso_video(c: CarpetaProyecto, t: Trabajo, permiso: bool = False) -> Path:
             except ValueError:
                 pass
 
-    t.avisar("Renderizando el video en 1080p…")
-    final = renderizar(c, ffmpeg(), c.ruta / "render" / "final.mp4", avisar=avisar, calidad="maxima")
+    vertical = c.cargar_escenas().relacion_aspecto == "9:16"
+    t.avisar("Renderizando el short vertical…" if vertical else "Renderizando el video…")
+    final = renderizar(c, ffmpeg(), c.ruta / "render" / "final.mp4", avisar=avisar, calidad="maxima",
+                       vertical=vertical)
     destino = carpeta_videos() / f"{slugificar(c.cargar().titulo)[:60]}.mp4"
     shutil.copy(final, destino)
     shutil.copy(final.with_suffix(".srt"), destino.with_suffix(".srt"))

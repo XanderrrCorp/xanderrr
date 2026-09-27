@@ -13,7 +13,7 @@ import wave
 from pathlib import Path
 
 import numpy as np
-from PIL import Image, ImageDraw, ImageFilter, ImageFont
+from PIL import Image, ImageDraw, ImageEnhance, ImageFilter, ImageFont
 
 from .config import leer_json
 from .esquemas import EDL
@@ -723,6 +723,75 @@ def mezclar_audio(raiz: Path, edl: dict, ffmpeg: str | None = None) -> np.ndarra
 CALIDADES = {"normal": ("veryfast", "19", "192k"), "maxima": ("slow", "15", "320k")}
 
 
+# ------------------------------------------------------------------ short vertical (9:16)
+
+VW, VH = 1080, 1920
+V_RECORTE = (864, 1080)          # ventana 4:5 que se toma del cuadro de 1920×1080 (se agranda 1,25×)
+V_Y = 300                        # dónde empieza la ventana; arriba queda el título fijo
+V_SUB_Y = 1440                   # centro de los subtítulos, sobre la parte baja de la ventana
+
+
+def _fondo_vertical(img: Image.Image) -> Image.Image:
+    """El mismo cuadro, borroso y oscuro, llenando la pantalla vertical (barato: se
+    desenfoca en miniatura)."""
+    chico = img.resize((96, 54), Image.Resampling.BILINEAR).crop((33, 0, 63, 54)).filter(ImageFilter.GaussianBlur(2.5))
+    return ImageEnhance.Brightness(chico.resize((VW, VH), Image.Resampling.BILINEAR)).enhance(0.42)
+
+
+def _titulo_vertical(texto: str) -> Image.Image:
+    """Título fijo de arriba: amarillo con borde negro, en una o dos líneas."""
+    palabras = texto.split()
+    lineas = [texto]
+    if len(palabras) > 1 and _texto_img(texto, 84, 12).width > VW - 60:
+        corte = min(range(1, len(palabras)), key=lambda k: abs(len(" ".join(palabras[:k])) - len(" ".join(palabras[k:]))))
+        lineas = [" ".join(palabras[:corte]), " ".join(palabras[corte:])]
+    imgs = [_texto_img(l, 84, 12, (255, 214, 0)) for l in lineas]
+    ancho = max(i.width for i in imgs)
+    alto = sum(i.height for i in imgs) - 14 * (len(imgs) - 1)
+    salida = Image.new("RGBA", (ancho, alto), (0, 0, 0, 0))
+    y = 0
+    for i in imgs:
+        salida.alpha_composite(i, ((ancho - i.width) // 2, y))
+        y += i.height - 14
+    if salida.width > VW - 40:
+        k = (VW - 40) / salida.width
+        salida = salida.resize((int(salida.width * k), int(salida.height * k)), Image.Resampling.LANCZOS)
+    return salida
+
+
+def _cuadro_vertical(img: Image.Image, cx: float, titulo: Image.Image | None) -> Image.Image:
+    lienzo = _fondo_vertical(img)
+    rw, rh = V_RECORTE
+    x0 = int(min(max(cx * W - rw / 2, 0), W - rw))
+    ventana = img.resize((VW, int(VW * rh / rw)), Image.Resampling.BICUBIC, box=(x0, 0, x0 + rw, rh))
+    lienzo.paste(ventana, (0, V_Y))
+    if titulo is not None:
+        lienzo.paste(titulo, ((VW - titulo.width) // 2, max(40, (V_Y - titulo.height) // 2 + 10)), titulo)
+    return lienzo
+
+
+def _centro_x(c: dict, ef: dict, focos: dict, escenario: "Escenario", camara: tuple | None) -> float:
+    """Dónde está lo importante del cuadro (0..1 en x) para centrar la ventana vertical:
+    el foco del animal si Claude lo ubicó, si no el punto de la cámara, si no el medio."""
+    x = None
+    foco = focos.get(str(c.get("escena")))
+    ubic = escenario.ubicacion.get(c["id"])
+    if foco and ubic and foco.get("caja"):
+        a, _, b, _ = _caja_px(ubic, foco["caja"])
+        x = (a + b) / 2
+    elif ubic:
+        x = ubic[0] + ubic[2] / 2
+    if x is None:
+        return 0.5
+    if camara:
+        s, fx = camara
+        if s > 1.0005:
+            w = W / s
+            cam = min(max(fx * W, w / 2), W - w / 2)
+            x = (x - (cam - w / 2)) * s
+    return min(max(x / W, 0.0), 1.0)
+
+
 def _salida() -> tuple[int, int, int]:
     """Resolución y cuadros por segundo del archivo final (config/render.json); se dibuja
     siempre en 1920×1080 y FFmpeg escala al tamaño pedido."""
@@ -735,18 +804,23 @@ def _salida() -> tuple[int, int, int]:
 
 def renderizar(carpeta: CarpetaProyecto, ffmpeg: str, destino: Path | None = None, desde: float = 0.0,
                hasta: float | None = None, avisar=print, calidad: str = "normal",
-               salida: tuple[int, int, int] | None = None) -> Path:
+               salida: tuple[int, int, int] | None = None, vertical: bool = False) -> Path:
+    """vertical=True arma el short 9:16 (1080×1920): la escena de 1920×1080 se dibuja
+    igual y se toma una ventana 4:5 que sigue al animal, con fondo borroso, título fijo
+    arriba y subtítulos grandes."""
     global FPS
     ancho, alto, fps = salida or _salida()
+    if vertical:
+        ancho, alto = VW, VH
     anterior, FPS = FPS, fps
     try:
-        return _renderizar(carpeta, ffmpeg, destino, desde, hasta, avisar, calidad, ancho, alto)
+        return _renderizar(carpeta, ffmpeg, destino, desde, hasta, avisar, calidad, ancho, alto, vertical)
     finally:
         FPS = anterior
 
 
 def _renderizar(carpeta: CarpetaProyecto, ffmpeg: str, destino: Path | None, desde: float, hasta: float | None,
-                avisar, calidad: str, ancho: int, alto: int) -> Path:
+                avisar, calidad: str, ancho: int, alto: int, vertical: bool = False) -> Path:
     preset, crf, audio_kbps = CALIDADES.get(calidad, CALIDADES["normal"])
     raiz = carpeta.ruta
     edl = leer_json(raiz / "edl.json")
@@ -799,10 +873,15 @@ def _renderizar(carpeta: CarpetaProyecto, ffmpeg: str, destino: Path | None, des
     total = edl["duracion_total"] if hasta is None else min(hasta, edl["duracion_total"])
     n0, n1 = int(desde * FPS), int(total * FPS)
 
+    direccion = leer_json(raiz / "direccion.json") if (raiz / "direccion.json").exists() else {}
+    focos = direccion.get("focos") or {}
+    titulo_v = _titulo_vertical(direccion["short"]["titulo"]) if vertical and direccion.get("short") else None
+    cx_suave, clip_previo = 0.5, None
+    lado = (VW, VH) if vertical else (W, H)
     video_tmp = destino.with_suffix(".video.mp4")
-    proc = subprocess.Popen([ffmpeg, "-y", "-loglevel", "error", "-f", "rawvideo", "-pix_fmt", "rgb24", "-s", f"{W}x{H}",
-                             "-r", str(FPS), "-i", "-",
-                             *(["-vf", f"scale={ancho}:{alto}:flags=lanczos"] if (ancho, alto) != (W, H) else []),
+    proc = subprocess.Popen([ffmpeg, "-y", "-loglevel", "error", "-f", "rawvideo", "-pix_fmt", "rgb24",
+                             "-s", f"{lado[0]}x{lado[1]}", "-r", str(FPS), "-i", "-",
+                             *(["-vf", f"scale={ancho}:{alto}:flags=lanczos"] if (ancho, alto) != lado else []),
                              "-c:v", "libx264", "-preset", preset, "-crf", crf,
                              "-profile:v", "high", "-g", str(FPS * 2), "-bf", "2",
                              "-pix_fmt", "yuv420p", str(video_tmp)], stdin=subprocess.PIPE)
@@ -819,6 +898,7 @@ def _renderizar(carpeta: CarpetaProyecto, ffmpeg: str, destino: Path | None, des
         loc = tt - c["inicio"]
         dur = c["fin"] - c["inicio"]
         ef = {e["efecto"]: e for e in c["efectos"]}
+        camara = None
         # --- imagen base del clip
         if c["modo"] == "tira" and tira:
             e = ef["tira_deslizar_a_nivel"]
@@ -899,6 +979,7 @@ def _renderizar(carpeta: CarpetaProyecto, ffmpeg: str, destino: Path | None, des
                 a = ef["temblor_leve"].get("amplitud", 3)
                 dx, dy = temblor.uniform(-a, a), temblor.uniform(-a, a)
             img = _camara(base, s, foco, dx, dy)
+            camara = (s, foco[0])
         # --- transición y destellos
         if c["transicion_entrada"] == "fundido_corto" and loc < 0.25 and ultimo is not None:
             img = Image.blend(ultimo, img, _suave(loc / 0.25))
@@ -929,8 +1010,20 @@ def _renderizar(carpeta: CarpetaProyecto, ffmpeg: str, destino: Path | None, des
             img = _poner_etiqueta(img, ef["etiqueta"], tt, c["fin"])
         if "signos_pregunta" in ef and not en_reaccion:
             img = _signos_pregunta(img, ef["signos_pregunta"], tt, c["fin"])
+        if vertical:
+            if en_reaccion or c["modo"] == "tira" or camara is None:
+                objetivo = 0.5
+            else:
+                objetivo = _centro_x(c, ef, focos, escenario, camara)
+            if clip_previo != c["id"]:
+                cx_suave = objetivo                 # en el corte se salta directo
+            else:
+                cx_suave += (objetivo - cx_suave) * min(1.0, 4.0 / FPS)
+            clip_previo = c["id"]
+            horizontal = img                        # los fundidos mezclan cuadros de 1920×1080
+            img = _cuadro_vertical(img, cx_suave, titulo_v)
         # --- textos en pantalla
-        for t in textos:
+        for t in textos if not vertical else ():
             if t["inicio"] <= tt < t["fin"]:
                 k = ("T", t["texto"])
                 if k not in cache_txt:
@@ -951,10 +1044,24 @@ def _renderizar(carpeta: CarpetaProyecto, ffmpeg: str, destino: Path | None, des
                 if k not in cache_txt:
                     cache_txt[k] = _texto_img(sb["texto"], 66, 8)
                 si = cache_txt[k]
-                img.paste(si, ((W - si.width) // 2, H - 150 - si.height // 2), si)
+                if vertical:
+                    k = ("V", sb["texto"])
+                    if k not in cache_txt:
+                        sv = _texto_img(sb["texto"], 88, 11)
+                        if sv.width > VW - 60:
+                            f = (VW - 60) / sv.width
+                            sv = sv.resize((int(sv.width * f), int(sv.height * f)), Image.Resampling.LANCZOS)
+                        cache_txt[k] = sv
+                    sv = cache_txt[k]
+                    pop = 1.0 + 0.12 * max(0.0, 1 - (tt - sb["inicio"]) / 0.12)     # entra con un pequeño pop
+                    if pop > 1.001:
+                        sv = sv.resize((int(sv.width * pop), int(sv.height * pop)), Image.Resampling.BILINEAR)
+                    img.paste(sv, ((VW - sv.width) // 2, V_SUB_Y - sv.height // 2), sv)
+                else:
+                    img.paste(si, ((W - si.width) // 2, H - 150 - si.height // 2), si)
                 break
         proc.stdin.write(img.tobytes())
-        ultimo = img
+        ultimo = horizontal if vertical else img
         if n % (FPS * 30) == 0:
             avisar(f"  render {tt / 60:.1f} / {total / 60:.1f} min")
     lector.cerrar()
