@@ -36,11 +36,14 @@ def _fuente(tam: int, fuerte: bool = False):
         return ImageFont.load_default()
 
 
-def _recorte(ruta: Path) -> Image.Image:
+def _recorte(ruta: Path, encerrados: bool = True) -> Image.Image:
     """Recorte limpio: además del fondo que toca los bordes, quita los huecos del mismo gris
     que quedan encerrados (entre patas y antenas), que el recorte normal no alcanza."""
     original = Image.open(ruta).convert("RGB")
     img = quitar_fondo_liso(original)
+    if not encerrados:          # fondo blanco: no se tocan los blancos de adentro (rayas, alas)
+        caja = img.getbbox()
+        return img.crop(caja) if caja else img
     arr = np.asarray(img).copy()
     rgb = np.asarray(original, np.int16)
     esquinas = np.array([rgb[2, 2], rgb[2, -3], rgb[-3, 2], rgb[-3, -3]]).mean(axis=0)
@@ -148,6 +151,62 @@ def textos_para(titulo: str, villano: str, ejecutar=claude_cli.ejecutar, carpeta
     return (textos + ["NO TE LE ACERQUES", "TE PICA DORMIDO", "EL MÁS PELIGROSO"])[:3]
 
 
+def _nivel_de_peligro(n: dict, niveles: list[dict]) -> str:
+    numeros = sorted(x["numero"] for x in niveles)
+    if n.get("villano"):
+        return "villano"
+    if n["numero"] == numeros[0]:
+        return "inofensivo"
+    return "peligroso" if n["numero"] >= numeros[-3] else "neutral"
+
+
+def ilustrar(carpeta: Path, permiso: bool = False, avisar=print) -> list[Path]:
+    """Ilustra cada animal para la miniatura, exagerado según su peligro (se paga una vez por
+    video, ~6 imágenes). Las ya hechas no se vuelven a pagar."""
+    from .config import ConfigCostos, leer_config
+    from .costos import LibroCostos
+    from .imagenes.proveedores import crear_proveedor
+
+    esc = leer_json(carpeta / "escenas.json")
+    estilo = cargar_estilo(leer_json(carpeta / "proyecto.json")["estilo"])
+    plantilla = estilo.plantillas_assets.get("miniatura")
+    if not plantilla:
+        raise ValueError("el estilo no tiene plantilla de miniatura (plantillas_assets.miniatura)")
+    sujetos = {a["id"]: a.get("prompt") or a.get("nombre") for a in esc["assets"]}
+    config = ConfigCostos.cargar()
+    proveedor = crear_proveedor(config, leer_config("proveedores.json")["imagenes"])
+    libro = LibroCostos(carpeta, config)
+    destino = carpeta / "assets" / "miniatura"
+    destino.mkdir(parents=True, exist_ok=True)
+    hechas = []
+    for n in esc["niveles"]:
+        archivo = destino / f"nivel_{n['numero']}.png"
+        if archivo.exists():
+            hechas.append(archivo)
+            continue
+        expresion = estilo.miniatura_expresiones.get(_nivel_de_peligro(n, esc["niveles"]), "")
+        prompt = plantilla.format(descripcion=f"{sujetos.get(n['asset'], n['nombre'])}. {expresion}")
+        libro.autorizar(proveedor.estimar_usd(prompt, []), permiso=permiso)
+        avisar(f"Ilustrando «{n['nombre']}» para la miniatura…")
+        from .imagenes.proveedores import ErrorProveedor
+
+        for intento in range(3):
+            try:
+                r = proveedor.generar(prompt, [])
+                break
+            except ErrorProveedor as ex:
+                if not ex.reintentable or intento == 2:
+                    raise
+                import time
+
+                time.sleep(4 * (intento + 1))
+        libro.registrar(modulo="miniatura", proveedor=r.proveedor, modelo=r.modelo, unidades=r.uso.unidades(),
+                        costo_usd=r.uso.costo_usd, detalle=f"miniatura nivel {n['numero']}")
+        archivo.write_bytes(r.png)
+        hechas.append(archivo)
+    return hechas
+
+
 def _advertencia(tam: int) -> Image.Image:
     im = Image.new("RGBA", (tam, tam), (0, 0, 0, 0))
     d = ImageDraw.Draw(im)
@@ -186,11 +245,13 @@ def cuadricula(carpeta: Path, frase: str, advertencia: bool = True) -> Image.Ima
     cols, cw, ch = 3, W / 3, H / 2
     for k, n in enumerate(niveles):
         cx, cy = (k % cols) * cw, (k // cols) * ch
-        ruta = carpeta / por_asset[n["asset"]]["archivo"]
+        ilustrada = carpeta / "assets" / "miniatura" / f"nivel_{n['numero']}.png"
+        ruta = ilustrada if ilustrada.exists() else carpeta / por_asset[n["asset"]]["archivo"]
         villano = bool(n.get("villano"))
         if ruta.exists():
             escala = 1.18 if villano else 1.0
-            bicho = _encajar(_recorte(ruta), int(cw * 0.98 * escala), int(ch * 0.80 * escala))
+            recorte = _recorte(ruta, encerrados=not ilustrada.exists())
+            bicho = _encajar(recorte, int(cw * 0.98 * escala), int(ch * 0.80 * escala))
             if villano:
                 bicho = _brillo(bicho, (255, 70, 70), 28, 1.6)          # brillo rojo suave, no mancha
             bx = int(cx + cw / 2 - bicho.width / 2)

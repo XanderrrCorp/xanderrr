@@ -164,6 +164,8 @@ class Estilo(Modelo):
     poses_canal: list["PoseCanal"] = []
     # Presentador realista (persona INVENTADA) para reacciones cortas en giro, revelación y humor
     presentador: "Presentador | None" = None
+    # miniaturas: cuánto se exagera cada animal según su peligro (villano, peligroso, neutral, inofensivo)
+    miniatura_expresiones: dict[str, str] = {}
 
     @model_validator(mode="before")
     @classmethod

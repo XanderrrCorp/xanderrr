@@ -2,7 +2,6 @@
   "id": "enciclopedia_mascota",
   "nombre": "Enciclopedia + mascota",
   "descripcion": "Cartoon 2D con mascota fija (cabeza blanca redonda, sombrero de paja, camisa roja a cuadros), animales semi-realistas muy detallados, diagramas a lápiz de color sobre blanco, escenas mixtas y amenazas cinematográficas con niebla azul. Recortes y recuadros sobre papel arrugado.",
-  "miniatura": "estilos/enciclopedia_mascota/preview.png",
   "con_personaje": true,
   "bloque_estilo": "Clean 2D cartoon illustration, thick clean black outlines, flat colors with soft subtle shading, highly detailed background.",
   "personaje_por_defecto": "a cartoon man with a round smooth white head, big expressive eyes, straw hat, open red plaid short-sleeve shirt over a white t-shirt, khaki cargo pants and green rubber boots",
@@ -86,7 +85,8 @@
     "personaje": "2D cartoon character, full body, front view, standing relaxed with arms at his sides, neutral friendly expression, thick clean black outlines, flat soft cel shading, simple and expressive design. {personaje}. {descripcion}. Isolated on a flat solid medium-gray background (#808080), no shadow on the floor, no other objects, no text, no letters.",
     "_defecto": "Semi-realistic digital illustration, highly detailed, fine black ink outlines, rich painterly shading with visible texture on every plate of the exoskeleton, glossy highlights, natural anatomical proportions, crisp and sharp. {descripcion}. Isolated on a flat solid medium-gray background (#808080), no shadow on the floor, no other objects, no text, no letters. Aspect ratio 16:9.",
     "pose": "2D cartoon character, full body, thick clean black outlines, flat soft cel shading, simple and expressive design. The same character as the reference image: {personaje}. {descripcion}. Isolated on a flat solid medium-gray background (#808080), no shadow on the floor, no other objects, no text, no letters.",
-    "presentador": "Photorealistic 16:9 video frame from a nature YouTube channel, medium shot from the waist up, eye-level camera, shallow depth of field, soft warm natural window light, natural skin texture, shot on a cinema camera. {persona}. {descripcion}. Setting: {escenario}. He is an invented person who does not resemble any real or famous person. No subtitles, no text, no letters anywhere."
+    "presentador": "Photorealistic 16:9 video frame from a nature YouTube channel, medium shot from the waist up, eye-level camera, shallow depth of field, soft warm natural window light, natural skin texture, shot on a cinema camera. {persona}. {descripcion}. Setting: {escenario}. He is an invented person who does not resemble any real or famous person. No subtitles, no text, no letters anywhere.",
+    "miniatura": "Semi-realistic digital illustration for a YouTube thumbnail, bold clean black ink outlines, rich painted shading, vivid saturated colors, glossy highlights, highly detailed, the animal drawn big, exaggerated and dramatic, three-quarter front view facing the viewer, whole body visible and centered. {descripcion}. Isolated on a pure white background (#FFFFFF), no ground, no shadow, no other objects, no text, no letters."
   },
   "_fuente": "Plantillas extraídas del proyecto real de alacranes (escenas.json, 215 prompts): inicio y final comunes por tipo; {descripcion} es lo que cambia en cada escena.",
   "tira_niveles": {
@@ -228,5 +228,11 @@
       "sorpresa": "piano_miedo",
       "risa": "comico"
     }
+  },
+  "miniatura_expresiones": {
+    "villano": "Menacing and terrifying: glowing red eyes, exaggerated sharp mouthparts or fangs, aggressive attacking pose, slightly sickly dark tones",
+    "peligroso": "Threatening and intense: fierce eyes, visible sharp mouthparts, tense ready-to-attack pose",
+    "neutral": "Unsettling and alert: big detailed eyes, slightly creepy expression",
+    "inofensivo": "Harmless and calm, almost cute: soft round eyes, relaxed pose"
   }
 }
