@@ -15,6 +15,10 @@ _SESION = None
 
 def _rembg(img: Image.Image) -> Image.Image | None:
     global _SESION
+    import os
+
+    if os.environ.get("XANDART_SIN_REMBG"):
+        return None
     try:
         from rembg import new_session, remove
     except Exception:  # noqa: BLE001

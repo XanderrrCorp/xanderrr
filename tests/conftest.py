@@ -22,3 +22,4 @@ def perfil(estilo):
 @pytest.fixture(autouse=True)
 def proyectos_temporales(tmp_path, monkeypatch):
     monkeypatch.setenv("ESTUDIO_PROYECTOS", str(tmp_path / "proyectos"))
+    monkeypatch.setenv("XANDART_SIN_REMBG", "1")      # las pruebas no bajan el modelo de rembg (170 MB)

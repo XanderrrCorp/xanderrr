@@ -43,13 +43,8 @@ def _fuente(t: TiraNiveles) -> ImageFont.FreeTypeFont | ImageFont.ImageFont:
 
 def quitar_fondo_liso(img: Image.Image, tolerancia: int = 38) -> Image.Image:
     """Recorte para sujetos generados sobre fondo liso (gris #808080 o blanco):
-    se inunda desde los bordes el color del fondo. Si `rembg` está instalado se
-    usa ese, que es mejor con bordes difíciles."""
-    try:
-        from rembg import remove  # opcional
-        return remove(img.convert("RGBA"))
-    except Exception:  # noqa: BLE001 — sin rembg, o sin su modelo (se baja la primera vez): recorte simple
-        pass
+    se inunda desde los bordes el color del fondo. (rembg se usa solo en las
+    miniaturas: en el video sería lento, cientos de recortes por render.)"""
     base = img.convert("RGB")
     marca = (255, 0, 255)
     trabajo = base.copy()
