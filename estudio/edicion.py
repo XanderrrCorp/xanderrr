@@ -482,8 +482,20 @@ def construir_edl(carpeta: CarpetaProyecto) -> dict:
             elif isinstance(v.reusar_de, str):
                 archivo, tipo = assets[v.reusar_de].archivo, assets[v.reusar_de].tipo
             else:
+                # se sigue la cadena: una escena puede reusar a otra que a su vez reusa una imagen
                 fuente = por_id[int(v.reusar_de)]
-                archivo, tipo = fuente.visual.archivo, fuente.visual.tipo
+                vistas = set()
+                while fuente.visual.accion == "reusar" and fuente.id not in vistas:
+                    vistas.add(fuente.id)
+                    ref = fuente.visual.reusar_de
+                    if isinstance(ref, str):
+                        break
+                    fuente = por_id[int(ref)]
+                ref = fuente.visual.reusar_de if fuente.visual.accion == "reusar" else None
+                if isinstance(ref, str) and ref in assets:
+                    archivo, tipo = assets[ref].archivo, assets[ref].tipo
+                else:
+                    archivo, tipo = fuente.visual.archivo, fuente.visual.tipo
                 razon = f"Reuso de la imagen de la escena {fuente.id} (referencia a lo ya visto, 14.8)"
         elif v.accion == "componer":
             modo, archivo = "tira", "assets/tira/tira_niveles_pixelada.png"

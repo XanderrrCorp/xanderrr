@@ -141,3 +141,18 @@ def test_ids_del_catalogo_tolerantes():
     assert _id_catalogo("012", ids) == "img012" and _id_catalogo("12", ids) == "img012"
     assert _id_catalogo(" img3 ", ids) == "img003"
     assert _id_catalogo("999", ids) is None
+
+
+def test_niveles_fijos_se_verifican_y_la_revelacion_no_se_pierde(estilo):
+    from estudio.guionista import _niveles_coinciden
+
+    datos = _datos()
+    historia = leer_historia(_historia_texto(datos))
+    _niveles_coinciden(historia, NIVELES)                                   # coincide: no falla
+    otros = [dict(n, nombre="Tarántula") if n["numero"] == 2 else n for n in NIVELES]
+    with pytest.raises(ValueError):
+        _niveles_coinciden(historia, otros)
+    for e in datos["escenas"]:
+        e.pop("revelacion_villano", None)                                  # nadie marcó la revelación
+    _, direccion, _ = a_escenas(datos, estilo, "canal")
+    assert direccion["villano_revelacion"] == 10                           # la escena tras «Nivel 4»

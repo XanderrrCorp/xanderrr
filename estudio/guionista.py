@@ -36,8 +36,14 @@ class Encargo:
     notas: str = ""
 
 
-def instruccion(encargo: Encargo, estilo: Estilo) -> str:
+def instruccion(encargo: Encargo, estilo: Estilo, niveles_fijos: list[dict] | None = None) -> str:
     palabras = int(encargo.minutos * 60 * PALABRAS_POR_SEGUNDO)
+    fijos = ""
+    if niveles_fijos:
+        lista = "\n".join(f"  {n['numero']}. {n['nombre']}{' (VILLANO, último)' if n.get('villano') else ''}"
+                          for n in sorted(niveles_fijos, key=lambda x: x["numero"]))
+        fijos = ("\nNIVELES OBLIGATORIOS (usa EXACTAMENTE estos animales, con estos nombres y en este orden; "
+                 f"ni uno más ni uno menos):\n{lista}\n")
     return f"""Eres el guionista y director visual de un canal de YouTube en español latino (México y
 Colombia) de formato escala: «del más inofensivo al más peligroso». Escribe el guion COMPLETO
 de un video y divídelo en escenas.
@@ -45,7 +51,7 @@ de un video y divídelo en escenas.
 == ENCARGO ==
 Tema: {encargo.tema}
 Giro: {encargo.giro or "(propón uno fuerte y verdadero)"}
-Villano (el más peligroso, último nivel): {encargo.villano or "(elige el más peligroso y verdadero)"}
+Villano (el más peligroso, último nivel): {encargo.villano or "(elige el más peligroso y verdadero)"}{fijos}
 Duración: unos {encargo.minutos:g} minutos de voz = entre {int(palabras * 0.93)} y {int(palabras * 1.07)} palabras en total.
 {("Notas del dueño: " + encargo.notas) if encargo.notas else ""}
 
@@ -134,6 +140,20 @@ def leer_historia(texto: str) -> dict:
     if not titulo or len(niveles) < 4 or len(niveles) > 8 or len(secciones) < 3:
         raise ValueError(f"historia incompleta: título={bool(titulo)}, niveles={len(niveles)}, secciones={len(secciones)}")
     return {"titulo": titulo, "niveles": niveles, "secciones": secciones}
+
+
+def _niveles_coinciden(historia: dict, fijos: list[dict]) -> None:
+    """Con niveles fijos, la historia debe tener una sección por cada uno, con su nombre."""
+    import unicodedata
+
+    def norm(t):
+        return "".join(c for c in unicodedata.normalize("NFD", t.lower()) if not unicodedata.combining(c))
+
+    nombres = [norm(n) for n, _ in historia["secciones"]]
+    faltan = [n["nombre"] for n in fijos
+              if not any(x.startswith(f"nivel {n['numero']}") and norm(n["nombre"]).split()[0] in x for x in nombres)]
+    if faltan or len([x for x in nombres if x.startswith("nivel ")]) != len(fijos):
+        raise ValueError(f"los niveles no son los pedidos (faltan o sobran): {', '.join(faltan) or 'hay niveles de más'}")
 
 
 def instruccion_detalles(historia: dict, k: int, estilo: Estilo, catalogo: list[dict] | None = None) -> str:
@@ -333,6 +353,14 @@ def a_escenas(datos: dict, estilo: Estilo, canal: str) -> tuple[dict, dict, str]
             md.append(f"\n## {e['seccion']}\n\n")
             seccion = e["seccion"]
         md.append(e["narracion"] + " ")
+    if "villano_revelacion" not in direccion:
+        villano = next((n for n in niveles if n["villano"]), None)
+        if villano:
+            entrada = next((e for e in escenas if e["visual"].get("reusar_de") == villano["asset"]), None)
+            siguiente = next((e for e in escenas if entrada and e["id"] > entrada["id"]
+                              and e["seccion"] == entrada["seccion"]), None)
+            if siguiente:
+                direccion["villano_revelacion"] = siguiente["id"]
     return doc, direccion, "".join(md).rstrip() + "\n"
 
 
@@ -344,7 +372,7 @@ def escribir_guion(encargo: Encargo, estilo: Estilo, carpeta: Path, canal: str,
     2) por sección, y varias a la vez, la intención, la imagen y los textos de cada escena."""
     from concurrent.futures import ThreadPoolExecutor
 
-    prompt = instruccion(encargo, estilo)
+    prompt = instruccion(encargo, estilo, niveles_fijos)
     error = ""
     borrador = carpeta / "_borrador_guion"
     borrador.mkdir(parents=True, exist_ok=True)
@@ -361,6 +389,8 @@ def escribir_guion(encargo: Encargo, estilo: Estilo, carpeta: Path, canal: str,
                                          "Devuelve la historia completa en el formato pedido.", cwd=carpeta)
         try:
             historia = leer_historia(texto)
+            if niveles_fijos:
+                _niveles_coinciden(historia, niveles_fijos)
             break
         except ValueError as ex:
             error = str(ex)[:300]
@@ -385,6 +415,7 @@ def escribir_guion(encargo: Encargo, estilo: Estilo, carpeta: Path, canal: str,
         try:
             ajustada = leer_historia(texto2)
             if niveles_fijos:
+                _niveles_coinciden(ajustada, niveles_fijos)
                 ajustada["niveles"] = niveles_fijos
             nuevas = sum(len(x.split()) for _, ls in ajustada["secciones"] for x in ls)
             if abs(nuevas - objetivo) < abs(palabras - objetivo):
