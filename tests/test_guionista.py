@@ -131,3 +131,13 @@ def test_cli_quita_variables_de_pago_y_detecta_cupo(monkeypatch):
 
 def test_extraer_json_con_vallas():
     assert claude_cli.extraer_json('```json\n{"a": "b}"}\n```') == {"a": "b}"}
+
+
+def test_ids_del_catalogo_tolerantes():
+    from estudio.guionista import _id_catalogo
+
+    ids = {"img012", "img003"}
+    assert _id_catalogo("img012", ids) == "img012"
+    assert _id_catalogo("012", ids) == "img012" and _id_catalogo("12", ids) == "img012"
+    assert _id_catalogo(" img3 ", ids) == "img003"
+    assert _id_catalogo("999", ids) is None
