@@ -85,6 +85,35 @@ def _sfx(lista: list, tipo: str, inicio: float, clip: int, razon: str, termina_e
                   "prioridad": PRIORIDAD.get(tipo, 1), "termina_en": termina_en})
 
 
+PERFIL_SHORT = "perfiles/short_vertical.json"
+# en el short casi cada corte suena: el tipo sale de la intención de la frase
+SONIDO_DE_CORTE = {
+    "gancho": ("golpe_grave", "stinger_terror"), "revelacion": ("golpe_grave", "stinger_terror"),
+    "giro": ("stinger_terror", "golpe_grave"), "dato_impactante": ("golpe_grave", "pop"),
+    "amenaza": ("zumbido", "subida_tension"), "tension_creciente": ("subida_tension", "latido"),
+    "advertencia": ("alerta", "zumbido"), "pregunta_al_espectador": ("comico", "pop"),
+    "humor": ("comico", "pop"), "cierre": ("piano_miedo", "golpe_grave"),
+}
+
+
+def _sonido_en_cada_corte(sfx: list, escenas: list, clips: list, rng: random.Random) -> None:
+    """Shorts: a cada escena que quedó muda se le pone un sonido en el corte, alternando
+    para que nunca suene el mismo tipo dos cortes seguidos."""
+    con_sonido = {x["clip"] for x in sfx}
+    previo = None
+    for idx, (e, c) in enumerate(zip(escenas, clips)):
+        tipos_aqui = {x["tipo"] for x in sfx if x["clip"] == idx}
+        if idx in con_sonido:
+            previo = next(iter(tipos_aqui))
+            continue
+        opciones = list(SONIDO_DE_CORTE.get(e.intencion, ("barrido", "pop")))
+        opciones += ["barrido", "pop"]
+        tipo = next((t for t in opciones if t != previo), "barrido")
+        _sfx(sfx, tipo, c["inicio"] + rng.uniform(0.0, 0.08), idx,
+             f"Short: sonido en el corte ({tipo}) para que el ritmo no se caiga")
+        previo = tipo
+
+
 def _recortar_sonidos(sfx: list, n_clips: int, total: float, perfil, rng: random.Random) -> list:
     """Sonido con intención, no en cada corte (14.7, 14.10):
     - nunca el mismo tipo en dos escenas seguidas
@@ -425,8 +454,9 @@ def construir_edl(carpeta: CarpetaProyecto) -> dict:
 
     estilo: Estilo = cargar_estilo(proyecto.estilo)
     gram = cargar_gramatica(estilo)["reglas"]
-    perfil = cargar_perfil_edicion(estilo)
     esc: EscenasV2 = carpeta.cargar_escenas()
+    vertical = esc.relacion_aspecto == "9:16"
+    perfil = cargar_perfil_edicion(estilo, PERFIL_SHORT if vertical else None)
     direccion = leer_json(carpeta.ruta / "direccion.json") if (carpeta.ruta / "direccion.json").exists() else {}
     focos = direccion.get("focos") or {}
     rng = random.Random(proyecto.semilla)
@@ -730,6 +760,8 @@ def construir_edl(carpeta: CarpetaProyecto) -> dict:
             carpeta.guardar(p)
     musica = _musica(escenas, clips, revelacion, total, rng)
     _equilibrar_movimientos(clips, perfil, rng, estilo.movimiento_maximo)
+    if vertical:
+        _sonido_en_cada_corte(sfx, escenas, clips, rng)
     vivos = _recortar_sonidos(sfx, len(clips), total, perfil, rng)
     pistas_sfx = _pistas_sfx(vivos, rng)
     edl = {"version": 1, "duracion_total": total,

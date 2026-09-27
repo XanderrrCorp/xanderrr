@@ -57,11 +57,13 @@ def instruccion(nivel: dict, escenas: list[dict], titulo_largo: str) -> str:
         "- Cada escena reutiliza la imagen de UNA escena del tramo (campo «fuente»): elige la que muestra lo que "
         "dice la frase y no repitas la misma imagen en escenas seguidas.\n"
         f"- «intencion» es una de: {', '.join(INTENCIONES)}.\n"
+        "- «palabra_clave» es UNA palabra de la frase, escrita igual, que sale en pantalla como etiqueta "
+        "(ej.: «anestésico», «corazón»).\n"
         "- «titulo» es el texto fijo arriba del short: 2 a 6 palabras, en mayúsculas, que den ganas de verlo "
         "hasta el final (no repitas el gancho palabra por palabra).\n"
         "Responde SOLO un JSON así: "
         '{"titulo": "<texto de arriba>", "titulo_youtube": "<título para subirlo, con #shorts>", '
-        '"escenas": [{"fuente": <número de escena del tramo>, "narracion": "<frase>", "intencion": "<intención>"}]}'
+        '"escenas": [{"fuente": <número de escena del tramo>, "narracion": "<frase>", "intencion": "<intención>", "palabra_clave": "<la palabra más fuerte de la frase, tal cual>"}]}'
     )
 
 
@@ -115,7 +117,8 @@ def crear_short(largo: Path, base: Path, nivel: int | None = None, ejecutar=clau
                   "narracion": str(f["narracion"]).strip(), "intencion": intencion, "efectos_sugeridos": [],
                   "pausa_despues_seg": 0.0, "notas_edicion": f"imagen de la escena {fuente['id']} del video largo",
                   "tiempo": {}})
-        e["palabra_clave"] = None
+        clave = str(f.get("palabra_clave") or fuente.get("palabra_clave") or "").strip()
+        e["palabra_clave"] = clave if clave and clave.lower() in e["narracion"].lower() else None
         e["visual"] = _resolver_visual(fuente, {x["id"]: x for x in datos["escenas"]})
         foco = focos_largo.get(str(fuente["id"]))
         if foco:

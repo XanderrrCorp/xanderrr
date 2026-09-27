@@ -1,0 +1,18 @@
+{
+  "fuente": [],
+  "segundos_promedio_por_imagen": 2.4,
+  "interrupcion_de_patron_cada_seg": 2.2,
+  "efectos_por_minuto": 22,
+  "sfx_por_minuto": 32,
+  "cambios_de_musica": "por_seccion",
+  "texto_en_pantalla_por_minuto": 6,
+  "densidad_primeros_30s": "alta",
+  "variacion_minima_duracion": 0.3,
+  "respiros_max_por_minuto": 0,
+  "uso_maximo_por_recurso": 0.5,
+  "recursos_exentos_de_uso_maximo": [
+    "corte"
+  ],
+  "variacion_referencia": {},
+  "notas": "Shorts verticales: ritmo mucho más alto que el video largo. Sonido en casi cada corte (barrido, pop, golpe o tensión según la intención), algo nuevo en pantalla cada ~2 s, sin respiros y etiquetas con la palabra clave. Pedido del dueño tras el primer short: «más efectos de sonido que no se vea tan plano»."
+}
