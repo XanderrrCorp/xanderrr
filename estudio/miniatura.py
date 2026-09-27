@@ -221,7 +221,8 @@ def _advertencia(tam: int) -> Image.Image:
     return im
 
 
-def _letrero(d: ImageDraw.ImageDraw, texto: str, centro: tuple[float, float], ancho_max: int, villano: bool) -> None:
+def _letrero(d: ImageDraw.ImageDraw, texto: str, centro: tuple[float, float], ancho_max: int, villano: bool,
+             celda: tuple[float, float] | None = None) -> None:
     for tam in range(62 if villano else 50, 20, -2):
         f = _fuente(tam, fuerte=villano)
         borde = 5 if villano else 0
@@ -229,7 +230,8 @@ def _letrero(d: ImageDraw.ImageDraw, texto: str, centro: tuple[float, float], an
         if caja[2] - caja[0] <= min(ancho_max, W - 28):
             break
     ancho = caja[2] - caja[0]
-    x = min(max(14, centro[0] - ancho / 2), W - 14 - ancho) - caja[0]      # nunca se corta en el borde
+    izq, der = celda if celda else (14, W - 14)
+    x = min(max(izq, centro[0] - ancho / 2), der - ancho) - caja[0]        # dentro de su casilla
     y = centro[1] - (caja[3] - caja[1]) / 2 - caja[1]
     d.text((x, y), texto, font=f, fill=(226, 20, 20) if villano else NEGRO, stroke_width=borde,
            stroke_fill=(255, 255, 255))
@@ -261,7 +263,8 @@ def cuadricula(carpeta: Path, frase: str, advertencia: bool = True) -> Image.Ima
                 icono = _advertencia(92)
                 lienzo.alpha_composite(icono, (int(min(cx + cw - 100, bx + bicho.width - 60)), int(max(8, by + 6))))
         etiqueta = ("¡" + frase.upper().strip("¡!¿? ") + "!") if villano else n["nombre"]
-        _letrero(d, etiqueta, (cx + cw / 2, cy + ch * 0.88), int(cw * (1.02 if villano else 0.94)), villano)
+        _letrero(d, etiqueta, (cx + cw / 2, cy + ch * 0.88), int(cw * 0.94), villano,
+                 celda=(max(14, cx + 8), min(W - 14, cx + cw - 8)))
     return lienzo
 
 
