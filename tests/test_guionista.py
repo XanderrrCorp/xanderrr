@@ -156,3 +156,15 @@ def test_niveles_fijos_se_verifican_y_la_revelacion_no_se_pierde(estilo):
         e.pop("revelacion_villano", None)                                  # nadie marcó la revelación
     _, direccion, _ = a_escenas(datos, estilo, "canal")
     assert direccion["villano_revelacion"] == 10                           # la escena tras «Nivel 4»
+
+
+def test_la_voz_nunca_dice_que_el_villano_esta_pixelado():
+    from estudio.guionista import leer_historia
+
+    niveles = "\n".join(f"NIVEL: {k} | Bicho {k} | a bug | {'si' if k == 4 else 'no'}" for k in range(1, 5))
+    texto = (f"TITULO: Prueba\n{niveles}\nSECCION: Gancho\nY el último no te lo esperas.\n"
+             "Se ve pixelado, porque todavía no te lo voy a enseñar.\nHay algo de él que no sabes.\n"
+             "SECCION: Nivel 1 · Bicho 1\nEmpezamos con el bicho uno.\nSECCION: Cierre\nAhora ya lo sabes.\n")
+    historia = leer_historia(texto)
+    gancho = historia["secciones"][0][1]
+    assert gancho == ["Y el último no te lo esperas.", "Hay algo de él que no sabes."]

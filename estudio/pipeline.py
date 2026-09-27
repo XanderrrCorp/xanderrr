@@ -404,7 +404,8 @@ def resumen(c: CarpetaProyecto) -> dict:
                 img = ref["archivo"] if ref else None
             elif e.visual.accion == "reusar" and isinstance(e.visual.reusar_de, str):
                 n = next((x for x in esc.niveles if x.asset == e.visual.reusar_de), None)
-                img = f"assets/tira/tarjeta_{n.numero}{'_pixelada' if n and n.villano else ''}.png" if n else None
+                oculto = n and n.villano and cargar_estilo(p.estilo).ocultar_villano
+                img = f"assets/tira/tarjeta_{n.numero}{'_pixelada' if oculto else ''}.png" if n else None
             datos["escenas"].append({"id": e.id, "seccion": e.seccion, "narracion": e.narracion,
                                      "accion": e.visual.accion, "imagen": img,
                                      "puede_regenerar": e.visual.accion == "generar",

@@ -161,6 +161,9 @@ class Estilo(Modelo):
     # Cómo dibuja el motor cada modo de montaje del estilo (sección 6).
     comportamiento_montaje: dict[str, Literal["recorte", "recuadro", "pantalla_completa"]] = {}
     # Poses del personaje del canal: se generan UNA vez y todos los videos las reutilizan
+    # True: el villano va pixelado en pantalla hasta su revelación. Es solo visual: la voz nunca
+    # dice que está pixelado (al dueño no le gustó oírlo en el guion)
+    ocultar_villano: bool = True
     poses_canal: list["PoseCanal"] = []
     # Presentador realista (persona INVENTADA) para reacciones cortas en giro, revelación y humor
     presentador: "Presentador | None" = None

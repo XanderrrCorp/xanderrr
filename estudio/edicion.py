@@ -503,13 +503,13 @@ def construir_edl(carpeta: CarpetaProyecto) -> dict:
                 n = nivel_de_asset[v.reusar_de]
                 modo, archivo = "tira", "assets/tira/tira_niveles.png"
                 efectos.append({"efecto": "tira_deslizar_a_nivel", "desde": max(1, nivel_actual or 1),
-                                "hasta": n.numero, "villano_pixelado": True,
+                                "hasta": n.numero, "villano_pixelado": estilo.ocultar_villano,
                                 "temblor": bool(n.villano)})
                 nivel_actual = n.numero
                 razon = f"Transición al nivel {n.numero}: la tira se desliza y se detiene en su tarjeta"
                 _sfx(sfx, "barrido", ini + 0.02, idx, "Barrido que acompaña el deslizamiento de la tira")
                 if n.villano:
-                    razon += "; el villano sigue pixelado y tiembla antes de la revelación"
+                    razon += "; la tarjeta del villano tiembla antes de la revelación"
                     _sfx(sfx, "zumbido", ini + 0.8, idx, "Zumbido grave: el último nivel es el peligroso")
             elif isinstance(v.reusar_de, str):
                 archivo, tipo = assets[v.reusar_de].archivo, assets[v.reusar_de].tipo
@@ -530,9 +530,10 @@ def construir_edl(carpeta: CarpetaProyecto) -> dict:
                     archivo, tipo = fuente.visual.archivo, fuente.visual.tipo
                 razon = f"Reuso de la imagen de la escena {fuente.id} (referencia a lo ya visto, 14.8)"
         elif v.accion == "componer":
-            modo, archivo = "tira", "assets/tira/tira_niveles_pixelada.png"
-            efectos.append({"efecto": "tira_deslizar_a_nivel", "pasar": True, "villano_pixelado": True})
-            razon = "Presentación de los niveles: la tira completa pasa con el villano pixelado"
+            oculto = estilo.ocultar_villano
+            modo, archivo = "tira", f"assets/tira/tira_niveles{'_pixelada' if oculto else ''}.png"
+            efectos.append({"efecto": "tira_deslizar_a_nivel", "pasar": True, "villano_pixelado": oculto})
+            razon = "Presentación de los niveles: la tira completa pasa" + (" con el villano pixelado" if oculto else "")
             _sfx(sfx, "barrido", ini + 0.05, idx, "Barrido de la tira completa")
         if modo is None:
             t_estilo = estilo.tipo(tipo) if tipo in estilo.ids_tipos else None
@@ -546,16 +547,18 @@ def construir_edl(carpeta: CarpetaProyecto) -> dict:
                 _sfx(sfx, "barrido", ini, idx, f"Barrido de cambio de sección: empieza «{e.seccion}»")
         # --- villano pixelado antes de su revelación (15.4)
         zonas = (direccion.get("pixelar") or {}).get(str(e.id))
-        if zonas and (revelacion is None or e.id < revelacion):
+        if zonas and estilo.ocultar_villano and (revelacion is None or e.id < revelacion):
             efectos.append({"efecto": "pixelar", "zonas": zonas, "bloque": 26})
             razon = (razon + "; " if razon else "") + "El villano va pixelado hasta su revelación"
         if revelacion and e.id == revelacion and villano:
-            efectos.append({"efecto": "revelar_pixelado", "duracion": 1.3, "nivel": villano.numero})
+            if estilo.ocultar_villano:
+                efectos.append({"efecto": "revelar_pixelado", "duracion": 1.3, "nivel": villano.numero})
             efectos.append({"efecto": "destello_rojo", "en": ini + 0.55})
             _sfx(sfx, "golpe_grave", ini + 0.55, idx, "Golpe grave de la revelación, justo tras el silencio")
             _sfx(sfx, "subida_tension", ini - 1.6, idx - 1, "Subida de tensión que termina en la revelación",
                  termina_en=ini + 0.55)
-            razon = "Revelación del villano: se despixela en la tira con destello rojo y golpe grave tras un silencio"
+            razon = ("Revelación del villano: " + ("se despixela en la tira con " if estilo.ocultar_villano else "")
+                     + "destello rojo y golpe grave tras un silencio")
         # --- movimiento (14.4)
         regla = gram.get(e.intencion, {})
         mov_nombre = regla.get("movimiento")

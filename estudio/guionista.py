@@ -56,43 +56,60 @@ Duración: unos {encargo.minutos:g} minutos de voz = entre {int(palabras * 0.93)
 {("Notas del dueño: " + encargo.notas) if encargo.notas else ""}
 
 == ESTRUCTURA (técnicas que retienen; escribe todo con palabras propias) ==
+El video es UNA historia contada por alguien que le habla de tú al espectador, como un amigo que
+le cuenta algo increíble, no una enciclopedia que lista datos. Toda la escala se mide con UN solo
+eje que se repite en todo el video (por ejemplo «la probabilidad de que te mande al hospital» o
+«de quitarte la vida»), y cada nivel existe para explicar POR QUÉ está en ese puesto.
+
 - Gancho de contraste (40 a 70 s), sin saludos ni «en este video»:
-  1. Pregúntale al espectador qué probabilidad cree que tiene un animal de hacerle daño de verdad,
-     empezando por uno que se ve inofensivo (casi cero).
-  2. Luego uno que SE VE aterrador: el espectador creerá que es el peor. Primer giro: está entre
-     los menos peligrosos (dilo claro).
-  3. «Y ahora el verdadero susto»: anuncia que el último de la lista es alguien que no te
-     esperarías (se muestra pixelado) y que hay algo de él que no sabes. Deja la pregunta abierta.
-  4. Promete la escala: empezamos casi en cero y vamos subiendo hasta el más peligroso, y al final
-     sabrás cómo pasa y qué hacer. Una escena del gancho presenta la lista de niveles (ahí se ve la tira).
-- Entre 4 y 8 niveles de menos a más peligro. Cada nivel abre con una escena «Nivel N. Nombre.»
-  (número en palabras). Luego 6 a 14 escenas, y en cada nivel usa:
-  una imagen mental fuerte al presentarlo, una comparación cotidiana que se recuerde, dónde vive
-  (lugares concretos), números concretos (tamaño, peso, profundidad), cómo hace daño explicado
-  paso a paso y fácil, una pregunta con respuesta seca («¿Cuántos casos hay? Cero.»), qué tan
-  frecuentes son los casos reales (sin exagerar: si son pocos, dilo), un remate del tipo «lo más
-  aterrador no es X, es Y» y un consejo práctico.
-- Cada nivel termina con una transición que deja con ganas y SUBE la escala («ahora subamos el
-  miedo», «de algo gigante pasamos a algo que cabe en tu mano, y es peor»).
-- Llamado a suscribirse UNA sola vez, hacia el minuto 1: justo después del gancho, cuando ya
-  presentaste al primer animal y dejaste una intriga («por cierto, si ya este te sorprendió, dale
-  like y suscríbete»); enseguida vuelve a la intriga («sí, vamos con la razón…»). Nunca al inicio.
-- Lo más fuerte va en el último tercio. Antes de los dos últimos niveles, una frase que retenga.
-- Último nivel (el villano): «el que te dije al principio»; confírmalo corto («Sí, una chinche.»);
+  1. «¿Qué probabilidad crees que tiene este animal de…?» con uno que se ve inofensivo; di lo
+     poco que podría hacerte («a lo mucho te muerde un dedo…») y concluye: prácticamente cero.
+  2. «Ahora mira este otro.» Uno que SE VE aterrador; el espectador cree que pasa del cincuenta
+     por ciento. «Pero aquí viene el primer giro»: está entre los MENOS peligrosos.
+  3. «Y ahora el verdadero susto. Agárrate.» El último de la lista, el de mayor probabilidad, es
+     alguien que nadie se espera: «al verlo no lo vas a creer, pero hay algo de él que no sabes».
+     No digas su nombre todavía. En pantalla va oculto, pero la voz NUNCA dice que está pixelado,
+     borroso, tapado u oculto: eso lo resuelve la imagen, no el guion.
+  4. Promesa: «hoy empezamos casi en cero y vamos a ver hasta dónde sube esa probabilidad, y cómo
+     de verdad podría pasar». Una escena del gancho presenta la lista de niveles (ahí se ve la tira).
+- Entre 5 y 7 niveles, de menos a más. Cada nivel es una mini historia de un minuto aprox.:
+  1. Lo presentas por su nombre con una imagen mental fuerte, SIN «nivel uno» ni números de nivel
+     («Empezamos con algo que parece salido de una pesadilla: la cucaracha.»).
+  2. Una pregunta que abre la intriga («¿por qué crees que está tan abajo? Hay una razón que
+     sorprende.»).
+  3. Dónde vive y cómo es, con UNA comparación cotidiana que se quede («parece un bolso de lujo»,
+     «para que te hagas una idea…»).
+  4. El mecanismo central de cómo hace daño, explicado paso a paso, cada frase apoyándose en la
+     anterior (y por eso…, pero…, entonces…, y aquí viene lo raro…). UN mecanismo bien contado, no
+     diez datos sueltos.
+  5. La pregunta con respuesta seca y repetida: «¿Cuántos ataques documentados tiene? Cero. Ni uno.
+     Ni antes, ni ahora. Cero, así de simple.»
+  6. El veredicto en el eje del video (por qué queda en este puesto y no más arriba) y un remate
+     «lo más aterrador no es X, es Y».
+  7. Transición que abre un bucle con el siguiente SIN nombrarlo: qué puede hacer y qué tiene de
+     raro («el siguiente sí te puede picar, y lo curioso es que no es la picadura lo que te
+     enferma; cuando sepas cómo lo hace, vas a cambiar de opinión»; «de algo gigante pasamos a algo
+     que cabe en tu mano, y kilo por kilo es muchísimo peor»).
+  Nada de consejos de limpieza o de prevención en cada nivel: eso aplana el video.
+- Llamado a suscribirse UNA sola vez, hacia el minuto 1, pegado a la intriga del primer animal:
+  «Por cierto, si hasta este primero te tomó por sorpresa, dale like y suscríbete. Sí, vamos con la
+  razón…». Nunca al inicio.
+- Antes del último nivel: «y ahora llegamos al final de la lista, al que te mencioné al principio,
+  el que te va a hacer decir "¿de verdad es este?"». Confírmalo corto («Sí, una chinche.»);
   contrasta lo inocente que se ve con lo que hace; «no avisa»; lo más escalofriante al final.
-- Cierre: qué hacer (lo prometido), repaso de un vistazo «empezamos con… y terminamos con…»,
-  pregunta para comentarios y suscripción, corto.
+- Cierre corto: «Ahora ya lo sabes. Empezamos con…, que casi no puede hacerte nada, y terminamos
+  con…, capaz de…». En salud, solo orientar a ir al médico. Luego like y notificaciones.
 
 == REGLAS DE TEXTO ==
-- Español neutro cercano, frases cortas, de tú. Cada escena cierra una idea: 5 a 14 palabras
-  (unos 2 a 4,5 segundos de voz; nunca más de 14). Alterna escenas muy cortas con otras medianas:
-  el ritmo NO debe ser parejo. Si una idea es larga, pártela en dos escenas.
+- Español neutro cercano, de tú, como se habla en voz alta. Las frases FLUYEN y se encadenan; mezcla
+  frases cortas de golpe («Cero.») con otras medianas. Cada escena lleva 3 a 16 palabras; si una
+  frase es más larga, pártela entre dos escenas seguidas en una pausa natural (en una coma).
 - En la primera escena con imagen propia de cada nivel, di el nombre del animal (no solo «ella» o
   «este»): el video lo encierra en un círculo rojo justo cuando lo nombras.
-- Hazle al espectador 3 a 5 preguntas directas repartidas en el video («¿tú lo sabías?», «¿adivinas
-  cuál es?»), cada una en su propia escena.
+- Hazle al espectador 4 a 6 preguntas directas repartidas en el video, cada una en su escena.
 - Números SIEMPRE en palabras («trescientos millones», «veinte años»).
-- Solo hechos verdaderos. En salud: sin dosis ni medicamentos; orienta a ir al médico o a urgencias.
+- Solo hechos verdaderos. Si los casos reales son pocos, dilo. En salud: sin dosis ni
+  medicamentos; orienta a ir al médico o a urgencias.
 - Nombres compuestos separados como se dicen. Nada de siglas deletreadas.
 
 == FORMATO DE SALIDA (texto, no JSON) ==
@@ -105,7 +122,7 @@ SECCION: Gancho
 <una escena por línea: solo lo que dice la voz>
 <otra escena>
 SECCION: Nivel 1 · <nombre>
-Nivel uno. <Nombre>.
+<escena que presenta al animal por su nombre>
 <escenas del nivel, una por línea>
 ... (una SECCION por nivel)
 SECCION: Cierre
@@ -134,7 +151,7 @@ def leer_historia(texto: str) -> dict:
         if m:
             secciones.append((m.group(1).strip(), []))
             continue
-        if secciones:
+        if secciones and not re.search(r"(?i)pixel", linea):    # lo pixelado es visual, la voz no lo dice
             secciones[-1][1].append(linea)
     secciones = [(n, ls) for n, ls in secciones if ls]
     if not titulo or len(niveles) < 4 or len(niveles) > 8 or len(secciones) < 3:
@@ -174,13 +191,14 @@ def instruccion_detalles(historia: dict, k: int, estilo: Estilo, catalogo: list[
     if es_gancho:
         especiales.append('- Esta es la sección del GANCHO: la escena que presenta la lista de niveles lleva '
                           '"accion": "componer" (el sistema muestra la tira). Si una escena muestra al villano, pon '
-                          '"muestra_villano": true: el sistema lo pixelará hasta su revelación.')
+                          '"muestra_villano": true: el sistema lo oculta en pantalla hasta su revelación (la narración '
+                          'nunca menciona que está pixelado u oculto).')
     if nivel:
-        especiales.append(f'- Es la sección del nivel {nivel["numero"]}: la escena 1 («Nivel …») lleva "accion": "reusar", '
+        especiales.append(f'- Es la sección del nivel {nivel["numero"]}: la escena 1 (la que lo presenta por su nombre) lleva "accion": "reusar", '
                           f'"reusar": "nivel:{nivel["numero"]}" e intención transicion_de_seccion.')
         if nivel["villano"]:
             especiales.append('- Es el VILLANO: marca "revelacion_villano": true en la escena donde se ve por primera vez '
-                              'su aspecto (normalmente justo después de «Nivel …»).')
+                              'su aspecto (normalmente justo después de la escena que lo presenta).')
     especiales = "\n".join(especiales)
     bloque_catalogo = ""
     if catalogo:
@@ -336,7 +354,7 @@ def a_escenas(datos: dict, estilo: Estilo, canal: str) -> tuple[dict, dict, str]
         t += escenas[-1]["tiempo"]["estimado_duracion"]
         if e.get("revelacion_villano") and "villano_revelacion" not in direccion:
             direccion["villano_revelacion"] = i
-        if e.get("muestra_villano") and accion == "generar":
+        if e.get("muestra_villano") and accion == "generar" and estilo.ocultar_villano:
             direccion["pixelar_pendiente"].append(i)
         if e.get("texto_pantalla"):
             direccion["textos"][str(i)] = {"texto": str(e["texto_pantalla"]).strip()[:48],
