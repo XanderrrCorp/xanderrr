@@ -129,7 +129,8 @@ async function pintar() {
     if (!imgOk) {
       cuerpo += `<section class="tarjeta"><h2>Revisa el guion</h2>
         <p class="tenue">Puedes cambiar el texto de cualquier escena tocándolo. Cuando te guste, aprueba y se hacen las imágenes.</p>
-        ${e.pasa_maximo ? `<div class="error">Ojo: todas las imágenes de este guion (${e.faltan}) pasan del máximo de ${esc(e.maximo_texto)} por video. Xandart se frena al llegar al máximo y te pide permiso para seguir. Para bajar el costo, que más escenas reutilicen imágenes.</div>` : ''}
+        ${e.pasa_maximo ? `<div class="error">Ojo: todas las imágenes de este guion (${e.faltan}) pasan del máximo de ${esc(e.maximo_texto)} por video. Xandart se frena al llegar al máximo y te pide permiso para seguir.
+          <div class="fila"><button class="primario" onclick="ajustarPresupuesto()">Ajustar al presupuesto (reusar imágenes, gratis)</button></div></div>` : ''}
         ${pruebaHtml(v)}
         <div class="fila"><button class="primario" onclick="accion('imagenes')">Aprobar y hacer las imágenes (${e.faltan} imágenes ≈ ${esc(e.texto)})</button>
         ${e.prueba ? `<button onclick="accion('prueba')">Probar primero 10 escenas (${e.prueba} imágenes ≈ ${esc(e.prueba_texto)})</button>` : ''}
@@ -202,6 +203,14 @@ async function accion(que, cuerpo = {}) {
     }
     alert(e.message);
   }
+}
+
+async function ajustarPresupuesto() {
+  try {
+    const r = await api(`/api/videos/${ACTUAL}/ajustar-imagenes`, { method: 'POST' });
+    alert(`Listo: ${r.ajuste.convertidas} escenas ahora reusan una imagen cercana. Imágenes nuevas: ${r.ajuste.faltan} (≈ ${r.ajuste.texto}).`);
+    await pintar();
+  } catch (e) { alert(e.message); }
 }
 
 async function regenerar(id) {

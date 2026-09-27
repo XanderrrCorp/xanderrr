@@ -10,6 +10,8 @@ vuelve a pagar (huellas por imagen y por oración de voz).
 """
 from __future__ import annotations
 
+import math
+
 import shutil
 import threading
 import time
@@ -228,6 +230,64 @@ def estimar_imagenes(c: CarpetaProyecto) -> dict:
             "prueba": prueba, "prueba_texto": formato_cop(config.a_cop(prueba * precio)),
             "maximo_texto": formato_cop(config.maximo_cop),
             "pasa_maximo": config.a_cop(faltan * precio) + c.libro(config).total_cop() > config.maximo_cop}
+
+
+# escenas que pueden repetir una imagen cercana sin que se note (primero las más «de relleno»)
+REUSABLES = ("explicacion", "transicion_de_seccion", "comparacion", "consejo_practico", "alivio",
+             "pregunta_al_espectador", "humor", "tension_creciente", "advertencia", "dato_impactante", "amenaza")
+PROTEGIDAS = ("gancho", "revelacion", "giro", "cierre", "llamado_accion")
+MARGEN_COP = 1200            # voz y miniatura también cuentan dentro del máximo
+
+
+def ajustar_al_presupuesto(c: CarpetaProyecto) -> dict:
+    """Si las imágenes pasan el máximo, algunas escenas pasan a reusar la imagen de una escena
+    anterior de la misma sección (el texto no cambia). Nunca se tocan el gancho, la revelación,
+    el giro, el cierre, la primera imagen de cada sección ni las escenas del villano oculto."""
+    from .esquemas import EscenasV2
+
+    config = ConfigCostos.cargar()
+    est = estimar_imagenes(c)
+    precio_cop = est["cop"] / est["faltan"] if est["faltan"] else 0
+    disponible = config.maximo_cop - MARGEN_COP - c.libro(config).total_cop()
+    sobran = 0 if not precio_cop else max(0, math.ceil((est["cop"] - disponible) / precio_cop))
+    if sobran == 0:
+        return {"convertidas": 0, **estimar_imagenes(c)}
+    esc = c.cargar_escenas()
+    direccion = leer_json(c.ruta / "direccion.json") if (c.ruta / "direccion.json").exists() else {}
+    ocultas = set(direccion.get("pixelar_pendiente") or []) | {int(k) for k in (direccion.get("pixelar") or {})}
+    man = leer_json(c.ruta / "imagenes" / "manifiesto.json") if (c.ruta / "imagenes" / "manifiesto.json").exists() else {}
+    candidatas = []
+    previa: dict[str, int] = {}              # sección → última escena con imagen propia
+    racha = 0
+    for k, e in enumerate(esc.escenas):
+        if e.visual.accion != "generar":
+            racha = 0
+            continue
+        fuente = previa.get(e.seccion)
+        hecha = f"escena:{e.id}" in man       # ya pagada: se deja
+        if (fuente is not None and not hecha and e.intencion not in PROTEGIDAS and e.id not in ocultas
+                and fuente not in ocultas and e.intencion in REUSABLES):
+            candidatas.append((REUSABLES.index(e.intencion), k, e.id, fuente))
+        previa[e.seccion] = e.id
+    elegidas: set[int] = set()
+    usadas_como_fuente: dict[int, int] = {}
+    for _, k, eid, fuente in sorted(candidatas):
+        if len(elegidas) >= sobran:
+            break
+        # nunca dos seguidas y cada imagen se repite como mucho 2 veces más: que no se note
+        if eid - 1 in elegidas or eid + 1 in elegidas or usadas_como_fuente.get(fuente, 0) >= 2:
+            continue
+        elegidas.add(eid)
+        usadas_como_fuente[fuente] = usadas_como_fuente.get(fuente, 0) + 1
+    datos = esc.model_dump()
+    fuentes = {eid: f for _, _, eid, f in candidatas}
+    for e in datos["escenas"]:
+        if e["id"] in elegidas:
+            e["visual"] = {**e["visual"], "accion": "reusar", "reusar_de": fuentes[e["id"]], "prompt": None,
+                           "tipo": None, "referencias": []}
+            e["notas_edicion"] = ((e.get("notas_edicion") or "") + " · reusa imagen para cuidar el presupuesto").strip(" ·")
+    c.guardar_escenas(EscenasV2.model_validate(datos))
+    return {"convertidas": len(elegidas), **estimar_imagenes(c)}
 
 
 def paso_imagenes(c: CarpetaProyecto, t: Trabajo, permiso: bool = False, ejecutar_claude=None) -> None:

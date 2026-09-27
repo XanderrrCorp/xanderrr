@@ -259,6 +259,15 @@ class Permiso(BaseModel):
     permiso: bool = False
 
 
+@app.post("/api/videos/{slug}/ajustar-imagenes")
+def ajustar_imagenes(slug: str):
+    c = _proyecto(slug)
+    if pipeline.ocupado(slug):
+        raise HTTPException(409, "Hay un trabajo en marcha para este video")
+    r = pipeline.ajustar_al_presupuesto(c)
+    return {**pipeline.resumen(c), "ajuste": r}
+
+
 @app.post("/api/videos/{slug}/imagenes")
 def imagenes(slug: str, p: Permiso = Permiso()):
     c = _proyecto(slug)
