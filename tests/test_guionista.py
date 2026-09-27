@@ -3,7 +3,8 @@ import json
 import pytest
 
 from estudio import claude_cli
-from estudio.guionista import Encargo, a_escenas, escribir_guion, instruccion, ubicar_villano
+from estudio.guionista import (Encargo, a_escenas, escribir_guion, instruccion, instruccion_detalles,
+                               leer_historia, ubicar_villano)
 
 NIVELES = [{"numero": i, "nombre": f"Bicho {i}", "sujeto": f"a bug number {i}, magnified", "villano": i == 4}
            for i in range(1, 5)]
@@ -31,10 +32,26 @@ def _datos():
     return {"titulo": "Prueba", "niveles": NIVELES, "escenas": esc}
 
 
+def _historia_texto(datos):
+    lineas = [f"TITULO: {datos['titulo']}"]
+    for n in datos["niveles"]:
+        lineas.append(f"NIVEL: {n['numero']} | {n['nombre']} | {n['sujeto']} | {'si' if n['villano'] else 'no'}")
+    seccion = None
+    for e in datos["escenas"]:
+        if e["seccion"] != seccion:
+            seccion = e["seccion"]
+            lineas.append(f"SECCION: {seccion}")
+        lineas.append(e["narracion"])
+    return "\n".join(lineas)
+
+
 def test_instruccion_usa_tipos_del_estilo_y_duracion(estilo):
     txt = instruccion(Encargo("insectos", "la cucaracha no es peligrosa", "chinche besucona", 9), estilo)
+    historia = leer_historia(_historia_texto(_datos()))
+    detalles = instruccion_detalles(historia, 1, estilo)
     for t in estilo.ids_tipos:
-        assert t in txt
+        assert t in detalles
+    assert '"reusar": "nivel:1"' in detalles
     from estudio.guionista import PALABRAS_POR_SEGUNDO
 
     palabras = int(9 * 60 * PALABRAS_POR_SEGUNDO)                          # ritmo real de la voz configurada
@@ -54,16 +71,24 @@ def test_a_escenas(estilo):
     assert "## Gancho" in md
 
 
-def test_escribir_guion_reintenta_si_el_json_falla(tmp_path, estilo):
-    respuestas = ["esto no es json", json.dumps(_datos())]
+def test_escribir_guion_en_dos_pasos_y_reintenta(tmp_path, estilo):
+    datos = _datos()
+    historias = ["esto no es una historia", _historia_texto(datos)]
     llamadas = []
 
     def falso(prompt, **kw):
         llamadas.append(prompt)
-        return respuestas.pop(0), {"usage": {"output_tokens": 10}}
+        if "Sección «" not in prompt:                         # fase 1: la historia
+            return historias.pop(0), {"usage": {"output_tokens": 10}}
+        seccion = prompt.split("Sección «", 1)[1].split("»", 1)[0]
+        propias = [e for e in datos["escenas"] if e["seccion"] == seccion]
+        return json.dumps({"escenas": [{"n": i + 1, **{k: v for k, v in e.items() if k not in ("seccion", "narracion")}}
+                                       for i, e in enumerate(propias)]}), {}
 
     r = escribir_guion(Encargo("x"), estilo, tmp_path, "canal", ejecutar=falso, avisar=lambda _: None)
-    assert r["escenas"] == 12 and len(llamadas) == 2 and "CORRIGE" in llamadas[1]
+    fase1 = [p for p in llamadas if "Sección «" not in p]
+    assert r["escenas"] == 12 and len(fase1) == 2 and "CORRIGE" in fase1[1]
+    assert len(llamadas) - len(fase1) == 6                   # una llamada por sección (gancho, 4 niveles, cierre)
     assert (tmp_path / "escenas.json").exists() and (tmp_path / "direccion.json").exists()
 
 

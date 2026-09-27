@@ -38,11 +38,6 @@ class Encargo:
 
 def instruccion(encargo: Encargo, estilo: Estilo) -> str:
     palabras = int(encargo.minutos * 60 * PALABRAS_POR_SEGUNDO)
-    tipos = "\n".join(f"  - {t.id}: {t.descripcion}" for t in estilo.tipos_de_escena)
-    ejemplo = estilo.tipos_de_escena[0].id
-    solo_mascota = next((t.id for t in estilo.tipos_de_escena if "{personaje}" in t.plantilla_prompt
-                         and "{bloque_estilo}" not in t.plantilla_prompt), None)
-    nota_mascota = (f" En escenas de tipo {solo_mascota} describe solo su pose y su cara." if solo_mascota else "")
     return f"""Eres el guionista y director visual de un canal de YouTube en español latino (México y
 Colombia) de formato escala: «del más inofensivo al más peligroso». Escribe el guion COMPLETO
 de un video y divídelo en escenas.
@@ -63,9 +58,9 @@ Duración: unos {encargo.minutos:g} minutos de voz = entre {int(palabras * 0.93)
   3. «Y ahora el verdadero susto»: anuncia que el último de la lista es alguien que no te
      esperarías (se muestra pixelado) y que hay algo de él que no sabes. Deja la pregunta abierta.
   4. Promete la escala: empezamos casi en cero y vamos subiendo hasta el más peligroso, y al final
-     sabrás cómo pasa y qué hacer. Una escena del gancho es la tira de niveles (accion "componer").
+     sabrás cómo pasa y qué hacer. Una escena del gancho presenta la lista de niveles (ahí se ve la tira).
 - Entre 4 y 8 niveles de menos a más peligro. Cada nivel abre con una escena «Nivel N. Nombre.»
-  que es accion "reusar" con "reusar": "nivel:N". Luego 6 a 14 escenas, y en cada nivel usa:
+  (número en palabras). Luego 6 a 14 escenas, y en cada nivel usa:
   una imagen mental fuerte al presentarlo, una comparación cotidiana que se recuerde, dónde vive
   (lugares concretos), números concretos (tamaño, peso, profundidad), cómo hace daño explicado
   paso a paso y fácil, una pregunta con respuesta seca («¿Cuántos casos hay? Cero.»), qué tan
@@ -89,46 +84,138 @@ Duración: unos {encargo.minutos:g} minutos de voz = entre {int(palabras * 0.93)
 - En la primera escena con imagen propia de cada nivel, di el nombre del animal (no solo «ella» o
   «este»): el video lo encierra en un círculo rojo justo cuando lo nombras.
 - Hazle al espectador 3 a 5 preguntas directas repartidas en el video («¿tú lo sabías?», «¿adivinas
-  cuál es?»), cada una en su propia escena con intención pregunta_al_espectador.
+  cuál es?»), cada una en su propia escena.
 - Números SIEMPRE en palabras («trescientos millones», «veinte años»).
 - Solo hechos verdaderos. En salud: sin dosis ni medicamentos; orienta a ir al médico o a urgencias.
 - Nombres compuestos separados como se dicen. Nada de siglas deletreadas.
 
-== REGLAS DE IMAGEN ==
-- tipo solo de esta lista (del estilo «{estilo.nombre}»):
+== FORMATO DE SALIDA (texto, no JSON) ==
+Responde SOLO con esto, sin nada antes ni después:
+TITULO: <título del video, gancho de YouTube>
+NIVEL: 1 | <nombre del animal> | <english description of the animal for a card: species, colors, pose, magnified, whole body visible and centered> | no
+NIVEL: 2 | ... | ... | no
+(uno por nivel, en orden; en el último, el villano, pon «si» al final)
+SECCION: Gancho
+<una escena por línea: solo lo que dice la voz>
+<otra escena>
+SECCION: Nivel 1 · <nombre>
+Nivel uno. <Nombre>.
+<escenas del nivel, una por línea>
+... (una SECCION por nivel)
+SECCION: Cierre
+<escenas del cierre>
+Antes de responder, cuenta las palabras de todas las escenas y ajusta al rango pedido."""
+
+
+def leer_historia(texto: str) -> dict:
+    """Lee la respuesta de la fase 1 (texto con TITULO / NIVEL / SECCION)."""
+    import re
+
+    titulo, niveles, secciones = None, [], []
+    for linea in (texto or "").splitlines():
+        linea = linea.strip().strip("`").strip()
+        if not linea or linea.startswith("("):
+            continue
+        m = re.match(r"(?i)^t[íi]tulo\s*:\s*(.+)$", linea)
+        if m:
+            titulo = m.group(1).strip()
+            continue
+        m = re.match(r"(?i)^nivel\s*:\s*(\d+)\s*\|\s*(.+?)\s*\|\s*(.+?)\s*\|\s*(s[ií]|no)\s*$", linea)
+        if m:
+            niveles.append({"numero": int(m.group(1)), "nombre": m.group(2), "sujeto": m.group(3),
+                            "villano": m.group(4).lower().startswith("s")})
+            continue
+        m = re.match(r"(?i)^secci[oó]n\s*:\s*(.+)$", linea)
+        if m:
+            secciones.append((m.group(1).strip(), []))
+            continue
+        if secciones:
+            secciones[-1][1].append(linea)
+    secciones = [(n, ls) for n, ls in secciones if ls]
+    if not titulo or len(niveles) < 4 or len(niveles) > 8 or len(secciones) < 3:
+        raise ValueError(f"historia incompleta: título={bool(titulo)}, niveles={len(niveles)}, secciones={len(secciones)}")
+    return {"titulo": titulo, "niveles": niveles, "secciones": secciones}
+
+
+def instruccion_detalles(historia: dict, k: int, estilo: Estilo) -> str:
+    """Fase 2, por sección: intención, imagen y textos de cada escena (la narración ya está)."""
+    nombre, lineas = historia["secciones"][k]
+    tipos = "\n".join(f"  - {t.id}: {t.descripcion}" for t in estilo.tipos_de_escena)
+    ejemplo = estilo.tipos_de_escena[0].id
+    solo_mascota = next((t.id for t in estilo.tipos_de_escena if "{personaje}" in t.plantilla_prompt
+                         and "{bloque_estilo}" not in t.plantilla_prompt), None)
+    nota_mascota = (f" En escenas de tipo {solo_mascota} describe solo su pose y su cara." if solo_mascota else "")
+    villano = next((n for n in historia["niveles"] if n["villano"]), historia["niveles"][-1])
+    niveles = "\n".join(f"  {n['numero']}. {n['nombre']}{' (VILLANO)' if n['villano'] else ''}" for n in historia["niveles"])
+    numeradas = "\n".join(f"{i + 1}. {t}" for i, t in enumerate(lineas))
+    es_gancho = k == 0
+    nivel = next((n for n in historia["niveles"] if nombre.lower().startswith(f"nivel {n['numero']} ")
+                  or nombre.lower().startswith(f"nivel {n['numero']}·")), None)
+    especiales = []
+    if es_gancho:
+        especiales.append('- Esta es la sección del GANCHO: la escena que presenta la lista de niveles lleva '
+                          '"accion": "componer" (el sistema muestra la tira). Si una escena muestra al villano, pon '
+                          '"muestra_villano": true: el sistema lo pixelará hasta su revelación.')
+    if nivel:
+        especiales.append(f'- Es la sección del nivel {nivel["numero"]}: la escena 1 («Nivel …») lleva "accion": "reusar", '
+                          f'"reusar": "nivel:{nivel["numero"]}" e intención transicion_de_seccion.')
+        if nivel["villano"]:
+            especiales.append('- Es el VILLANO: marca "revelacion_villano": true en la escena donde se ve por primera vez '
+                              'su aspecto (normalmente justo después de «Nivel …»).')
+    especiales = "\n".join(especiales)
+    return f"""Eres el director visual de un video de YouTube en español: «{historia['titulo']}».
+Niveles (de menos a más peligro):
+{niveles}
+El villano ({villano['nombre']}) no se muestra claramente antes de su revelación.
+
+Sección «{nombre}». Estas son sus escenas (lo que dice la voz), numeradas:
+{numeradas}
+
+Para CADA escena, en orden, decide:
+- "intencion": una de {", ".join(INTENCIONES)} (las preguntas al espectador son pregunta_al_espectador).
+- "intensidad": 1 a 5.
+- "accion": "generar" (imagen nueva), "reusar" o "componer". Alrededor del 70 % generan imagen; reusa con
+  "reusar": "escena:<primeras palabras exactas de una escena anterior de esta sección>" cuando la voz vuelve
+  sobre algo ya visto.
+- "tipo" (solo si generar), de esta lista del estilo «{estilo.nombre}»:
 {tipos}
-- "descripcion" en INGLÉS: qué se ve, concreto (sujeto, acción, lugar, luz). Nunca pidas texto,
+- "descripcion" (solo si generar) en INGLÉS: qué se ve, concreto (sujeto, acción, lugar, luz). Nunca texto,
   letras, números ni letreros en la imagen. Nada de sangre ni heridas gráficas.
-- La mascota del canal (un hombre de dibujo con cabeza blanca redonda) aparece en muchas escenas:
-  pon "con_mascota": true y descríbela en la escena como "the cartoon man" (su aspecto lo pone
-  el sistema).{nota_mascota}
-- Alrededor del 70 % de las escenas generan imagen nueva; el resto reusa: "reusar": "nivel:N" en
-  las entradas de nivel, o "reusar": "escena:<primeras palabras exactas de la narración de una
-  escena anterior>" cuando la narración vuelve sobre algo ya visto (cierre, recordatorios).
-- El villano NO se muestra claramente antes de su revelación. Si una escena anterior lo muestra
-  (por ejemplo en el gancho), pon "muestra_villano": true: el sistema lo pixelará.
-- Marca con "revelacion_villano": true la escena donde se ve al villano por primera vez en su
-  nivel (normalmente la que describe su aspecto, justo después de «Nivel N. ...»).
-- En 8 a 14 momentos clave (giros, datos fuertes) pon "texto_pantalla": un título corto de 2 a 6
-  palabras escrito normal, como lo diría una persona («Puede posarse en tu cabeza», «Es aterrador»),
-  y "palabra": la palabra de la narración en la que debe aparecer.
-- En cada escena pon "palabra_clave": la palabra MÁS importante de esa narración, copiada tal cual
-  (un sustantivo o número dicho en palabras: «veneno», «colchón», «trescientos»). Sale como etiqueta.
+- "con_mascota": true si aparece la mascota (un hombre de dibujo de cabeza blanca redonda); en la descripción
+  llámala "the cartoon man".{nota_mascota}
+- "palabra_clave": la palabra MÁS importante de esa escena, copiada tal cual (sustantivo o número en palabras).
+- "texto_pantalla": solo en 1 o 2 escenas fuertes de la sección, un título corto de 2 a 6 palabras escrito
+  normal, como lo diría una persona («Es aterrador»); y "palabra": la palabra de la escena donde aparece.
+  En las demás, null.
+{especiales}
 
-== INTENCIONES (una por escena) ==
-{", ".join(INTENCIONES)}
+Responde SOLO un JSON: {{"escenas": [{{"n": 1, "intencion": "...", "intensidad": 3, "accion": "generar",
+"tipo": "{ejemplo}", "descripcion": "...", "con_mascota": false, "palabra_clave": "...", "texto_pantalla": null,
+"palabra": null}}, ...]}} con exactamente {len(lineas)} escenas."""
 
-== FORMATO DE SALIDA ==
-Responde SOLO con un objeto JSON, sin texto antes ni después:
-{{"titulo": "...",
-  "niveles": [{{"numero": 1, "nombre": "...", "sujeto": "english description of the animal for a card: species, colors, pose, magnified, whole body visible and centered", "villano": false}}, ...],
-  "escenas": [{{"seccion": "Gancho", "narracion": "...", "intencion": "gancho", "intensidad": 3,
-               "accion": "generar", "tipo": "{ejemplo}", "descripcion": "...", "con_mascota": true,
-               "muestra_villano": false, "revelacion_villano": false, "texto_pantalla": null, "palabra": null,
-               "palabra_clave": "..."}},
-              {{"seccion": "Nivel 1 · ...", "narracion": "Nivel uno. ...", "intencion": "transicion_de_seccion",
-               "intensidad": 2, "accion": "reusar", "reusar": "nivel:1"}}, ...]}}
-Antes de responder, cuenta las palabras de todas las narraciones y ajusta al rango pedido."""
+
+def _detalles(historia: dict, k: int, estilo: Estilo, carpeta: Path, ejecutar, avisar) -> list[dict]:
+    nombre, lineas = historia["secciones"][k]
+    prompt = instruccion_detalles(historia, k, estilo)
+    error = ""
+    for intento in range(2):
+        texto, _ = ejecutar(prompt if not error else prompt + f"\n\nTu respuesta anterior falló: {error}. Corrígela.",
+                            cwd=carpeta)
+        try:
+            datos = claude_cli.extraer_json(texto)
+            lista = datos["escenas"] if isinstance(datos, dict) else datos
+            por_n = {int(d["n"]): d for d in lista if isinstance(d, dict) and "n" in d}
+            if len(por_n) < len(lineas):
+                raise ValueError(f"faltan escenas: {len(por_n)} de {len(lineas)}")
+            salida = []
+            for i, narr in enumerate(lineas):
+                d = {k2: v for k2, v in por_n[i + 1].items() if k2 != "n"}
+                salida.append({"seccion": nombre, "narracion": narr, **d})
+            return salida
+        except (ValueError, KeyError, TypeError) as ex:
+            error = str(ex)[:300]
+            avisar(f"  sección «{nombre}»: intento {intento + 1} no válido ({error[:100]})")
+    raise claude_cli.ErrorClaude(f"La sección «{nombre}» no quedó válida: {error}")
 
 
 def _clave_en(clave, narracion: str) -> str | None:
@@ -216,22 +303,34 @@ def a_escenas(datos: dict, estilo: Estilo, canal: str) -> tuple[dict, dict, str]
 
 
 def escribir_guion(encargo: Encargo, estilo: Estilo, carpeta: Path, canal: str,
-                   ejecutar=claude_cli.ejecutar, avisar=print) -> dict:
+                   ejecutar=claude_cli.ejecutar, avisar=print, en_paralelo: int = 3) -> dict:
+    """Dos pasos para que ninguna respuesta sea enorme (y no pase del tiempo máximo):
+    1) la historia en texto (título, niveles y lo que dice la voz, escena por escena);
+    2) por sección, y varias a la vez, la intención, la imagen y los textos de cada escena."""
+    from concurrent.futures import ThreadPoolExecutor
+
     prompt = instruccion(encargo, estilo)
-    ultimo_error = ""
+    error = ""
+    avisar("Claude está escribiendo la historia…")
     for intento in range(2):
-        texto, sobre = ejecutar(prompt if not ultimo_error else
-                                prompt + f"\n\n== CORRIGE ==\nTu respuesta anterior falló: {ultimo_error}. "
-                                         "Devuelve el JSON completo corregido.", cwd=carpeta)
+        texto, sobre = ejecutar(prompt if not error else
+                                prompt + f"\n\n== CORRIGE ==\nTu respuesta anterior falló: {error}. "
+                                         "Devuelve la historia completa en el formato pedido.", cwd=carpeta)
         try:
-            datos = claude_cli.extraer_json(texto)
-            doc, direccion, md = a_escenas(datos, estilo, canal)
+            historia = leer_historia(texto)
             break
-        except (ValueError, KeyError, TypeError) as ex:
-            ultimo_error = str(ex)[:500]
-            avisar(f"  guion: intento {intento + 1} no válido ({ultimo_error[:120]})")
+        except ValueError as ex:
+            error = str(ex)[:300]
+            avisar(f"  historia: intento {intento + 1} no válido ({error[:120]})")
     else:
-        raise claude_cli.ErrorClaude(f"El guion no quedó válido tras dos intentos: {ultimo_error}")
+        raise claude_cli.ErrorClaude(f"La historia no quedó válida tras dos intentos: {error}")
+    n = len(historia["secciones"])
+    avisar(f"Historia lista ({sum(len(x[1]) for x in historia['secciones'])} escenas). Claude está dirigiendo "
+           f"las {n} secciones…")
+    with ThreadPoolExecutor(max_workers=max(1, en_paralelo)) as pool:
+        partes = list(pool.map(lambda k: _detalles(historia, k, estilo, carpeta, ejecutar, avisar), range(n)))
+    datos = {"titulo": historia["titulo"], "niveles": historia["niveles"], "escenas": [e for p in partes for e in p]}
+    doc, direccion, md = a_escenas(datos, estilo, canal)
     escribir_json(carpeta / "escenas.json", doc)
     escribir_json(carpeta / "direccion.json", direccion)
     (carpeta / "guion.md").write_text(md, encoding="utf-8")
