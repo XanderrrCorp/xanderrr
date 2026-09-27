@@ -70,7 +70,19 @@ def prompt_de_escena(escena: Escena, estilo: Estilo, personaje: str) -> str:
     tipo = estilo.tipo(escena.visual.tipo)
     if tipo is None:
         raise ValueError(f"escena {escena.id}: el tipo '{escena.visual.tipo}' no existe en el estilo '{estilo.id}'")
-    return armar(tipo.plantilla_prompt, estilo, personaje, escena.visual.prompt or escena.narracion)
+    descripcion = escena.visual.prompt or escena.narracion
+    if HUMANO.search(descripcion) and "{personaje}" not in tipo.plantilla_prompt:
+        # las plantillas de animales hablan de «placas del exoesqueleto» y brillos: con piernas o
+        # manos humanas Gemini dibujaba un robot negro. Solo cambia el prompt de esas escenas.
+        descripcion = descripcion.rstrip(". ") + ". " + PERSONA_NORMAL
+    return armar(tipo.plantilla_prompt, estilo, personaje, descripcion)
+
+
+HUMANO = re.compile(r"\b(legs?|feet|foot|ankles?|knees?|toes?|hands?|arms?|fingers?|skin|person|people|human|man|"
+                    r"woman|swimmer|fisherman|child|boy|girl|bather)\b", re.IGNORECASE)
+PERSONA_NORMAL = ("Any human body part is an ordinary real person with natural skin tone and normal casual clothes "
+                  "(for example rolled-up jeans or shorts); never armor, never a robot, never a black suit or "
+                  "shiny plates on the human.")
 
 
 def usa_personaje(escena: Escena, estilo: Estilo) -> bool:
