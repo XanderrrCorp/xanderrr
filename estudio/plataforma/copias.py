@@ -65,6 +65,10 @@ def hacer_copia(motivo: str, solo_base: bool = False) -> dict:
     lanza CopiaFallida y no se sigue con lo que iba a cambiar."""
     fecha = datetime.now().strftime("%Y-%m-%d_%H%M%S")
     destino = carpeta_copias() / f"{fecha}_{motivo}"
+    n = 2
+    while destino.exists():                     # nunca se escribe encima de otra copia
+        destino = carpeta_copias() / f"{fecha}_{motivo}_{n}"
+        n += 1
     fuentes = {} if solo_base else {k: v for k, v in que_se_copia().items() if v.exists()}
     base = _base_de_datos()
     total = sum(_tamano(v)[1] for v in fuentes.values()) + (base.stat().st_size if base else 0)

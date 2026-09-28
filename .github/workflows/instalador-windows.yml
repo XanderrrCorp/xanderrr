@@ -75,9 +75,13 @@ jobs:
           Set-Content "$p\imagenes\escena_001.png" 'imagen' -Encoding ascii
           $antesVieja = (Get-ChildItem $vieja -Recurse -File | Where-Object { $_.FullName -notmatch '\\(__pycache__|logs)\\' } | Measure-Object).Count
           $pidVieja = @(Get-CimInstance Win32_Process | Where-Object { $_.CommandLine -like '*estudio.app*' } | ForEach-Object { $_.ProcessId })
-          # la version de la rama de este commit (el .bat baja el instalador de GitHub)
-          & powershell -NoProfile -ExecutionPolicy Bypass -File "instalar\instalar-nueva.ps1"
+          # igual que el .bat: el instalador se corre como BLOQUE (asi se corre cuando se baja de GitHub).
+          # Correrlo con -File escondio un error de alcance que dejaba el .env vacio.
+          & powershell -NoProfile -ExecutionPolicy Bypass -Command "& ([scriptblock]::Create([IO.File]::ReadAllText('$((Resolve-Path 'instalar\instalar-nueva.ps1').Path)')))"
           if ($LASTEXITCODE -ne 0) { throw 'fallo el instalador de la nueva' }
+          $envNueva = Join-Path $env:LOCALAPPDATA 'XandartNueva\.env'
+          Get-Content $envNueva | Where-Object { $_ -notmatch '_KEY=' }
+          if (-not (Select-String -Path $envNueva -Pattern '^ESTUDIO_PROYECTOS=' -Quiet)) { throw 'el .env de la nueva quedo sin configurar' }
           $nueva = Join-Path $env:LOCALAPPDATA 'XandartNueva'
           if (-not (Test-Path "$([Environment]::GetFolderPath('Desktop'))\Xandart Nueva.lnk")) { throw 'falta el acceso directo' }
           if (@(Get-Process -Id $pidVieja -ErrorAction SilentlyContinue).Count -ne $pidVieja.Count) { throw 'la nueva cerro la Xandart de siempre' }

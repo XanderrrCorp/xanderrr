@@ -37,13 +37,19 @@ def _preparar() -> None:
     from .migrar import migrar_instalacion
 
     try:
+        from ..config import ruta_proyectos
+
         marca = _marca()
-        if not marca.exists():
+        hecha = json.loads(marca.read_text(encoding="utf-8")) if marca.exists() else {}
+        # se repite si la copia anterior se hizo de otra carpeta de videos (p. ej. una instalación
+        # que quedó mal configurada y copió una carpeta vacía)
+        if not marca.exists() or hecha.get("proyectos") != str(ruta_proyectos()):
             _estado.update(fase="copiando", detalle="Haciendo la copia de seguridad completa antes de preparar la plataforma…")
             info = hacer_copia("antes_de_la_plataforma")
             marca.parent.mkdir(parents=True, exist_ok=True)
             marca.write_text(json.dumps({"carpeta": info["carpeta"], "fecha": datetime.now().isoformat(timespec="seconds"),
-                                         "bytes": info["total_bytes"]}, ensure_ascii=False), encoding="utf-8")
+                                         "bytes": info["total_bytes"], "proyectos": str(ruta_proyectos())},
+                                        ensure_ascii=False), encoding="utf-8")
         _estado.update(fase="migrando", detalle="Registrando tus canales y videos…")
         from ..config import raiz_origen
 

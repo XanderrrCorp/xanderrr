@@ -99,23 +99,31 @@ Write-Host '   listo'
 # La nueva usa otro puerto y lee los datos de la de siempre. Las claves se copian de la de siempre
 # (quedan solo en este computador). Nunca se escribe nada en la carpeta de la de siempre.
 $envNueva = Join-Path $Destino '.env'
-$lineas = @()
-if (Test-Path $envNueva) { $lineas = Get-Content $envNueva -Encoding UTF8 }
-function Poner($clave, $valor) {
-    if (-not ($script:lineas | Where-Object { $_ -like "$clave=*" })) { $script:lineas += "$clave=$valor" }
+# lista que se modifica en su lugar: funciona igual corriendo este archivo o bajandolo como bloque
+# (el .bat lo baja de GitHub y lo corre como bloque: ahi $script: apuntaba a otra variable y el .env quedaba vacio)
+$lineas = New-Object System.Collections.ArrayList
+if (Test-Path $envNueva) { foreach ($l in (Get-Content $envNueva -Encoding UTF8)) { if ($l.Trim()) { [void]$lineas.Add($l.TrimStart([char]0xFEFF)) } } }
+$quiero = [ordered]@{
+    'XANDART_PUERTO'     = '8031'
+    'XANDART_ABRIR'      = '/app/'
+    'XANDART_ORIGEN'     = $Actual
+    'ESTUDIO_PROYECTOS'  = (Join-Path $Actual 'proyectos')
+    'XANDART_BIBLIOTECA' = (Join-Path $Actual 'biblioteca')
 }
-Poner 'XANDART_PUERTO' '8031'
-Poner 'XANDART_ABRIR' '/app/'
-Poner 'XANDART_ORIGEN' $Actual
-Poner 'ESTUDIO_PROYECTOS' (Join-Path $Actual 'proyectos')
-Poner 'XANDART_BIBLIOTECA' (Join-Path $Actual 'biblioteca')
 $envActual = Join-Path $Actual '.env'
 if (Test-Path $envActual) {
     foreach ($l in (Get-Content $envActual -Encoding UTF8)) {
-        if ($l -match '^([A-Z_]+_API_KEY|XANDART_SMTP_[A-Z]+)=') { Poner $Matches[1] ($l.Substring($Matches[1].Length + 1)) }
+        $l = $l.TrimStart([char]0xFEFF)
+        if ($l -match '^([A-Z_]+_API_KEY|XANDART_SMTP_[A-Z]+)=') { if (-not $quiero.Contains($Matches[1])) { $quiero[$Matches[1]] = $l.Substring($Matches[1].Length + 1) } }
     }
 }
-Set-Content $envNueva $lineas -Encoding UTF8
+foreach ($clave in @($quiero.Keys)) {
+    $ya = $false
+    foreach ($l in $lineas) { if ($l -like "$clave=*") { $ya = $true } }
+    if (-not $ya) { [void]$lineas.Add("$clave=$($quiero[$clave])") }
+}
+[IO.File]::WriteAllLines($envNueva, [string[]]$lineas)   # UTF-8 sin BOM
+if (-not (Select-String -Path $envNueva -Pattern '^ESTUDIO_PROYECTOS=' -Quiet)) { throw 'No se pudo guardar la configuracion de la Xandart nueva (.env)' }
 Write-Host "   usa tus videos de: $(Join-Path $Actual 'proyectos')"
 Write-Host "   copia de seguridad: $([Environment]::GetFolderPath('MyDocuments'))\Xandart copias"
 

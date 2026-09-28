@@ -46,9 +46,20 @@ def raiz_origen() -> Path:
     return Path(os.environ.get("XANDART_ORIGEN") or RAIZ)
 
 
+def _por_defecto_de_la_nueva() -> dict[str, str]:
+    """Si esta es la Xandart Nueva (carpeta XandartNueva al lado de la de siempre), sus ajustes
+    salen solos aunque el instalador no haya podido escribir su .env."""
+    if RAIZ.name.lower() != "xandartnueva":
+        return {}
+    actual = RAIZ.parent / "Xandart"
+    return {"XANDART_PUERTO": "8031", "XANDART_ABRIR": "/app/", "XANDART_ORIGEN": str(actual),
+            "ESTUDIO_PROYECTOS": str(actual / "proyectos"), "XANDART_BIBLIOTECA": str(actual / "biblioteca")}
+
+
 def aplicar_ajustes_de_instalacion() -> None:
     """Pasa al entorno los ajustes de instalación de `.env` que el sistema no haya fijado ya."""
-    for k, v in _leer_env().items():
+    valores = {**_por_defecto_de_la_nueva(), **{k: v for k, v in _leer_env().items() if v}}
+    for k, v in valores.items():
         if k in AJUSTES_DE_INSTALACION and v and not os.environ.get(k):
             os.environ[k] = v
 
@@ -57,7 +68,22 @@ def clave_api(nombre: str) -> str | None:
     """Clave de un proveedor: primero la guardada en Xandart (`.env`, ⚙ Ajustes), luego el
     entorno. Nunca del código. (Antes mandaba el entorno: una clave vieja guardada en Windows
     tapaba en silencio la nueva que se pegaba en Ajustes.)"""
-    return limpiar_clave(_leer_env().get(nombre)) or limpiar_clave(os.environ.get(nombre)) or None
+    return (limpiar_clave(_leer_env().get(nombre)) or limpiar_clave(os.environ.get(nombre))
+            or _clave_de_la_de_siempre(nombre) or None)
+
+
+def _clave_de_la_de_siempre(nombre: str) -> str:
+    """La Xandart Nueva usa las claves de la de siempre si no tiene las suyas."""
+    origen = os.environ.get("XANDART_ORIGEN")
+    if not origen or Path(origen).resolve() == RAIZ.resolve():
+        return ""
+    ruta = Path(origen) / ".env"
+    if not ruta.exists():
+        return ""
+    for linea in ruta.read_text(encoding="utf-8-sig").splitlines():
+        if linea.strip().startswith(f"{nombre}="):
+            return limpiar_clave(linea.split("=", 1)[1])
+    return ""
 
 
 def leer_config(nombre: str) -> dict[str, Any]:

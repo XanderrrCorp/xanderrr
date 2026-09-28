@@ -48,3 +48,23 @@ def test_probar_usa_la_clave_escrita_y_la_guarda_solo_si_funciona(tmp_path, monk
 
     r = cli.post("/api/probar/pexels", json={"clave": "https://www.pexels.com/api/"}).json()
     assert not r["ok"] and "símbolos" in r["detalle"]
+
+
+def test_la_nueva_sabe_sola_donde_esta_la_de_siempre(tmp_path, monkeypatch):
+    """Aunque su .env quede vacío, la Xandart Nueva usa el puerto 8031, abre /app y lee los videos
+    y las claves de la de siempre."""
+    nueva, vieja = tmp_path / "XandartNueva", tmp_path / "Xandart"
+    nueva.mkdir(); vieja.mkdir()
+    (nueva / ".env").write_text("", encoding="utf-8")
+    (vieja / ".env").write_text("PEXELS_API_KEY=" + "p" * 56 + "\n", encoding="utf-8")
+    monkeypatch.setattr(config, "RAIZ", nueva)
+    for k in config.AJUSTES_DE_INSTALACION:
+        monkeypatch.delenv(k, raising=False)
+    monkeypatch.delenv("PEXELS_API_KEY", raising=False)
+    config.aplicar_ajustes_de_instalacion()
+    import os
+    assert os.environ["XANDART_PUERTO"] == "8031" and os.environ["XANDART_ABRIR"] == "/app/"
+    assert os.environ["ESTUDIO_PROYECTOS"] == str(vieja / "proyectos")
+    assert config.clave_api("PEXELS_API_KEY") == "p" * 56
+    for k in config.AJUSTES_DE_INSTALACION:
+        monkeypatch.delenv(k, raising=False)

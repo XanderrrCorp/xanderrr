@@ -90,3 +90,20 @@ def test_actualizar_una_base_con_datos_hace_copia_primero(tmp_path, monkeypatch)
     hechas = copias.listar()
     assert len(hechas) == 1 and hechas[0]["motivo"] == "antes_de_actualizar_la_base"
     assert list(hechas[0]["partes"]) == ["base_de_datos"]
+
+
+def test_la_copia_se_repite_si_cambia_la_carpeta_de_videos(tmp_path, monkeypatch):
+    monkeypatch.delenv("XANDART_SIN_MIGRAR")
+    local.olvidar()
+    try:
+        local.preparar()                                   # primera vez: carpeta de videos vacía
+        assert len(copias.listar()) == 1
+        otra = tmp_path / "videos_de_siempre"
+        monkeypatch.setenv("ESTUDIO_PROYECTOS", str(otra))
+        _proyecto_con_archivos()
+        local.olvidar()
+        local.preparar()                                   # ahora con los videos de verdad: copia otra vez
+        hechas = copias.listar()
+        assert len(hechas) == 2 and hechas[0]["partes"]["proyectos"]["archivos"] == 4
+    finally:
+        local.olvidar()
