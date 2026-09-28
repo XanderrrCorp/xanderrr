@@ -289,7 +289,7 @@ def main(argv: list[str] | None = None) -> int:
     from .plataforma import contexto, local
 
     # la terminal trabaja en el mismo espacio que la página (en modo local, el del dueño)
-    contexto.fijar_espacio(local.espacio())
+    contexto.fijar_espacio(local.espacio())   # espera la copia de seguridad si es la primera vez
     if hasattr(a, "estilo"):
         canal, a.estilo = _canal_y_estilo(getattr(a, "canal", None), a.estilo)
         if hasattr(a, "canal") and a.cmd != "importar-v1":

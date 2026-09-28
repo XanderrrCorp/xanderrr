@@ -52,3 +52,5 @@ export interface Precios {
 export const archivo = (slug: string, ruta: string) => `/archivos/${slug}/${ruta}`;
 // Mientras la página nueva no tenga todas las pantallas, la revisión de un video se hace en la de siempre.
 export const paginaVieja = (slug?: string) => (slug ? `/#${slug}` : '/');
+
+export interface EstadoLocal { activo: boolean; fase: string; detalle: string; error: string | null; carpeta_copias: string }

@@ -25,6 +25,7 @@ def proyectos_temporales(tmp_path, monkeypatch):
     monkeypatch.setenv("XANDART_SIN_REMBG", "1")      # las pruebas no bajan el modelo de rembg (170 MB)
     monkeypatch.setenv("XANDART_DATOS", str(tmp_path / "datos"))   # base de datos y archivos de cada prueba aparte
     monkeypatch.setenv("XANDART_SIN_MIGRAR", "1")     # la migración solo corre en las pruebas que la piden
+    monkeypatch.setenv("XANDART_COPIAS", str(tmp_path / "copias"))  # las copias de seguridad de cada prueba aparte
 
 
 @pytest.fixture(autouse=True)

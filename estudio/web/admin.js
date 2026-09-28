@@ -15,7 +15,7 @@ const num = v => (v === '' || v == null ? null : Number(v));
 
 async function pintar() {
   let d;
-  try { d = await api('/api/v2/admin/resumen'); }
+  try { d = await api('/api/v2/admin/resumen'); d.copias = await api('/api/v2/admin/copias'); }
   catch (e) { $('#app').innerHTML = `<div class="error">${esc(e.message)}</div>`; return; }
   const m = d.margen;
   $('#app').innerHTML = `
@@ -28,6 +28,15 @@ async function pintar() {
       <div class="cifra"><span class="tenue">A precio de lista</span><b>${usd(m.precio_lista_usd)}</b></div>
     </div>
     <p class="tenue" style="font-size:13px">Tu cuenta paga a costo real: su consumo suma al costo pero no a lo cobrado. «A precio de lista» es lo que habría pagado un cliente por todo lo producido.</p>
+  </section>
+
+  <section class="tarjeta"><h2>Copias de seguridad</h2>
+    <p class="tenue">Copia completa: base de datos, videos (guiones, imágenes, audios, render), sonidos, estilos y canales. Nunca se borran solas. Carpeta: <b>${esc(d.copias.carpeta)}</b></p>
+    <div class="desliza"><table class="tabla"><tr><th>Fecha</th><th>Motivo</th><th>Tamaño</th><th>Carpeta</th></tr>
+    ${d.copias.copias.map(c => `<tr><td>${esc(c.fecha)}</td><td>${esc(c.motivo.replaceAll('_', ' '))}</td>
+      <td>${(c.total_bytes / 2 ** 20).toFixed(0)} MB</td><td class="tenue" style="font-size:12px">${esc(c.carpeta)}</td></tr>`).join('') || '<tr><td colspan="4" class="tenue">Todavía no hay copias.</td></tr>'}
+    </table></div>
+    <div class="fila"><button class="mini" onclick="copiaAhora(this)">Hacer una copia ahora</button></div>
   </section>
 
   <section class="tarjeta"><h2>Saldo en los proveedores</h2>
@@ -136,5 +145,11 @@ function guardarCorreo() {
 async function probarCorreo() {
   try { const r = await api('/api/v2/admin/correo/prueba', { method: 'POST' }); alert(`Correo enviado a ${r.para}. Revisa tu bandeja.`); }
   catch (e) { alert(e.message); }
+}
+async function copiaAhora(boton) {
+  boton.disabled = true; boton.textContent = 'Copiando… (puede tardar unos minutos)';
+  try { const c = await api('/api/v2/admin/copias', { method: 'POST' }); alert(`Copia lista en:\n${c.carpeta}`); }
+  catch (e) { alert(e.message); }
+  pintar();
 }
 pintar();

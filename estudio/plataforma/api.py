@@ -381,3 +381,31 @@ def videos(_: Quien = Depends(usuario_actual)):
                                     "activo": t.activo, "error": t.error} if t else None)})
     salida.sort(key=lambda v: (v["estado"] != "en_marcha", -v["modificado"]))
     return salida
+
+
+# ------------------------------------------------------------------ copias de seguridad y preparación
+
+@api.get("/estado-local")
+def estado_local():
+    """Si la plataforma se está preparando (copia de seguridad y registro de videos) o ya está lista."""
+    from . import local
+    from .copias import carpeta_copias
+
+    return {**local.estado(), "carpeta_copias": str(carpeta_copias())}
+
+
+@api.get("/admin/copias")
+def copias(_: Quien = Depends(solo_admin)):
+    from .copias import carpeta_copias, listar
+
+    return {"carpeta": str(carpeta_copias()), "copias": listar()}
+
+
+@api.post("/admin/copias")
+def copia_ahora(_: Quien = Depends(solo_admin)):
+    from .copias import CopiaFallida, hacer_copia
+
+    try:
+        return hacer_copia("a_mano")
+    except CopiaFallida as ex:
+        raise HTTPException(400, str(ex)) from ex

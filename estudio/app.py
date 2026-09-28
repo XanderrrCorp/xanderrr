@@ -34,6 +34,9 @@ def _version() -> str:
 
 
 VERSION = _version()
+from .config import aplicar_ajustes_de_instalacion  # noqa: E402
+
+aplicar_ajustes_de_instalacion()
 PUERTO = int(os.environ.get("XANDART_PUERTO", "8030"))
 app = FastAPI(title="Xandart")
 
@@ -52,7 +55,7 @@ class EspacioDeLaPeticion:
 
         from .plataforma import contexto, local
 
-        espacio = await run_in_threadpool(local.espacio)
+        espacio = await run_in_threadpool(local.espacio, False)   # no espera la copia: mientras, modo de siempre
         with contexto.usar_espacio(espacio):
             await self.siguiente(scope, receive, send)
 
@@ -751,13 +754,12 @@ def main():
             _cerrar_puerto()
     from .plataforma import local
 
-    local.espacio()                # la primera vez migra la instalación a datos del dueño (idempotente)
-    if local.error():
-        print(f"Xandart sigue en modo de siempre: no se pudo preparar el espacio ({local.error()})")
+    local.preparar(esperar=False)  # copia de seguridad y migración en segundo plano (la primera vez tarda)
     if "--sin-navegador" not in sys.argv:
         import threading
 
-        threading.Timer(1.5, lambda: webbrowser.open(f"http://127.0.0.1:{PUERTO}/")).start()
+        abrir = os.environ.get("XANDART_ABRIR", "/")     # la versión nueva abre directo en /app/
+        threading.Timer(1.5, lambda: webbrowser.open(f"http://127.0.0.1:{PUERTO}{abrir}")).start()
     uvicorn.run(app, host="127.0.0.1", port=PUERTO, log_level="warning")
 
 

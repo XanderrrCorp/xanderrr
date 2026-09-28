@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Route, Routes } from 'react-router-dom';
-import { api, type Cuenta } from './api';
+import { api, type Cuenta, type EstadoLocal } from './api';
 import { Barra } from './componentes/Barra';
 import { Lateral } from './componentes/Lateral';
 import { Canales } from './paginas/Canales';
@@ -13,6 +13,17 @@ import { Pronto } from './paginas/Pronto';
 export function App() {
   const [cuenta, setCuenta] = useState<Cuenta | null>(null);
   const [menu, setMenu] = useState(false);
+  const [prep, setPrep] = useState<EstadoLocal | null>(null);
+  useEffect(() => {
+    // la primera vez la plataforma hace la copia de seguridad y registra tus videos: se avisa hasta que termine
+    let espera: number | undefined;
+    const mirar = () => api<EstadoLocal>('/api/v2/estado-local').then((e) => {
+      setPrep(e);
+      if (e.activo && !['listo', 'error'].includes(e.fase)) espera = window.setTimeout(mirar, 3000);
+    }).catch(() => {});
+    mirar();
+    return () => window.clearTimeout(espera);
+  }, []);
   useEffect(() => {
     const traer = () => api<Cuenta>('/api/v2/cuenta').then(setCuenta).catch(() => {});
     traer();
@@ -26,6 +37,13 @@ export function App() {
       <Lateral admin={!!cuenta?.usuario.admin} abierto={menu} cerrar={() => setMenu(false)} />
       <div className="contenido">
         <Barra cuenta={cuenta} menu={() => setMenu(true)} />
+        {prep && prep.activo && prep.fase !== 'listo' && (
+          <div className={`aviso-prep ${prep.fase === 'error' ? 'malo' : ''}`} role="status">
+            {prep.fase === 'error'
+              ? <>No se preparó la plataforma: {prep.error}. Tus videos siguen intactos.</>
+              : <>{prep.detalle || 'Preparando…'} La copia queda en <b>{prep.carpeta_copias}</b>. Mientras tanto todo sigue funcionando.</>}
+          </div>
+        )}
         <main>
           <Routes>
             <Route path="/" element={<Inicio />} />

@@ -62,3 +62,41 @@ jobs:
           if (-not (Select-String -Path "$d\.env" -Pattern 'TOGETHER_API_KEY=prueba' -Quiet)) { throw 'se borraron las claves' }
           Start-Sleep 5
           (Invoke-RestMethod http://127.0.0.1:8030/api/version).version
+
+      - name: Xandart Nueva al lado (copia de seguridad, videos de siempre, la de siempre intacta)
+        shell: powershell
+        timeout-minutes: 20
+        run: |
+          $vieja = Join-Path $env:LOCALAPPDATA 'Xandart'
+          # un video de la de siempre, para ver que la nueva lo muestra y que lo copia antes de migrar
+          $p = Join-Path $vieja 'proyectos\peces'
+          New-Item -ItemType Directory -Force "$p\imagenes" | Out-Null
+          Set-Content "$p\proyecto.json" '{"slug":"peces","titulo":"Peces del Amazonas","canal":"animales-peligrosos","estilo":"enciclopedia_mascota","duracion_objetivo_seg":540,"creado":"2026-09-28T00:00:00+00:00"}' -Encoding ascii
+          Set-Content "$p\imagenes\escena_001.png" 'imagen' -Encoding ascii
+          $antesVieja = (Get-ChildItem $vieja -Recurse -File | Where-Object { $_.FullName -notmatch '\\(__pycache__|logs)\\' } | Measure-Object).Count
+          $pidVieja = @(Get-CimInstance Win32_Process | Where-Object { $_.CommandLine -like '*estudio.app*' } | ForEach-Object { $_.ProcessId })
+          # la version de la rama de este commit (el .bat baja el instalador de GitHub)
+          & powershell -NoProfile -ExecutionPolicy Bypass -File "instalar\instalar-nueva.ps1"
+          if ($LASTEXITCODE -ne 0) { throw 'fallo el instalador de la nueva' }
+          $nueva = Join-Path $env:LOCALAPPDATA 'XandartNueva'
+          if (-not (Test-Path "$([Environment]::GetFolderPath('Desktop'))\Xandart Nueva.lnk")) { throw 'falta el acceso directo' }
+          if (@(Get-Process -Id $pidVieja -ErrorAction SilentlyContinue).Count -ne $pidVieja.Count) { throw 'la nueva cerro la Xandart de siempre' }
+          $ok = $false
+          foreach ($i in 1..90) {
+            try { $e = Invoke-RestMethod http://127.0.0.1:8031/api/v2/estado-local; if ($e.fase -in 'listo', 'error') { $ok = $true; break } } catch { }
+            Start-Sleep 2
+          }
+          $e | ConvertTo-Json
+          if (-not $ok -or $e.fase -ne 'listo') { Get-Content "$nueva\logs\xandart.log" -ErrorAction SilentlyContinue; throw "no quedo lista: $($e.error)" }
+          $copias = Join-Path ([Environment]::GetFolderPath('MyDocuments')) 'Xandart copias'
+          $copia = Get-ChildItem $copias -Directory | Select-Object -First 1
+          if (-not (Test-Path "$($copia.FullName)\proyectos\peces\imagenes\escena_001.png")) { throw 'la copia no tiene el video' }
+          $videos = Invoke-RestMethod http://127.0.0.1:8031/api/v2/videos
+          if (-not ($videos | Where-Object { $_.slug -eq 'peces' })) { throw 'la nueva no muestra el video de siempre' }
+          $canales = Invoke-RestMethod http://127.0.0.1:8031/api/v2/canales
+          $canales | ConvertTo-Json -Depth 3
+          if (-not $canales) { throw 'no se registro el canal' }
+          if ((Invoke-WebRequest http://127.0.0.1:8031/app/ -UseBasicParsing).Content -notlike '*id="raiz"*') { throw 'no abre /app' }
+          $despuesVieja = (Get-ChildItem $vieja -Recurse -File | Where-Object { $_.FullName -notmatch '\\(__pycache__|logs)\\' } | Measure-Object).Count
+          if ($despuesVieja -ne $antesVieja) { throw "la nueva escribio en la carpeta de siempre ($antesVieja -> $despuesVieja archivos)" }
+          (Invoke-RestMethod http://127.0.0.1:8030/api/version).version

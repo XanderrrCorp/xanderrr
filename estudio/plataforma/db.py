@@ -88,5 +88,20 @@ def preparar() -> None:
         cfg = Config()
         cfg.set_main_option("script_location", str(Path(__file__).with_name("migraciones")))
         cfg.set_main_option("sqlalchemy.url", direccion)
+        if _pendiente(cfg, direccion):
+            # regla del dueño: antes de cambiar la estructura de una base con datos, copia de seguridad
+            from .copias import hacer_copia
+
+            hacer_copia("antes_de_actualizar_la_base", solo_base=True)
         command.upgrade(cfg, "head")
         _PREPARADAS.add(direccion)
+
+
+def _pendiente(cfg, direccion: str) -> bool:
+    """True si la base ya tiene datos y le falta alguna migración (una base nueva no necesita copia)."""
+    from alembic.runtime.migration import MigrationContext
+    from alembic.script import ScriptDirectory
+
+    with motor().connect() as c:
+        actual = MigrationContext.configure(c).get_current_revision()
+    return actual is not None and actual != ScriptDirectory.from_config(cfg).get_current_head()

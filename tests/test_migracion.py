@@ -78,6 +78,7 @@ def test_modo_local_peticiones_y_trabajos_corren_en_el_espacio_del_dueno(tmp_pat
         listo.wait(5)
         return {}
 
+    local.preparar()                                                   # copia de seguridad + migración
     try:
         TestClient(modulo_app.app).get("/api/_prueba_espacio")
     finally:

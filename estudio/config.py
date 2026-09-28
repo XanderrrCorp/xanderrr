@@ -19,7 +19,7 @@ def _leer_env() -> dict[str, str]:
     valores: dict[str, str] = {}
     ruta = RAIZ / ".env"
     if ruta.exists():
-        for linea in ruta.read_text(encoding="utf-8").splitlines():
+        for linea in ruta.read_text(encoding="utf-8-sig").splitlines():
             linea = linea.strip()
             if not linea or linea.startswith("#") or "=" not in linea:
                 continue
@@ -32,6 +32,25 @@ def limpiar_clave(valor: str | None) -> str:
     """Quita lo que se cuela al copiar y pegar: espacios, saltos de línea, comillas y
     caracteres invisibles (espacio de ancho cero, espacio duro…)."""
     return re.sub(r"[\s\u200b\u200c\u200d\u2060\ufeff\xa0\"'`]", "", valor or "")
+
+
+# ajustes de la instalación que se pueden fijar en `.env` (la versión nueva instalada al lado de
+# la de siempre usa otro puerto y lee los proyectos de la carpeta de la de siempre)
+AJUSTES_DE_INSTALACION = ("XANDART_PUERTO", "ESTUDIO_PROYECTOS", "XANDART_DATOS", "XANDART_COPIAS", "XANDART_CEO_EMAIL",
+                          "XANDART_ORIGEN", "XANDART_BIBLIOTECA", "XANDART_ABRIR")
+
+
+def raiz_origen() -> Path:
+    """Instalación de donde salen los datos de siempre (estilos con sus poses, canales con sus
+    referencias). La versión nueva instalada al lado apunta a la de siempre con XANDART_ORIGEN."""
+    return Path(os.environ.get("XANDART_ORIGEN") or RAIZ)
+
+
+def aplicar_ajustes_de_instalacion() -> None:
+    """Pasa al entorno los ajustes de instalación de `.env` que el sistema no haya fijado ya."""
+    for k, v in _leer_env().items():
+        if k in AJUSTES_DE_INSTALACION and v and not os.environ.get(k):
+            os.environ[k] = v
 
 
 def clave_api(nombre: str) -> str | None:
