@@ -273,8 +273,8 @@ def usar_pexels_en_escenas(c: CarpetaProyecto, t=None, ejecutar_claude=None) -> 
     try:
         indice = preparar_stock(c.ruta, ejecutar=ejecutar_claude or claude_cli.ejecutar, avisar=avisar,
                                 recrear_faltantes=False)
-    except SinClavePexels:
-        avisar("Sin clave de Pexels: se ajusta solo reusando imágenes")
+    except SinClavePexels as ex:
+        avisar(f"⚠ Sin fotos reales de Pexels: {ex}. Se ajusta solo reusando imágenes.")
         return 0
     tomas = [a for a in indice["archivos"] if a.get("verificado") and not a.get("sintetica")
              and (c.ruta / a["archivo"]).exists()]
@@ -345,7 +345,18 @@ def ajustar_al_presupuesto(c: CarpetaProyecto, t=None, ejecutar_claude=None, usa
     el giro, el cierre, la primera imagen de cada sección ni las escenas del villano oculto."""
     from .esquemas import EscenasV2
 
+    avisos: list[str] = []
+    if t:
+        original = t.avisar
+
+        def _capturar(texto, _o=original):
+            if texto.startswith("⚠"):
+                avisos.append(texto)
+            _o(texto)
+        t.avisar = _capturar
     pexels = usar_pexels_en_escenas(c, t, ejecutar_claude) if usar_pexels else 0
+    if t:
+        t.avisar = original
     config = ConfigCostos.cargar()
     est = estimar_imagenes(c)
     precio_cop = est["cop"] / est["faltan"] if est["faltan"] else 0
@@ -391,7 +402,7 @@ def ajustar_al_presupuesto(c: CarpetaProyecto, t=None, ejecutar_claude=None, usa
     r = {"pexels": pexels, "convertidas": len(elegidas), **estimar_imagenes(c)}
     if t:
         t.avisar(f"Listo: {pexels} escenas con Pexels y {len(elegidas)} que reusan una imagen cercana. "
-                 f"Imágenes nuevas: {r['faltan']} (≈ {r['texto']})")
+                 f"Imágenes nuevas: {r['faltan']} (≈ {r['texto']})" + (" · " + avisos[0] if avisos else ""))
     return r
 
 
@@ -441,8 +452,8 @@ def _stock(c: CarpetaProyecto, t: Trabajo, ejecutar_claude=None) -> None:
 
     try:
         preparar_stock(c.ruta, ejecutar=ejecutar_claude or claude_cli.ejecutar, avisar=t.avisar)
-    except SinClavePexels:
-        t.avisar("Sin fotos reales: falta la clave de Pexels en ⚙ Ajustes (es gratis)")
+    except SinClavePexels as ex:
+        t.avisar(f"⚠ Sin fotos reales de Pexels: {ex}")
     except Exception as ex:  # noqa: BLE001 — no es imprescindible
         t.avisar(f"Sin fotos reales esta vez: {str(ex)[:160]}")
 
