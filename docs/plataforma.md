@@ -60,6 +60,14 @@ Referencia vista en otro canal: el personaje lleva un hoodie con capota del anim
 - Un ícono pequeño del tema entre la mascota y la silueta (gota de veneno, etc.): usa los íconos que
   ya tiene el módulo de miniaturas.
 
+- La silueta dura TODO el nivel hasta que se dice el nombre: también en las escenas de contexto (la
+  rana negra con «?» sobre una mano con la herida). En esas escenas se pide a la imagen el animal ya
+  como silueta negra con «?» (mismo costo: es el mismo prompt), y la escena de la revelación va a color.
+- Composición repetida: mascota disfrazada a la izquierda reaccionando, el objeto o la escena a la
+  derecha, fondo de papel (ya lo tenemos).
+- Subtítulos de UNA palabra a la vez, grandes, amarillos con borde negro, abajo al centro (opción por
+  canal; hoy son trozos de hasta 4 palabras).
+
 ## Funciones pedidas para el inicio (según la competencia)
 Producir: video largo, short vertical, recortes a shorts (solo de videos propios).
 Identidad del canal: personaje, estilo visual, canal. Generar suelto: imagen, clip animado, voz.
