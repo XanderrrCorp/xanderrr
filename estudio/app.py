@@ -833,7 +833,7 @@ def main():
         except Exception:  # noqa: BLE001 — un Xandart muy viejo no tiene /api/version
             abierta = None
         if abierta == VERSION:     # segundo clic en el acceso directo: solo abre la página
-            webbrowser.open(f"http://127.0.0.1:{PUERTO}/")
+            webbrowser.open(f"http://127.0.0.1:{PUERTO}{os.environ.get('XANDART_ABRIR', '/')}")
             return
         try:                       # quedó abierto el Xandart de antes de actualizar: se cierra
             urllib.request.urlopen(urllib.request.Request(f"http://127.0.0.1:{PUERTO}/api/apagar", method="POST"),
