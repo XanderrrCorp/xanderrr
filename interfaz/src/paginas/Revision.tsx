@@ -79,7 +79,7 @@ export function Revision() {
       <div className="rev-cab">
         <Link to="/videos" className="tenue pequeno">← Mis videos</Link>
         <span className="crece" />
-        {guionOk && !v.vertical && <a className="boton-borde pequeno" href={`/#mini/${slug}`}>Miniatura</a>}
+        {guionOk && !v.vertical && <Link className="boton-borde pequeno" to={`/videos/${slug}/miniatura`}>Miniatura</Link>}
         <span className="chip-gasto">Gastado: {v.costo}</span>
       </div>
       <h1 className="rev-titulo">{v.titulo}</h1>

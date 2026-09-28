@@ -7,6 +7,7 @@ import { Canales } from './paginas/Canales';
 import { Editor } from './paginas/Editor';
 import { Formatos } from './paginas/Formatos';
 import { Inicio } from './paginas/Inicio';
+import { Miniatura } from './paginas/Miniatura';
 import { MisVideos } from './paginas/MisVideos';
 import { Planes } from './paginas/Planes';
 import { Pronto } from './paginas/Pronto';
@@ -51,6 +52,7 @@ export function App() {
             <Route path="/" element={<Inicio />} />
             <Route path="/videos" element={<MisVideos />} />
             <Route path="/videos/:slug/editor" element={<Editor />} />
+            <Route path="/videos/:slug/miniatura" element={<Miniatura />} />
             <Route path="/videos/:slug" element={<Revision />} />
             <Route path="/canales" element={<Canales />} />
             <Route path="/formatos" element={<Formatos />} />
