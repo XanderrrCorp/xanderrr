@@ -89,7 +89,9 @@ def cerrar_video(carpeta: Path, minutos_reales: float) -> dict | None:
             return None
         costo = max(0.0, _costo_usd(carpeta) - _ya_cobrado_usd(s, v.id))
         movs = creditos.cerrar(s, r, minutos_reales, costo, nota=f"Video «{v.titulo}»")
-        return {"cobrado": -sum(m.creditos for m in movs), "costo_real_usd": round(costo, 4)}
+        salida = {"cobrado": -sum(m.creditos for m in movs), "costo_real_usd": round(costo, 4)}
+    _avisar_proveedores()
+    return salida
 
 
 def descartar_video(carpeta: Path, motivo: str = "Video descartado sin terminar") -> None:
@@ -142,3 +144,15 @@ def accion(carpeta: Path, clave: str, cantidad: float = 1.0):
         raise
     with db.sesion() as s:
         creditos.cerrar(s, s.get(Reserva, reserva_id), cantidad, medida.gasto())
+    _avisar_proveedores()
+
+
+def _avisar_proveedores() -> None:
+    """Tras cada gasto: si el saldo estimado de un proveedor bajó del aviso, correo al dueño."""
+    try:
+        from . import proveedores
+
+        with db.sesion() as s:
+            proveedores.revisar_y_avisar(s)
+    except Exception:  # noqa: BLE001 — un aviso que no sale nunca frena la producción
+        pass

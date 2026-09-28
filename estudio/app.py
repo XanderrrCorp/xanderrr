@@ -59,6 +59,10 @@ class EspacioDeLaPeticion:
 
 app.add_middleware(EspacioDeLaPeticion)
 
+from .plataforma.api import api as api_v2  # noqa: E402 — la API de la plataforma (cuenta, créditos, admin)
+
+app.include_router(api_v2)
+
 
 def _proyecto(slug: str) -> CarpetaProyecto:
     try:
@@ -76,6 +80,11 @@ SIN_CACHE = {"Cache-Control": "no-store, max-age=0"}
 @app.get("/", response_class=HTMLResponse)
 def portada():
     return HTMLResponse((WEB / "index.html").read_text(encoding="utf-8"), headers=SIN_CACHE)
+
+
+@app.get("/admin", response_class=HTMLResponse)
+def administracion():
+    return HTMLResponse((WEB / "admin.html").read_text(encoding="utf-8"), headers=SIN_CACHE)
 
 
 @app.get("/web/{nombre}")
@@ -127,7 +136,8 @@ def estado():
                 except Exception:  # noqa: BLE001 — un proyecto roto no tumba la lista
                     continue
     return {"claves": {"together": bool(clave_api("TOGETHER_API_KEY")), "minimax": bool(clave_api("MINIMAX_API_KEY")),
-                       "pexels": bool(clave_api("PEXELS_API_KEY")), "freesound": bool(clave_api("FREESOUND_API_KEY"))},
+                       "pexels": bool(clave_api("PEXELS_API_KEY")), "freesound": bool(clave_api("FREESOUND_API_KEY")),
+                       "correo": bool(clave_api("XANDART_SMTP_USUARIO") and clave_api("XANDART_SMTP_CLAVE"))},
             "claude": bool(claude_cli.ejecutable()), "videos": videos,
             "carpeta_videos": str(pipeline.carpeta_videos())}
 
@@ -137,6 +147,8 @@ class Claves(BaseModel):
     minimax: str | None = None
     pexels: str | None = None
     freesound: str | None = None
+    smtp_usuario: str | None = None     # Gmail que manda los avisos
+    smtp_clave: str | None = None       # contraseña de aplicación de ese Gmail
 
 
 @app.post("/api/claves")
@@ -153,7 +165,8 @@ def guardar_claves(c: Claves):
 
 
 NOMBRES_CLAVE = {"together": "TOGETHER_API_KEY", "minimax": "MINIMAX_API_KEY", "pexels": "PEXELS_API_KEY",
-                 "freesound": "FREESOUND_API_KEY"}
+                 "freesound": "FREESOUND_API_KEY", "smtp_usuario": "XANDART_SMTP_USUARIO",
+                 "smtp_clave": "XANDART_SMTP_CLAVE"}
 
 
 DONDE_CLAVE = {"together": "api.together.ai → Settings → API keys", "pexels": "pexels.com/api → Your API key",
