@@ -7,3 +7,11 @@ proyectos/
 logs/
 biblioteca/
 entregas/
+# claves y credenciales: nunca al repositorio (es público)
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+credenciales*.json
+secrets/
