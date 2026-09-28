@@ -468,6 +468,25 @@ def _globo_pregunta(img: Image.Image, loc: float) -> Image.Image:
 _MONTAJE: dict = {}
 
 
+_ESCALA_QUIETA: dict[tuple[int, int, int], Image.Image] = {}
+
+
+def _cuadro_escala(papel: Image.Image, valor: int, loc: float) -> Image.Image:
+    """Escala de peligro 0–10 sobre el papel. Mientras la flecha se mueve se dibuja cada cuadro; ya
+    quieta (desde 1,3 s) el cuadro se reutiliza."""
+    from .escala_peligro import dibujar
+
+    clave = (valor, papel.width, papel.height)
+    if loc >= 1.3 and clave in _ESCALA_QUIETA:
+        return _ESCALA_QUIETA[clave].copy()
+    img = papel.copy().convert("RGBA")
+    img.alpha_composite(dibujar(valor, loc, papel.width, papel.height))
+    img = img.convert("RGB")
+    if loc >= 1.3:
+        _ESCALA_QUIETA[clave] = img.copy()
+    return img
+
+
 def _montaje_foto(raiz: Path, papel: Image.Image, ef: dict, loc: float) -> Image.Image:
     """Foto REAL en marco rojo sobre el papel, con la mascota señalándola desde la izquierda."""
     clave = (ef["archivo"], ef.get("pose"))
@@ -1066,6 +1085,9 @@ def _renderizar(carpeta: CarpetaProyecto, ffmpeg: str, destino: Path | None, des
                 img, en_reaccion = cuadro.copy(), True
         if not en_reaccion and f_real and f_real["en"] <= tt < f_real["en"] + f_real["dur"]:
             img, en_reaccion = _montaje_foto(raiz, papel, f_real, tt - f_real["en"]), True
+        esc_p = ef.get("escala_peligro")
+        if not en_reaccion and esc_p and esc_p["en"] <= tt < esc_p["en"] + esc_p["dur"]:
+            img, en_reaccion = _cuadro_escala(papel, esc_p["valor"], tt - esc_p["en"]), True
         if "icono_advertencia" in ef and not en_reaccion:
             img = _poner_icono(img, ef["icono_advertencia"], tt)
         if "etiqueta" in ef and not en_reaccion:

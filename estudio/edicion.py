@@ -27,6 +27,7 @@ import re
 from pathlib import Path
 
 from .config import escribir_json, leer_json
+from .escala_peligro import valor_por_posicion
 from .esquemas import EDL, EscenasV2, Estilo
 from .estilos import cargar_gramatica, cargar_perfil_edicion
 from .proyecto import CarpetaProyecto
@@ -461,6 +462,11 @@ def _musica(escenas: list, clips: list, revelacion: int | None, total: float, rn
     return salida
 
 
+def _escala(en: float, dur: float, valor: int, nivel) -> dict:
+    return {"efecto": "escala_peligro", "en": en, "dur": dur, "valor": int(valor), "nivel": nivel.numero,
+            "villano": bool(nivel.villano)}
+
+
 def construir_edl(carpeta: CarpetaProyecto) -> dict:
     proyecto = carpeta.cargar()
     from .estilos import cargar_estilo
@@ -498,6 +504,7 @@ def construir_edl(carpeta: CarpetaProyecto) -> dict:
     respiros_por_minuto: dict[int, int] = {}
     usos_entrada = {"entrada_abajo": 0, "entrada_lado": 0, "entrada_rebote": 0}
     ultima_entrada = None
+    escala_pendiente = None
     for idx, e in enumerate(escenas):
         ini, fin = round(inicios[idx], 3), round(finales[idx], 3)
         dur = fin - ini
@@ -521,6 +528,13 @@ def construir_edl(carpeta: CarpetaProyecto) -> dict:
                 frena = ini + min(0.8, dur * 0.5)          # la tira se detiene en la tarjeta (ver render)
                 _sfx(sfx, "ruleta", ini, idx, "Ruleta: la tira gira y sus clics se frenan justo en la tarjeta del nivel",
                      termina_en=frena, duracion_max=round(frena - ini, 3))
+                valor = n.peligro if n.peligro is not None else valor_por_posicion(n.numero, len(esc.niveles))
+                if dur >= 3.0:
+                    efectos.append(_escala(round(frena + 0.5, 3), round(fin - frena - 0.5, 3), valor, n))
+                    _sfx(sfx, "golpe_grave" if n.villano else "pop", frena + 0.5 + 0.9, idx,
+                         f"La flecha llega a {valor}/10 en la escala de peligro")
+                else:
+                    escala_pendiente = (valor, n)       # la tira dura poco: la escala abre la escena siguiente
                 if n.villano:
                     razon += "; la tarjeta del villano tiembla antes de la revelación"
                     _sfx(sfx, "zumbido", ini + 0.8, idx, "Zumbido grave: el último nivel es el peligroso")
@@ -549,6 +563,14 @@ def construir_edl(carpeta: CarpetaProyecto) -> dict:
             razon = "Presentación de los niveles: la tira completa pasa" + (" con el villano pixelado" if oculto else "")
             _sfx(sfx, "ruleta", ini, idx, "Ruleta: la lista completa pasa girando y frena en el último nivel",
                  termina_en=fin - 0.05, duracion_max=round(max(0.5, dur - 0.05), 3))
+        if escala_pendiente and modo != "tira" and dur >= 1.6:
+            valor, n = escala_pendiente
+            efectos.append(_escala(ini, round(min(2.6, dur - 0.3), 3), valor, n))
+            _sfx(sfx, "golpe_grave" if n.villano else "pop", ini + 0.9, idx,
+                 f"La flecha llega a {valor}/10 en la escala de peligro")
+            escala_pendiente = None
+        elif escala_pendiente and modo != "tira":
+            escala_pendiente = None
         if modo is None:
             t_estilo = estilo.tipo(tipo) if tipo in estilo.ids_tipos else None
             if t_estilo is None:

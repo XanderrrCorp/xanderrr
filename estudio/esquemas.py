@@ -41,6 +41,8 @@ EFECTOS = (
     "foto_real", "video_real",
     # entradas del objeto al cortar (sale de abajo o de un lado con rebote) y vaivén suave mientras está
     "entrada_abajo", "entrada_lado", "vaiven",
+    # escala de peligro 0–10 a pantalla completa cuando se presenta un nivel (dibujada con código)
+    "escala_peligro",
 )
 # "sfx" no es un efecto visual, pero se sugiere en la misma lista (ver 3.1).
 EFECTOS_SUGERIBLES = EFECTOS + ("sfx",)
@@ -372,6 +374,7 @@ class Nivel(Modelo):
     nombre: str
     asset: str
     villano: bool = False
+    peligro: int | None = Field(None, ge=0, le=10)   # escala 0–10 en pantalla; si falta, sale de la posición
 
 
 class EscenasV2(Modelo):
