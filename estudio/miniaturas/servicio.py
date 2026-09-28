@@ -87,11 +87,11 @@ def producir(c: CarpetaProyecto, t, permiso: bool = False, rehacer_plan: bool = 
     t.progreso = 0.5
     _censura(c, plan, ejecutar)
     t.avisar("Armando la miniatura…")
-    componer(c, plan)
+    mapa = componer(c, plan)
     informe = {"rondas": []}
     for ronda in range(REINTENTOS_QA + 1):
         t.avisar("Claude está revisando la miniatura…" if ronda == 0 else f"Revisando otra vez (ronda {ronda + 1})…")
-        r = qa.revisar(base, plan, base / "miniatura.jpg", ejecutar)
+        r = qa.revisar(base, plan, base / "miniatura.jpg", ejecutar, medidas=mapa.get("medidas"))
         informe["rondas"].append(r)
         malos = [int(k) for k, v in r["sujetos"].items()
                  if not v["ok"] and plan.cells[int(k)].intentos_qa < REINTENTOS_QA]
@@ -106,7 +106,7 @@ def producir(c: CarpetaProyecto, t, permiso: bool = False, rehacer_plan: bool = 
         if 0 in malos:
             plan.hero_censor_box = None
             _censura(c, plan, ejecutar)
-        componer(c, plan)
+        mapa = componer(c, plan)
         t.progreso = min(0.95, t.progreso + 0.15)
     informe["aprobada"] = all(v["ok"] for v in informe["rondas"][-1]["sujetos"].values())
     escribir_json(base / "qa.json", informe)

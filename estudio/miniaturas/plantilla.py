@@ -33,7 +33,8 @@ class Plantilla(BaseModel):
     layout: str = "escala_2x3"
     bloque_estilo: str
     fuente_etiquetas: str = "PatrickHand-Regular.ttf"
-    fuente_hero: str = "ArchivoBlack-Regular.ttf"
+    fuente_hero: str | None = None           # obsoleto: el texto del protagonista usa la fuente de las etiquetas
+    grosor_hero: int = Field(2, ge=0, le=8)   # trazo del texto del protagonista (su «negrita»)
     color_hero_text: str = "#E00000"
     color_etiquetas: str = "#111111"
     iconos_permitidos: list[str] = Field(default_factory=lambda: ["advertencia", "prohibido", "calavera", "rayo",

@@ -27,6 +27,8 @@ def medir(carpeta: Path, plan: Plan) -> dict[int, list[str]]:
         if not c.archivo or not (carpeta / c.archivo).exists():
             problemas[i] = ["falta la imagen"]
             continue
+        if plan.hook_mode == "scene":
+            continue                              # la escena va completa: no hay fondo blanco que medir
         img = np.asarray(Image.open(carpeta / c.archivo).convert("L").resize((256, 256)))
         ys, xs = np.nonzero(img < 235)
         ocupa = ((xs.max() - xs.min()) * (ys.max() - ys.min()) / 256 ** 2) if len(xs) else 0
@@ -58,7 +60,7 @@ def hoja(carpeta: Path, plan: Plan) -> Path:
     return ruta
 
 
-def revisar(carpeta: Path, plan: Plan, final: Path, ejecutar=claude_cli.ejecutar) -> dict:
+def revisar(carpeta: Path, plan: Plan, final: Path, ejecutar=claude_cli.ejecutar, medidas: dict | None = None) -> dict:
     medidos = medir(carpeta, plan)
     h = hoja(carpeta, plan)
     lista = "\n".join(f"#{i + 1} {c.name} · etiqueta «{c.label}»" for i, c in enumerate(plan.cells))
@@ -71,10 +73,11 @@ def revisar(carpeta: Path, plan: Plan, final: Path, ejecutar=claude_cli.ejecutar
         "(ej. un candirú no debe parecer un banco de sardinas)?\n- ¿Tiene pose o expresión amenazante (salvo el #6, "
         "que debe ser tierno, inofensivo o sorprendente)?\n- ¿El recorte quedó limpio (sin restos de fondo ni bordes "
         f"blancos raros)?\n- ¿Trae texto, marcos o bordes (no debe)?{gancho}\nY en conjunto: ¿el #1 es claramente "
-        "el más llamativo? ¿El estilo es coherente entre los 6?\n"
+        "el más llamativo? ¿El estilo es coherente entre los 6? ¿Hay DOS sujetos con silueta y color parecidos "
+        "(ej. dos peces plateados alargados)? Si los hay, ponlos en «parecidos».\n"
         "Si un sujeto falla, da en «arreglo» una instrucción corta EN INGLÉS para regenerarlo.\n"
         'Responde SOLO un JSON: {"sujetos": [{"numero": 1, "ok": true, "problemas": [], "arreglo": ""}], '
-        '"protagonista_destaca": true, "estilo_coherente": true, "resumen": "<una frase en español>"}',
+        '"protagonista_destaca": true, "estilo_coherente": true, "parecidos": [[2, 5]], "resumen": "<una frase en español>"}',
         cwd=carpeta, herramientas=["Read"])
     datos = claude_cli.extraer_json(texto) or {}
     sujetos = {}
@@ -92,6 +95,18 @@ def revisar(carpeta: Path, plan: Plan, final: Path, ejecutar=claude_cli.ejecutar
         s["problemas"] = probs + s["problemas"]
         if not s["arreglo"]:
             s["arreglo"] = "Make the subject much bigger so it fills almost the whole frame."
+    for par in datos.get("parecidos") or []:
+        try:
+            a, b = sorted(int(x) - 1 for x in par)[:2]
+        except (TypeError, ValueError):
+            continue
+        cual = b if b != 0 else a                  # se cambia el que no es protagonista
+        if 0 <= cual < 6:
+            s = sujetos.setdefault(cual, {"ok": True, "problemas": [], "arreglo": ""})
+            s["ok"] = False
+            s["problemas"].append(f"se parece mucho al #{(a if cual == b else b) + 1} en silueta y color")
+            s["arreglo"] = (s["arreglo"] + " " if s["arreglo"] else "") + \
+                "Use a clearly different color palette and a different pose so it cannot be confused with the others."
     if datos.get("protagonista_destaca") is False and 0 in sujetos:
         sujetos[0]["ok"] = False
         sujetos[0]["problemas"].append("el protagonista no es el más llamativo")
@@ -99,6 +114,7 @@ def revisar(carpeta: Path, plan: Plan, final: Path, ejecutar=claude_cli.ejecutar
     return {"sujetos": {str(k): v for k, v in sorted(sujetos.items())},
             "protagonista_destaca": datos.get("protagonista_destaca"),
             "estilo_coherente": datos.get("estilo_coherente"), "resumen": str(datos.get("resumen") or "")[:300],
+            "medidas": medidas or {},
             "claude_respondio": bool(datos)}
 
 

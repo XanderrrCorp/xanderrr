@@ -20,6 +20,8 @@ from .plantilla import Plantilla, referencias_activas
 
 CIERRE = ("Single subject, huge, fills the frame, centered, isolated on a pure flat white background, NO text, "
           "NO letters, NO borders, NO frames, NO shadows on the background.")
+CIERRE_ESCENA = ("Single subject, huge, fills the frame, centered, the scene fills the whole image edge to edge (no "
+                 "white background), NO text, NO letters, NO borders, NO frames.")
 CON_REFERENCIAS = ("Match the illustration style, line art, shading and color palette of the reference images. "
                    "Do NOT copy their composition, animals or any text.")
 LADO = 1024
@@ -34,7 +36,7 @@ def prompt(plan: Plan, celda: Celda, plantilla: Plantilla, extra: str = "", con_
         partes.append("Show a visible fresh bite wound or bloody mark near the animal's mouth or on its prey.")
     if extra.strip():
         partes.append(extra.strip())
-    partes.append(CIERRE)
+    partes.append(CIERRE_ESCENA if plan.hook_mode == "scene" else CIERRE)
     if con_referencias:
         partes.append(CON_REFERENCIAS)
     return " ".join(partes)

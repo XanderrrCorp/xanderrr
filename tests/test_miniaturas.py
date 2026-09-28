@@ -154,3 +154,20 @@ def test_api_editar_y_plantilla(tmp_path, monkeypatch):
     r = cli.delete("/api/canales/animales-peligrosos/miniatura/referencias/nueva.jpg")
     assert all(x["archivo"] != "nueva.jpg" for x in r.json()["referencias"])
     assert cli.get("/canales/..%2F..%2Fetc/referencias/passwd").status_code in (400, 404, 422, 500)
+
+
+def test_medidas_del_armado(tmp_path):
+    """Protagonista ≥ 1,3× el mayor, encimado ≤ 5 %, ícono libre y cabezas sin cortar; y en modo
+    scene la escena no se recorta: va completa con bordes redondeados."""
+    (tmp_path / "sujetos").mkdir()
+    datos = json.loads(json.dumps(PLAN))
+    for k, c in enumerate(datos["cells"]):
+        _sujeto((40 * k, 90, 160)).save(tmp_path / f"sujetos/s{k}.png")
+        c["archivo"] = f"sujetos/s{k}.png"
+    _, mapa = composicion.componer(tmp_path, Plan.model_validate(datos), plantillas.cargar("animales-peligrosos"))
+    m = mapa["medidas"]
+    assert m["protagonista_vs_mayor"] >= 1.3 and m["protagonista_ok"]
+    assert m["solape_max"] <= 0.05 and m["icono_libre"] and m["cabeza_sin_cortar"]
+    escena = composicion.cargar_escena(tmp_path, "sujetos/s1.png", 1.5)
+    assert escena.getpixel((0, 0))[3] == 0                                  # esquina redondeada
+    assert escena.getpixel((60, 60))[:3] == (255, 255, 255)                 # el fondo blanco NO se quita

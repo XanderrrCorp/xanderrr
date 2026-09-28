@@ -109,6 +109,16 @@ function miniPanelHtml(p) {
   </section>`;
 }
 
+function miniMedidasHtml(m) {
+  if (!m) return '';
+  const ok = v => v ? '<span class="chip ok">bien</span>' : '<span class="chip aviso">revisar</span>';
+  return `<ul class="mini-medidas">
+    <li>Protagonista: <b>${m.protagonista_vs_mayor ?? '—'}×</b> el más grande de los otros (mínimo 1,3×) ${ok(m.protagonista_ok)}</li>
+    <li>Encimado máximo entre dos sujetos: <b>${Math.round((m.solape_max || 0) * 100)} %</b> (máximo 5 %) ${ok(m.solape_ok)}</li>
+    <li>Ícono libre (sin tocar a nadie): <b>${m.icono_libre ? 'sí' : 'no'}</b> ${ok(m.icono_libre)}</li>
+    <li>Cabezas sin cortar por arriba ${ok(m.cabeza_sin_cortar)}</li></ul>`;
+}
+
 function miniQaHtml(qa) {
   const r = qa.rondas[qa.rondas.length - 1];
   const filas = Object.entries(r.sujetos).filter(([, s]) => !s.ok || s.problemas.length).map(([k, s]) =>
@@ -116,6 +126,7 @@ function miniQaHtml(qa) {
   return `<section class="tarjeta" style="margin-top:14px"><h2>Control de calidad
     <span class="chip ${qa.aprobada ? 'ok' : 'aviso'}">${qa.aprobada ? 'aprobada' : 'con observaciones'}</span></h2>
     <p>${esc(r.resumen || '')}</p>${filas ? `<ul>${filas}</ul>` : '<p class="tenue">Sin problemas.</p>'}
+    <b>Medidas del armado (por código)</b>${miniMedidasHtml((MINI.mapa && MINI.mapa.medidas) || r.medidas)}
     <p class="tenue" style="font-size:13px">${qa.rondas.length} ronda(s) de revisión · cada sujeto se regenera como mucho 2 veces.</p></section>`;
 }
 

@@ -103,12 +103,15 @@ FÓRMULA DEL FORMATO (siempre):
 - Sujetos ENORMES, de 3/4 o de frente mirando a la cámara, con pose o expresión amenazante (boca abierta,
   colmillos, lengua fuera, garras), salvo el último.
 - Animales visualmente distintos entre sí (no tres serpientes marrones iguales). Sin repetir animales.
+- NINGÚN par de sujetos con silueta y color parecidos (ej. dos peces plateados alargados, dos arañas negras):
+  si pasa, cambia uno por otro animal o dale en «scene» un color, pose o encuadre claramente distinto.
 
 DECIDE:
 - scale_type: qué mide la escala (peligro, engaño, inteligencia, probabilidad de sobrevivir, dolor de la
   picadura…), deducido del tema.
 - hook_mode: "isolated" (animal solo; el gancho es la pose) o "scene" (el MISMO gancho visual repetido en los 6,
-  ej. «biting a human forearm», «human legs dangling in murky river water»; ese elemento se recorta con el animal).
+  ej. «biting a human forearm», «human legs dangling in murky river water»; en ese modo la escena NO se recorta:
+  se muestra completa con bordes redondeados).
 - hook_visual: el gancho en inglés si hook_mode es "scene"; si no, null.
 - cells: 6 en orden (el primero es el protagonista, is_hero true; los demás false). Cada uno:
   name (nombre interno), label (texto visible, máximo {MAX_LABEL} caracteres: normalmente el nombre del animal en

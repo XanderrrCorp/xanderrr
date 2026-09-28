@@ -95,4 +95,10 @@ select { font: inherit; font-size: 16px; color: var(--texto); background: var(--
 .mini-ref img { width: 100%; aspect-ratio: 1; object-fit: contain; background: #fff; border-radius: 8px; display: block; }
 .mini-ref.apagada img { opacity: .35; }
 @media (max-width: 640px) { .mini-orden { grid-template-columns: repeat(3, 1fr); } }
-input[type=color] { height: 44px; padding: 4px 6px; cursor: pointer; }
+input[type=color] { -webkit-appearance: none; appearance: none; height: 44px; min-height: 44px; padding: 4px;
+  cursor: pointer; }
+input[type=color]::-webkit-color-swatch-wrapper { padding: 0; }
+input[type=color]::-webkit-color-swatch { border: 1px solid var(--linea); border-radius: 8px; }
+input[type=color]::-moz-color-swatch { border: 1px solid var(--linea); border-radius: 8px; }
+.mini-medidas { margin: 6px 0 0; padding-left: 18px; }
+.mini-medidas li { margin: 3px 0; }
