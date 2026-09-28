@@ -1,0 +1,12 @@
+{
+  "nombre": "Escala de peligro",
+  "descripcion": "Del más inofensivo al que nunca deberías tocar: niveles con tira que se desliza, mini historias y una revelación al final.",
+  "formula": "escala_peligro",
+  "estilo": "",
+  "perfil": "",
+  "duraciones_min": [6, 9, 12],
+  "duracion_min": 9,
+  "relacion_aspecto": "16:9",
+  "idea_ejemplo": "Los peces más peligrosos del río Amazonas, del más inofensivo al que nunca deberías tocar",
+  "portada": ""
+}

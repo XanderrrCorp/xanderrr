@@ -13,13 +13,13 @@ from sqlalchemy.orm import Session
 from . import creditos as cr
 from . import db, precios, proveedores, recursos
 from .cuentas import SinPermiso, cuenta_local, es_admin
-from .modelos import (Ajuste, Canal, Espacio, Estilo, FormulaGuion, Movimiento, Paquete, PerfilEdicion, Personaje,
-                      Plan, PlantillaMiniatura, Precio, Usuario, Video, Voz)
+from .modelos import (Ajuste, Canal, Espacio, Estilo, Formato, FormulaGuion, Movimiento, Paquete, PerfilEdicion,
+                      Personaje, Plan, PlantillaMiniatura, Precio, Usuario, Video, Voz)
 
 api = APIRouter(prefix="/api/v2")
 
 TIPOS = {"estilos": Estilo, "personajes": Personaje, "plantillas": PlantillaMiniatura, "formulas": FormulaGuion,
-         "voces": Voz, "perfiles": PerfilEdicion}
+         "voces": Voz, "perfiles": PerfilEdicion, "formatos": Formato}
 
 
 def sesion():
@@ -75,7 +75,7 @@ def canales(q: Quien = Depends(usuario_actual), s: Session = Depends(sesion)):
              "estilo": clave(Estilo, c.estilo_id), "personaje": clave(Personaje, c.personaje_id),
              "voz": clave(Voz, c.voz_id), "formula": clave(FormulaGuion, c.formula_id),
              "plantilla_miniatura": clave(PlantillaMiniatura, c.plantilla_miniatura_id),
-             "perfil_edicion": clave(PerfilEdicion, c.perfil_edicion_id),
+             "perfil_edicion": clave(PerfilEdicion, c.perfil_edicion_id), "formato": clave(Formato, c.formato_id),
              "videos": s.query(Video).filter(Video.canal_id == c.id).count()} for c in filas]
 
 
@@ -84,7 +84,8 @@ def listar_recursos(tipo: str, buscar: str = "", q: Quien = Depends(usuario_actu
     modelo = TIPOS.get(tipo)
     if modelo is None:
         raise HTTPException(404, "tipo de recurso desconocido")
-    return [{"id": r.id, "clave": r.clave, "nombre": r.nombre, "descripcion": r.descripcion, "publico": r.publico}
+    return [{"id": r.id, "clave": r.clave, "nombre": r.nombre, "descripcion": r.descripcion, "publico": r.publico,
+             **({"datos": r.datos} if tipo == "formatos" else {})}      # duraciones e idea de ejemplo para elegir
             for r in recursos.listar(s, modelo, q.espacio, buscar=buscar)]
 
 

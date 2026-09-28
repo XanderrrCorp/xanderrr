@@ -99,3 +99,27 @@ def test_video_nuevo_usa_el_canal_del_espacio_y_queda_registrado(tmp_path):
     with db.sesion() as s:
         v = s.scalar(select(Video).where(Video.slug == c.ruta.name))
         assert v.espacio_id == r["espacio"] and v.canal_id and v.minutos == 9
+
+
+def test_formatos_del_catalogo_y_del_canal(tmp_path):
+    from fastapi.testclient import TestClient
+
+    from estudio import app as modulo_app
+    from estudio.plataforma.modelos import Formato
+
+    raiz, proyectos = _instalacion_vieja(tmp_path)
+    r = migrar_instalacion(raiz, proyectos)
+    assert r["catalogo"]["formatos"] >= 1
+    with db.sesion() as s:
+        f = s.scalar(select(Formato).where(Formato.clave == "escala_peligro"))
+        assert f.espacio_id is None and f.datos["formula"] == "escala_peligro"
+        canal = s.scalar(select(Canal))
+        assert canal.formato_id == f.id and s.scalar(select(Video)).formato_id == f.id
+    cli = TestClient(modulo_app.app)
+    lista = cli.get("/api/v2/recursos/formatos").json()
+    escala = next(x for x in lista if x["clave"] == "escala_peligro")
+    assert escala["publico"] and escala["datos"]["duraciones_min"] == [6, 9, 12]
+    copia = cli.post(f"/api/v2/recursos/formatos/{escala['id']}/duplicar", json={"nombre": "Mi escala"}).json()
+    lista = cli.get("/api/v2/recursos/formatos").json()
+    mio = next(x for x in lista if x["id"] == copia["id"])
+    assert not mio["publico"] and mio["nombre"] == "Mi escala"              # la copia es privada y editable

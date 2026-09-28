@@ -123,6 +123,16 @@ class PerfilEdicion(Recurso, Base):
     __table_args__ = (UniqueConstraint("espacio_id", "clave"),)
 
 
+class Formato(Recurso, Base):
+    """Plantilla de video que se elige al crear (Escala de peligro, Top X, Storytelling, Stickman,
+    Video para dormir…): junta fórmula de guion, estilo visual y perfil de edición con sus
+    duraciones. El catálogo trae los de Xandart; cada usuario duplica uno o crea los suyos.
+    datos = {formula, estilo, perfil, duraciones_min, duracion_min, relacion_aspecto, idea_ejemplo, portada}
+    (formula/estilo/perfil son claves; vacío = «el del canal»)."""
+    __tablename__ = "formatos"
+    __table_args__ = (UniqueConstraint("espacio_id", "clave"),)
+
+
 class Canal(ConFechas, Base):
     __tablename__ = "canales"
     __table_args__ = (UniqueConstraint("espacio_id", "clave"),)
@@ -137,6 +147,7 @@ class Canal(ConFechas, Base):
     formula_id: Mapped[str | None] = mapped_column(ForeignKey("formulas_guion.id"), nullable=True)
     plantilla_miniatura_id: Mapped[str | None] = mapped_column(ForeignKey("plantillas_miniatura.id"), nullable=True)
     perfil_edicion_id: Mapped[str | None] = mapped_column(ForeignKey("perfiles_edicion.id"), nullable=True)
+    formato_id: Mapped[str | None] = mapped_column(ForeignKey("formatos.id"), nullable=True)   # el de siempre del canal
     # duración objetivo, segundos por escena, presentador, logo… (lo que el asistente de canal pide)
     ajustes: Mapped[dict] = mapped_column(JSON, default=dict)
     archivado: Mapped[bool] = mapped_column(Boolean, default=False)
@@ -154,6 +165,7 @@ class Video(ConFechas, Base):
     estado: Mapped[str] = mapped_column(String(30), default="borrador")
     # carpeta del proyecto dentro del almacén del espacio (el motor sigue trabajando con carpetas)
     carpeta: Mapped[str] = mapped_column(String(300))
+    formato_id: Mapped[str | None] = mapped_column(ForeignKey("formatos.id"), nullable=True)
     minutos: Mapped[float | None] = mapped_column(Float, nullable=True)
     archivado: Mapped[bool] = mapped_column(Boolean, default=False)
 

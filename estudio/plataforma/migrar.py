@@ -17,8 +17,8 @@ from sqlalchemy.orm import Session
 from ..config import RAIZ, leer_config, leer_json, ruta_proyectos
 from . import almacen, contexto, db, precios
 from .cuentas import cuenta_local
-from .modelos import (Ajuste, Canal, Estilo, FormulaGuion, PerfilEdicion, Personaje, PlantillaMiniatura,
-                      Video, Voz)
+from .modelos import (Ajuste, Canal, Estilo, Formato, FormulaGuion, PerfilEdicion, Personaje,
+                      PlantillaMiniatura, Video, Voz)
 
 
 def _upsert(s: Session, modelo, espacio_id: str | None, clave: str, **campos):
@@ -38,7 +38,7 @@ def _upsert(s: Session, modelo, espacio_id: str | None, clave: str, **campos):
 def sembrar_catalogo(s: Session) -> dict[str, int]:
     """Registra en la base el catálogo público que viene con Xandart (carpeta catalogo/)."""
     base = contexto.carpeta_catalogo()
-    cuenta = {"formulas": 0, "plantillas": 0, "perfiles": 0, "estilos": 0}
+    cuenta = {"formulas": 0, "plantillas": 0, "perfiles": 0, "estilos": 0, "formatos": 0}
     for f in sorted((base / "formulas").glob("*/formula.json")):
         d = leer_json(f)
         _upsert(s, FormulaGuion, None, f.parent.name, nombre=d["nombre"], descripcion=d.get("descripcion", ""),
@@ -59,6 +59,11 @@ def sembrar_catalogo(s: Session) -> dict[str, int]:
         _upsert(s, Estilo, None, f.parent.name, nombre=d.get("nombre", f.parent.name),
                 descripcion=d.get("descripcion", ""), datos=d, origen={"catalogo": True})
         cuenta["estilos"] += 1
+    for f in sorted((base / "formatos").glob("*/formato.json")):
+        d = leer_json(f)
+        _upsert(s, Formato, None, f.parent.name, nombre=d["nombre"], descripcion=d.get("descripcion", ""),
+                datos={k: v for k, v in d.items() if k not in ("nombre", "descripcion")}, origen={"catalogo": True})
+        cuenta["formatos"] += 1
     return cuenta
 
 
@@ -141,6 +146,7 @@ def migrar_instalacion(raiz: Path = RAIZ, proyectos: Path | None = None) -> dict
         claves_canal.discard("")
         formula = s.scalar(select(FormulaGuion).where(FormulaGuion.espacio_id.is_(None),
                                                       FormulaGuion.clave == "escala_peligro"))
+        formato = s.scalar(select(Formato).where(Formato.espacio_id.is_(None), Formato.clave == "escala_peligro"))
         canales: dict[str, Canal] = {}
         for clave in sorted(claves_canal):
             usados = [leer_json(p) for p in proyectos.glob("*/proyecto.json") if leer_json(p).get("canal") == clave]
@@ -159,6 +165,7 @@ def migrar_instalacion(raiz: Path = RAIZ, proyectos: Path | None = None) -> dict
             c.personaje_id = presentador.id if presentador else None
             c.voz_id = voz.id if voz else None
             c.formula_id = formula.id if formula else None
+            c.formato_id = formato.id if formato else None
             c.plantilla_miniatura_id = plantillas[clave].id if clave in plantillas else None
             c.perfil_edicion_id = perfiles[perfil_clave].id if perfil_clave in perfiles else None
             c.ajustes = {**(c.ajustes or {}), "minutos": 9, "idioma_voz": v.get("idioma", "Spanish")}
@@ -178,6 +185,7 @@ def migrar_instalacion(raiz: Path = RAIZ, proyectos: Path | None = None) -> dict
                 vid = Video(espacio_id=E, slug=d["slug"], titulo=d["titulo"], carpeta=str(carpeta))
                 s.add(vid)
             vid.canal_id = canales[d["canal"]].id if d.get("canal") in canales else None
+            vid.formato_id = canales[d["canal"]].formato_id if d.get("canal") in canales else None
             vid.formato = formato
             vid.estado = "listo" if (carpeta / "render" / "final.mp4").exists() else "en_proceso"
             vid.minutos = round(d.get("duracion_objetivo_seg", 0) / 60, 1) or None
