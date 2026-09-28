@@ -62,7 +62,7 @@ def componer(c: CarpetaProyecto, plan: Plan | None = None) -> dict:
     return mapa
 
 
-def producir(c: CarpetaProyecto, t, permiso: bool = False, rehacer_plan: bool = False,
+def _producir(c: CarpetaProyecto, t, permiso: bool = False, rehacer_plan: bool = False,
              ejecutar=None, proveedor=None) -> Path:
     """Plan → 6 sujetos en paralelo → recorte y composición → control de calidad (regenera lo que
     falle, máx. 2 veces por sujeto). Lo ya generado no se vuelve a pagar."""
@@ -128,7 +128,7 @@ def _censura(c: CarpetaProyecto, plan: Plan, ejecutar) -> None:
         _guardar_plan(c, plan)
 
 
-def regenerar(c: CarpetaProyecto, t, indice: int, instruccion: str = "", permiso: bool = False,
+def _regenerar(c: CarpetaProyecto, t, indice: int, instruccion: str = "", permiso: bool = False,
               ejecutar=None, proveedor=None) -> None:
     ejecutar = ejecutar or claude_cli.ejecutar
     plan = _plan(c)
@@ -143,7 +143,7 @@ def regenerar(c: CarpetaProyecto, t, indice: int, instruccion: str = "", permiso
     componer(c, plan)
 
 
-def variantes_protagonista(c: CarpetaProyecto, t, n: int = 2, permiso: bool = False, proveedor=None) -> list[str]:
+def _variantes_protagonista(c: CarpetaProyecto, t, n: int = 2, permiso: bool = False, proveedor=None) -> list[str]:
     """2-3 versiones más del protagonista para elegir; la elegida no cambia sola."""
     plan = _plan(c)
     libro = LibroCostos(c.ruta, ConfigCostos.cargar())
@@ -232,3 +232,26 @@ def borrar_plan(c: CarpetaProyecto) -> None:
     """Empieza de cero (las imágenes ya pagadas se conservan en sujetos/)."""
     (carpeta(c) / "plan.json").unlink(missing_ok=True)
     shutil.rmtree(carpeta(c) / "recortes", ignore_errors=True)
+
+
+# ------------------------------------------------------------------ con cobro en créditos
+
+def producir(c: CarpetaProyecto, t, *args, **kw) -> Path:
+    from ..plataforma import cobro
+
+    with cobro.accion(c.ruta, "miniatura"):
+        return _producir(c, t, *args, **kw)
+
+
+def regenerar(c: CarpetaProyecto, t, *args, **kw) -> None:
+    from ..plataforma import cobro
+
+    with cobro.accion(c.ruta, "miniatura_variante"):
+        return _regenerar(c, t, *args, **kw)
+
+
+def variantes_protagonista(c: CarpetaProyecto, t, n: int = 2, *args, **kw) -> list[str]:
+    from ..plataforma import cobro
+
+    with cobro.accion(c.ruta, "miniatura_variante", n):
+        return _variantes_protagonista(c, t, n, *args, **kw)

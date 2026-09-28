@@ -209,9 +209,12 @@ def paso_prueba(c: CarpetaProyecto, t: Trabajo, n: int = 10, permiso: bool = Fal
             t.progreso = min(0.95, hechas[0] / max(1, objetivo))
         t.avisar(txt)
 
-    r = generar_imagenes(c, primeras=n, permiso=permiso, avisar=avisar, config=config)
-    if r.frenado:
-        raise RuntimeError(r.frenado)
+    from .plataforma import cobro
+
+    with cobro.accion(c.ruta, "prueba_escenas"):
+        r = generar_imagenes(c, primeras=n, permiso=permiso, avisar=avisar, config=config)
+        if r.frenado:
+            raise RuntimeError(r.frenado)
     claves = [k for k in r.generadas + r.ya_estaban if k.startswith("escena:")]
     hoja = hoja_de_contacto(c, claves, c.ruta / "render" / "hoja_prueba.png")
     pr = proyectar(c, config)
@@ -444,6 +447,7 @@ def paso_imagenes(c: CarpetaProyecto, t: Trabajo, permiso: bool = False, ejecuta
             t.progreso = min(0.9, 0.9 * hechas[0] / max(1, total))
         t.avisar(txt)
 
+    _apartar_creditos_del_video(c, t)
     c.marcar("assets", "en_curso")
     r = generar_imagenes(c, permiso=permiso, avisar=avisar)
     if r.frenado:
@@ -494,6 +498,13 @@ def _ubicar_focos(c: CarpetaProyecto, t: Trabajo, ejecutar_claude=None) -> None:
 
 
 def regenerar_imagen(c: CarpetaProyecto, t: Trabajo, escena_id: int, instruccion: str) -> None:
+    from .plataforma import cobro
+
+    with cobro.accion(c.ruta, "imagen_regenerada"):
+        _regenerar_imagen(c, t, escena_id, instruccion)
+
+
+def _regenerar_imagen(c: CarpetaProyecto, t: Trabajo, escena_id: int, instruccion: str) -> None:
     from .imagenes.generador import generar_imagenes
 
     esc = c.cargar_escenas()
@@ -522,6 +533,7 @@ def paso_video(c: CarpetaProyecto, t: Trabajo, permiso: bool = False, fps: int |
     from .render import renderizar
     from .voz import generar_voz
 
+    _apartar_creditos_del_video(c, t)
     c.marcar("voz", "en_curso")
     t.avisar("Grabando la voz…")
     t.progreso = 0.05
@@ -570,17 +582,37 @@ def paso_video(c: CarpetaProyecto, t: Trabajo, permiso: bool = False, fps: int |
     shutil.copy(final, destino)
     shutil.copy(final.with_suffix(".srt"), destino.with_suffix(".srt"))
     c.marcar("export_final", "completo", [str(destino)])
+    from .plataforma import cobro
+
+    cobrado = cobro.cerrar_video(c.ruta, total / 60)
+    if cobrado:
+        t.avisar(f"Créditos cobrados: {cobrado['cobrado']} (lo apartado que sobró volvió a tu saldo)")
     t.avisar(f"Video listo: {destino}")
     return destino
+
+
+def _apartar_creditos_del_video(c: CarpetaProyecto, t: Trabajo) -> None:
+    """Antes del primer gasto del video completo se apartan sus créditos (una sola vez)."""
+    from .plataforma import cobro
+
+    if c.archivo_escenas.exists() and c.cargar_escenas().relacion_aspecto == "9:16":
+        return                                  # el short se cobra aparte (acción «short»)
+    apartado = cobro.abrir_video(c.ruta, c.cargar().duracion_objetivo_seg / 60)
+    if apartado and apartado["creditos"]:
+        t.avisar(f"Créditos apartados para el video: {apartado['creditos']}")
 
 
 def paso_short(c: CarpetaProyecto, t: Trabajo, permiso: bool = False) -> Path:
     """Short vertical (9:16) sacado del video largo: no genera imágenes, solo voz."""
     from .short import crear_short
 
-    corto = crear_short(c.ruta, c.ruta.parent, avisar=t.avisar)
-    t.progreso = 0.05
-    return paso_video(corto, t, permiso=permiso)
+    from .plataforma import cobro
+
+    with cobro.accion(c.ruta, "short") as gasto:
+        corto = crear_short(c.ruta, c.ruta.parent, avisar=t.avisar)
+        gasto.sumar(corto.ruta)                 # la voz del short se anota en su propia carpeta
+        t.progreso = 0.05
+        return paso_video(corto, t, permiso=permiso)
 
 
 def resumen(c: CarpetaProyecto) -> dict:

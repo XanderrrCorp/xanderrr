@@ -165,6 +165,10 @@ def reservar(s: Session, espacio: Espacio, accion: str, cantidad: float = 1.0, u
     cot = cotizar(s, espacio, accion, cantidad, costo_estimado_usd)
     factor = float((precios.ajuste(s, "margen_reserva") or {}).get("factor", 1.15)) if con_margen else 1.0
     total = int(math.ceil(cot.creditos * factor))
+    if cot.a_costo:
+        # la cuenta del dueño paga a los proveedores con sus propias claves: su freno es el tope en
+        # pesos por video, no el saldo. Se aparta lo que haya y se anota lo que un cliente pagaría.
+        total = min(total, max(0, saldo(s, espacio)))
     try:
         reparto = _repartir(s, espacio, total)
     except SaldoInsuficiente as ex:
