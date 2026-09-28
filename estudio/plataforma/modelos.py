@@ -184,6 +184,9 @@ class Movimiento(Base):
     usuario_id: Mapped[str | None] = mapped_column(ForeignKey("usuarios.id"), nullable=True)
     tipo: Mapped[str] = mapped_column(String(20))   # recarga|bono|consumo|reserva|liberacion|devolucion|ajuste|vencimiento
     creditos: Mapped[int] = mapped_column(Integer)
+    # bolsa de donde entra o sale: plan (se renueva cada mes, con tope), bono (regalos) o recarga
+    # (comprada: nunca vence). Se gasta primero plan, luego bono, luego recarga.
+    bolsa: Mapped[str] = mapped_column(String(10), default="recarga")
     accion: Mapped[str | None] = mapped_column(String(60), nullable=True)      # clave de la tabla de precios
     cantidad: Mapped[float | None] = mapped_column(Float, nullable=True)       # minutos, imágenes…
     video_id: Mapped[str | None] = mapped_column(ForeignKey("videos.id", ondelete="SET NULL"), nullable=True,
