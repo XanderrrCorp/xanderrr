@@ -346,8 +346,10 @@ def _estado_video(pasos: dict, trabajo) -> str:
 
 
 @api.get("/videos")
-def videos(_: Quien = Depends(usuario_actual)):
-    """Videos del espacio, el más reciente primero, con su portada (primera imagen hecha)."""
+def videos():
+    """Videos del espacio, el más reciente primero, con su portada (primera imagen hecha).
+    Se leen de la carpeta de proyectos, sin pasar por la base: tus videos se ven aunque la base
+    todavía se esté preparando o haya fallado."""
     from .. import pipeline
     from ..config import leer_json, ruta_proyectos
     from ..proyecto import CarpetaProyecto

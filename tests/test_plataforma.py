@@ -84,3 +84,30 @@ def test_preparar_la_base_desde_varias_peticiones_a_la_vez():
     for h in hilos:
         h.join()
     assert errores == []
+
+
+def test_cuenta_del_dueno_desde_dos_hilos_a_la_vez():
+    """La página y la preparación piden la cuenta del dueño a la vez: sale una sola, sin error."""
+    import threading
+
+    from estudio.plataforma.cuentas import cuenta_local
+    from estudio.plataforma.modelos import Usuario
+
+    db.preparar()
+    errores, ids = [], []
+
+    def pedir():
+        try:
+            with db.sesion() as s:
+                ids.append(cuenta_local(s)[1].id)
+        except Exception as ex:  # noqa: BLE001
+            errores.append(ex)
+
+    hilos = [threading.Thread(target=pedir) for _ in range(6)]
+    for h in hilos:
+        h.start()
+    for h in hilos:
+        h.join()
+    assert errores == [] and len(set(ids)) == 1
+    with db.sesion() as s:
+        assert s.query(Usuario).count() == 1

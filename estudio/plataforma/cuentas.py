@@ -7,8 +7,10 @@ token) y el resto del código no cambia: todo pide el usuario y el espacio por a
 from __future__ import annotations
 
 import os
+import threading
 
 from sqlalchemy import func, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from .modelos import Espacio, Miembro, Usuario
@@ -42,12 +44,26 @@ def registrar(s: Session, email: str, nombre: str = "", rol: str = "cliente", a_
     return u, e
 
 
+_CERROJO_DUENO = threading.Lock()
+
+
 def cuenta_local(s: Session) -> tuple[Usuario, Espacio]:
     """La cuenta del dueño (se crea la primera vez). En modo local es siempre el usuario actual."""
     u = s.scalar(select(Usuario).where(Usuario.rol == "ceo").order_by(Usuario.creado))
     if u is None:
-        u, e = registrar(s, _email_ceo(), "Dueño de Xandart", rol="ceo", a_costo=True, nombre_espacio="Xandart")
-        return u, e
+        with _CERROJO_DUENO:
+            u = s.scalar(select(Usuario).where(Usuario.rol == "ceo").order_by(Usuario.creado))
+            if u is None:
+                # la primera vez la página y la preparación pueden llegar a la vez: se crea una sola
+                # cuenta y se guarda ya, para que la otra la encuentre
+                try:
+                    u, e = registrar(s, _email_ceo(), "Dueño de Xandart", rol="ceo", a_costo=True,
+                                     nombre_espacio="Xandart")
+                    s.commit()
+                    return u, e
+                except IntegrityError:
+                    s.rollback()
+                    u = s.scalar(select(Usuario).where(Usuario.rol == "ceo").order_by(Usuario.creado))
     e = s.scalar(select(Espacio).where(Espacio.dueno_id == u.id).order_by(Espacio.creado))
     return u, e
 
