@@ -38,6 +38,10 @@
       "google/flash-image-2.5": {
         "precio_por_imagen": 0.05,
         "_nota": "Lista de Together: 0,039 USD por imagen (Gemini Flash Image 2.5 «Nano Banana»). La factura del 26-sep (5,07 USD por ~115 imágenes: 96 del primer video + poses + miniaturas) da ~0,044. Se usa 0,05 para cubrir las imágenes de referencia y que el freno quede un poco por encima. El 0,30 anterior fue un error de cuenta."
+      },
+      "google/flash-image-3.1": {
+        "precio_por_imagen": 0.07,
+        "_nota": "Gemini 3.1 Flash Image («Nano Banana 2») en Together, a 1376x768. Lista: 0,0466 a 512 px; Google cobra 0,067 a 1K. Se usa 0,07 para el freno hasta medirlo en la factura. Reemplaza a flash-image-2.5, que Google apaga el 2-oct-2026 (prueba de estilo aprobada el 28-sep)."
       }
     },
     "videos_por_modelo": {
@@ -94,7 +98,7 @@
     "reuso_extra_por_recortes": 0.1,
     "umbral_mejora": 0.85
   },
-  "ultima_revision_precios": "2026-09-26",
+  "ultima_revision_precios": "2026-09-28",
   "_fuentes_precios": {
     "claude": "Tabla de precios de la API de Anthropic (primera parte), revisada 2026-09-26",
     "imagen_por_unidad": "Gemini 2.5 Flash Image en modo normal: 30 USD por millón de tokens de salida, 1.290 tokens por imagen = 0,039 USD. En modo por lotes es la mitad (~0,0195). CONFIRMAR en ai.google.dev/gemini-api/docs/pricing. El libro de costos registra el costo REAL desde usageMetadata, con las referencias incluidas.",

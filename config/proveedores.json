@@ -7,10 +7,11 @@
     "tiempo_max_s": 120,
     "opciones": {
       "together": {
-        "modelo": "google/flash-image-2.5",
+        "modelo": "google/flash-image-3.1",
         "variable_clave": "TOGETHER_API_KEY",
-        "ancho": 1344,
-        "alto": 768
+        "ancho": 1376,
+        "alto": 768,
+        "_nota": "Gemini 3.1 Flash Image solo acepta tamaños fijos: 1376x768 es su 16:9 (768x1376 el 9:16, 1024x1024 el cuadrado). flash-image-2.5 se apaga el 2-oct-2026."
       },
       "gemini": {
         "modelo": "gemini-2.5-flash-image",
