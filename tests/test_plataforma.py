@@ -62,3 +62,25 @@ def test_almacen_no_se_sale_del_espacio(s):
     for malo in ("..", "../x", "/etc", "a/b"):
         with pytest.raises(ValueError):
             almacen.ruta(e.id, malo)
+
+
+def test_preparar_la_base_desde_varias_peticiones_a_la_vez():
+    """La página nueva pide varias cosas a la vez: la base se migra una sola vez, sin chocar."""
+    import threading
+
+    from estudio.plataforma import db
+
+    errores = []
+
+    def preparar():
+        try:
+            db.preparar()
+        except Exception as ex:  # noqa: BLE001
+            errores.append(ex)
+
+    hilos = [threading.Thread(target=preparar) for _ in range(8)]
+    for h in hilos:
+        h.start()
+    for h in hilos:
+        h.join()
+    assert errores == []

@@ -54,7 +54,15 @@ def _creditos(n: int) -> dict:
 @api.get("/cuenta")
 def cuenta(q: Quien = Depends(usuario_actual), s: Session = Depends(sesion)):
     saldo = cr.saldo(s, q.espacio)
-    return {"usuario": {"email": q.usuario.email, "nombre": q.usuario.nombre, "rol": q.usuario.rol,
+    from datetime import datetime, timezone
+
+    from sqlalchemy import func
+
+    inicio_mes = datetime.now(timezone.utc).replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    gasto_mes = s.scalar(select(func.coalesce(func.sum(Movimiento.costo_real_usd), 0.0)).where(
+        Movimiento.espacio_id == q.espacio.id, Movimiento.tipo == "consumo", Movimiento.creado >= inicio_mes)) or 0.0
+    return {"gasto_mes_usd": round(float(gasto_mes), 2),     # la cuenta del dueño ve su gasto real del mes
+            "usuario": {"email": q.usuario.email, "nombre": q.usuario.nombre, "rol": q.usuario.rol,
                         "a_costo": q.usuario.a_costo, "admin": es_admin(q.usuario)},
             "espacio": {"id": q.espacio.id, "nombre": q.espacio.nombre},
             "saldo": {**_creditos(saldo), "por_bolsa": cr.saldo_por_bolsa(s, q.espacio),
@@ -321,3 +329,55 @@ def correo_prueba(q: Quien = Depends(solo_admin)):
         raise HTTPException(400, f"Gmail no aceptó el envío: {str(ex)[:200]} (revisa que sea una contraseña de "
                                  "aplicación y que la verificación en dos pasos esté activa)") from ex
     return {"ok": True, "para": para}
+
+
+# ------------------------------------------------------------------ videos (para la interfaz nueva)
+
+def _estado_video(pasos: dict, trabajo) -> str:
+    if trabajo and trabajo.activo:
+        return "en_marcha"
+    if pasos.get("export_final") == "completo":
+        return "listo"
+    if pasos.get("assets") == "completo":
+        return "imagenes_listas"
+    if pasos.get("guionista") == "completo":
+        return "guion_listo"
+    return "borrador"
+
+
+@api.get("/videos")
+def videos(_: Quien = Depends(usuario_actual)):
+    """Videos del espacio, el más reciente primero, con su portada (primera imagen hecha)."""
+    from .. import pipeline
+    from ..config import leer_json, ruta_proyectos
+    from ..proyecto import CarpetaProyecto
+
+    salida = []
+    base = ruta_proyectos()
+    for d in (base.iterdir() if base.exists() else []):
+        if not (d / "proyecto.json").exists():
+            continue
+        try:
+            p = CarpetaProyecto(d).cargar()
+        except Exception:  # noqa: BLE001 — un proyecto roto no tumba la lista
+            continue
+        pasos = {k: v.estado for k, v in p.pasos.items()}
+        man = d / "imagenes" / "manifiesto.json"
+        portada = None
+        if man.exists():
+            try:
+                hechas = leer_json(man)
+                primera = next((v for k, v in hechas.items() if k.startswith("escena:")), None) \
+                    or next(iter(hechas.values()), None)
+                portada = primera["archivo"] if primera else None
+            except Exception:  # noqa: BLE001
+                portada = None
+        t = pipeline.TRABAJOS.get(d.name)
+        salida.append({"slug": d.name, "titulo": p.titulo, "minutos": round(p.duracion_objetivo_seg / 60, 1),
+                       "canal": p.canal, "estado": _estado_video(pasos, t), "pasos": pasos, "portada": portada,
+                       "video": "render/final.mp4" if (d / "render" / "final.mp4").exists() else None,
+                       "modificado": (d / "proyecto.json").stat().st_mtime,
+                       "trabajo": ({"paso": t.paso, "progreso": round(t.progreso, 3), "mensaje": t.mensaje,
+                                    "activo": t.activo, "error": t.error} if t else None)})
+    salida.sort(key=lambda v: (v["estado"] != "en_marcha", -v["modificado"]))
+    return salida

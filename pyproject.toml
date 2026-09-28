@@ -26,7 +26,7 @@ build-backend = "setuptools.build_meta"
 include = ["estudio*"]
 
 [tool.setuptools.package-data]
-estudio = ["web/*", "fuentes/*", "plataforma/migraciones/*", "plataforma/migraciones/versions/*"]
+estudio = ["web/*", "web_app/*", "web_app/assets/*", "fuentes/*", "plataforma/migraciones/*", "plataforma/migraciones/versions/*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

@@ -27,7 +27,7 @@ def _version() -> str:
 
     h = hashlib.sha256()
     base = Path(__file__).parent
-    for f in sorted(list(base.rglob("*.py")) + list(WEB.glob("*"))):
+    for f in sorted(list(base.rglob("*.py")) + list(WEB.glob("*")) + list((base / "web_app").rglob("*.*"))):
         h.update(f.name.encode())
         h.update(f.read_bytes())
     return h.hexdigest()[:12]
@@ -85,6 +85,25 @@ def portada():
 @app.get("/admin", response_class=HTMLResponse)
 def administracion():
     return HTMLResponse((WEB / "admin.html").read_text(encoding="utf-8"), headers=SIN_CACHE)
+
+
+APP = Path(__file__).parent / "web_app"      # la interfaz nueva (React), construida en GitHub Actions
+
+
+@app.get("/app", response_class=HTMLResponse)
+@app.get("/app/{ruta:path}", response_class=HTMLResponse)
+def interfaz_nueva(ruta: str = ""):
+    """Interfaz nueva. Los archivos construidos se sirven tal cual; cualquier otra ruta es la
+    aplicación (sus páginas las resuelve el navegador)."""
+    base = APP.resolve()
+    if ruta:
+        destino = (base / ruta).resolve()
+        if base in destino.parents and destino.is_file():
+            return FileResponse(destino)
+    indice = base / "index.html"
+    if not indice.exists():
+        raise HTTPException(404, "La interfaz nueva no está construida en esta instalación")
+    return HTMLResponse(indice.read_text(encoding="utf-8"), headers=SIN_CACHE)
 
 
 @app.get("/web/{nombre}")
@@ -278,11 +297,12 @@ class Nuevo(BaseModel):
     villano: str = ""
     minutos: float = Field(9, ge=4, le=11)
     notas: str = ""
+    canal: str | None = None        # clave del canal; si no, el primero del espacio
 
 
 @app.post("/api/videos")
 def nuevo(n: Nuevo):
-    c = pipeline.crear_video(n.tema, n.giro, n.villano, n.minutos, n.notas)
+    c = pipeline.crear_video(n.tema, n.giro, n.villano, n.minutos, n.notas, canal=n.canal or None)
     pipeline.lanzar(c.ruta.name, "guion", lambda t: pipeline.paso_guion(c, t))
     return pipeline.resumen(c)
 

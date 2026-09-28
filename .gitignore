@@ -16,3 +16,6 @@ datos/
 *.p12
 credenciales*.json
 secrets/
+
+# interfaz nueva: dependencias de Node (lo construido va en estudio/web_app)
+interfaz/node_modules/

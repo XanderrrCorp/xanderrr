@@ -81,3 +81,21 @@ def test_la_pagina_de_administracion_abre(cli):
     r = cli.get("/admin")
     assert r.status_code == 200 and "admin.js" in r.text
     assert cli.get("/web/admin.js").status_code == 200
+
+
+def test_interfaz_nueva_se_sirve_en_app(cli):
+    r = cli.get("/app/")
+    assert r.status_code == 200 and '<div id="raiz">' in r.text
+    assert cli.get("/app/planes").text == r.text                       # las páginas las resuelve el navegador
+    js = next(p for p in (modulo_app.APP / "assets").iterdir() if p.suffix == ".js")
+    assert cli.get(f"/app/assets/{js.name}").status_code == 200
+    assert cli.get("/app/../app.py").status_code in (200, 404)          # nunca sale de la carpeta
+    assert "def " not in cli.get("/app/..%2Fapp.py").text
+
+
+def test_lista_de_videos_con_portada_y_estado(cli):
+    from estudio import pipeline
+
+    c = pipeline.crear_video("Ranas venenosas", "", "", 9)
+    v = cli.get("/api/v2/videos").json()
+    assert v[0]["slug"] == c.ruta.name and v[0]["estado"] == "borrador" and v[0]["portada"] is None

@@ -7,6 +7,7 @@ El esquema se versiona con Alembic (carpeta migraciones/): nunca se edita a mano
 from __future__ import annotations
 
 import os
+import threading
 from contextlib import contextmanager
 from pathlib import Path
 
@@ -65,15 +66,27 @@ def sesion() -> Session:
         s.close()
 
 
+_PREPARADAS: set[str] = set()
+_CERROJO_MIGRAR = threading.Lock()
+
+
 def preparar() -> None:
-    """Deja la base al día (migraciones de Alembic). Se llama al abrir Xandart."""
+    """Deja la base al día (migraciones de Alembic), una sola vez por base y proceso.
+    Alembic no aguanta dos migraciones a la vez en el mismo proceso: van en fila."""
     from alembic import command
     from alembic.config import Config
 
     from . import modelos  # noqa: F401 — registra las tablas
 
-    motor()                                   # crea la carpeta de datos si hace falta
-    cfg = Config()
-    cfg.set_main_option("script_location", str(Path(__file__).with_name("migraciones")))
-    cfg.set_main_option("sqlalchemy.url", url())
-    command.upgrade(cfg, "head")
+    direccion = url()
+    if direccion in _PREPARADAS:
+        return
+    with _CERROJO_MIGRAR:
+        if direccion in _PREPARADAS:
+            return
+        motor()                                   # crea la carpeta de datos si hace falta
+        cfg = Config()
+        cfg.set_main_option("script_location", str(Path(__file__).with_name("migraciones")))
+        cfg.set_main_option("sqlalchemy.url", direccion)
+        command.upgrade(cfg, "head")
+        _PREPARADAS.add(direccion)

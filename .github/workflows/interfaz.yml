@@ -1,0 +1,38 @@
+# Construye la interfaz nueva (React + Vite) y deja lo construido en estudio/web_app, que es
+# lo que el instalador baja con el resto del código. Se sube solo si cambió.
+name: Interfaz
+on:
+  push:
+    paths: ["interfaz/**", ".github/workflows/interfaz.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  construir:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: interfaz/package-lock.json
+      - name: Instalar y construir
+        working-directory: interfaz
+        run: |
+          npm ci --no-audit --no-fund
+          npm run build
+      - name: Subir lo construido si cambió
+        run: |
+          git add -A estudio/web_app
+          if git diff --cached --quiet; then
+            echo "La interfaz construida ya estaba al día"
+          else
+            git config user.name "xandart-bot"
+            git config user.email "xandart-bot@users.noreply.github.com"
+            git commit -m "Interfaz construida (automático)"
+            git push
+          fi

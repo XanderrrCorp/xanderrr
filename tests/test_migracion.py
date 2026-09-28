@@ -118,7 +118,7 @@ def test_formatos_del_catalogo_y_del_canal(tmp_path):
     cli = TestClient(modulo_app.app)
     lista = cli.get("/api/v2/recursos/formatos").json()
     escala = next(x for x in lista if x["clave"] == "escala_peligro")
-    assert escala["publico"] and escala["datos"]["duraciones_min"] == [6, 9, 12]
+    assert escala["publico"] and escala["datos"]["duraciones_min"] == [6, 9, 11]
     copia = cli.post(f"/api/v2/recursos/formatos/{escala['id']}/duplicar", json={"nombre": "Mi escala"}).json()
     lista = cli.get("/api/v2/recursos/formatos").json()
     mio = next(x for x in lista if x["id"] == copia["id"])

@@ -47,6 +47,16 @@ Producir: video largo, short vertical, recortes a shorts (solo de videos propios
 Identidad del canal: personaje, estilo visual, canal. Generar suelto: imagen, clip animado, voz.
 Publicar: miniatura escala 2×3, títulos y descripción, avance (tráiler de 30 s).
 
+## Interfaz nueva (Fase 2)
+- Código en `interfaz/` (React + Vite + TypeScript). `npm run build` deja lo construido en
+  `estudio/web_app/`, que Xandart sirve en `/app`. El workflow «Interfaz» lo construye en GitHub
+  Actions y lo sube solo cuando cambia; el instalador lo baja con el resto del código.
+- Diseño aprobado (mezcla): menú lateral angosto con grupos Crear / Mis recursos / Inspiración que
+  abren un panel de herramientas; créditos siempre arriba a la derecha (la cuenta del dueño ve su
+  gasto real del mes); inicio con la caja de idea (formato, canal, duración, Auto/Personalizado) y al
+  lado el video en marcha con el storyboard que se va llenando; planes solo visual (sin pasarela).
+- Mientras tanto, la revisión y aprobación de cada video sigue en la página de siempre (`/#slug`).
+
 ## Fases
 1. Datos multiusuario, créditos, migración de Peligro Tropical, API v2 y administración — **hecha**.
 3. Asistente de personaje (atajo pedido por Paradoja Sapiens).
