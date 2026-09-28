@@ -42,6 +42,17 @@ e «Inicio rápido» con Sleep video, Storytelling, Top X, Doodle Character, Doo
 - La caja de inicio: escribir la idea, elegir formato, duración y canal. Modo **Auto** (Xandart decide
   todo y el usuario aprueba cada paso) o **Personalizado** (el usuario ajusta guion, estilo y voz antes).
 
+## Idea del dueño: disfraz de la mascota según el animal del video (28-09-2026)
+Referencia vista en otro canal: el personaje lleva un hoodie con capota del animal del que habla el video
+(rana → capota de rana con ojos arriba). Cómo encaja en Xandart:
+- Al crear el video se genera UNA imagen de la mascota del canal con el hoodie del animal (misma cara y
+  trazo, con la mascota de siempre como referencia). Esa imagen es la referencia del personaje solo en
+  ese video: todas las escenas con la mascota la usan sin costo extra.
+- Las poses guardadas del canal (reacciones que se reusan gratis) no tienen el disfraz: o se rehacen
+  para ese video (~10 imágenes, ~$0.70) o ese video usa solo escenas generadas con la mascota.
+- Opción por canal/formato: «disfraz según el tema» sí/no. Aplica también a la miniatura.
+- Ojo con el parecido: es una idea general (disfraz temático), no se copia el personaje ni el estilo del otro canal.
+
 ## Funciones pedidas para el inicio (según la competencia)
 Producir: video largo, short vertical, recortes a shorts (solo de videos propios).
 Identidad del canal: personaje, estilo visual, canal. Generar suelto: imagen, clip animado, voz.
