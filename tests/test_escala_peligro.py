@@ -68,3 +68,16 @@ def test_la_edicion_pone_la_escala_en_cada_nivel(estilo):
     assert escalas[4]["valor"] == 3                           # nivel 2: tira corta, va en la escena siguiente
     assert 3 not in escalas
     assert escalas[1]["en"] > edl["pistas"]["escenas"][0]["inicio"]   # después de que la tira se detiene
+
+
+def test_tramos_del_render_en_paralelo_cortan_entre_escenas():
+    from estudio.render import tramos
+
+    clips = [{"inicio": float(i * 10), "transicion_entrada": "fundido_corto" if i == 6 else "corte"} for i in range(12)]
+    edl = {"duracion_total": 120.0, "pistas": {"escenas": clips}}
+    partes = tramos(edl, 4)
+    assert partes[0][0] == 0 and partes[-1][1] == 120.0
+    assert all(b == c for (_, b), (c, _) in zip(partes, partes[1:]))        # sin huecos ni encimados
+    assert all(a in {c["inicio"] for c in clips} for a, _ in partes)         # siempre en un corte
+    assert 60.0 not in [a for a, _ in partes]                                # nunca en medio de un fundido
+    assert tramos({"duracion_total": 40.0, "pistas": {"escenas": clips[:4]}}, 4) == [(0.0, 40.0)]   # corto: uno solo

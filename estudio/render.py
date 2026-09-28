@@ -7,7 +7,9 @@ from __future__ import annotations
 
 import io
 import math
+import os
 import random
+import shutil
 import subprocess
 import wave
 from pathlib import Path
@@ -15,7 +17,7 @@ from pathlib import Path
 import numpy as np
 from PIL import Image, ImageDraw, ImageEnhance, ImageFilter, ImageFont
 
-from .config import leer_json
+from .config import RAIZ, leer_json
 from .esquemas import EDL
 from .estilos import cargar_estilo
 from .proyecto import CarpetaProyecto
@@ -883,23 +885,136 @@ def _salida() -> tuple[int, int, int]:
 
 def renderizar(carpeta: CarpetaProyecto, ffmpeg: str, destino: Path | None = None, desde: float = 0.0,
                hasta: float | None = None, avisar=print, calidad: str = "normal",
-               salida: tuple[int, int, int] | None = None, vertical: bool = False) -> Path:
+               salida: tuple[int, int, int] | None = None, vertical: bool = False,
+               procesos: int | None = None, solo_video: bool = False) -> Path:
     """vertical=True arma el short 9:16 (1080×1920): la escena de 1920×1080 se dibuja
     igual y se toma una ventana 4:5 que sigue al animal, con fondo borroso, título fijo
-    arriba y subtítulos grandes."""
+    arriba y subtítulos grandes.
+
+    Un video completo se parte en tramos (siempre en un corte entre escenas) que se dibujan a la
+    vez en varios núcleos y se unen al final: el mismo resultado, varias veces más rápido."""
     global FPS
     ancho, alto, fps = salida or _salida()
     if vertical:
         ancho, alto = VW, VH
+    if not solo_video and desde == 0 and hasta is None:
+        n = _procesos(procesos)
+        if n > 1:
+            hecho = _renderizar_paralelo(carpeta, ffmpeg, destino, avisar, calidad, (ancho, alto, fps), vertical, n)
+            if hecho is not None:
+                return hecho
     anterior, FPS = FPS, fps
     try:
-        return _renderizar(carpeta, ffmpeg, destino, desde, hasta, avisar, calidad, ancho, alto, vertical)
+        return _renderizar(carpeta, ffmpeg, destino, desde, hasta, avisar, calidad, ancho, alto, vertical, solo_video)
     finally:
         FPS = anterior
 
 
+def _procesos(pedidos: int | None) -> int:
+    """Cuántos tramos a la vez: los núcleos menos uno (para que el PC siga usable), hasta 6."""
+    if pedidos:
+        return max(1, int(pedidos))
+    try:
+        conf = int(leer_json(RAIZ / "config" / "render.json").get("procesos") or 0)
+    except Exception:  # noqa: BLE001
+        conf = 0
+    if conf:
+        return max(1, conf)
+    return max(1, min(6, (os.cpu_count() or 2) - 1))
+
+
+def tramos(edl: dict, n: int, minimo_s: float = 25.0) -> list[tuple[float, float]]:
+    """Parte el video en n tramos parecidos, cortando siempre donde empieza una escena con corte
+    seco (nunca en medio de un fundido). Tramos muy cortos no valen la pena: se juntan."""
+    total = float(edl["duracion_total"])
+    cortes = sorted({float(c["inicio"]) for c in edl["pistas"]["escenas"]
+                     if c["inicio"] > 0 and c.get("transicion_entrada", "corte") == "corte"})
+    limites = [0.0]
+    for k in range(1, n):
+        objetivo = total * k / n
+        if not cortes:
+            break
+        mejor = min(cortes, key=lambda x: abs(x - objetivo))
+        if mejor - limites[-1] >= minimo_s and total - mejor >= minimo_s:
+            limites.append(mejor)
+    limites.append(total)
+    return list(zip(limites[:-1], limites[1:]))
+
+
+def _renderizar_paralelo(carpeta: CarpetaProyecto, ffmpeg: str, destino: Path | None, avisar, calidad: str,
+                         salida: tuple[int, int, int], vertical: bool, n: int) -> Path | None:
+    import concurrent.futures as cf
+    import sys
+
+    from .editor import edl_con_ediciones
+
+    raiz = carpeta.ruta
+    edl = edl_con_ediciones(raiz)
+    partes = tramos(edl, n)
+    if len(partes) < 2:
+        return None                                   # video corto: en uno solo
+    destino = destino or raiz / "render" / "final.mp4"
+    destino.parent.mkdir(parents=True, exist_ok=True)
+    # lo que los tramos leen se prepara una vez aquí (así ninguno escribe a la vez que otro)
+    proyecto = carpeta.cargar()
+    papel_ruta = raiz / "assets" / "papel_arrugado.png"
+    if not papel_ruta.exists():
+        papel_ruta.parent.mkdir(parents=True, exist_ok=True)
+        papel_arrugado(W, H, proyecto.semilla % 1000).save(papel_ruta)
+    esc = carpeta.cargar_escenas()
+    if esc.niveles:
+        armar_tira(esc, cargar_estilo(proyecto.estilo), raiz, seed=proyecto.semilla)
+    carpeta_tramos = destino.parent / "tramos"
+    shutil.rmtree(carpeta_tramos, ignore_errors=True)
+    carpeta_tramos.mkdir(parents=True)
+    avisar(f"  render en {len(partes)} tramos a la vez ({n} núcleos)")
+    procs = []
+    sin_ventana = 0x08000000 if os.name == "nt" else 0            # sin ventanas negras en Windows
+    from .plataforma import contexto
+
+    entorno = {**os.environ, "XANDART_ESPACIO": contexto.espacio_actual() or ""}   # mismo estilo que aquí
+    for k, (a, b) in enumerate(partes):
+        cmd = [sys.executable, "-m", "estudio.render_tramo", str(raiz), str(carpeta_tramos / f"t{k:02d}.mp4"),
+               f"{a:.6f}", f"{b:.6f}", calidad, str(salida[0]), str(salida[1]), str(salida[2]),
+               "1" if vertical else "0", str(max(1, (os.cpu_count() or 2) // len(partes)))]
+        procs.append(subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, creationflags=sin_ventana,
+                                      env=entorno))
+    # mientras dibujan: se mezcla el audio y se informa el avance
+    with cf.ThreadPoolExecutor(1) as ex:
+        audio = ex.submit(mezclar_audio, raiz, edl, ffmpeg)
+        total = edl["duracion_total"]
+        import time
+
+        while any(p.poll() is None for p in procs):
+            hecho = sum(_avance(carpeta_tramos / f"t{k:02d}.mp4") for k in range(len(partes)))
+            avisar(f"  render {min(hecho, total) / 60:.1f} / {total / 60:.1f} min")
+            time.sleep(5)
+        mezcla = audio.result()
+    errores = [p.stderr.read().decode("utf-8", "replace")[-600:] for p in procs if p.returncode != 0]
+    if errores:
+        raise RuntimeError("falló un tramo del render: " + errores[0])
+    # unir los tramos (sin volver a comprimir) y ponerles el audio
+    lista = carpeta_tramos / "lista.txt"
+    lista.write_text("".join(f"file '{(carpeta_tramos / f't{k:02d}.mp4').as_posix()}'\n" for k in range(len(partes))),
+                     encoding="utf-8")
+    video_tmp = destino.with_suffix(".video.mp4")
+    subprocess.run([ffmpeg, "-y", "-loglevel", "error", "-f", "concat", "-safe", "0", "-i", str(lista),
+                    "-c", "copy", str(video_tmp)], check=True)
+    _mezclar_y_unir(raiz, edl, ffmpeg, destino, video_tmp, mezcla, calidad)
+    shutil.rmtree(carpeta_tramos, ignore_errors=True)
+    return destino
+
+
+def _avance(archivo: Path) -> float:
+    """Segundos ya dibujados de un tramo (lo escribe el propio tramo al lado del video)."""
+    try:
+        return float(archivo.with_suffix(".avance").read_text() or 0)
+    except (OSError, ValueError):
+        return 0.0
+
+
 def _renderizar(carpeta: CarpetaProyecto, ffmpeg: str, destino: Path | None, desde: float, hasta: float | None,
-                avisar, calidad: str, ancho: int, alto: int, vertical: bool = False) -> Path:
+                avisar, calidad: str, ancho: int, alto: int, vertical: bool = False, solo_video: bool = False) -> Path:
     preset, crf, audio_kbps = CALIDADES.get(calidad, CALIDADES["normal"])
     raiz = carpeta.ruta
     from .editor import edl_con_ediciones
@@ -917,11 +1032,12 @@ def _renderizar(carpeta: CarpetaProyecto, ffmpeg: str, destino: Path | None, des
         papel_arrugado(W, H, proyecto.semilla % 1000).save(papel_ruta)
     papel = Image.open(papel_ruta).convert("RGB").resize((W, H))
     escenario = Escenario(raiz, papel, estilo.comportamiento_montaje)
+    hilos_x264 = os.environ.get("XANDART_HILOS_X264")
 
     # tira (15): bases a 1080 de alto, con niebla a los lados para centrar cualquier nivel
     tira = None
     if esc.niveles:
-        armada = armar_tira(esc, estilo, raiz, seed=proyecto.semilla)
+        armada = armar_tira(esc, estilo, raiz, seed=proyecto.semilla, guardar=not solo_video)
         t = armada.t
         esc_f = H / armada.normal.height
         pad = W // 2
@@ -965,6 +1081,7 @@ def _renderizar(carpeta: CarpetaProyecto, ffmpeg: str, destino: Path | None, des
                              *(["-vf", f"scale={ancho}:{alto}:flags=lanczos"] if (ancho, alto) != lado else []),
                              "-c:v", "libx264", "-preset", preset, "-crf", crf,
                              "-profile:v", "high", "-g", str(FPS * 2), "-bf", "2",
+                             *(["-threads", hilos_x264] if hilos_x264 else []),
                              "-pix_fmt", "yuv420p", str(video_tmp)], stdin=subprocess.PIPE)
     temblor = random.Random(proyecto.semilla)
     capa_foco = Foco()
@@ -1148,12 +1265,24 @@ def _renderizar(carpeta: CarpetaProyecto, ffmpeg: str, destino: Path | None, des
         ultimo = horizontal if vertical else img
         if n % (FPS * 30) == 0:
             avisar(f"  render {tt / 60:.1f} / {total / 60:.1f} min")
+        if solo_video and n % (FPS * 3) == 0:
+            destino.with_suffix(".avance").write_text(f"{tt - desde:.1f}")
     lector.cerrar()
     proc.stdin.close()
     proc.wait()
-
-    # --- audio completo, normalizado, y unión
+    if solo_video:                      # un tramo del render en paralelo: el audio lo pone quien une
+        if proc.returncode != 0:
+            raise RuntimeError(f"ffmpeg terminó con error ({proc.returncode})")
+        video_tmp.replace(destino)
+        return destino
     mezcla = mezclar_audio(raiz, edl, ffmpeg)[int(desde * SR):int(total * SR)]
+    return _mezclar_y_unir(raiz, edl, ffmpeg, destino, video_tmp, mezcla, calidad)
+
+
+def _mezclar_y_unir(raiz: Path, edl: dict, ffmpeg: str, destino: Path, video_tmp: Path, mezcla, calidad: str) -> Path:
+    """Audio completo normalizado + video, subtítulos SRT y créditos de audio."""
+    _, _, audio_kbps = CALIDADES.get(calidad, CALIDADES["normal"])
+    subs = edl["pistas"]["subtitulos"]
     from . import biblioteca
 
     creditos = biblioteca.atribuciones(getattr(mezclar_audio, "usados", []))

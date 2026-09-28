@@ -161,7 +161,8 @@ def _brillo(w: int, h: int, t: TiraNiveles, intensidad: float = 1.0) -> Image.Im
     return halo
 
 
-def armar_tira(esc: EscenasV2, estilo: Estilo, carpeta: Path, seed: int = 0) -> TiraArmada:
+def armar_tira(esc: EscenasV2, estilo: Estilo, carpeta: Path, seed: int = 0, guardar: bool = True) -> TiraArmada:
+    """guardar=False: solo en memoria (los tramos del render en paralelo la arman a la vez)."""
     t = estilo.tira_niveles or TiraNiveles()
     if not esc.niveles:
         raise ValueError("escenas.json no tiene 'niveles': no es un video de formato escala")
@@ -183,8 +184,9 @@ def armar_tira(esc: EscenasV2, estilo: Estilo, carpeta: Path, seed: int = 0) -> 
             sujeto = Image.open(sin_fondo).convert("RGBA")
         elif original.exists():
             sujeto = quitar_fondo_liso(Image.open(original))
-            sin_fondo.parent.mkdir(parents=True, exist_ok=True)
-            sujeto.save(sin_fondo)
+            if guardar:
+                sin_fondo.parent.mkdir(parents=True, exist_ok=True)
+                sujeto.save(sin_fondo)
         tarjeta = _tarjeta(sujeto, i, n, t, seed)
         tarjeta_px = _pixelar_interior(tarjeta, t) if nivel.villano else tarjeta
         x = t.separacion + i * (t.tarjeta_ancho + t.separacion)
@@ -198,8 +200,11 @@ def armar_tira(esc: EscenasV2, estilo: Estilo, carpeta: Path, seed: int = 0) -> 
             _texto(capa, t.texto.formato.format(n=nivel.numero), x + t.tarjeta_ancho // 2, y, t, fuente)
         if nivel.villano:
             caja_villano = (x, y, x + t.tarjeta_ancho, y + t.tarjeta_alto)
-        tarjeta.save(salida / f"tarjeta_{nivel.numero}.png")
-        _pixelar_interior(tarjeta, t).save(salida / f"tarjeta_{nivel.numero}_pixelada.png")
+        if guardar:
+            tarjeta.save(salida / f"tarjeta_{nivel.numero}.png")
+            _pixelar_interior(tarjeta, t).save(salida / f"tarjeta_{nivel.numero}_pixelada.png")
+    if not guardar:
+        return TiraArmada(lienzo, lienzo_px, centros, caja_villano, t)
     lienzo.save(salida / "tira_niveles.png")
     lienzo_px.save(salida / "tira_niveles_pixelada.png")
     if t.fondo.tipo != "transparente":
