@@ -17,7 +17,7 @@ from PIL import Image, ImageDraw, ImageFilter
 
 from . import claude_cli
 from .config import leer_json
-from .estilos import cargar_estilo, carpeta_estilos
+from .estilos import cargar_estilo, carpeta_estilo
 from .tira import quitar_fondo_liso
 
 W, H = 1280, 720

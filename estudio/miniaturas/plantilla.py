@@ -3,6 +3,7 @@ las imágenes de referencia de estilo (animales sueltos recortados, SIN texto ni
 cuadrículas: si se pasan miniaturas completas, Gemini copia la cuadrícula)."""
 from __future__ import annotations
 
+import os
 import re
 from pathlib import Path
 
@@ -11,7 +12,8 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 from ..config import RAIZ, escribir_json, leer_json
 
 EXTENSIONES_IMAGEN = (".png", ".jpg", ".jpeg", ".webp")
-MAX_REFERENCIAS_POR_LLAMADA = 3        # Gemini 2.5 Flash Image: mejor con máximo 3 imágenes de entrada
+MAX_REFERENCIAS_POR_LLAMADA = 3
+BASE = "escala_2x3"                    # plantilla base del catálogo público        # Gemini 2.5 Flash Image: mejor con máximo 3 imágenes de entrada
 
 
 def carpeta_canales() -> Path:
@@ -57,24 +59,58 @@ class Plantilla(BaseModel):
         return v.upper()
 
 
-def ruta_plantilla(canal: str) -> Path:
+def _validar(canal: str) -> None:
     if not re.fullmatch(r"[a-z0-9][a-z0-9\-]{0,59}", canal or ""):
         raise ValueError(f"nombre de canal no válido: {canal!r}")
-    return carpeta_canales() / canal / "miniatura"
+
+
+def ruta_plantilla(canal: str) -> Path:
+    """Carpeta de la plantilla de un canal: la del espacio actual, la del catálogo o la vieja."""
+    from ..plataforma import almacen, contexto
+
+    _validar(canal)
+    if os.environ.get("XANDART_CANALES"):
+        return carpeta_canales() / canal / "miniatura"
+    encontrada = contexto.buscar("plantillas_miniatura", canal)
+    if encontrada:
+        return encontrada
+    esp = contexto.espacio_actual()
+    return (almacen.raiz_espacio(esp) / "plantillas_miniatura" / canal) if esp else carpeta_canales() / canal / "miniatura"
+
+
+def _para_escribir(canal: str) -> Path:
+    """Donde se guardan los cambios: siempre en el espacio actual. Si la plantilla venía del
+    catálogo o de la carpeta vieja, primero se copia (el catálogo nunca se modifica)."""
+    import shutil
+
+    from ..plataforma import almacen, contexto
+
+    _validar(canal)
+    esp = contexto.espacio_actual()
+    if not esp or os.environ.get("XANDART_CANALES"):
+        return ruta_plantilla(canal)
+    propia = almacen.raiz_espacio(esp) / "plantillas_miniatura" / canal
+    actual = ruta_plantilla(canal)
+    if actual != propia and actual.exists() and not propia.exists():
+        shutil.copytree(actual, propia)
+    propia.mkdir(parents=True, exist_ok=True)
+    return propia
 
 
 def cargar(canal: str) -> Plantilla:
     ruta = ruta_plantilla(canal) / "plantilla.json"
     if not ruta.exists():
-        # canal sin plantilla propia: se parte de la de Peligro Tropical
-        base = leer_json(carpeta_canales() / "animales-peligrosos" / "miniatura" / "plantilla.json")
+        # canal sin plantilla propia: se parte de la plantilla base del catálogo
+        from ..plataforma import contexto
+
+        base = leer_json(contexto.carpeta_catalogo() / "plantillas_miniatura" / BASE / "plantilla.json")
         base.update(canal=canal, nombre=f"{canal} · escala 2x3", referencias=[])
         return Plantilla.model_validate(base)
     return Plantilla.model_validate(leer_json(ruta))
 
 
 def guardar(p: Plantilla) -> None:
-    escribir_json(ruta_plantilla(p.canal) / "plantilla.json", p.model_dump())
+    escribir_json(_para_escribir(p.canal) / "plantilla.json", p.model_dump())
 
 
 def referencias_activas(p: Plantilla, maximo: int = MAX_REFERENCIAS_POR_LLAMADA) -> list[Path]:
@@ -101,7 +137,7 @@ def agregar_referencia(canal: str, datos: bytes, nombre: str) -> Plantilla:
         img = fondo
     img = img.convert("RGB")
     img.thumbnail((896, 896))
-    carpeta = ruta_plantilla(canal) / "referencias"
+    carpeta = _para_escribir(canal) / "referencias"
     carpeta.mkdir(parents=True, exist_ok=True)
     archivo = f"{base}.jpg"
     k = 2
@@ -117,7 +153,7 @@ def quitar_referencia(canal: str, archivo: str) -> Plantilla:
     p = cargar(canal)
     if not any(r.archivo == archivo for r in p.referencias):
         raise KeyError(archivo)
-    (ruta_plantilla(canal) / "referencias" / Path(archivo).name).unlink(missing_ok=True)
+    (_para_escribir(canal) / "referencias" / Path(archivo).name).unlink(missing_ok=True)
     p.referencias = [r for r in p.referencias if r.archivo != archivo]
     guardar(p)
     return p

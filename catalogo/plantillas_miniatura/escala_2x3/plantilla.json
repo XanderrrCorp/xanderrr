@@ -1,0 +1,20 @@
+{
+  "canal": "escala-2x3",
+  "nombre": "Escala 2x3 (base de Xandart)",
+  "layout": "escala_2x3",
+  "bloque_estilo": "Detailed digital illustration, warm realistic colors, soft painterly shading, fine line art, highly detailed textures (scales, fur, shells).",
+  "fuente_etiquetas": "PatrickHand-Regular.ttf",
+  "color_hero_text": "#E00000",
+  "color_etiquetas": "#111111",
+  "iconos_permitidos": [
+    "advertencia",
+    "prohibido",
+    "calavera",
+    "rayo",
+    "interrogacion",
+    "reloj"
+  ],
+  "color_aura_por_defecto": "#FF1A1A",
+  "referencias": [],
+  "grosor_hero": 2
+}

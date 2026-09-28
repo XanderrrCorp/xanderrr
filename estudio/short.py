@@ -38,10 +38,10 @@ def elegir_nivel(datos: dict) -> int:
     return villano or datos["niveles"][-1]["numero"]
 
 
-def instruccion(nivel: dict, escenas: list[dict], titulo_largo: str) -> str:
+def instruccion(nivel: dict, escenas: list[dict], titulo_largo: str, canal: str = "") -> str:
     lineas = "\n".join(f"{e['id']} [{e['intencion']}] {e['narracion']}" for e in escenas)
     return (
-        "Eres guionista de YouTube Shorts de un canal de animales peligrosos (Peligro Tropical), en español "
+        f"Eres guionista de YouTube Shorts del canal «{canal or 'este canal'}», en español "
         "latino, tono cercano y con ritmo. Vas a convertir este tramo de un video largo "
         f"(«{titulo_largo}»), sobre «{nivel['nombre']}», en UN short vertical de unos {SEGUNDOS_OBJETIVO} "
         "segundos.\n\n"
@@ -86,7 +86,10 @@ def crear_short(largo: Path, base: Path, nivel: int | None = None, ejecutar=clau
     por_id = {e["id"]: e for e in tramo}
     guion = {}
     for _ in range(2):
-        texto, _uso = ejecutar(instruccion(info, tramo, proyecto_largo["titulo"]), cwd=largo)
+        from .plataforma.consultas import nombre_canal
+
+        texto, _uso = ejecutar(instruccion(info, tramo, proyecto_largo["titulo"],
+                                           nombre_canal(proyecto_largo.get("canal", ""))), cwd=largo)
         guion = claude_cli.extraer_json(texto) or {}
         filas = [f for f in guion.get("escenas", []) if isinstance(f, dict) and str(f.get("narracion", "")).strip()
                  and str(f.get("fuente", "")).isdigit() and int(f["fuente"]) in por_id]

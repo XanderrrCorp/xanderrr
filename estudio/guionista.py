@@ -36,7 +36,20 @@ class Encargo:
     notas: str = ""
 
 
-def instruccion(encargo: Encargo, estilo: Estilo, niveles_fijos: list[dict] | None = None) -> str:
+def cargar_formula(clave: str = "escala_peligro") -> dict:
+    """La fórmula del guion es un dato (catálogo público o del espacio), no texto en el código."""
+    from .config import leer_json
+    from .plataforma import contexto
+
+    ruta = contexto.buscar("formulas", clave, "formula.json")
+    if ruta is None:
+        raise FileNotFoundError(f"no existe la fórmula de guion «{clave}»")
+    return leer_json(ruta)
+
+
+def instruccion(encargo: Encargo, estilo: Estilo, niveles_fijos: list[dict] | None = None,
+                formula: dict | None = None, narrador: str | None = None) -> str:
+    formula = formula or cargar_formula()
     palabras = int(encargo.minutos * 60 * PALABRAS_POR_SEGUNDO)
     fijos = ""
     if niveles_fijos:
@@ -44,9 +57,9 @@ def instruccion(encargo: Encargo, estilo: Estilo, niveles_fijos: list[dict] | No
                           for n in sorted(niveles_fijos, key=lambda x: x["numero"]))
         fijos = ("\nNIVELES OBLIGATORIOS (usa EXACTAMENTE estos animales, con estos nombres y en este orden; "
                  f"ni uno más ni uno menos):\n{lista}\n")
-    return f"""Eres el guionista y director visual de un canal de YouTube en español latino (México y
-Colombia) de formato escala: «del más inofensivo al más peligroso». Escribe el guion COMPLETO
-de un video y divídelo en escenas.
+    presentacion = formula["presentacion"]
+    estructura = formula["estructura"].replace("<<narrador>>", narrador or formula.get("narrador_por_defecto", "el narrador"))
+    return f"""{presentacion}
 
 == ENCARGO ==
 Tema: {encargo.tema}
@@ -55,72 +68,7 @@ Villano (el más peligroso, último nivel): {encargo.villano or "(elige el más 
 Duración: unos {encargo.minutos:g} minutos de voz = entre {int(palabras * 0.93)} y {int(palabras * 1.07)} palabras en total.
 {("Notas del dueño: " + encargo.notas) if encargo.notas else ""}
 
-== ESTRUCTURA (técnicas que retienen; escribe todo con palabras propias) ==
-El video es UNA historia contada por alguien que le habla de tú al espectador, como un amigo que
-le cuenta algo increíble, no una enciclopedia que lista datos. Toda la escala se mide con UN solo
-eje que se repite en todo el video (por ejemplo «la probabilidad de que te mande al hospital» o
-«de quitarte la vida»), y cada nivel existe para explicar POR QUÉ está en ese puesto.
-
-- Gancho de contraste (40 a 70 s), sin saludos ni «en este video»:
-  1. «¿Qué probabilidad crees que tiene este animal de…?» con uno que se ve inofensivo; di lo
-     poco que podría hacerte («a lo mucho te muerde un dedo…») y concluye: prácticamente cero.
-  2. «Ahora mira este otro.» Uno que SE VE aterrador; el espectador cree que pasa del cincuenta
-     por ciento. «Pero aquí viene el primer giro»: está entre los MENOS peligrosos.
-  3. «Y ahora el verdadero susto. Agárrate.» El último de la lista, el de mayor probabilidad, es
-     alguien que nadie se espera: «al verlo no lo vas a creer, pero hay algo de él que no sabes».
-     No digas su nombre todavía. En pantalla va oculto, pero la voz NUNCA dice que está pixelado,
-     borroso, tapado u oculto: eso lo resuelve la imagen, no el guion.
-  4. Promesa: «hoy empezamos casi en cero y vamos a ver hasta dónde sube esa probabilidad, y cómo
-     de verdad podría pasar». Una escena del gancho presenta la lista de niveles (ahí se ve la tira).
-- Entre 5 y 7 niveles, de menos a más. Cada nivel es una mini historia de un minuto aprox.:
-  1. Lo presentas por su nombre con una imagen mental fuerte, SIN «nivel uno» ni números de nivel
-     («Empezamos con algo que parece salido de una pesadilla: la cucaracha.»).
-  2. Una pregunta que abre la intriga («¿por qué crees que está tan abajo? Hay una razón que
-     sorprende.»).
-  3. Dónde vive y cómo es, con UNA comparación cotidiana que se quede («parece un bolso de lujo»,
-     «para que te hagas una idea…»).
-  4. El mecanismo central de cómo hace daño, explicado paso a paso, cada frase apoyándose en la
-     anterior (y por eso…, pero…, entonces…, y aquí viene lo raro…). UN mecanismo bien contado, no
-     diez datos sueltos.
-  5. La pregunta con respuesta seca y repetida: «¿Cuántos ataques documentados tiene? Cero. Ni uno.
-     Ni antes, ni ahora. Cero, así de simple.»
-  6. El veredicto en el eje del video (por qué queda en este puesto y no más arriba) y un remate
-     «lo más aterrador no es X, es Y».
-  7. Transición que abre un bucle con el siguiente SIN nombrarlo: qué puede hacer y qué tiene de
-     raro («el siguiente sí te puede picar, y lo curioso es que no es la picadura lo que te
-     enferma; cuando sepas cómo lo hace, vas a cambiar de opinión»; «de algo gigante pasamos a algo
-     que cabe en tu mano, y kilo por kilo es muchísimo peor»).
-  Nada de consejos de limpieza o de prevención en cada nivel: eso aplana el video.
-- Una o dos anécdotas del narrador en primera persona, contadas como un recuerdo suyo (el
-  explorador del canal): un momento concreto, con lugar y persona («la primera vez que vi uno fue
-  en la casa de un amigo en Cartagena; estaba sentado en el sofá y de pronto…»), lo que sintió
-  («me quedé congelado») y cómo lo lleva al dato. De 3 a 6 escenas, para abrir un nivel o antes
-  del villano. La anécdota es solo el marco: todos los datos que vienen después siguen siendo
-  verdaderos y no se inventan cifras ni casos dentro de ella.
-- Llamado a suscribirse UNA sola vez, hacia el minuto 1, pegado a la intriga del primer animal:
-  «Por cierto, si hasta este primero te tomó por sorpresa, dale like y suscríbete. Sí, vamos con la
-  razón…». Nunca al inicio.
-- Antes del último nivel: «y ahora llegamos al final de la lista, al que te mencioné al principio,
-  el que te va a hacer decir "¿de verdad es este?"». Confírmalo corto («Sí, una chinche.»);
-  contrasta lo inocente que se ve con lo que hace; «no avisa»; lo más escalofriante al final.
-- Cierre corto: «Ahora ya lo sabes. Empezamos con…, que casi no puede hacerte nada, y terminamos
-  con…, capaz de…». En salud, solo orientar a ir al médico. Luego like y notificaciones.
-
-== REGLAS DE TEXTO ==
-- Español neutro cercano, de tú, como se habla en voz alta. Las frases FLUYEN y se encadenan; mezcla
-  frases cortas de golpe («Cero.») con otras medianas. Cada escena lleva 3 a 16 palabras; si una
-  frase es más larga, pártela entre dos escenas seguidas en una pausa natural (en una coma).
-- En la primera escena con imagen propia de cada nivel, di el nombre del animal (no solo «ella» o
-  «este»): el video lo encierra en un círculo rojo justo cuando lo nombras.
-- Hazle al espectador 4 a 6 preguntas directas repartidas en el video, cada una en su escena.
-- Números SIEMPRE en palabras («trescientos millones», «veinte años»).
-- Solo hechos verdaderos. Si los casos reales son pocos, dilo. En salud: sin dosis ni
-  medicamentos; orienta a ir al médico o a urgencias.
-- Nombres compuestos separados como se dicen. Nada de siglas deletreadas.
-- La voz NUNCA dice «villano», «villano final», «nivel uno», «nivel dos», «escala» ni otras palabras
-  de cómo está armado el video: el último animal se presenta como «el último de la lista», «el que te
-  dije al principio». Villano es solo una palabra interna para ti.
-
+{estructura}
 == FORMATO DE SALIDA (texto, no JSON) ==
 Responde SOLO con esto, sin nada antes ni después:
 TITULO: <título del video, gancho de YouTube>

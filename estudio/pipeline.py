@@ -22,7 +22,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from .config import RAIZ, ConfigCostos, formato_cop, leer_config, leer_json, escribir_json
-from .estilos import cargar_estilo
+from .estilos import cargar_estilo, carpeta_estilo
 from .proyecto import CarpetaProyecto, slugificar
 
 ESTILO_POR_DEFECTO = "enciclopedia_mascota"
@@ -130,7 +130,7 @@ def crear_video(tema: str, giro: str, villano: str, minutos: float, notas: str =
 
 def _copiar_mascota(c: CarpetaProyecto, estilo_id: str) -> None:
     # el personaje del canal se reutiliza (5.3): no se vuelve a pagar
-    mascota = RAIZ / "estilos" / estilo_id / "assets" / "mascota_base.png"
+    mascota = carpeta_estilo(estilo_id) / "assets" / "mascota_base.png"
     if mascota.exists():
         (c.ruta / "assets").mkdir(parents=True, exist_ok=True)
         shutil.copy(mascota, c.ruta / "assets" / "mascota_base.png")

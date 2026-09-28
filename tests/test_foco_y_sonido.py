@@ -74,13 +74,16 @@ def test_biblioteca_registra_fuente_y_licencia(tmp_path, monkeypatch):
 def test_poses_del_canal_se_pagan_una_vez_y_se_copian(tmp_path, monkeypatch):
     import shutil
 
-    from estudio import estilos, poses
+    from estudio import poses
     from estudio.config import RAIZ
+    from estudio.plataforma import almacen, contexto
 
-    shutil.copytree(RAIZ / "estilos" / "enciclopedia_mascota", tmp_path / "enciclopedia_mascota")
-    shutil.rmtree(tmp_path / "enciclopedia_mascota" / "assets" / "poses", ignore_errors=True)
-    monkeypatch.setattr(estilos, "carpeta_estilos", lambda: tmp_path)
-    monkeypatch.setattr(poses, "carpeta_estilos", lambda: tmp_path)
+    # el estilo vive en el espacio de trabajo (lo privado manda sobre el código)
+    espacio = "0" * 32
+    destino = almacen.raiz_espacio(espacio) / "estilos" / "enciclopedia_mascota"
+    shutil.copytree(RAIZ / "estilos" / "enciclopedia_mascota", destino)
+    shutil.rmtree(destino / "assets" / "poses", ignore_errors=True)
+    contexto.fijar_espacio(espacio)
     r1 = poses.generar_poses("enciclopedia_mascota", nombre_proveedor="simulado", avisar=lambda *_: None)
     assert r1["generadas"] and not r1["fallidas"]
     r2 = poses.generar_poses("enciclopedia_mascota", nombre_proveedor="simulado", avisar=lambda *_: None)

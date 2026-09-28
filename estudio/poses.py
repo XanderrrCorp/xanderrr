@@ -15,13 +15,13 @@ from pathlib import Path
 
 from .config import ConfigCostos, escribir_json, formato_cop, leer_config, leer_json
 from .costos import FrenoPresupuesto, LibroCostos
-from .estilos import cargar_estilo, carpeta_estilos
+from .estilos import cargar_estilo, carpeta_estilo
 from .imagenes import prompts
 from .imagenes.proveedores import ErrorProveedor, crear_proveedor
 
 
 def carpeta(estilo_id: str) -> Path:
-    return carpeta_estilos() / estilo_id / "assets" / "poses"
+    return carpeta_estilo(estilo_id) / "assets" / "poses"
 
 
 def indice(estilo_id: str) -> dict:
@@ -39,7 +39,7 @@ def generar_poses(estilo_id: str, ids: list[str] | None = None, *, permiso: bool
                   nombre_proveedor: str | None = None, avisar=print, rehacer: list[str] | None = None) -> dict:
     """Genera las poses que falten (o las pedidas). Las que ya están no se vuelven a pagar."""
     estilo = cargar_estilo(estilo_id)
-    base = carpeta_estilos() / estilo_id / "assets" / "mascota_base.png"
+    base = carpeta_estilo(estilo_id) / "assets" / "mascota_base.png"
     if not base.exists():
         raise FileNotFoundError("falta la mascota base del canal (assets/mascota_base.png)")
     plantilla = estilo.plantillas_assets.get("pose")
@@ -105,7 +105,7 @@ def copiar_a_proyecto(estilo_id: str, carpeta_proyecto: Path) -> list[str]:
 # ------------------------------------------------------------------ presentador realista
 
 def carpeta_presentador(estilo_id: str) -> Path:
-    return carpeta_estilos() / estilo_id / "assets" / "presentador"
+    return carpeta_estilo(estilo_id) / "assets" / "presentador"
 
 
 def generar_presentador(estilo_id: str, ids: list[str] | None = None, *, permiso: bool = False,
@@ -121,7 +121,7 @@ def generar_presentador(estilo_id: str, ids: list[str] | None = None, *, permiso
     plantilla = estilo.plantillas_assets.get("presentador")
     if not plantilla:
         raise ValueError("falta plantillas_assets.presentador en el estilo")
-    logo = carpeta_estilos() / estilo_id / "assets" / pr.logo
+    logo = carpeta_estilo(estilo_id) / "assets" / pr.logo
     if not logo.exists():
         raise FileNotFoundError(f"falta el logo del canal ({pr.logo})")
     config = ConfigCostos.cargar()
