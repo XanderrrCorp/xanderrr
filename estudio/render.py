@@ -883,7 +883,9 @@ def _renderizar(carpeta: CarpetaProyecto, ffmpeg: str, destino: Path | None, des
                 avisar, calidad: str, ancho: int, alto: int, vertical: bool = False) -> Path:
     preset, crf, audio_kbps = CALIDADES.get(calidad, CALIDADES["normal"])
     raiz = carpeta.ruta
-    edl = leer_json(raiz / "edl.json")
+    from .editor import edl_con_ediciones
+
+    edl = edl_con_ediciones(raiz)           # la edición automática + los cambios hechos en el editor
     EDL.model_validate(edl)
     proyecto = carpeta.cargar()
     estilo = cargar_estilo(proyecto.estilo)

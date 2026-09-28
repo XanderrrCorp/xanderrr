@@ -16,8 +16,10 @@ VALOR_CREDITO_USD = 0.01          # 1 crédito = 0,01 USD al cliente (decisión 
 def sembrar(s: Session) -> None:
     """Copia la semilla a la base solo si esa tabla está vacía (nunca pisa lo editado)."""
     semilla = leer_config("precios.json")
-    if not s.scalar(select(Precio).limit(1)):
-        s.add_all(Precio(**p) for p in semilla["precios"])
+    # precios: los que falten (una acción nueva) se agregan; los que ya están no se tocan
+    for p in semilla["precios"]:
+        if s.get(Precio, p["clave"]) is None:
+            s.add(Precio(**p))
     if not s.scalar(select(Plan).limit(1)):
         s.add_all(Plan(**p) for p in semilla["planes"])
     if not s.scalar(select(Paquete).limit(1)):

@@ -494,6 +494,7 @@ class Texto(Tramo):
 
 class Subtitulo(Tramo):
     texto: str
+    escena: int | None = None      # de qué escena es (el editor corrige los de una escena)
 
 
 class PistaVoz(Modelo):

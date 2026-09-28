@@ -20,7 +20,9 @@ from .poses import carpeta_presentador
 
 URL = "https://api.together.xyz/v2/videos"
 # precio por clip de 5 s en dólares: el MEDIDO en la factura (el de lista era 0,10 y cobró ~0,67)
-MODELOS = {"Wan-AI/wan2.7-i2v": 0.70, "kwaivgI/kling-2.1-standard": 0.70}
+MODELOS = {"Wan-AI/wan2.7-i2v": 0.70, "kwaivgI/kling-2.1-standard": 0.70,
+           # escenas del editor: lista de Together 0,143 por 5 s a 720p; se reserva 0,25 hasta medirlo en la factura
+           "ByteDance/Seedance-1.0-lite": 0.25}
 # qué se mueve en cada pose: gesto corto y natural, sin hablar ni salir de cuadro
 MOVIMIENTO = {
     "sorpresa": "he reacts with genuine surprise, eyebrows rise, he leans slightly toward the camera and blinks",
@@ -53,16 +55,38 @@ def animar(estilo_id: str, pose: str, modelo: str = "Wan-AI/wan2.7-i2v", *, perm
         return destino
     config = ConfigCostos.cargar()
     libro = LibroCostos(carpeta, config)
-    precio = MODELOS.get(modelo, 0.3) * max(1, segundos / 5)
+    costo, trabajo = animar_imagen(foto, destino, BASE + MOVIMIENTO.get(pose, "subtle natural reaction"), libro,
+                                   modelo, segundos=segundos, permiso=permiso, avisar=avisar, sesion=sesion,
+                                   modulo="presentador_animado", detalle=pose)
+    ruta_idx = carpeta / "clips" / "clips.json"
+    idx = leer_json(ruta_idx) if ruta_idx.exists() else {}
+    idx[destino.name] = {"pose": pose, "modelo": modelo, "segundos": segundos, "costo_usd": costo,
+                         "trabajo": trabajo, "generado": datetime.now(timezone.utc).isoformat(timespec="seconds")}
+    escribir_json(ruta_idx, idx)
+    avisar(f"  «{pose}» animada · {formato_cop(config.a_cop(costo))}")
+    return destino
+
+
+def precio_clip(modelo: str, segundos: int = 5) -> float:
+    return MODELOS.get(modelo, 0.3) * max(1, segundos / 5)
+
+
+def animar_imagen(foto: Path, destino: Path, prompt: str, libro: LibroCostos, modelo: str, *, segundos: int = 5,
+                  permiso: bool = False, avisar=print, sesion=requests, modulo: str = "animacion",
+                  detalle: str = "") -> tuple[float, str]:
+    """La imagen es el primer cuadro del clip: lo que se ve no cambia, solo se mueve. Frena antes de
+    gastar (mismo libro de costos del video) y registra el costo real que devuelve Together."""
+    precio = precio_clip(modelo, segundos)
     libro.autorizar(precio, permiso=permiso)
-    datos = "data:image/png;base64," + base64.b64encode(foto.read_bytes()).decode()
-    cuerpo = {"model": modelo, "prompt": BASE + MOVIMIENTO.get(pose, "subtle natural reaction"),
+    tipo = "image/jpeg" if foto.suffix.lower() in (".jpg", ".jpeg") else "image/png"
+    datos = f"data:{tipo};base64," + base64.b64encode(foto.read_bytes()).decode()
+    cuerpo = {"model": modelo, "prompt": prompt,
               "frame_images": [{"input_image": datos, "frame": "first"}], "seconds": str(segundos)}
     r = sesion.post(URL, json=cuerpo, headers=_cabeceras(), timeout=120)
     if r.status_code >= 400:
         raise RuntimeError(f"Together no aceptó el video: HTTP {r.status_code} {r.text[:300]}")
     trabajo = r.json()["id"]
-    avisar(f"Animando «{pose}» con {modelo} (trabajo {trabajo})…")
+    avisar(f"Animando con {modelo} (trabajo {trabajo})…")
     for _ in range(180):                               # hasta 30 min
         time.sleep(10)
         d = sesion.get(f"{URL}/{trabajo}", headers=_cabeceras(), timeout=60).json()
@@ -83,12 +107,6 @@ def animar(estilo_id: str, pose: str, modelo: str = "Wan-AI/wan2.7-i2v", *, perm
     video.raise_for_status()
     destino.parent.mkdir(parents=True, exist_ok=True)
     destino.write_bytes(video.content)
-    libro.registrar(modulo="presentador_animado", proveedor="together", modelo=modelo,
-                    unidades={"segundos": segundos}, costo_usd=costo, detalle=pose)
-    ruta_idx = carpeta / "clips" / "clips.json"
-    idx = leer_json(ruta_idx) if ruta_idx.exists() else {}
-    idx[destino.name] = {"pose": pose, "modelo": modelo, "segundos": segundos, "costo_usd": costo,
-                         "trabajo": trabajo, "generado": datetime.now(timezone.utc).isoformat(timespec="seconds")}
-    escribir_json(ruta_idx, idx)
-    avisar(f"  «{pose}» animada · {formato_cop(config.a_cop(costo))}")
-    return destino
+    libro.registrar(modulo=modulo, proveedor="together", modelo=modelo,
+                    unidades={"segundos": segundos}, costo_usd=costo, detalle=detalle)
+    return costo, trabajo

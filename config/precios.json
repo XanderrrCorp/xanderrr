@@ -2,34 +2,174 @@
   "_nota": "Semilla de la tabla de precios, planes, paquetes y bonos. Se copia a la base de datos la primera vez; después se editan desde la administración (no aquí). 1 crédito = 0,01 USD al cliente.",
   "valor_credito_usd": 0.01,
   "precios": [
-    {"clave": "video_minuto", "nombre": "Minuto de video (720p)", "unidad": "minuto", "creditos": 145, "costo_ref_usd": 0.55},
-    {"clave": "video_minuto_hd", "nombre": "Minuto de video (1080p)", "unidad": "minuto", "creditos": 175, "costo_ref_usd": 0.6},
-    {"clave": "short", "nombre": "Short vertical 9:16", "unidad": "short", "creditos": 60, "costo_ref_usd": 0.1},
-    {"clave": "prueba_escenas", "nombre": "Prueba de 10 escenas", "unidad": "prueba", "creditos": 40, "costo_ref_usd": 0.35},
-    {"clave": "imagen_regenerada", "nombre": "Imagen regenerada", "unidad": "imagen", "creditos": 10, "costo_ref_usd": 0.04},
-    {"clave": "audio_regenerado", "nombre": "Audio regenerado", "unidad": "audio", "creditos": 5, "costo_ref_usd": 0.005},
-    {"clave": "miniatura", "nombre": "Miniatura (6 sujetos)", "unidad": "miniatura", "creditos": 60, "costo_ref_usd": 0.3},
-    {"clave": "miniatura_variante", "nombre": "Variante o sujeto regenerado de miniatura", "unidad": "imagen", "creditos": 10, "costo_ref_usd": 0.04},
-    {"clave": "crear_personaje", "nombre": "Crear personaje (variantes, hoja y 3 pruebas)", "unidad": "personaje", "creditos": 150, "costo_ref_usd": 0.6},
-    {"clave": "crear_estilo", "nombre": "Crear estilo (4 imágenes de prueba)", "unidad": "estilo", "creditos": 100, "costo_ref_usd": 0.3},
-    {"clave": "tts_mil_caracteres", "nombre": "Texto a voz suelto (1.000 caracteres)", "unidad": "mil_caracteres", "creditos": 5, "costo_ref_usd": 0.005},
-    {"clave": "recreacion_ia", "nombre": "Recreación realista con IA", "unidad": "imagen", "creditos": 10, "costo_ref_usd": 0.04}
+    {
+      "clave": "video_minuto",
+      "nombre": "Minuto de video (720p)",
+      "unidad": "minuto",
+      "creditos": 145,
+      "costo_ref_usd": 0.55
+    },
+    {
+      "clave": "video_minuto_hd",
+      "nombre": "Minuto de video (1080p)",
+      "unidad": "minuto",
+      "creditos": 175,
+      "costo_ref_usd": 0.6
+    },
+    {
+      "clave": "short",
+      "nombre": "Short vertical 9:16",
+      "unidad": "short",
+      "creditos": 60,
+      "costo_ref_usd": 0.1
+    },
+    {
+      "clave": "prueba_escenas",
+      "nombre": "Prueba de 10 escenas",
+      "unidad": "prueba",
+      "creditos": 40,
+      "costo_ref_usd": 0.35
+    },
+    {
+      "clave": "imagen_regenerada",
+      "nombre": "Imagen regenerada",
+      "unidad": "imagen",
+      "creditos": 10,
+      "costo_ref_usd": 0.04
+    },
+    {
+      "clave": "audio_regenerado",
+      "nombre": "Audio regenerado",
+      "unidad": "audio",
+      "creditos": 5,
+      "costo_ref_usd": 0.005
+    },
+    {
+      "clave": "miniatura",
+      "nombre": "Miniatura (6 sujetos)",
+      "unidad": "miniatura",
+      "creditos": 60,
+      "costo_ref_usd": 0.3
+    },
+    {
+      "clave": "miniatura_variante",
+      "nombre": "Variante o sujeto regenerado de miniatura",
+      "unidad": "imagen",
+      "creditos": 10,
+      "costo_ref_usd": 0.04
+    },
+    {
+      "clave": "crear_personaje",
+      "nombre": "Crear personaje (variantes, hoja y 3 pruebas)",
+      "unidad": "personaje",
+      "creditos": 150,
+      "costo_ref_usd": 0.6
+    },
+    {
+      "clave": "crear_estilo",
+      "nombre": "Crear estilo (4 imágenes de prueba)",
+      "unidad": "estilo",
+      "creditos": 100,
+      "costo_ref_usd": 0.3
+    },
+    {
+      "clave": "tts_mil_caracteres",
+      "nombre": "Texto a voz suelto (1.000 caracteres)",
+      "unidad": "mil_caracteres",
+      "creditos": 5,
+      "costo_ref_usd": 0.005
+    },
+    {
+      "clave": "recreacion_ia",
+      "nombre": "Recreación realista con IA",
+      "unidad": "imagen",
+      "creditos": 10,
+      "costo_ref_usd": 0.04
+    },
+    {
+      "clave": "animar_escena",
+      "nombre": "Animar una escena (clip de 5 s)",
+      "unidad": "clip",
+      "creditos": 40,
+      "costo_ref_usd": 0.25
+    },
+    {
+      "clave": "exportar_video",
+      "nombre": "Exportar de nuevo tras editar",
+      "unidad": "video",
+      "creditos": 0,
+      "costo_ref_usd": 0.0
+    }
   ],
   "planes": [
-    {"clave": "lite", "nombre": "Lite", "precio_usd_mes": 29, "minutos_mes": 20, "creditos_mes": 2900, "tope_acumulado_meses": 2},
-    {"clave": "starter", "nombre": "Starter", "precio_usd_mes": 59, "minutos_mes": 45, "creditos_mes": 6525, "tope_acumulado_meses": 2},
-    {"clave": "creator", "nombre": "Creator", "precio_usd_mes": 129, "minutos_mes": 110, "creditos_mes": 15950, "tope_acumulado_meses": 2}
+    {
+      "clave": "lite",
+      "nombre": "Lite",
+      "precio_usd_mes": 29,
+      "minutos_mes": 20,
+      "creditos_mes": 2900,
+      "tope_acumulado_meses": 2
+    },
+    {
+      "clave": "starter",
+      "nombre": "Starter",
+      "precio_usd_mes": 59,
+      "minutos_mes": 45,
+      "creditos_mes": 6525,
+      "tope_acumulado_meses": 2
+    },
+    {
+      "clave": "creator",
+      "nombre": "Creator",
+      "precio_usd_mes": 129,
+      "minutos_mes": 110,
+      "creditos_mes": 15950,
+      "tope_acumulado_meses": 2
+    }
   ],
   "paquetes": [
-    {"clave": "recarga_10", "nombre": "Recarga 10 USD", "precio_usd": 10, "creditos": 1000},
-    {"clave": "recarga_25", "nombre": "Recarga 25 USD", "precio_usd": 25, "creditos": 2500},
-    {"clave": "recarga_50", "nombre": "Recarga 50 USD", "precio_usd": 50, "creditos": 5000}
+    {
+      "clave": "recarga_10",
+      "nombre": "Recarga 10 USD",
+      "precio_usd": 10,
+      "creditos": 1000
+    },
+    {
+      "clave": "recarga_25",
+      "nombre": "Recarga 25 USD",
+      "precio_usd": 25,
+      "creditos": 2500
+    },
+    {
+      "clave": "recarga_50",
+      "nombre": "Recarga 50 USD",
+      "precio_usd": 50,
+      "creditos": 5000
+    }
   ],
   "ajustes": {
-    "bienvenida": {"creditos": 300, "nota": "Créditos de bienvenida para todo registro nuevo"},
-    "promo_primeros": {"cupo": 50, "minutos": 8, "precio": "video_minuto", "nota": "Un video completo gratis (duración mínima) para los primeros 50 registros"},
-    "aviso_saldo_bajo": {"minutos": 2, "nota": "Avisar cuando el saldo alcance para menos de estos minutos de video"},
-    "margen_reserva": {"factor": 1.15, "nota": "Se reserva un 15 % extra por si el video sale más largo; lo que sobra se libera"},
-    "freno_ceo": {"maximo_cop_por_video": 16000, "trm": 3100, "nota": "Tope de gasto real por video en la cuenta del dueño"}
+    "bienvenida": {
+      "creditos": 300,
+      "nota": "Créditos de bienvenida para todo registro nuevo"
+    },
+    "promo_primeros": {
+      "cupo": 50,
+      "minutos": 8,
+      "precio": "video_minuto",
+      "nota": "Un video completo gratis (duración mínima) para los primeros 50 registros"
+    },
+    "aviso_saldo_bajo": {
+      "minutos": 2,
+      "nota": "Avisar cuando el saldo alcance para menos de estos minutos de video"
+    },
+    "margen_reserva": {
+      "factor": 1.15,
+      "nota": "Se reserva un 15 % extra por si el video sale más largo; lo que sobra se libera"
+    },
+    "freno_ceo": {
+      "maximo_cop_por_video": 16000,
+      "trm": 3100,
+      "nota": "Tope de gasto real por video en la cuenta del dueño"
+    }
   }
 }

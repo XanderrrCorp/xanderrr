@@ -506,6 +506,78 @@ def regenerar_imagen(c: CarpetaProyecto, t: Trabajo, escena_id: int, instruccion
         _regenerar_imagen(c, t, escena_id, instruccion)
 
 
+MOVIMIENTO_ESCENA = ("Subtle cinematic motion from this exact first frame: keep exactly the same drawing style, "
+                     "the same characters, colors and background; gentle natural movement of the subject and a slow "
+                     "camera push-in; no new objects, no text, no letters, no scene change. ")
+
+
+def animar_escena(c: CarpetaProyecto, t: Trabajo, escena_id: int, instruccion: str = "", permiso: bool = False) -> str:
+    """Editor: la imagen de la escena pasa a ser un clip con movimiento (la imagen es el primer cuadro)."""
+    import math
+
+    from . import editor
+    from .animacion import animar_imagen
+    from .config import leer_config
+    from .plataforma import cobro
+
+    edl = leer_json(c.ruta / "edl.json")
+    clip = next((x for x in edl["pistas"]["escenas"] if x["escena"] == escena_id), None)
+    if clip is None:
+        raise RuntimeError("Esa escena no está en el video")
+    if clip.get("modo") == "tira":
+        raise RuntimeError("La tira de niveles ya se mueve sola: no se anima")
+    ajustes = leer_config("proveedores.json").get("animacion_escenas") or {}
+    modelo = ajustes.get("modelo", "ByteDance/Seedance-1.0-lite")
+    segundos = 10 if (clip["fin"] - clip["inicio"]) > 5.5 else 5
+    narracion = next((e.narracion for e in c.cargar_escenas().escenas if e.id == escena_id), "")
+    prompt = MOVIMIENTO_ESCENA + (instruccion.strip() or f"The scene illustrates: {narracion[:200]}")
+    version = len(list((c.ruta / "animaciones").glob(f"escena_{escena_id:03d}*.mp4"))) + 1 \
+        if (c.ruta / "animaciones").exists() else 1
+    destino = c.ruta / "animaciones" / f"escena_{escena_id:03d}_v{version}.mp4"
+    t.avisar(f"Animando la escena {escena_id} ({segundos} s con {modelo.split('/')[-1]})…")
+    with cobro.accion(c.ruta, "animar_escena", segundos / 5):
+        animar_imagen(c.ruta / clip["archivo"], destino, prompt, c.libro(ConfigCostos.cargar()), modelo,
+                      segundos=segundos, permiso=permiso, avisar=t.avisar, modulo="animacion_escena",
+                      detalle=f"escena {escena_id}")
+    ed = editor.cargar(c.ruta)
+    ed["animaciones"][str(escena_id)] = str(destino.relative_to(c.ruta))
+    editor.guardar(c.ruta, ed)
+    t.avisar("Escena animada: dale «Exportar» para ver el cambio en el video")
+    return str(destino.relative_to(c.ruta))
+
+
+def regenerar_voz_escena(c: CarpetaProyecto, t: Trabajo, escena_id: int, texto: str | None = None,
+                         permiso: bool = False) -> None:
+    """Editor: vuelve a grabar la oración de esa escena (con el texto nuevo, si lo hay). Solo se paga esa
+    oración: las demás salen del caché. Los tiempos del video se recalculan."""
+    from .config import escribir_json
+    from .edicion import construir_edl
+    from .plataforma import cobro
+    from .voz import agrupar, generar_voz
+
+    esc = c.cargar_escenas()
+    e = next((x for x in esc.escenas if x.id == escena_id), None)
+    if e is None:
+        raise RuntimeError("Esa escena no existe")
+    if texto is not None and texto.strip() and texto.strip() != e.narracion:
+        e.narracion = texto.strip()
+        c.guardar_escenas(esc)
+    # se olvida la grabación de su oración para que se vuelva a sintetizar aunque el texto sea igual
+    grupos = agrupar(esc.escenas)
+    ruta_man = c.ruta / "audio" / "voz_manifiesto.json"
+    man = leer_json(ruta_man) if ruta_man.exists() else {}
+    for gi, g in enumerate(grupos):
+        if any(x.id == escena_id for x in g.escenas):
+            man.pop(f"g{gi:03d}", None)
+    escribir_json(ruta_man, man)
+    t.avisar(f"Grabando de nuevo la voz de la escena {escena_id}…")
+    with cobro.accion(c.ruta, "audio_regenerado"):
+        generar_voz(c, ffmpeg(), permiso=permiso, avisar=t.avisar)
+    t.avisar("Recalculando los tiempos del video…")
+    construir_edl(c)
+    t.avisar("Voz lista: dale «Exportar» para rearmar el video")
+
+
 def _regenerar_imagen(c: CarpetaProyecto, t: Trabajo, escena_id: int, instruccion: str) -> None:
     from .imagenes.generador import generar_imagenes
 

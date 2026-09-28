@@ -769,7 +769,7 @@ def construir_edl(carpeta: CarpetaProyecto) -> dict:
             t0 = a + (b - a) * acum / largo
             acum += len(tr)
             t1 = a + (b - a) * acum / largo
-            subtitulos.append({"inicio": round(t0, 3), "fin": round(max(t1, t0 + 0.2), 3), "texto": tr})
+            subtitulos.append({"inicio": round(t0, 3), "fin": round(max(t1, t0 + 0.2), 3), "texto": tr, "escena": e.id})
     for e, c in zip(escenas, clips):
         v = (direccion.get("video_escena") or {}).get(str(e.id))
         if v and (carpeta.ruta / v["archivo"]).exists():

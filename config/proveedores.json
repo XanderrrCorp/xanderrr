@@ -40,5 +40,10 @@
     "pensamiento_detalles_tokens": 2000,
     "secciones_en_paralelo": 8,
     "tolerancia_largo": 0.15
+  },
+  "animacion_escenas": {
+    "modelo": "ByteDance/Seedance-1.0-lite",
+    "segundos": 5,
+    "_nota": "Imagen a video para «Animar» en el editor (la imagen es el primer cuadro). Lista de Together: 0,143 USD por 5 s a 720p. Alternativa: kwaivgI/kling-2.1-standard (0,185 por 5 s). Precio real por confirmar en la factura."
   }
 }

@@ -404,6 +404,100 @@ class Instruccion(BaseModel):
     instruccion: str = ""
 
 
+# ------------------------------------------------------------------ editor (tipo CapCut)
+
+def _editor(slug: str):
+    c = _proyecto(slug)
+    if not (c.ruta / "edl.json").exists():
+        raise HTTPException(409, "El editor se abre cuando el video ya está armado")
+    return c
+
+
+@app.get("/api/videos/{slug}/editor")
+def editor_ver(slug: str):
+    from . import editor
+
+    import time
+
+    c = _editor(slug)
+    t = pipeline.TRABAJOS.get(slug)
+    trabajo = ({"paso": t.paso, "mensaje": t.mensaje, "progreso": round(t.progreso, 3), "activo": t.activo,
+                "error": t.error, "segundos": int(time.time() - t.inicio)} if t else None)
+    return {**editor.linea_de_tiempo(c.ruta), "slug": slug, "titulo": c.cargar().titulo, "trabajo": trabajo}
+
+
+class Corte(BaseModel):
+    inicio: float = Field(ge=0)
+
+
+@app.put("/api/videos/{slug}/editor/escenas/{escena_id}/corte")
+def editor_corte(slug: str, escena_id: int, p: Corte):
+    from . import editor
+
+    c = _editor(slug)
+    try:
+        editor.mover_corte(c.ruta, escena_id, p.inicio)
+    except KeyError as ex:
+        raise HTTPException(404, str(ex)) from ex
+    return editor_ver(slug)
+
+
+class SubtituloEditado(BaseModel):
+    inicio: float = Field(ge=0)
+    fin: float = Field(ge=0)
+    texto: str = Field(max_length=200)
+
+
+class Subtitulos(BaseModel):
+    subtitulos: list[SubtituloEditado]
+
+
+@app.put("/api/videos/{slug}/editor/escenas/{escena_id}/subtitulos")
+def editor_subtitulos(slug: str, escena_id: int, p: Subtitulos):
+    from . import editor
+
+    c = _editor(slug)
+    try:
+        editor.cambiar_subtitulos(c.ruta, escena_id, [s.model_dump() for s in p.subtitulos])
+    except KeyError as ex:
+        raise HTTPException(404, str(ex)) from ex
+    return editor_ver(slug)
+
+
+@app.delete("/api/videos/{slug}/editor/escenas/{escena_id}/{que}")
+def editor_deshacer(slug: str, escena_id: int, que: str):
+    from . import editor
+
+    if que not in ("corte", "subtitulos", "animacion"):
+        raise HTTPException(404)
+    editor.deshacer_escena(_editor(slug).ruta, escena_id, que)
+    return editor_ver(slug)
+
+
+class Animar(BaseModel):
+    instruccion: str = Field("", max_length=400)
+    permiso: bool = False
+
+
+@app.post("/api/videos/{slug}/escenas/{escena_id}/animar")
+def editor_animar(slug: str, escena_id: int, p: Animar = Animar()):
+    c = _editor(slug)
+    _lanzar(slug, "animar", lambda t: pipeline.animar_escena(c, t, escena_id, p.instruccion, p.permiso))
+    return editor_ver(slug)
+
+
+class VozEscena(BaseModel):
+    texto: str | None = Field(None, max_length=2000)
+    permiso: bool = False
+
+
+@app.post("/api/videos/{slug}/escenas/{escena_id}/voz")
+def editor_voz(slug: str, escena_id: int, p: VozEscena = VozEscena()):
+    c = _editor(slug)
+    _lanzar(slug, "voz", lambda t: pipeline.regenerar_voz_escena(c, t, escena_id, p.texto, p.permiso))
+    return editor_ver(slug)
+
+
 @app.post("/api/videos/{slug}/escenas/{escena_id}/regenerar")
 def regenerar(slug: str, escena_id: int, cuerpo: Instruccion):
     c = _proyecto(slug)
