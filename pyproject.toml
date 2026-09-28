@@ -4,7 +4,8 @@ version = "0.1.0"
 description = "Estudio de producción de video para Buscanichos"
 requires-python = ">=3.11"
 dependencies = ["pydantic>=2.6", "pillow>=10", "requests>=2.31", "numpy>=1.24", "imageio-ffmpeg>=0.5",
-                "fastapi>=0.110", "uvicorn>=0.29", "python-multipart>=0.0.9"]
+                "fastapi>=0.110", "uvicorn>=0.29", "python-multipart>=0.0.9",
+                "sqlalchemy>=2.0", "alembic>=1.13"]
 
 # rembg (quitar fondos de las miniaturas) es opcional y pesado: el instalador lo intenta
 # aparte y, si no está, se usa el recorte por color de fondo
@@ -25,7 +26,7 @@ build-backend = "setuptools.build_meta"
 include = ["estudio*"]
 
 [tool.setuptools.package-data]
-estudio = ["web/*"]
+estudio = ["web/*", "fuentes/*", "plataforma/migraciones/*", "plataforma/migraciones/versions/*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

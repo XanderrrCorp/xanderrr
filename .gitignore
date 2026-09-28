@@ -7,6 +7,7 @@ proyectos/
 logs/
 biblioteca/
 entregas/
+datos/
 # claves y credenciales: nunca al repositorio (es público)
 .env.*
 !.env.example
