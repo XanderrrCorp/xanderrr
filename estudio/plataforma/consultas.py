@@ -18,3 +18,48 @@ def nombre_canal(clave: str) -> str:
             return c.nombre if c else clave
     except Exception:  # noqa: BLE001 — en modo viejo (sin base) basta la clave
         return clave
+
+
+def canal_por_defecto() -> tuple[str, str] | None:
+    """(clave del canal, clave de su estilo) del primer canal del espacio actual, o None."""
+    try:
+        from sqlalchemy import select
+
+        from . import contexto, db
+        from .modelos import Canal, Estilo
+
+        esp = contexto.espacio_actual()
+        if not esp:
+            return None
+        with db.sesion() as s:
+            c = s.scalar(select(Canal).where(Canal.espacio_id == esp).order_by(Canal.creado))
+            if c is None:
+                return None
+            est = s.get(Estilo, c.estilo_id) if c.estilo_id else None
+            return c.clave, (est.clave if est else "")
+    except Exception:  # noqa: BLE001
+        return None
+
+
+def registrar_video(slug: str, titulo: str, carpeta: str, canal: str, minutos: float | None,
+                    formato: str = "16:9", estado: str = "borrador") -> None:
+    """Deja constancia en la base del video creado en el espacio actual (si hay espacio)."""
+    try:
+        from sqlalchemy import select
+
+        from . import contexto, db
+        from .modelos import Canal, Video
+
+        esp = contexto.espacio_actual()
+        if not esp:
+            return
+        with db.sesion() as s:
+            v = s.scalar(select(Video).where(Video.espacio_id == esp, Video.slug == slug))
+            if v is None:
+                v = Video(espacio_id=esp, slug=slug, titulo=titulo, carpeta=carpeta)
+                s.add(v)
+            c = s.scalar(select(Canal).where(Canal.espacio_id == esp, Canal.clave == canal))
+            v.canal_id = c.id if c else None
+            v.minutos, v.formato, v.estado = minutos, formato, estado
+    except Exception:  # noqa: BLE001 — el video existe igual en su carpeta
+        pass

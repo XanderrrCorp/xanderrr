@@ -15,6 +15,7 @@ import os
 
 import shutil
 import subprocess
+import contextvars
 import threading
 import time
 import traceback
@@ -25,7 +26,9 @@ from .config import RAIZ, ConfigCostos, formato_cop, leer_config, leer_json, esc
 from .estilos import cargar_estilo, carpeta_estilo
 from .proyecto import CarpetaProyecto, slugificar
 
+# solo para una instalación sin canales registrados (la versión de un usuario)
 ESTILO_POR_DEFECTO = "enciclopedia_mascota"
+CANAL_POR_DEFECTO = "animales-peligrosos"
 
 
 @dataclass
@@ -93,7 +96,9 @@ def lanzar(slug: str, paso: str, funcion) -> Trabajo:
             t.activo = False
             despierto(False)
 
-    threading.Thread(target=correr, daemon=True).start()
+    # el trabajo corre en el mismo espacio de trabajo que la petición que lo lanzó
+    contexto_actual = contextvars.copy_context()
+    threading.Thread(target=contexto_actual.run, args=(correr,), daemon=True).start()
     return t
 
 
@@ -112,8 +117,18 @@ def carpeta_videos() -> Path:
 
 # ------------------------------------------------------------------ pasos
 
+def _canal_y_estilo(canal: str | None, estilo_id: str | None) -> tuple[str, str]:
+    """Si no se dice, el canal (y su estilo) es el primero del espacio de trabajo."""
+    from .plataforma.consultas import canal_por_defecto
+
+    por_defecto = canal_por_defecto() or (CANAL_POR_DEFECTO, ESTILO_POR_DEFECTO)
+    canal = canal or por_defecto[0]
+    return canal, estilo_id or (por_defecto[1] if canal == por_defecto[0] else "") or ESTILO_POR_DEFECTO
+
+
 def crear_video(tema: str, giro: str, villano: str, minutos: float, notas: str = "",
-                canal: str = "animales-peligrosos", estilo_id: str = ESTILO_POR_DEFECTO) -> CarpetaProyecto:
+                canal: str | None = None, estilo_id: str | None = None) -> CarpetaProyecto:
+    canal, estilo_id = _canal_y_estilo(canal, estilo_id)
     base = slugificar(tema)[:40] or "video"
     slug, n = base, 2
     from .config import ruta_proyectos
@@ -125,6 +140,9 @@ def crear_video(tema: str, giro: str, villano: str, minutos: float, notas: str =
     p.notas = [f"giro: {giro}", f"villano: {villano}", f"notas: {notas}"]
     c.guardar(p)
     _copiar_mascota(c, estilo_id)
+    from .plataforma.consultas import registrar_video
+
+    registrar_video(slug, tema, str(c.ruta), canal, minutos)
     return c
 
 
@@ -142,9 +160,10 @@ def _copiar_mascota(c: CarpetaProyecto, estilo_id: str) -> None:
     copiar_presentador(estilo_id, c.ruta)    # reacciones animadas del presentador
 
 
-def importar_guion(v1: dict | list, canal: str = "animales-peligrosos",
-                   estilo_id: str = ESTILO_POR_DEFECTO) -> tuple[CarpetaProyecto, list[str]]:
+def importar_guion(v1: dict | list, canal: str | None = None,
+                   estilo_id: str | None = None) -> tuple[CarpetaProyecto, list[str]]:
     """Trae un escenas.json hecho antes (formato v1) como un video listo para imágenes."""
+    canal, estilo_id = _canal_y_estilo(canal, estilo_id)
     from .config import ruta_proyectos
     from .importar_v1 import convertir, duracion_escenas
 
@@ -163,6 +182,10 @@ def importar_guion(v1: dict | list, canal: str = "animales-peligrosos",
     c.guardar_escenas(esc)
     _copiar_mascota(c, estilo.id)
     c.marcar("guionista", "completo", ["escenas.json"])
+    from .plataforma.consultas import registrar_video
+
+    registrar_video(slug, esc.video, str(c.ruta), esc.canal, round(dur / 60, 1),
+                    formato=esc.relacion_aspecto, estado="en_proceso")
     avisos = list(res.avisos) + [f"escena {k}: efectos sin equivalente: {v}"
                                  for k, v in res.efectos_no_reconocidos.items()]
     return c, avisos

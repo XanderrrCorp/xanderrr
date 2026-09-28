@@ -37,6 +37,28 @@ PUERTO = int(os.environ.get("XANDART_PUERTO", "8030"))
 app = FastAPI(title="Xandart")
 
 
+class EspacioDeLaPeticion:
+    """Cada petición corre dentro del espacio de trabajo de quien la hace. En modo local
+    es siempre el del dueño (su instalación ya migrada a datos)."""
+
+    def __init__(self, siguiente):
+        self.siguiente = siguiente
+
+    async def __call__(self, scope, receive, send):
+        if scope["type"] != "http":
+            return await self.siguiente(scope, receive, send)
+        from starlette.concurrency import run_in_threadpool
+
+        from .plataforma import contexto, local
+
+        espacio = await run_in_threadpool(local.espacio)
+        with contexto.usar_espacio(espacio):
+            await self.siguiente(scope, receive, send)
+
+
+app.add_middleware(EspacioDeLaPeticion)
+
+
 def _proyecto(slug: str) -> CarpetaProyecto:
     try:
         return CarpetaProyecto.abrir(slug)
@@ -649,6 +671,11 @@ def main():
                 break
         if _ya_abierto() and os.name == "nt":
             _cerrar_puerto()
+    from .plataforma import local
+
+    local.espacio()                # la primera vez migra la instalación a datos del dueño (idempotente)
+    if local.error():
+        print(f"Xandart sigue en modo de siempre: no se pudo preparar el espacio ({local.error()})")
     if "--sin-navegador" not in sys.argv:
         import threading
 

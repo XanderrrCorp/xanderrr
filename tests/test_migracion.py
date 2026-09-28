@@ -50,3 +50,52 @@ def test_migra_peligro_tropical_como_datos_del_dueno(tmp_path):
         assert carpeta_estilo("enciclopedia_mascota").is_relative_to(raiz_e)
         assert ruta_plantilla("animales-peligrosos").is_relative_to(raiz_e)
         assert len(cargar("animales-peligrosos").referencias) == 3
+
+
+def test_modo_local_peticiones_y_trabajos_corren_en_el_espacio_del_dueno(tmp_path, monkeypatch):
+    """La página migra sola la primera vez; cada petición y cada trabajo usan el espacio del dueño."""
+    import threading
+
+    from fastapi.testclient import TestClient
+
+    from estudio import app as modulo_app, pipeline
+    from estudio.plataforma import local
+
+    monkeypatch.delenv("XANDART_SIN_MIGRAR")
+    local.olvidar()
+    visto = {}
+
+    @modulo_app.app.get("/api/_prueba_espacio")
+    def _espacio_de_prueba():
+        visto["peticion"] = contexto.espacio_actual()
+        listo = threading.Event()
+
+        def trabajo(t):
+            visto["trabajo"] = contexto.espacio_actual()
+            listo.set()
+
+        pipeline.lanzar("_prueba", "prueba", trabajo)
+        listo.wait(5)
+        return {}
+
+    try:
+        TestClient(modulo_app.app).get("/api/_prueba_espacio")
+    finally:
+        modulo_app.app.router.routes.pop()
+        local.olvidar()
+    assert visto["peticion"] and visto["trabajo"] == visto["peticion"]
+    assert contexto.espacio_actual() is None                           # no se queda pegado fuera
+
+
+def test_video_nuevo_usa_el_canal_del_espacio_y_queda_registrado(tmp_path):
+    from estudio import pipeline
+
+    raiz, proyectos = _instalacion_vieja(tmp_path)
+    r = migrar_instalacion(raiz, proyectos)
+    with contexto.usar_espacio(r["espacio"]):
+        c = pipeline.crear_video("Ranas venenosas", "", "", 9)
+    p = c.cargar()
+    assert p.canal == "animales-peligrosos" and p.estilo == "enciclopedia_mascota"
+    with db.sesion() as s:
+        v = s.scalar(select(Video).where(Video.slug == c.ruta.name))
+        assert v.espacio_id == r["espacio"] and v.canal_id and v.minutos == 9

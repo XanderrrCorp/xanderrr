@@ -1,10 +1,10 @@
 """Línea de comandos del Estudio (Fase 0).
 
     python -m estudio estilos
-    python -m estudio nuevo "Título" --canal animales-peligrosos --estilo enciclopedia_mascota --minutos 10
-    python -m estudio importar-v1 ruta/escenas_v1.json --slug alacranes --canal animales-peligrosos
+    python -m estudio nuevo "Título" --minutos 10          (canal y estilo: los del espacio; --canal/--estilo para otros)
+    python -m estudio importar-v1 ruta/escenas_v1.json --slug alacranes
     python -m estudio estimar --slug alacranes           (duración real del proyecto)
-    python -m estudio estimar --minutos 10 --estilo enciclopedia_mascota
+    python -m estudio estimar --minutos 10
     python -m estudio validar --slug alacranes
     python -m estudio costos --slug alacranes
     python -m estudio generar-imagenes --slug alacranes --primeras 10
@@ -224,8 +224,8 @@ def main(argv: list[str] | None = None) -> int:
 
     n = sub.add_parser("nuevo", help="crea un proyecto vacío y muestra la estimación")
     n.add_argument("titulo")
-    n.add_argument("--canal", required=True)
-    n.add_argument("--estilo", default="enciclopedia_mascota")
+    n.add_argument("--canal")
+    n.add_argument("--estilo")
     n.add_argument("--minutos", type=float, required=True)
     n.add_argument("--slug")
     n.set_defaults(fn=_cmd_nuevo)
@@ -235,13 +235,13 @@ def main(argv: list[str] | None = None) -> int:
     i.add_argument("--slug")
     i.add_argument("--canal")
     i.add_argument("--titulo")
-    i.add_argument("--estilo", default="enciclopedia_mascota")
+    i.add_argument("--estilo")
     i.set_defaults(fn=_cmd_importar)
 
     e = sub.add_parser("estimar", help="estimación previa del costo en pesos y dólares")
     e.add_argument("--slug")
     e.add_argument("--minutos", type=float)
-    e.add_argument("--estilo", default="enciclopedia_mascota")
+    e.add_argument("--estilo")
     e.set_defaults(fn=_cmd_estimar)
 
     v = sub.add_parser("validar", help="valida los contratos del proyecto")
@@ -285,6 +285,15 @@ def main(argv: list[str] | None = None) -> int:
     rd.set_defaults(fn=_cmd_render)
 
     a = ap.parse_args(argv)
+    from .pipeline import _canal_y_estilo
+    from .plataforma import contexto, local
+
+    # la terminal trabaja en el mismo espacio que la página (en modo local, el del dueño)
+    contexto.fijar_espacio(local.espacio())
+    if hasattr(a, "estilo"):
+        canal, a.estilo = _canal_y_estilo(getattr(a, "canal", None), a.estilo)
+        if hasattr(a, "canal") and a.cmd != "importar-v1":
+            a.canal = canal
     try:
         return a.fn(a)
     except (FileNotFoundError, FileExistsError, ValueError) as ex:
