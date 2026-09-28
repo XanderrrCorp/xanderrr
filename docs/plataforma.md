@@ -53,6 +53,13 @@ Referencia vista en otro canal: el personaje lleva un hoodie con capota del anim
 - Opción por canal/formato: «disfraz según el tema» sí/no. Aplica también a la miniatura.
 - Ojo con el parecido: es una idea general (disfraz temático), no se copia el personaje ni el estilo del otro canal.
 
+### Del mismo video de referencia: silueta con «?» y número del puesto
+- Antes de revelar cada nivel, el animal aparece como silueta negra con un «?» blanco y el puesto
+  arriba en rojo (#6). Se hace con código desde la imagen ya generada (recorte del fondo → relleno
+  negro): no cuesta imágenes nuevas. Alternativa al pixelado del villano, elegible por canal.
+- Un ícono pequeño del tema entre la mascota y la silueta (gota de veneno, etc.): usa los íconos que
+  ya tiene el módulo de miniaturas.
+
 ## Funciones pedidas para el inicio (según la competencia)
 Producir: video largo, short vertical, recortes a shorts (solo de videos propios).
 Identidad del canal: personaje, estilo visual, canal. Generar suelto: imagen, clip animado, voz.
