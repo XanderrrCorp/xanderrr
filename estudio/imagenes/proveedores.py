@@ -128,7 +128,8 @@ class ProveedorGemini:
                              data=json.dumps(self._cuerpo(prompt, referencias)),
                              timeout=self.tiempo_max_s)
         if r.status_code == 429 or r.status_code >= 500:
-            espera = _espera_sugerida(r)
+            # el modelo nuevo limita las ráfagas: sin espera, los reintentos llegaban en el mismo segundo
+            espera = _espera_sugerida(r) or (ESPERA_429_S if r.status_code == 429 else 0)
             if espera:
                 time.sleep(min(espera, 60))
             raise ErrorProveedor(f"HTTP {r.status_code}: {r.text[:300]}", reintentable=True)
@@ -163,8 +164,11 @@ def _espera_sugerida(r) -> float | None:
     return None
 
 
+ESPERA_429_S = 5.0
+
+
 class ProveedorTogether:
-    """Together AI (google/flash-image-2.5 y otros). Cobra por imagen generada.
+    """Together AI (google/flash-image-3.1 y otros). Cobra por imagen generada.
 
     Las referencias van en `reference_images`, que es el único parámetro de
     imagen que acepta este modelo en Together. Se mandan como data URI para no
@@ -173,7 +177,7 @@ class ProveedorTogether:
 
     nombre = "together"
 
-    def __init__(self, config: ConfigCostos, modelo: str, ancho: int = 1344, alto: int = 768,
+    def __init__(self, config: ConfigCostos, modelo: str, ancho: int = 1376, alto: int = 768,
                  tiempo_max_s: float = 120, variable_clave: str = "TOGETHER_API_KEY", sesion=None, **_):
         import requests
 
@@ -203,7 +207,8 @@ class ProveedorTogether:
         r = self.sesion.post(TOGETHER_URL, headers=cabeceras,
                              data=json.dumps(cuerpo), timeout=self.tiempo_max_s)
         if r.status_code == 429 or r.status_code >= 500:
-            espera = _espera_sugerida(r)
+            # el modelo nuevo limita las ráfagas: sin espera, los reintentos llegaban en el mismo segundo
+            espera = _espera_sugerida(r) or (ESPERA_429_S if r.status_code == 429 else 0)
             if espera:
                 time.sleep(min(espera, 60))
             raise ErrorProveedor(f"HTTP {r.status_code}: {r.text[:300]}", reintentable=True)
@@ -271,8 +276,8 @@ def crear_proveedor(config: ConfigCostos, ajustes: dict, nombre: str | None = No
                                ajustes.get("relacion_aspecto", "16:9"), tiempo,
                                op.get("variable_clave", "GEMINI_API_KEY"))
     if nombre == "together":
-        return ProveedorTogether(config, op.get("modelo", "google/flash-image-2.5"),
-                                 op.get("ancho", 1344), op.get("alto", 768), tiempo,
+        return ProveedorTogether(config, op.get("modelo", "google/flash-image-3.1"),
+                                 op.get("ancho", 1376), op.get("alto", 768), tiempo,
                                  op.get("variable_clave", "TOGETHER_API_KEY"))
     if nombre == "simulado":
         return ProveedorSimulado(config)
