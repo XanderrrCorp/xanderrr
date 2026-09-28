@@ -273,6 +273,8 @@ def estimar_imagenes(c: CarpetaProyecto) -> dict:
             "texto": formato_cop(config.a_cop(faltan * precio)),
             "prueba": prueba, "prueba_texto": formato_cop(config.a_cop(prueba * precio)),
             "maximo_texto": formato_cop(config.maximo_cop),
+            "gastado_texto": formato_cop(c.libro(config).total_cop()),
+            "total_texto": formato_cop(config.a_cop(faltan * precio) + c.libro(config).total_cop()),
             "pasa_maximo": config.a_cop(faltan * precio) + c.libro(config).total_cop() > config.maximo_cop}
 
 

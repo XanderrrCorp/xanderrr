@@ -108,7 +108,9 @@ async function pintar() {
       <div class="barra"><i style="width:${Math.round(t.progreso * 100)}%"></i></div>
       <span class="tenue">${esc(t.mensaje)} · ${Math.floor(t.segundos / 60)} min ${t.segundos % 60} s</span></section>`;
   } else if (t && t.error) {
-    cuerpo = `<div class="error">No se pudo terminar «${esc(nombrePaso(t.paso))}»: ${esc(t.error)}</div>`;
+    const conPermiso = /máximo|FRENO|tope/.test(t.error) && ['imagenes', 'prueba', 'video', 'short'].includes(t.paso);
+    cuerpo = `<div class="error">No se pudo terminar «${esc(nombrePaso(t.paso))}»: ${esc(t.error)}
+      ${conPermiso ? `<div class="fila"><button onclick="seguirConPermiso('${t.paso}')">Dar permiso y seguir</button></div>` : ''}</div>`;
   }
   if (vidOk && !enCurso) {
     cuerpo += `<section class="tarjeta"><h2>Tu video está listo</h2>
@@ -129,10 +131,10 @@ async function pintar() {
     if (!imgOk) {
       cuerpo += `<section class="tarjeta"><h2>Revisa el guion</h2>
         <p class="tenue">Puedes cambiar el texto de cualquier escena tocándolo. Cuando te guste, aprueba y se hacen las imágenes.</p>
-        ${e.pasa_maximo ? `<div class="error">Ojo: todas las imágenes de este guion (${e.faltan}) pasan del máximo de ${esc(e.maximo_texto)} por video. Xandart se frena al llegar al máximo y te pide permiso para seguir.</div>` : ''}
+        ${e.pasa_maximo ? `<div class="error">Ojo: este video ya lleva ${esc(e.gastado_texto)} gastados. Las ${e.faltan} imágenes que faltan (≈ ${esc(e.texto)}) lo llevarían a ≈ ${esc(e.total_texto)}, por encima del máximo de ${esc(e.maximo_texto)} por video. Para no pasarte, usa «Usar Pexels y ajustar al presupuesto»; si igual quieres todas, Xandart te pide permiso antes de gastar.</div>` : ''}
         <div class="fila"><button ${e.pasa_maximo ? 'class="primario"' : ''} onclick="ajustarPresupuesto()">Usar Pexels y ajustar al presupuesto (gratis)</button></div>
         ${pruebaHtml(v)}
-        <div class="fila"><button class="primario" onclick="accion('imagenes')">Aprobar y hacer las imágenes (${e.faltan} imágenes ≈ ${esc(e.texto)})</button>
+        <div class="fila"><button class="primario" onclick="aprobarImagenes()">Aprobar y hacer las imágenes (${e.faltan} imágenes ≈ ${esc(e.texto)})</button>
         ${e.prueba ? `<button onclick="accion('prueba')">Probar primero 10 escenas (${e.prueba} imágenes ≈ ${esc(e.prueba_texto)})</button>` : ''}
         <button onclick="if(confirm('¿Escribir otro guion desde cero?')) accion('guion')">Escribir otro guion</button></div></section>`;
     } else if (!vidOk) {
@@ -140,7 +142,7 @@ async function pintar() {
         <p class="tenue">Si alguna no te gusta, dale «Regenerar» (≈ 125 pesos). Cuando todo esté bien, haz el video.</p>
         ${selectorFps()}
         <div class="fila"><button class="primario" onclick="accion('video', {fps: fpsElegido()})">Hacer el video</button>
-        ${e.faltan ? `<button onclick="accion('imagenes')">Completar imágenes que faltan (${e.faltan})</button>` : ''}</div></section>`;
+        ${e.faltan ? `<button onclick="aprobarImagenes()">Completar imágenes que faltan (${e.faltan})</button>` : ''}</div></section>`;
     } else {
       cuerpo += `${selectorFps()}<div class="fila"><button onclick="accion('video', {fps: fpsElegido()})">Volver a montar el video</button></div>`;
     }
@@ -219,6 +221,27 @@ async function accion(que, cuerpo = {}) {
     }
     alert(e.message);
   }
+}
+
+// el freno salta dentro del trabajo (en segundo plano): el permiso se pide aquí, con los números
+function aprobarImagenes() {
+  const e = (window.__ultimo || {}).estimacion_imagenes || {};
+  if (!e.pasa_maximo) return accion('imagenes');
+  if (confirm(`Este video ya lleva ${e.gastado_texto} gastados. Las ${e.faltan} imágenes que faltan cuestan ≈ ${e.texto} ` +
+              `y el video quedaría en ≈ ${e.total_texto}, por encima del máximo de ${e.maximo_texto}.\n\n` +
+              `¿Das permiso para pasar el máximo en este video?\n(Si no, cancela y usa «Usar Pexels y ajustar al presupuesto», que es gratis.)`)) {
+    return accion('imagenes', { permiso: true });
+  }
+}
+
+function seguirConPermiso(paso) {
+  const v = window.__ultimo || {};
+  const e = v.estimacion_imagenes || {};
+  const detalle = paso === 'imagenes' && e.faltan
+    ? `Faltan ${e.faltan} imágenes (≈ ${e.texto}); el video quedaría en ≈ ${e.total_texto} (máximo ${e.maximo_texto}).`
+    : `Este video ya lleva ${v.costo} gastados.`;
+  if (!confirm(`${detalle}\n\n¿Das permiso para pasar el máximo en este video?`)) return;
+  return accion(paso, paso === 'video' ? { permiso: true, fps: fpsElegido() } : { permiso: true });
 }
 
 async function ajustarPresupuesto() {
