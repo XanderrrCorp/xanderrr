@@ -127,7 +127,7 @@ def _canal_y_estilo(canal: str | None, estilo_id: str | None) -> tuple[str, str]
 
 
 def crear_video(tema: str, giro: str, villano: str, minutos: float, notas: str = "",
-                canal: str | None = None, estilo_id: str | None = None) -> CarpetaProyecto:
+                canal: str | None = None, estilo_id: str | None = None, disfraz: bool = False) -> CarpetaProyecto:
     canal, estilo_id = _canal_y_estilo(canal, estilo_id)
     base = slugificar(tema)[:40] or "video"
     slug, n = base, 2
@@ -138,6 +138,7 @@ def crear_video(tema: str, giro: str, villano: str, minutos: float, notas: str =
     c = CarpetaProyecto.crear(tema, canal, estilo_id, minutos * 60, slug=slug)
     p = c.cargar()
     p.notas = [f"giro: {giro}", f"villano: {villano}", f"notas: {notas}"]
+    p.disfraz_mascota = bool(disfraz)
     c.guardar(p)
     _copiar_mascota(c, estilo_id)
     from .plataforma.consultas import registrar_video
@@ -212,6 +213,7 @@ def paso_prueba(c: CarpetaProyecto, t: Trabajo, n: int = 10, permiso: bool = Fal
     from .plataforma import cobro
 
     with cobro.accion(c.ruta, "prueba_escenas"):
+        _disfraz(c, t, permiso, config)
         r = generar_imagenes(c, primeras=n, permiso=permiso, avisar=avisar, config=config)
         if r.frenado:
             raise RuntimeError(r.frenado)
@@ -266,6 +268,8 @@ def estimar_imagenes(c: CarpetaProyecto) -> dict:
     if man.exists():
         hechas = sum(1 for v in leer_json(man).values() if v.get("proveedor") != "existente")
     total = total_a_generar(esc) - (1 if (c.ruta / "assets" / "mascota_base.png").exists() else 0)
+    if c.cargar().disfraz_mascota and not (c.ruta / "assets" / "disfraz.json").exists():
+        total += 1                                   # la mascota disfrazada del tema
     faltan = max(0, total - hechas)
     ya = set(leer_json(man)) if man.exists() else set()
     prueba = sum(1 for e in esc.escenas[:10] if e.visual.accion == "generar" and f"escena:{e.id}" not in ya)
@@ -450,6 +454,7 @@ def paso_imagenes(c: CarpetaProyecto, t: Trabajo, permiso: bool = False, ejecuta
         t.avisar(txt)
 
     _apartar_creditos_del_video(c, t)
+    _disfraz(c, t, permiso, None, ejecutar_claude)
     c.marcar("assets", "en_curso")
     r = generar_imagenes(c, permiso=permiso, avisar=avisar)
     if r.frenado:
@@ -576,6 +581,19 @@ def regenerar_voz_escena(c: CarpetaProyecto, t: Trabajo, escena_id: int, texto: 
     t.avisar("Recalculando los tiempos del video…")
     construir_edl(c)
     t.avisar("Voz lista: dale «Exportar» para rearmar el video")
+
+
+def _disfraz(c: CarpetaProyecto, t: Trabajo, permiso: bool, config=None, ejecutar_claude=None) -> None:
+    """Si el video pide la mascota disfrazada, se hace antes de la primera imagen (una sola vez)."""
+    if not c.cargar().disfraz_mascota:
+        return
+    from .config import leer_config
+    from .disfraz import preparar
+    from .imagenes.proveedores import crear_proveedor
+
+    config = config or ConfigCostos.cargar()
+    proveedor = crear_proveedor(config, leer_config("proveedores.json")["imagenes"])
+    preparar(c, proveedor, config, permiso=permiso, ejecutar=ejecutar_claude, avisar=t.avisar)
 
 
 def _regenerar_imagen(c: CarpetaProyecto, t: Trabajo, escena_id: int, instruccion: str) -> None:

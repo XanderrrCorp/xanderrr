@@ -599,6 +599,9 @@ class Proyecto(Modelo):
     # se activa si el video usa al presentador realista hecho con IA: al subirlo hay que
     # marcar «contenido alterado o sintético» en YouTube
     requiere_divulgacion_contenido_sintetico: bool = False
+    # la mascota sale con un hoodie del animal del tema solo en este video (una imagen extra)
+    disfraz_mascota: bool = False
+    disfraz_tema: str | None = None
 
     @model_validator(mode="after")
     def _pasos_completos(self) -> "Proyecto":

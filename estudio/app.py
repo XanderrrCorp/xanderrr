@@ -301,11 +301,12 @@ class Nuevo(BaseModel):
     minutos: float = Field(9, ge=4, le=11)
     notas: str = ""
     canal: str | None = None        # clave del canal; si no, el primero del espacio
+    disfraz: bool = False           # mascota con hoodie del animal del tema (una imagen extra)
 
 
 @app.post("/api/videos")
 def nuevo(n: Nuevo):
-    c = pipeline.crear_video(n.tema, n.giro, n.villano, n.minutos, n.notas, canal=n.canal or None)
+    c = pipeline.crear_video(n.tema, n.giro, n.villano, n.minutos, n.notas, canal=n.canal or None, disfraz=n.disfraz)
     pipeline.lanzar(c.ruta.name, "guion", lambda t: pipeline.paso_guion(c, t))
     return pipeline.resumen(c)
 

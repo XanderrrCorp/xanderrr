@@ -286,3 +286,6 @@ main { max-width: 1320px; margin: 0 auto; padding: 8px 28px 64px; }
   .panel-grupo { position: absolute; left: calc(var(--riel) + 10px); width: min(290px, calc(100vw - var(--riel) - 40px)); }
   .titular { margin-top: 12px; } .caja-fila .crece { display: none; }
 }
+
+.casilla { display: inline-flex; align-items: center; gap: 7px; font-size: 13px; color: var(--tenue); cursor: pointer; margin-right: 12px; }
+.casilla input { accent-color: var(--violeta); width: 16px; height: 16px; }
