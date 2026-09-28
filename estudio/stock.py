@@ -47,19 +47,26 @@ def _cabeceras() -> dict:
     return {"Authorization": clave}
 
 
+def _revisar(r) -> None:
+    if r.status_code in (401, 403):
+        raise SinClavePexels(f"Pexels rechazó la clave (HTTP {r.status_code}): cópiala otra vez desde pexels.com/api "
+                             "y guárdala en ⚙ Ajustes")
+    r.raise_for_status()
+
+
 def buscar(consulta: str, sesion=requests) -> list[dict]:
     """Candidatos de foto y video para una búsqueda, en un formato común."""
     salida = []
     r = sesion.get(API_FOTOS, params={"query": consulta, "per_page": FOTOS_POR_NIVEL, "orientation": "landscape"},
                    headers=_cabeceras(), timeout=30)
-    r.raise_for_status()
+    _revisar(r)
     for f in r.json().get("photos", []):
         salida.append({"tipo": "foto", "pexels_id": f["id"], "url_origen": f["url"], "autor": f.get("photographer", ""),
                        "autor_url": f.get("photographer_url", ""), "miniatura": f["src"]["medium"],
                        "descarga": f["src"].get("large2x") or f["src"]["large"], "descripcion": f.get("alt", "")})
     r = sesion.get(API_VIDEOS, params={"query": consulta, "per_page": VIDEOS_POR_NIVEL, "orientation": "landscape"},
                    headers=_cabeceras(), timeout=30)
-    r.raise_for_status()
+    _revisar(r)
     for v in r.json().get("videos", []):
         archivos = [a for a in v.get("video_files", []) if a.get("file_type") == "video/mp4" and a.get("width")]
         if not archivos or v.get("duration", 0) < 3:

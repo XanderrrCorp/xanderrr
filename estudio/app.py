@@ -131,6 +131,21 @@ def guardar_claves(c: Claves):
     return estado()
 
 
+DONDE_CLAVE = {"together": "api.together.ai → Settings → API keys", "pexels": "pexels.com/api → Your API key",
+               "freesound": "freesound.org/apiv2/apply → tu clave (Client secret/API key)"}
+
+
+def _explicar(servicio: str, codigo: int) -> str:
+    if codigo == 200:
+        return "funciona"
+    if codigo in (401, 403):
+        return (f"La clave no es válida (HTTP {codigo}). Cópiala otra vez desde {DONDE_CLAVE.get(servicio, 'la página del servicio')}, "
+                "pégala sin espacios, dale Guardar y vuelve a Probar.")
+    if codigo == 429:
+        return "El servicio dice que hiciste demasiadas consultas (HTTP 429). Espera unos minutos y prueba de nuevo."
+    return f"El servicio respondió con un error (HTTP {codigo}). Prueba de nuevo en unos minutos."
+
+
 @app.post("/api/probar/{servicio}")
 def probar(servicio: str):
     import requests
@@ -139,15 +154,15 @@ def probar(servicio: str):
         if servicio == "together":
             r = requests.get("https://api.together.xyz/v1/models", timeout=30,
                              headers={"Authorization": f"Bearer {clave_api('TOGETHER_API_KEY')}"})
-            return {"ok": r.status_code == 200, "detalle": "funciona" if r.status_code == 200 else f"HTTP {r.status_code}"}
+            return {"ok": r.status_code == 200, "detalle": _explicar("together", r.status_code)}
         if servicio == "pexels":
             r = requests.get("https://api.pexels.com/v1/search", params={"query": "scorpion", "per_page": 1}, timeout=30,
                              headers={"Authorization": clave_api("PEXELS_API_KEY") or ""})
-            return {"ok": r.status_code == 200, "detalle": "funciona" if r.status_code == 200 else f"HTTP {r.status_code}"}
+            return {"ok": r.status_code == 200, "detalle": _explicar("pexels", r.status_code)}
         if servicio == "freesound":
             r = requests.get("https://freesound.org/apiv2/search/text/", params={"query": "pop", "page_size": 1},
                              headers={"Authorization": f"Token {clave_api('FREESOUND_API_KEY') or ''}"}, timeout=30)
-            return {"ok": r.status_code == 200, "detalle": "funciona" if r.status_code == 200 else f"HTTP {r.status_code}"}
+            return {"ok": r.status_code == 200, "detalle": _explicar("freesound", r.status_code)}
         if servicio == "minimax":
             from .config import ConfigCostos, leer_config
             from .voz import VozMiniMax
