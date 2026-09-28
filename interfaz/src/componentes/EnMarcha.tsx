@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { api, archivo, paginaVieja, type VideoDetalle } from '../api';
 import { Icono } from './Icono';
 
@@ -85,7 +86,12 @@ export function EnMarcha({ slug }: { slug: string | null }) {
       ) : (
         <p className="tenue pequeno">El storyboard aparece cuando el guion esté listo.</p>
       )}
-      {v.video && <a className="boton-primario ancho" href={archivo(v.slug, v.video) + '?descargar=true'}>Descargar el video</a>}
+      {v.video && (
+        <div className="em-acciones">
+          <Link className="boton-primario" to={`/videos/${v.slug}/editor`}>Abrir en el editor</Link>
+          <a className="boton-borde" href={archivo(v.slug, v.video) + '?descargar=true'}>Descargar</a>
+        </div>
+      )}
     </aside>
   );
 }

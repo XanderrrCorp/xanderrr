@@ -39,7 +39,7 @@ export interface VideoDetalle {
 
 export interface Cotizacion {
   creditos: number; usd: number; precio_cliente: { creditos: number; usd: number };
-  a_costo: boolean; alcanza: boolean; saldo: number;
+  a_costo: boolean; alcanza: boolean; saldo: number; costo_real_usd?: number;
 }
 
 export interface Precios {
@@ -54,3 +54,20 @@ export const archivo = (slug: string, ruta: string) => `/archivos/${slug}/${ruta
 export const paginaVieja = (slug?: string) => (slug ? `/#${slug}` : '/');
 
 export interface EstadoLocal { activo: boolean; fase: string; detalle: string; error: string | null; carpeta_copias: string }
+
+// ------------------------------------------------------------ editor
+export interface EscenaLinea {
+  id: number; inicio: number; fin: number; imagen: string; animacion: string | null; video_real: string | null;
+  narracion: string; seccion: string; puede_regenerar: boolean; modo: string; corte_movido: boolean;
+}
+export interface SubLinea { inicio: number; fin: number; texto: string; escena: number | null; editado: boolean }
+export interface LineaDeTiempo {
+  slug: string; titulo: string; duracion: number; escenas: EscenaLinea[];
+  voz: { escena: number; inicio: number; fin: number }[];
+  musica: { inicio: number; fin: number; nombre: string; animo: string | null }[];
+  sfx: { inicio: number; tipo: string; dur: number }[];
+  subtitulos: SubLinea[]; video: string | null; video_version: number;
+  ediciones: { version: number; actualizado: string | null; pendientes: boolean };
+  trabajo: (Trabajo & { segundos: number }) | null;
+}
+export const reloj = (s: number) => `${Math.floor(s / 60)}:${(s % 60).toFixed(1).padStart(4, '0')}`;

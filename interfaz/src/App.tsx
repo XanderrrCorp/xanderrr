@@ -4,6 +4,7 @@ import { api, type Cuenta, type EstadoLocal } from './api';
 import { Barra } from './componentes/Barra';
 import { Lateral } from './componentes/Lateral';
 import { Canales } from './paginas/Canales';
+import { Editor } from './paginas/Editor';
 import { Formatos } from './paginas/Formatos';
 import { Inicio } from './paginas/Inicio';
 import { MisVideos } from './paginas/MisVideos';
@@ -48,6 +49,7 @@ export function App() {
           <Routes>
             <Route path="/" element={<Inicio />} />
             <Route path="/videos" element={<MisVideos />} />
+            <Route path="/videos/:slug/editor" element={<Editor />} />
             <Route path="/canales" element={<Canales />} />
             <Route path="/formatos" element={<Formatos />} />
             <Route path="/planes" element={<Planes />} />

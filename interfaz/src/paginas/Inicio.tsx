@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { api, archivo, paginaVieja, type VideoLista } from '../api';
 import { CajaIdea } from '../componentes/CajaIdea';
 import { EnMarcha } from '../componentes/EnMarcha';
@@ -40,15 +40,19 @@ const ESTADOS: Record<string, string> = {
 };
 
 export function TarjetaVideo({ v, elegir, activo }: { v: VideoLista; elegir?: () => void; activo?: boolean }) {
+  const ir = useNavigate();
+  // un video terminado se abre en el editor; uno a medio hacer, en la revisión de siempre
+  const abrir = () => (v.video ? ir(`/videos/${v.slug}/editor`) : (window.location.href = paginaVieja(v.slug)));
   return (
     <article className={`tarjeta-video ${activo ? 'activo' : ''}`}>
-      <button className="tv-portada" onClick={elegir ?? (() => (window.location.href = paginaVieja(v.slug)))}>
+      <button className="tv-portada" onClick={elegir ?? abrir}>
         {v.portada ? <img src={archivo(v.slug, v.portada)} alt="" loading="lazy" /> : <Icono nombre="videos" tam={32} />}
         <span className={`estado ${v.estado}`}>{ESTADOS[v.estado] ?? v.estado}</span>
       </button>
       <div className="tv-texto">
         <b title={v.titulo}>{v.titulo}</b>
-        <span className="tenue pequeno">{v.minutos} min · <a href={paginaVieja(v.slug)}>abrir</a></span>
+        <span className="tenue pequeno">{v.minutos} min · {v.video
+          ? <Link to={`/videos/${v.slug}/editor`}>editar</Link> : <a href={paginaVieja(v.slug)}>abrir</a>}</span>
       </div>
     </article>
   );
