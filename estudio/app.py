@@ -3,6 +3,7 @@ los pasos del video. Se abre con `python -m estudio.app` o con el acceso directo
 from __future__ import annotations
 
 import os
+import re
 import subprocess
 import sys
 import webbrowser
@@ -140,17 +141,19 @@ class Claves(BaseModel):
 
 @app.post("/api/claves")
 def guardar_claves(c: Claves):
+    from .config import limpiar_clave
+
     valores = _leer_env()
-    if c.together and c.together.strip():
-        valores["TOGETHER_API_KEY"] = c.together.strip()
-    if c.minimax and c.minimax.strip():
-        valores["MINIMAX_API_KEY"] = c.minimax.strip()
-    if c.pexels and c.pexels.strip():
-        valores["PEXELS_API_KEY"] = c.pexels.strip()
-    if c.freesound and c.freesound.strip():
-        valores["FREESOUND_API_KEY"] = c.freesound.strip()
+    for campo, nombre in NOMBRES_CLAVE.items():
+        v = limpiar_clave(getattr(c, campo))
+        if v:
+            valores[nombre] = v
     (RAIZ / ".env").write_text("".join(f"{k}={v}\n" for k, v in valores.items()), encoding="utf-8")
     return estado()
+
+
+NOMBRES_CLAVE = {"together": "TOGETHER_API_KEY", "minimax": "MINIMAX_API_KEY", "pexels": "PEXELS_API_KEY",
+                 "freesound": "FREESOUND_API_KEY"}
 
 
 DONDE_CLAVE = {"together": "api.together.ai → Settings → API keys", "pexels": "pexels.com/api → Your API key",
@@ -168,19 +171,61 @@ def _explicar(servicio: str, codigo: int) -> str:
     return f"El servicio respondió con un error (HTTP {codigo}). Prueba de nuevo en unos minutos."
 
 
+class Prueba_clave(BaseModel):
+    clave: str | None = None     # la que está escrita en Ajustes (aún sin guardar)
+
+
+def _forma_pexels(clave: str) -> str | None:
+    """Pista si lo pegado no tiene la forma de una clave de Pexels (sin mostrar la clave)."""
+    if not re.fullmatch(r"[A-Za-z0-9]+", clave):
+        return ("Lo que se pegó tiene símbolos que una clave de Pexels no lleva (¿se copió un enlace o un correo?). "
+                "En pexels.com/api, con tu cuenta abierta, copia solo el texto largo de «Your API Key».")
+    if len(clave) != 56:
+        return (f"Lo que se pegó tiene {len(clave)} caracteres y las claves de Pexels suelen tener 56: "
+                "puede que se haya copiado incompleta. Cópiala completa desde «Your API Key» en pexels.com/api.")
+    return None
+
+
 @app.post("/api/probar/{servicio}")
-def probar(servicio: str):
+def probar(servicio: str, p: Prueba_clave = Prueba_clave()):
     import requests
 
+    from .config import limpiar_clave
+
+    escrita = limpiar_clave(p.clave)
+    nombre = NOMBRES_CLAVE.get(servicio)
+    if escrita and nombre:
+        # se prueba lo que está escrito; si funciona, queda guardado de una vez
+        valores = _leer_env()
+        anterior = valores.get(nombre)
+        valores[nombre] = escrita
+        (RAIZ / ".env").write_text("".join(f"{k}={v}\n" for k, v in valores.items()), encoding="utf-8")
+        r = probar(servicio)
+        if not r.get("ok"):
+            if anterior:
+                valores[nombre] = anterior
+            else:
+                valores.pop(nombre, None)
+            (RAIZ / ".env").write_text("".join(f"{k}={v}\n" for k, v in valores.items()), encoding="utf-8")
+        else:
+            r["detalle"] = "funciona y quedó guardada"
+        return r
     try:
         if servicio == "together":
             r = requests.get("https://api.together.xyz/v1/models", timeout=30,
                              headers={"Authorization": f"Bearer {clave_api('TOGETHER_API_KEY')}"})
             return {"ok": r.status_code == 200, "detalle": _explicar("together", r.status_code)}
         if servicio == "pexels":
+            clave = clave_api("PEXELS_API_KEY") or ""
+            if not clave:
+                return {"ok": False, "detalle": "No hay clave de Pexels guardada: pégala arriba y dale Probar."}
             r = requests.get("https://api.pexels.com/v1/search", params={"query": "scorpion", "per_page": 1}, timeout=30,
-                             headers={"Authorization": clave_api("PEXELS_API_KEY") or ""})
-            return {"ok": r.status_code == 200, "detalle": _explicar("pexels", r.status_code)}
+                             headers={"Authorization": clave, "User-Agent": "Xandart/1.0"})
+            detalle = _explicar("pexels", r.status_code)
+            if r.status_code in (401, 403):
+                detalle = _forma_pexels(clave) or ("Pexels dice que esa clave no existe. Entra a pexels.com/api con "
+                                                   "la cuenta donde la pediste y copia el texto de «Your API Key».")
+            return {"ok": r.status_code == 200, "detalle": detalle}
         if servicio == "freesound":
             r = requests.get("https://freesound.org/apiv2/search/text/", params={"query": "pop", "page_size": 1},
                              headers={"Authorization": f"Token {clave_api('FREESOUND_API_KEY') or ''}"}, timeout=30)

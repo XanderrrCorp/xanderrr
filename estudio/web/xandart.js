@@ -403,8 +403,11 @@ async function guardarClaves() {
 async function probar(servicio) {
   const el = $('#e-' + servicio);
   el.textContent = 'probando…';
-  const r = await api(`/api/probar/${servicio}`, { method: 'POST' });
-  el.textContent = r.ok ? '✓ funciona' : '✗ ' + r.detalle;
+  const campo = $('#k-' + servicio);
+  const escrita = campo ? campo.value.trim() : '';
+  const r = await api(`/api/probar/${servicio}`, { method: 'POST', cuerpo: escrita ? { clave: escrita } : {} });
+  el.textContent = r.ok ? '✓ ' + r.detalle : '✗ ' + r.detalle;
+  if (r.ok && campo) { campo.value = ''; ESTADO = await api('/api/estado'); }
 }
 async function sesionClaude() {
   try { await api('/api/claude/sesion', { method: 'POST' }); alert('Se abrió una ventana de Claude: sigue los pasos para iniciar sesión y luego ciérrala.'); }
