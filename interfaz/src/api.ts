@@ -31,10 +31,24 @@ export interface VideoLista {
   slug: string; titulo: string; minutos: number; canal: string; estado: string;
   pasos: Record<string, string>; portada: string | null; video: string | null; trabajo: Trabajo | null;
 }
-export interface Escena { id: number; seccion: string; narracion: string; accion: string; imagen: string | null }
+export interface Escena {
+  id: number; seccion: string; narracion: string; accion: string; imagen: string | null;
+  puede_regenerar?: boolean; medico?: boolean;
+}
+export interface Estimacion {
+  total: number; faltan: number; texto: string; prueba: number; prueba_texto: string; maximo_texto: string;
+  gastado_texto?: string; total_texto?: string; pasa_maximo: boolean;
+}
+export interface Prueba {
+  escenas: number; generadas: number; ya_estaban: number; llamadas: number; proveedor: string; modelo: string;
+  costo_corrida: string; costo_medio_imagen: string | null; hoja: string | null;
+  proyeccion: { imagenes: number; texto: string; base: string } | null;
+}
 export interface VideoDetalle {
   slug: string; titulo: string; minutos: number; pasos: Record<string, string>; costo: string;
   escenas: Escena[]; video: string | null; trabajo: (Trabajo & { segundos: number }) | null;
+  estimacion_imagenes?: Estimacion; prueba: Prueba | null; puede_short?: boolean; vertical: boolean;
+  divulgacion: boolean; guion: string | null;
 }
 
 export interface Cotizacion {

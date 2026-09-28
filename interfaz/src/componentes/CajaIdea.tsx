@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
-import { api, miles, paginaVieja, type Canal, type Cotizacion, type Formato, type VideoDetalle } from '../api';
+import { useNavigate } from 'react-router-dom';
+import { api, miles, type Canal, type Cotizacion, type Formato, type VideoDetalle } from '../api';
 import { Icono } from './Icono';
 
 // Formatos que vienen en camino (se muestran para que se sepa que llegan, sin poder elegirse).
 const EN_CAMINO = ['Hombre de palo', 'Top X', 'Narración de historias', 'Personaje garabato', 'Videos para dormir'];
 
 export function CajaIdea({ creado }: { creado: (slug: string) => void }) {
+  const ir = useNavigate();
   const [formatos, setFormatos] = useState<Formato[]>([]);
   const [canales, setCanales] = useState<Canal[]>([]);
   const [formato, setFormato] = useState('');
@@ -34,7 +36,7 @@ export function CajaIdea({ creado }: { creado: (slug: string) => void }) {
     try {
       const v = await api<VideoDetalle>('/api/videos', { cuerpo: { tema: idea.trim(), minutos, canal: canal || null } });
       setIdea('');
-      if (modo === 'personalizado') window.location.href = paginaVieja(v.slug);
+      if (modo === 'personalizado') ir(`/videos/${v.slug}`);
       else creado(v.slug);
     } catch (e) { setError((e as Error).message); } finally { setEnviando(false); }
   }

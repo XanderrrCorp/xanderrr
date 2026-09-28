@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { api, archivo, paginaVieja, type VideoDetalle } from '../api';
+import { api, archivo, type VideoDetalle } from '../api';
 import { Icono } from './Icono';
 
 const PASOS: { clave: string[]; nombre: string }[] = [
@@ -56,7 +56,7 @@ export function EnMarcha({ slug }: { slug: string | null }) {
           <span className="tenue pequeno">{t?.activo ? 'En marcha' : 'Tu último video'}</span>
           <h3 title={v.titulo}>{v.titulo}</h3>
         </div>
-        <a className="boton-borde pequeno" href={paginaVieja(v.slug)}>Revisar y aprobar <Icono nombre="flecha" tam={16} /></a>
+        <Link className="boton-borde pequeno" to={`/videos/${v.slug}`}>Revisar y aprobar <Icono nombre="flecha" tam={16} /></Link>
       </div>
       <ol className="pasos">
         {PASOS.map((p, i) => (

@@ -10,6 +10,7 @@ import { Inicio } from './paginas/Inicio';
 import { MisVideos } from './paginas/MisVideos';
 import { Planes } from './paginas/Planes';
 import { Pronto } from './paginas/Pronto';
+import { Revision } from './paginas/Revision';
 
 export function App() {
   const [cuenta, setCuenta] = useState<Cuenta | null>(null);
@@ -50,6 +51,7 @@ export function App() {
             <Route path="/" element={<Inicio />} />
             <Route path="/videos" element={<MisVideos />} />
             <Route path="/videos/:slug/editor" element={<Editor />} />
+            <Route path="/videos/:slug" element={<Revision />} />
             <Route path="/canales" element={<Canales />} />
             <Route path="/formatos" element={<Formatos />} />
             <Route path="/planes" element={<Planes />} />
