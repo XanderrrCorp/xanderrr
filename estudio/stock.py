@@ -44,7 +44,7 @@ def _cabeceras() -> dict:
     clave = clave_api("PEXELS_API_KEY")
     if not clave:
         raise SinClavePexels("falta la clave de Pexels (⚙ Ajustes)")
-    return {"Authorization": clave}
+    return {"Authorization": clave, "User-Agent": "Xandart/1.0"}
 
 
 def _revisar(r) -> None:

@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 from pathlib import Path
 from typing import Any
 
@@ -27,9 +28,17 @@ def _leer_env() -> dict[str, str]:
     return valores
 
 
+def limpiar_clave(valor: str | None) -> str:
+    """Quita lo que se cuela al copiar y pegar: espacios, saltos de línea, comillas y
+    caracteres invisibles (espacio de ancho cero, espacio duro…)."""
+    return re.sub(r"[\s\u200b\u200c\u200d\u2060\ufeff\xa0\"'`]", "", valor or "")
+
+
 def clave_api(nombre: str) -> str | None:
-    """Clave de un proveedor: primero el entorno, luego `.env`. Nunca del código."""
-    return os.environ.get(nombre) or _leer_env().get(nombre) or None
+    """Clave de un proveedor: primero la guardada en Xandart (`.env`, ⚙ Ajustes), luego el
+    entorno. Nunca del código. (Antes mandaba el entorno: una clave vieja guardada en Windows
+    tapaba en silencio la nueva que se pegaba en Ajustes.)"""
+    return limpiar_clave(_leer_env().get(nombre)) or limpiar_clave(os.environ.get(nombre)) or None
 
 
 def leer_config(nombre: str) -> dict[str, Any]:
