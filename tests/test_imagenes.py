@@ -242,3 +242,33 @@ def test_asset_existente_se_adopta_sin_pagar(proyecto, config):
     r = generar_imagenes(proyecto, primeras=10, proveedor=prov, config=config, avisar=silencio)
     assert "asset:mascota_base" in r.ya_estaban and "asset:mascota_base" not in r.generadas
     assert prov.llamadas == 5
+
+
+def test_arreglo_de_las_corazas_no_vuelve_a_pagar_imagenes(proyecto, config, estilo, monkeypatch, tmp_path):
+    """La plantilla vieja pedía placas de exoesqueleto en todo animal. Al corregirla, las imágenes
+    ya pagadas con la frase vieja se reconocen como las mismas (no se regeneran)."""
+    from estudio.estilos import Estilo
+    from estudio.imagenes import arreglos, generador
+
+    viejo, nuevo = arreglos.REEMPLAZOS[0]
+    assert viejo not in json.dumps(estilo.model_dump()) and nuevo in json.dumps(estilo.model_dump())
+    estilo_viejo = Estilo.model_validate(json.loads(json.dumps(estilo.model_dump()).replace(nuevo, viejo)))
+    prov = ProveedorSimulado(config)
+    with monkeypatch.context() as m:
+        m.setattr(generador, "cargar_estilo", lambda _id: estilo_viejo)
+        r = generar_imagenes(proyecto, primeras=10, proveedor=prov, config=config, avisar=silencio)
+    assert r.generadas and prov.llamadas == len(r.generadas)
+    antes = prov.llamadas
+    r2 = generar_imagenes(proyecto, primeras=10, proveedor=prov, config=config, avisar=silencio)
+    assert prov.llamadas == antes and not r2.generadas                     # nada se vuelve a pagar
+    man = leer_json(proyecto.ruta / "imagenes" / "manifiesto.json")
+    assert not any(viejo in (v.get("prompt") or "") for v in man.values())  # quedan con el prompt nuevo
+
+    # el estilo copiado en el espacio también se corrige (con copia del original)
+    f = tmp_path / "datos" / "espacios" / ("a" * 32) / "estilos" / "enciclopedia_mascota" / "estilo.json"
+    f.parent.mkdir(parents=True)
+    f.write_text(json.dumps(estilo_viejo.model_dump()), encoding="utf-8")
+    assert arreglos.corregir_estilos(tmp_path / "datos") == [f]
+    assert viejo not in f.read_text(encoding="utf-8") and nuevo in f.read_text(encoding="utf-8")
+    assert viejo in (f.parent / "estilo.antes_del_arreglo.json").read_text(encoding="utf-8")
+    assert arreglos.corregir_estilos(tmp_path / "datos") == []                # una sola vez

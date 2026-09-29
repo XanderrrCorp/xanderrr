@@ -54,11 +54,22 @@ def _preparar() -> None:
         from ..config import raiz_origen
 
         r = migrar_instalacion(raiz_origen())
+        _arreglar_estilos()
         _estado.update(espacio=r["espacio"], resumen=r, error=None, fase="listo", detalle="")
     except CopiaFallida as ex:
         _estado.update(espacio=None, error=str(ex), fase="error", detalle=str(ex))
     except Exception as ex:  # noqa: BLE001 — la versión de siempre sigue sirviendo
         _estado.update(espacio=None, error=f"{ex.__class__.__name__}: {ex}", fase="error", detalle=str(ex))
+
+
+def _arreglar_estilos() -> None:
+    """Correcciones de plantillas en los estilos del espacio (ver imagenes/arreglos.py)."""
+    from ..imagenes.arreglos import corregir_base, corregir_estilos
+    from . import db
+
+    corregir_estilos(db.carpeta_datos())
+    with db.sesion() as s:
+        corregir_base(s)
 
 
 def preparar(esperar: bool = True) -> None:

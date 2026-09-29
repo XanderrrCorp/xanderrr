@@ -164,8 +164,9 @@ def instruccion_detalles(historia: dict, k: int, estilo: Estilo, catalogo: list[
     if catalogo:
         filas = "\n".join(f"  - {c['id']}: {c['descripcion'][:140]}" for c in catalogo)
         bloque_catalogo = f"""
-IMÁGENES YA HECHAS (gratis): prefiere SIEMPRE una de estas si encaja con lo que dice la escena, con
-"accion": "reusar", "reusar": "imagen:<id>". Solo pide imagen nueva ("generar") si ninguna encaja de verdad.
+IMÁGENES YA HECHAS (gratis): úsala con "accion": "reusar", "reusar": "imagen:<id>" SOLO si muestra
+exactamente lo que dice la voz en esa escena (el mismo animal y la misma acción o situación). Si solo se
+parece, o hay duda, pide imagen nueva ("generar"): una imagen que no cuadra con la voz se nota.
 No pongas la misma imagen en dos escenas seguidas.
 {filas}
 """
@@ -181,12 +182,18 @@ Para CADA escena, en orden, decide:
 - "intencion": una de {", ".join(INTENCIONES)} (las preguntas al espectador son pregunta_al_espectador).
 - "intensidad": 1 a 5.
 - "accion": "generar" (imagen nueva), "reusar" o "componer". Alrededor del 70 % generan imagen; reusa con
-  "reusar": "escena:<primeras palabras exactas de una escena anterior de esta sección>" cuando la voz vuelve
-  sobre algo ya visto.
+  "reusar": "escena:<primeras palabras exactas de una escena anterior de esta sección>" solo cuando la voz
+  vuelve sobre EXACTAMENTE lo mismo que ya se vio en esa escena.
 - "tipo" (solo si generar), de esta lista del estilo «{estilo.nombre}»:
 {tipos}
-- "descripcion" (solo si generar) en INGLÉS: qué se ve, concreto (sujeto, acción, lugar, luz). Nunca texto,
-  letras, números ni letreros en la imagen. Nada de sangre ni heridas gráficas. Nunca termómetros, medidores
+- "descripcion" (solo si generar) en INGLÉS: la imagen tiene que mostrar LO QUE DICE LA VOZ en esa escena,
+  no una imagen genérica del tema. Si la voz nombra un animal, ese animal exacto por su nombre común en inglés
+  y con su aspecto real (pelo, plumas, piel o escamas como los tiene la especie; nunca armaduras ni placas si
+  el animal no las tiene). Si habla de personas (agricultores, cazadores, pescadores, niños, turistas…), se
+  ven esas personas haciendo lo que dice la voz, con su ropa y su lugar (un agricultor en su cultivo, un
+  cazador en el monte), usando un tipo de escena completa. Si habla de una acción, un dato o una situación
+  (cazar, esconderse, un tamaño, un lugar), eso es lo que se ve. Concreto: sujeto, acción, lugar, luz. Nunca texto, letras, números ni letreros
+  en la imagen. Nada de sangre ni heridas gráficas. Nunca termómetros, medidores
   ni barras de peligro: la escala de peligro 0–10 la pone el montaje a pantalla completa.
 - "con_mascota": true si aparece la mascota (un hombre de dibujo de cabeza blanca redonda); en la descripción
   llámala "the cartoon man".{nota_mascota}

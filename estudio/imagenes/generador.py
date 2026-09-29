@@ -62,6 +62,15 @@ def _huella(t: Trabajo, modelo: str) -> str:
     return h.hexdigest()[:16]
 
 
+def _misma_de_antes(t: Trabajo, modelo: str, previo: dict) -> bool:
+    from dataclasses import replace
+
+    from .arreglos import prompt_anterior
+
+    antes = prompt_anterior(t.prompt)
+    return antes is not None and _huella(replace(t, prompt=antes), modelo) == previo.get("huella")
+
+
 def _validar_png(datos: bytes, aspecto: str) -> tuple[bytes, str | None]:
     """Control de calidad barato: que la imagen abra y tenga la proporción pedida.
     El control visual (letras, anatomía, personaje) lo hace el Revisor."""
@@ -200,6 +209,11 @@ def generar_imagenes(carpeta: CarpetaProyecto, *, primeras: int | None = None, i
             escribir_json(ruta_manifiesto, manifiesto)
             reporte.ya_estaban.append(t.clave)
             continue
+        if previo and previo.get("huella") != huella and t.destino.exists() and _misma_de_antes(t, proveedor.modelo, previo):
+            # pagada con la plantilla de antes de un arreglo (ver arreglos.py): es la misma imagen
+            manifiesto[t.clave] = {**previo, "huella": huella, "prompt": t.prompt}
+            escribir_json(ruta_manifiesto, manifiesto)
+            previo = manifiesto[t.clave]
         if previo and previo.get("huella") == huella and t.destino.exists():
             reporte.ya_estaban.append(t.clave)
             continue
