@@ -235,7 +235,8 @@ def _equilibrar_movimientos(clips: list, perfil, rng: random.Random, maximo: flo
     relleno por el alternativo menos usado; zoom_golpe y ráfagas no se tocan."""
     exentos = set(perfil.recursos_exentos_de_uso_maximo) | {"zoom_golpe"}
     alternativos = ["zoom_lento", "alejamiento_lento", "paneo_lento", None]
-    movibles = [c for c in clips if c["modo"] != "tira" and not any(e["efecto"] == "rafaga" for e in c["efectos"])
+    movibles = [c for c in clips if c["modo"] not in ("tira", "pantalla_completa")
+                and not any(e["efecto"] == "rafaga" for e in c["efectos"])
                 and (c["movimiento"] or {}).get("tipo") not in exentos]
     tope = max(1, int(perfil.uso_maximo_por_recurso * len(clips)))
 
@@ -485,6 +486,20 @@ def _musica_suave(pistas: list[str], escenas: list, clips: list, revelacion: int
     return [clip]
 
 
+# intenciones que piden sumergirse en la imagen (la escena llena la pantalla, sin papel)
+INMERSIVAS = {"gancho", "tension_creciente", "amenaza", "anecdota", "revelacion", "cierre", "giro"}
+
+
+def _a_pantalla_completa(estilo: Estilo, modo: str, e, zonas, revelacion: int | None, rng: random.Random) -> bool:
+    """Parte de las escenas completas (con fondo propio) van a pantalla completa con zoom lento, como en
+    los canales que le gustan al dueño; los recortes siguen sobre el papel. No las del villano oculto."""
+    if estilo.comportamiento_montaje.get(modo, "recuadro") != "recuadro" or zonas:
+        return False
+    if revelacion and e.id < revelacion and getattr(e, "muestra_villano", False):
+        return False
+    return rng.random() < (0.75 if e.intencion in INMERSIVAS else 0.45)
+
+
 def _escala(en: float, dur: float, valor: int, nivel) -> dict:
     return {"efecto": "escala_peligro", "en": en, "dur": dur, "valor": int(valor), "nivel": nivel.numero,
             "villano": bool(nivel.villano)}
@@ -602,6 +617,9 @@ def construir_edl(carpeta: CarpetaProyecto) -> dict:
                 t_estilo = next((x for x in estilo.tipos_de_escena if x.quitar_fondo == quitar),
                                 estilo.tipos_de_escena[0])
             modo = t_estilo.modo_montaje
+            if _a_pantalla_completa(estilo, modo, e, (direccion.get("pixelar") or {}).get(str(e.id)), revelacion, rng):
+                modo = "pantalla_completa"
+                razon = (razon + "; " if razon else "") + "Escena completa a pantalla completa, sin papel"
             if nueva_seccion:
                 _sfx(sfx, "barrido", ini, idx, f"Barrido de cambio de sección: empieza «{e.seccion}»")
         # --- villano pixelado antes de su revelación (15.4)
@@ -624,7 +642,12 @@ def construir_edl(carpeta: CarpetaProyecto) -> dict:
         movimiento = None
         transicion = "corte"
         respiro = False
-        if modo != "tira":
+        if modo == "pantalla_completa":
+            # la imagen llena la pantalla y se acerca muy despacio durante toda la escena
+            foco = [round(rng.uniform(0.45, 0.55), 3), round(rng.uniform(0.42, 0.52), 3)]
+            movimiento = {"tipo": "zoom_lento", "de": 1.0, "a": round(1 + rng.uniform(0.05, 0.08), 3),
+                          "punto_foco": foco}
+        elif modo != "tira":
             if mov_nombre == "zoom_golpe" and previo_golpe:
                 mov_nombre = "zoom_lento"
             sutil = False
@@ -635,7 +658,7 @@ def construir_edl(carpeta: CarpetaProyecto) -> dict:
             if mov_nombre == "zoom_golpe":
                 foco = [round(rng.uniform(0.42, 0.58), 3), round(rng.uniform(0.40, 0.54), 3)]
                 golpe = round(min(ini + 0.35 * dur, fin - 0.4), 3)
-                movimiento = {"tipo": "zoom_golpe", "de": 1.0, "a": 1.07, "punto_foco": foco}
+                movimiento = {"tipo": "zoom_golpe", "de": 1.0, "a": 1.045, "punto_foco": foco}
                 efectos.append({"efecto": "zoom_golpe", "en": golpe})
                 _sfx(sfx, "golpe_grave", golpe, idx, f"Golpe con el zoom de {e.intencion.replace('_', ' ')}")
             else:
@@ -645,7 +668,7 @@ def construir_edl(carpeta: CarpetaProyecto) -> dict:
                     movimiento["a"] = round(1 + rng.uniform(0.012, 0.022), 3)
             # ráfaga: 2 o 3 acercamientos cortos al ritmo de un latido, solo en tension_creciente
             if (e.intencion == "tension_creciente" and dur >= 1.8 and not previo_rafaga
-                    and not zonas and rng.random() < 0.75):
+                    and not zonas and rng.random() < 0.35):
                 n_golpes = 3 if dur >= 2.6 else 2
                 t, tiempos = ini + rng.uniform(0.2, 0.35), []
                 for _ in range(n_golpes):
@@ -767,11 +790,11 @@ def construir_edl(carpeta: CarpetaProyecto) -> dict:
             elif sonido == "zumbido" and rng.random() < 0.5:
                 _sfx(sfx, "zumbido", ini + 0.3, idx, "Zumbido grave: amenaza")
         # --- entrada del objeto al cortar (sale de abajo, de un lado o con rebote) y vaivén suave
-        if modo != "tira" and idx > 0 and archivo != clips[-1]["archivo"] and not zonas \
+        if modo not in ("tira", "pantalla_completa") and idx > 0 and archivo != clips[-1]["archivo"] and not zonas \
                 and not any(x["efecto"] == "revelar_pixelado" for x in efectos):
             opciones = ["entrada_abajo", "entrada_lado", "entrada_rebote"]
             con_cupo = [o for o in opciones if usos_entrada[o] / (idx + 1) < tope_recurso and o != ultima_entrada]
-            if con_cupo and rng.random() < 0.85:
+            if con_cupo and rng.random() < 0.35:          # el dueño lo veía exagerado: pocas entradas
                 o = min(con_cupo, key=lambda r: (usos_entrada[r], rng.random()))
                 usos_entrada[o] += 1
                 ultima_entrada = o
@@ -783,8 +806,8 @@ def construir_edl(carpeta: CarpetaProyecto) -> dict:
                 razon = (razon + "; " if razon else "") + {"entrada_abajo": "la imagen sale desde abajo",
                                                            "entrada_lado": "la imagen entra de lado",
                                                            "entrada_rebote": "la imagen aparece con rebote"}[o]
-        if modo != "tira":
-            efectos.append({"efecto": "vaiven", "hz": round(rng.uniform(0.55, 0.85), 2), "px": round(rng.uniform(4, 7), 1),
+        if modo not in ("tira", "pantalla_completa") and rng.random() < 0.25:   # vaivén leve, solo a ratos
+            efectos.append({"efecto": "vaiven", "hz": round(rng.uniform(0.4, 0.6), 2), "px": round(rng.uniform(2, 3.5), 1),
                             "fase": round(rng.uniform(0, 6.28), 2)})
         previo_golpe = bool(movimiento and movimiento["tipo"] == "zoom_golpe")
         previo_rafaga = any(x["efecto"] == "rafaga" for x in efectos)

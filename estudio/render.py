@@ -150,6 +150,17 @@ class Escenario:
         img = Image.open(self.raiz / clip["archivo"]).convert("RGB")
         if zonas:
             img = _pixelar_zonas(img, zonas, next(e.get("bloque", 26) for e in clip["efectos"] if e["efecto"] == "pixelar"))
+        if clip["modo"] == "pantalla_completa":
+            # sin papel: la imagen llena el cuadro (recortando lo que sobre del centro)
+            k = max(W / img.width, H / img.height)
+            d = img.resize((max(W, round(img.width * k)), max(H, round(img.height * k))), Image.Resampling.LANCZOS)
+            x0, y0 = (d.width - W) // 2, (d.height - H) // 2
+            self.ubicacion[clip["id"]] = (-x0, -y0, d.width, d.height)
+            final = d.crop((x0, y0, x0 + W, y0 + H))
+            self.cache[clave] = final
+            if len(self.cache) > 6:
+                self.cache.pop(next(iter(self.cache)))
+            return final
         lienzo = self.papel.copy().convert("RGBA")
         if self.comportamiento.get(clip["modo"], "recuadro") == "recorte":
             esquina = np.asarray(img.resize((40, 24)), np.float32)
