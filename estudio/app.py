@@ -161,6 +161,7 @@ def estado():
                     continue
     return {"claves": {"together": bool(clave_api("TOGETHER_API_KEY")), "minimax": bool(clave_api("MINIMAX_API_KEY")),
                        "pexels": bool(clave_api("PEXELS_API_KEY")), "freesound": bool(clave_api("FREESOUND_API_KEY")),
+                       "gemini": bool(clave_api("GEMINI_API_KEY")),
                        "correo": bool(clave_api("XANDART_SMTP_USUARIO") and clave_api("XANDART_SMTP_CLAVE"))},
             "claude": bool(claude_cli.ejecutable()), "videos": videos,
             "carpeta_videos": str(pipeline.carpeta_videos())}
@@ -171,6 +172,7 @@ class Claves(BaseModel):
     minimax: str | None = None
     pexels: str | None = None
     freesound: str | None = None
+    gemini: str | None = None          # Google AI Studio (imágenes directo con Google)
     smtp_usuario: str | None = None     # Gmail que manda los avisos
     smtp_clave: str | None = None       # contraseña de aplicación de ese Gmail
 
@@ -189,12 +191,13 @@ def guardar_claves(c: Claves):
 
 
 NOMBRES_CLAVE = {"together": "TOGETHER_API_KEY", "minimax": "MINIMAX_API_KEY", "pexels": "PEXELS_API_KEY",
-                 "freesound": "FREESOUND_API_KEY", "smtp_usuario": "XANDART_SMTP_USUARIO",
+                 "freesound": "FREESOUND_API_KEY", "gemini": "GEMINI_API_KEY", "smtp_usuario": "XANDART_SMTP_USUARIO",
                  "smtp_clave": "XANDART_SMTP_CLAVE"}
 
 
 DONDE_CLAVE = {"together": "api.together.ai → Settings → API keys", "pexels": "pexels.com/api → Your API key",
-               "freesound": "freesound.org/apiv2/apply → tu clave (Client secret/API key)"}
+               "freesound": "freesound.org/apiv2/apply → tu clave (Client secret/API key)",
+               "gemini": "aistudio.google.com/apikey → Create API key"}
 
 
 def _explicar(servicio: str, codigo: int) -> str:
@@ -267,6 +270,15 @@ def probar(servicio: str, p: Prueba_clave = Prueba_clave()):
             r = requests.get("https://freesound.org/apiv2/search/text/", params={"query": "pop", "page_size": 1},
                              headers={"Authorization": f"Token {clave_api('FREESOUND_API_KEY') or ''}"}, timeout=30)
             return {"ok": r.status_code == 200, "detalle": _explicar("freesound", r.status_code)}
+        if servicio == "gemini":
+            # listar modelos no genera nada ni cuesta: solo confirma la clave y qué modelos de imagen hay
+            r = requests.get("https://generativelanguage.googleapis.com/v1beta/models", params={"pageSize": 200},
+                             headers={"x-goog-api-key": clave_api("GEMINI_API_KEY") or ""}, timeout=30)
+            if r.status_code != 200:
+                return {"ok": False, "detalle": _explicar("gemini", r.status_code)}
+            imagen = sorted(m["name"].removeprefix("models/") for m in r.json().get("models", []) if "image" in m["name"])
+            return {"ok": True, "detalle": "funciona" + (f" · modelos de imagen: {', '.join(imagen[:4])}" if imagen else ""),
+                    "modelos_imagen": imagen}
         if servicio == "minimax":
             from .config import ConfigCostos, leer_config
             from .voz import VozMiniMax

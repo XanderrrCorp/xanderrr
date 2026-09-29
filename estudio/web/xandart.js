@@ -391,13 +391,14 @@ function abrirAjustes() {
   $('#e-minimax').textContent = c.minimax ? 'guardada' : 'falta';
   $('#e-pexels').textContent = c.pexels ? 'guardada' : 'falta (opcional)';
   $('#e-freesound').textContent = c.freesound ? 'guardada' : 'falta (opcional)';
+  $('#e-gemini').textContent = c.gemini ? 'guardada' : 'falta (opcional)';
   $('#e-claude').textContent = ESTADO && ESTADO.claude ? 'instalado' : 'no instalado';
   $('#ajustes').showModal();
 }
 async function guardarClaves() {
   ESTADO = await api('/api/claves', { method: 'POST', cuerpo: { together: $('#k-together').value, minimax: $('#k-minimax').value,
-    pexels: $('#k-pexels').value, freesound: $('#k-freesound').value } });
-  $('#k-together').value = $('#k-minimax').value = $('#k-pexels').value = $('#k-freesound').value = '';
+    pexels: $('#k-pexels').value, freesound: $('#k-freesound').value, gemini: $('#k-gemini').value } });
+  $('#k-together').value = $('#k-minimax').value = $('#k-pexels').value = $('#k-freesound').value = $('#k-gemini').value = '';
   abrirAjustes();
 }
 async function probar(servicio) {

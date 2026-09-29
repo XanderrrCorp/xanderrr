@@ -21,7 +21,7 @@ def test_portada_y_estado(cliente):
     assert "Xandart" in cliente.get("/").text
     assert cliente.get("/web/xandart.js").status_code == 200
     e = cliente.get("/api/estado").json()
-    assert set(e["claves"]) == {"together", "minimax", "pexels", "freesound", "correo"} and e["videos"] == []
+    assert set(e["claves"]) == {"together", "minimax", "pexels", "freesound", "gemini", "correo"} and e["videos"] == []
 
 
 def test_crear_video_y_verlo(cliente):
