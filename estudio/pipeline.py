@@ -338,6 +338,8 @@ def usar_pexels_en_escenas(c: CarpetaProyecto, t=None, ejecutar_claude=None) -> 
         return 0
     esc = c.cargar_escenas()
     direccion = leer_json(c.ruta / "direccion.json") if (c.ruta / "direccion.json").exists() else {}
+    if not esc.niveles:
+        return _pexels_por_temas(c, esc, direccion, tomas, avisar)
     revelacion = int(direccion.get("villano_revelacion", 0)) or None
     villano = next((n.numero for n in esc.niveles if n.villano), None)
     ocultas = set(direccion.get("pixelar_pendiente") or []) | {int(k) for k in (direccion.get("pixelar") or {})}
@@ -389,6 +391,57 @@ def usar_pexels_en_escenas(c: CarpetaProyecto, t=None, ejecutar_claude=None) -> 
             assets.add(aid)
         e["visual"] = {**v, "accion": "reusar", "reusar_de": aid, "prompt": None, "tipo": None, "referencias": []}
         e["notas_edicion"] = ((e.get("notas_edicion") or "") + f" · {toma['tipo']} real de Pexels").strip(" ·")
+        cambiadas += 1
+        con_pexels.add(k)
+    c.guardar_escenas(EscenasV2.model_validate(datos))
+    escribir_json(c.ruta / "direccion.json", direccion)
+    avisar(f"{cambiadas} escenas usan fotos o videos reales de Pexels en vez de imágenes nuevas")
+    return cambiadas
+
+
+def _pexels_por_temas(c: CarpetaProyecto, esc, direccion: dict, tomas: list[dict], avisar) -> int:
+    """Documentales (sin niveles): cada escena que el director marcó como real usa una toma aprobada de
+    ese mismo tema. Máximo USOS_POR_TOMA usos por toma y nunca dos escenas seguidas con foto real."""
+    from .esquemas import EscenasV2
+
+    reales = {int(k): v for k, v in (direccion.get("reales") or {}).items()}
+    man = leer_json(c.ruta / "imagenes" / "manifiesto.json") if (c.ruta / "imagenes" / "manifiesto.json").exists() else {}
+    datos = esc.model_dump()
+    assets = {a["id"] for a in datos["assets"]}
+    videos = direccion.setdefault("video_escena", {})
+    usos = {a["archivo"]: 0 for a in tomas}
+    por_stem = {Path(a["archivo"]).stem: a["archivo"] for a in tomas}
+    con_pexels = set()
+    for k, e in enumerate(datos["escenas"]):
+        ref = e["visual"].get("reusar_de")
+        if e["visual"]["accion"] == "reusar" and isinstance(ref, str) and ref.startswith("pexels_"):
+            con_pexels.add(k)
+            if por_stem.get(ref.removeprefix("pexels_")):
+                usos[por_stem[ref.removeprefix("pexels_")]] += 1
+    cambiadas = 0
+    for k, e in enumerate(datos["escenas"]):
+        v, tema = e["visual"], reales.get(e["id"])
+        if (not tema or v["accion"] != "generar" or f"escena:{e['id']}" in man or e["intencion"] in PROTEGIDAS
+                or k - 1 in con_pexels or k + 1 in con_pexels):
+            continue
+        propias = sorted((a for a in tomas if a.get("tema") == tema and usos[a["archivo"]] < USOS_POR_TOMA),
+                         key=lambda a: (usos[a["archivo"]], a["tipo"] != "video"))
+        if not propias:
+            continue
+        toma = propias[0]
+        usos[toma["archivo"]] += 1
+        foto = toma["archivo"]
+        if toma["tipo"] == "video":
+            foto = _cuadro_de_video(c.ruta, toma["archivo"])
+            videos[str(e["id"])] = {"archivo": toma["archivo"], "desde": round(0.5 + 1.2 * (usos[toma["archivo"]] - 1), 2),
+                                    "origen": toma.get("url_origen", "")}
+        aid = "pexels_" + Path(foto).stem
+        if aid not in assets:
+            datos["assets"].append({"id": aid, "tipo": "foto_pexels", "archivo": foto, "quitar_fondo": False,
+                                    "prompt": f"Pexels: {toma.get('url_origen', '')}"})
+            assets.add(aid)
+        e["visual"] = {**v, "accion": "reusar", "reusar_de": aid, "prompt": None, "tipo": None, "referencias": []}
+        e["notas_edicion"] = ((e.get("notas_edicion") or "") + f" · {toma['tipo']} real de Pexels ({tema})").strip(" ·")
         cambiadas += 1
         con_pexels.add(k)
     c.guardar_escenas(EscenasV2.model_validate(datos))
@@ -489,6 +542,12 @@ def paso_imagenes(c: CarpetaProyecto, t: Trabajo, permiso: bool = False, ejecuta
         t.avisar(txt)
 
     _apartar_creditos_del_video(c, t)
+    if not esc.niveles and (c.ruta / "direccion.json").exists() and leer_json(c.ruta / "direccion.json").get("reales"):
+        # documental: primero lo que Pexels tiene de verdad (gratis); lo que no, se dibuja
+        try:
+            usar_pexels_en_escenas(c, t, ejecutar_claude)
+        except Exception as ex:  # noqa: BLE001 — sin Pexels, se dibuja todo
+            t.avisar(f"Sin fotos reales de Pexels ({str(ex)[:100]}): se dibujan todas")
     _disfraz(c, t, permiso, None, ejecutar_claude)
     c.marcar("assets", "en_curso")
     r = generar_imagenes(c, permiso=permiso, avisar=avisar)

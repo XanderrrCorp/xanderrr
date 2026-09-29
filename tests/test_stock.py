@@ -171,3 +171,37 @@ def test_dar_dos_veces_a_pexels_no_repite_de_mas(monkeypatch):
     assert max(Counter(e.visual.reusar_de for e in reales).values()) <= pipeline.USOS_POR_TOMA
     pos = sorted(k for k, e in enumerate(esc.escenas) if e in reales)
     assert all(b - a >= 2 for a, b in zip(pos, pos[1:]))
+
+
+def test_documental_usa_pexels_por_tema(monkeypatch):
+    """Sin niveles: las escenas marcadas como reales usan tomas verificadas de ese tema."""
+    from estudio import pipeline
+    from estudio.config import escribir_json
+    from estudio.proyecto import CarpetaProyecto
+
+    monkeypatch.setenv("PEXELS_API_KEY", "clave-prueba")
+    c = CarpetaProyecto.crear("Congo", "animales-peligrosos", "enciclopedia_mascota", 600)
+    escenas = [{"id": i, "seccion": f"Parte {i // 6}", "narracion": f"Frase número {i} del documental.",
+                "intencion": "explicacion", "intensidad": 2,
+                "visual": {"accion": "generar", "tipo": "escena_cartoon_completa", "prompt": "x"}} for i in range(1, 25)]
+    escribir_json(c.archivo_escenas, {"version": 2, "video": "congo", "canal": "animales-peligrosos",
+                                      "estilo": "enciclopedia_mascota", "assets": [], "niveles": [], "escenas": escenas})
+    escribir_json(c.ruta / "direccion.json", {"reales": {"3": "congo river rapids", "4": "congo river rapids",
+                                                         "10": "nile crocodile", "11": "nile crocodile", "12": "nile crocodile",
+                                                         "20": "hippo in river"}})
+
+    def claude(prompt, cwd=None, herramientas=None):
+        if "hippo" in prompt:
+            return '{"aprobados": []}', {}                      # nada bueno: esa escena se dibuja
+        return '{"aprobados": [{"numero": 1, "razon": "sí"}, {"numero": 4, "razon": "video"}]}', {}
+
+    monkeypatch.setattr(stock.requests, "get", SesionFalsa().get)
+    monkeypatch.setattr(pipeline, "_cuadro_de_video", lambda raiz, archivo: archivo.replace(".mp4", ".jpg"))
+    n = pipeline.usar_pexels_en_escenas(c, ejecutar_claude=claude)
+    esc = c.cargar_escenas()
+    reales = {e.id: e.visual.reusar_de for e in esc.escenas if e.visual.accion == "reusar"}
+    assert n == len(reales) and set(reales) <= {3, 4, 10, 11, 12} and 20 not in reales
+    assert not any(a + 1 in reales for a in reales)                        # nunca dos seguidas
+    indice = json.loads((c.ruta / "assets" / "stock" / "stock.json").read_text(encoding="utf-8"))
+    assert set(indice["temas_revisados"]) == {"congo river rapids", "nile crocodile", "hippo in river"}
+    assert all(a["tema"] for a in indice["archivos"]) and not any(a.get("sintetica") for a in indice["archivos"])

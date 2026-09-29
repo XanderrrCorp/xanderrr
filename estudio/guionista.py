@@ -192,6 +192,11 @@ parece, o hay duda, pide imagen nueva ("generar"): una imagen que no cuadra con 
 No pongas la misma imagen en dos escenas seguidas.
 {filas}
 """
+    nota_real = ("" if con_niveles else
+                 '- "real": si la escena muestra algo REAL que se vería mejor con una foto o un video de verdad (un animal, '
+                 'un lugar, un paisaje, un río, un fenómeno), la búsqueda corta en inglés para un banco de fotos '
+                 '(«congo river rapids», «barn owl flying»); si es una idea, una comparación, una persona o algo '
+                 'imaginado, null. Más o menos en una de cada tres escenas.\n')
     contexto = (f"""Niveles (de menos a más peligro):
 {niveles}
 El villano ({villano['nombre']}) no se muestra claramente antes de su revelación.
@@ -220,7 +225,7 @@ Para CADA escena, en orden, decide:
   ni barras de peligro: la escala de peligro 0–10 la pone el montaje a pantalla completa.
 - "con_mascota": true si aparece la mascota (un hombre de dibujo de cabeza blanca redonda); en la descripción
   llámala "the cartoon man".{nota_mascota}
-- "palabra_clave": la palabra MÁS importante de esa escena, copiada tal cual (sustantivo o número en palabras).
+{nota_real}- "palabra_clave": la palabra MÁS importante de esa escena, copiada tal cual (sustantivo o número en palabras).
 - "texto_pantalla": solo en 1 o 2 escenas fuertes de la sección, un título corto de 2 a 6 palabras escrito
   normal, como lo diría una persona («Es aterrador»); y "palabra": la palabra de la escena donde aparece.
   En las demás, null.
@@ -347,6 +352,9 @@ def a_escenas(datos: dict, estilo: Estilo, canal: str) -> tuple[dict, dict, str]
             direccion["villano_revelacion"] = i
         if e.get("muestra_villano") and accion == "generar" and estilo.ocultar_villano:
             direccion["pixelar_pendiente"].append(i)
+        real = str(e.get("real") or "").strip()
+        if real and not niveles_in and accion == "generar":
+            direccion.setdefault("reales", {})[str(i)] = real[:60]
         if e.get("texto_pantalla"):
             direccion["textos"][str(i)] = {"texto": str(e["texto_pantalla"]).strip()[:48],
                                            "palabra": e.get("palabra") or ""}

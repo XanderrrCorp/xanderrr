@@ -119,9 +119,9 @@ def _busquedas(niveles: list[dict], carpeta: Path, ejecutar) -> dict[str, str]:
 def _verificar(nivel: dict, hoja: Path, candidatos: list[dict], carpeta: Path, ejecutar) -> dict[int, str]:
     texto, _ = ejecutar(
         f"Mira la hoja de contacto {hoja.relative_to(carpeta).as_posix()} con la herramienta Read. Tiene {len(candidatos)} "
-        f"candidatos numerados (fotos y VIDEOS de un banco de imágenes). El video es sobre: «{nivel['nombre']}».\n"
-        "Aprueba SOLO los que muestran con claridad ESA especie (no una parecida, no un dibujo, no un juguete, sin "
-        "texto ni marcas de agua grandes, que se vea bien el animal). Si dudas, no lo apruebes.\n"
+        f"candidatos numerados (fotos y VIDEOS de un banco de imágenes). Tienen que mostrar: «{nivel['nombre']}».\n"
+        "Aprueba SOLO los que muestran con claridad ESO (si es un animal, ESA especie y no una parecida; no un dibujo, "
+        "no un juguete, sin texto ni marcas de agua grandes, que se vea bien). Si dudas, no lo apruebes.\n"
         'Responde SOLO un JSON: {"aprobados": [{"numero": <n>, "razon": "<por qué es esa especie>"}]}',
         cwd=carpeta, herramientas=["Read"])
     datos = claude_cli.extraer_json(texto) or {}
@@ -183,6 +183,8 @@ def preparar_stock(carpeta: Path, ejecutar=claude_cli.ejecutar, avisar=print, se
     ruta = carpeta / "assets" / "stock" / "stock.json"
     indice = leer_json(ruta) if ruta.exists() else {"archivos": [], "niveles_revisados": []}
     niveles = leer_json(carpeta / "escenas.json").get("niveles", [])
+    if not niveles:
+        return _stock_por_temas(carpeta, indice, ruta, ejecutar, avisar, sesion)
     pendientes = [n for n in niveles if n["numero"] not in indice["niveles_revisados"]]
     if not pendientes:
         return indice
@@ -225,6 +227,48 @@ def preparar_stock(carpeta: Path, ejecutar=claude_cli.ejecutar, avisar=print, se
         escribir_json(ruta, indice)
         avisar(f"  «{n['nombre']}»: {cuenta['foto']} fotos y {cuenta['video']} videos verificados")
     escribir_json(ruta, indice)
+    return indice
+
+
+MAX_TEMAS = 24
+
+
+def _stock_por_temas(carpeta: Path, indice: dict, ruta: Path, ejecutar, avisar, sesion) -> dict:
+    """Videos sin niveles (documentales): lo que el director visual marcó como real en cada escena
+    («congo river rapids»). Mismo cuidado: solo se usa lo que Claude aprueba en la hoja de contacto.
+    Sin recreaciones con IA: si Pexels no tiene algo bueno, esa escena se dibuja."""
+    dir_ruta = carpeta / "direccion.json"
+    reales = (leer_json(dir_ruta).get("reales") or {}) if dir_ruta.exists() else {}
+    revisados = set(indice.setdefault("temas_revisados", []))
+    temas = [t for t in dict.fromkeys(reales.values()) if t not in revisados][:MAX_TEMAS]
+    if not temas:
+        return indice
+    _cabeceras()
+    for k, tema in enumerate(temas, 1):
+        avisar(f"Buscando fotos y videos reales de «{tema}» ({k} de {len(temas)})…")
+        candidatos = buscar(tema, sesion)
+        aprobados = {}
+        if candidatos:
+            hoja = _hoja(candidatos, carpeta / "assets" / "stock" / f"hoja_tema_{len(revisados) + k}.png", sesion)
+            aprobados = _verificar({"nombre": tema}, hoja, candidatos, carpeta, ejecutar)
+        cuenta = {"foto": 0, "video": 0}
+        for n, razon in sorted(aprobados.items()):
+            c = candidatos[n]
+            if cuenta[c["tipo"]] >= APROBADAS_POR_NIVEL[c["tipo"]]:
+                continue
+            cuenta[c["tipo"]] += 1
+            ext = ".mp4" if c["tipo"] == "video" else ".jpg"
+            destino = carpeta / "assets" / "stock" / f"tema_{len(revisados) + k}_{c['tipo']}_{cuenta[c['tipo']]}{ext}"
+            r = sesion.get(c["descarga"], timeout=300)
+            r.raise_for_status()
+            destino.write_bytes(r.content)
+            indice["archivos"].append({
+                "archivo": destino.relative_to(carpeta).as_posix(), "tipo": c["tipo"], "tema": tema, "nivel": None,
+                "especie": tema, "busqueda": tema, "url_origen": c["url_origen"], "autor": c["autor"],
+                "autor_url": c["autor_url"], "pexels_id": c["pexels_id"], "licencia": LICENCIA,
+                "verificado": True, "razon": razon, "duracion": c.get("duracion")})
+        indice["temas_revisados"].append(tema)
+        escribir_json(ruta, indice)
     return indice
 
 
