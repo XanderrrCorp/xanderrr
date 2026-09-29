@@ -393,7 +393,12 @@ function abrirAjustes() {
   $('#e-freesound').textContent = c.freesound ? 'guardada' : 'falta (opcional)';
   $('#e-gemini').textContent = c.gemini ? 'guardada' : 'falta (opcional)';
   $('#e-claude').textContent = ESTADO && ESTADO.claude ? 'instalado' : 'no instalado';
+  api('/api/proveedor-imagenes').then(r => { $('#proveedor-img').value = r.proveedor; }).catch(() => {});
   $('#ajustes').showModal();
+}
+async function elegirProveedorImagenes(p) {
+  try { const r = await api('/api/proveedor-imagenes', { method: 'POST', cuerpo: { proveedor: p } }); $('#proveedor-img').value = r.proveedor; }
+  catch (e) { alert(e.message); const r = await api('/api/proveedor-imagenes'); $('#proveedor-img').value = r.proveedor; }
 }
 async function guardarClaves() {
   ESTADO = await api('/api/claves', { method: 'POST', cuerpo: { together: $('#k-together').value, minimax: $('#k-minimax').value,

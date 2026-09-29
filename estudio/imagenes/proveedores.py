@@ -18,6 +18,9 @@ from typing import Protocol
 from ..config import ConfigCostos, PrecioFaltante, clave_api
 
 GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/{modelo}:generateContent"
+# Google Cloud · Agent Platform (antes Vertex AI) con clave de API («modo exprés»): mismo modelo, se
+# cobra a la cuenta de facturación de Cloud (y a sus créditos de prueba)
+VERTEX_URL = "https://aiplatform.googleapis.com/v1/publishers/google/models/{modelo}:{accion}"
 TOGETHER_URL = "https://api.together.xyz/v1/images/generations"
 TIPOS_MIME = {".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".webp": "image/webp"}
 
@@ -127,6 +130,9 @@ class ProveedorGemini:
                              headers={"x-goog-api-key": self.clave, "Content-Type": "application/json"},
                              data=json.dumps(self._cuerpo(prompt, referencias)),
                              timeout=self.tiempo_max_s)
+        return self._leer(r)
+
+    def _leer(self, r) -> ResultadoImagen:
         if r.status_code == 429 or r.status_code >= 500:
             # el modelo nuevo limita las ráfagas: sin espera, los reintentos llegaban en el mismo segundo
             espera = _espera_sugerida(r) or (ESPERA_429_S if r.status_code == 429 else 0)
@@ -146,6 +152,22 @@ class ProveedorGemini:
         motivo = ";".join(str(c.get("finishReason")) for c in datos.get("candidates") or []) \
             or str((datos.get("promptFeedback") or {}).get("blockReason"))
         raise ErrorProveedor(f"la respuesta no trae imagen (motivo: {motivo})", reintentable=True, uso=uso)
+
+
+class ProveedorVertex(ProveedorGemini):
+    """Gemini en Google Cloud (Agent Platform) con clave de API. Mismo cuerpo y respuesta que la API de
+    Gemini; cambia la dirección y que la clave va en la URL."""
+
+    nombre = "vertex"
+
+    def generar(self, prompt: str, referencias: list[Path]) -> ResultadoImagen:
+        r = self.sesion.post(VERTEX_URL.format(modelo=self.modelo, accion="generateContent"),
+                             params={"key": self.clave}, headers={"Content-Type": "application/json"},
+                             data=json.dumps(self._cuerpo(prompt, referencias)), timeout=self.tiempo_max_s)
+        return self._respuesta(r)
+
+    def _respuesta(self, r) -> ResultadoImagen:
+        return ProveedorGemini._leer(self, r)
 
 
 def _espera_sugerida(r) -> float | None:
@@ -268,7 +290,8 @@ class ProveedorSimulado:
 
 
 def crear_proveedor(config: ConfigCostos, ajustes: dict, nombre: str | None = None) -> Proveedor:
-    nombre = nombre or ajustes.get("proveedor", "gemini")
+    # el dueño puede elegir en Ajustes con quién se hacen las imágenes (queda en .env)
+    nombre = nombre or clave_api("XANDART_PROVEEDOR_IMAGENES") or ajustes.get("proveedor", "gemini")
     op = (ajustes.get("opciones") or {}).get(nombre, {})
     tiempo = ajustes.get("tiempo_max_s", 120)
     if nombre == "gemini":
@@ -279,6 +302,10 @@ def crear_proveedor(config: ConfigCostos, ajustes: dict, nombre: str | None = No
         return ProveedorTogether(config, op.get("modelo", "google/flash-image-3.1"),
                                  op.get("ancho", 1376), op.get("alto", 768), tiempo,
                                  op.get("variable_clave", "TOGETHER_API_KEY"))
+    if nombre == "vertex":
+        return ProveedorVertex(config, clave_api("XANDART_MODELO_IMAGEN_GOOGLE") or op.get("modelo", "gemini-3.1-flash-image-preview"),
+                               ajustes.get("relacion_aspecto", "16:9"), tiempo,
+                               op.get("variable_clave", "GEMINI_API_KEY"))
     if nombre == "simulado":
         return ProveedorSimulado(config)
     raise ValueError(f"proveedor de imágenes desconocido: {nombre}")

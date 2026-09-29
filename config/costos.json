@@ -42,6 +42,22 @@
       "google/flash-image-3.1": {
         "precio_por_imagen": 0.07,
         "_nota": "Gemini 3.1 Flash Image («Nano Banana 2») en Together, a 1376x768. Lista: 0,0466 a 512 px; Google cobra 0,067 a 1K. Se usa 0,07 para el freno hasta medirlo en la factura. Reemplaza a flash-image-2.5, que Google apaga el 2-oct-2026 (prueba de estilo aprobada el 28-sep)."
+      },
+      "gemini-3.1-flash-image-preview": {
+        "entrada_por_millon_tokens": 0.5,
+        "salida_por_millon_tokens": 60.0,
+        "tokens_salida_por_imagen": 1120,
+        "tokens_por_imagen_de_referencia": 1120,
+        "descuento_lotes": 0.5,
+        "_nota": "Estimado: Google cobra ~0,067 USD por imagen de 1K (1120 tokens de salida a 60 USD por millón). Confirmar con la factura de Cloud tras la prueba de 3 imágenes."
+      },
+      "gemini-3.1-flash-image": {
+        "entrada_por_millon_tokens": 0.5,
+        "salida_por_millon_tokens": 60.0,
+        "tokens_salida_por_imagen": 1120,
+        "tokens_por_imagen_de_referencia": 1120,
+        "descuento_lotes": 0.5,
+        "_nota": "Estimado: Google cobra ~0,067 USD por imagen de 1K (1120 tokens de salida a 60 USD por millón). Confirmar con la factura de Cloud tras la prueba de 3 imágenes."
       }
     },
     "videos_por_modelo": {

@@ -296,3 +296,41 @@ def test_seguir_con_las_imagenes_que_hay(proyecto, config, monkeypatch):
     assert e.narracion == faltante.narracion                            # el texto no cambia
     assert all(x.visual.reusar_de != faltante.id for x in esc2.escenas)  # nadie apunta a la que no tiene imagen
     assert proyecto.cargar().pasos["assets"].estado == "completo"
+
+
+def test_google_cloud_agent_platform_con_clave(config, tmp_path, monkeypatch):
+    """Agent Platform (antes Vertex AI): mismo cuerpo que Gemini, la clave va en la URL."""
+    import base64 as b64
+
+    from estudio.imagenes import proveedores as pv
+
+    monkeypatch.setenv("GEMINI_API_KEY", "clave-prueba")
+    pedidos = []
+
+    class R:
+        status_code = 200
+        headers = {}
+
+        def json(self):
+            return {"candidates": [{"content": {"parts": [{"inlineData": {"data": b64.b64encode(b"PNG").decode()}}]}}],
+                    "usageMetadata": {"promptTokenCount": 100, "candidatesTokenCount": 1120}}
+
+    class S:
+        def post(self, url, params=None, headers=None, data=None, timeout=None):
+            pedidos.append((url, params))
+            return R()
+
+    p = pv.crear_proveedor(config, {"proveedor": "vertex", "opciones": {"vertex": {"modelo": "gemini-3.1-flash-image-preview"}}})
+    p.sesion = S()
+    r = p.generar("un búho", [])
+    assert r.png == b"PNG" and r.proveedor == "vertex"
+    assert pedidos[0][0].startswith("https://aiplatform.googleapis.com/v1/publishers/google/models/gemini-3.1-flash-image-preview")
+    assert pedidos[0][1] == {"key": "clave-prueba"}
+    assert 0.06 < r.uso.costo_usd < 0.08                      # ~0,067 por imagen de 1K
+
+
+def test_el_dueno_elige_el_proveedor_en_ajustes(config, monkeypatch):
+    from estudio.imagenes import proveedores as pv
+
+    monkeypatch.setenv("XANDART_PROVEEDOR_IMAGENES", "simulado")
+    assert pv.crear_proveedor(config, {"proveedor": "together", "opciones": {}}).nombre == "simulado"

@@ -211,6 +211,64 @@ def _explicar(servicio: str, codigo: int) -> str:
     return f"El servicio respondió con un error (HTTP {codigo}). Prueba de nuevo en unos minutos."
 
 
+MODELOS_IMAGEN_GOOGLE = ("gemini-3.1-flash-image-preview", "gemini-3.1-flash-image", "gemini-2.5-flash-image")
+
+
+def _probar_google(clave: str) -> dict:
+    """La clave de Google puede ser de AI Studio o de Google Cloud (Agent Platform). Nada de esto genera
+    imágenes ni cuesta: se listan modelos (AI Studio) o se cuentan tokens de un «hola» (Cloud)."""
+    import requests
+
+    if not clave:
+        return {"ok": False, "detalle": "No hay clave de Google guardada: pégala arriba y dale Probar."}
+    r = requests.get("https://generativelanguage.googleapis.com/v1beta/models", params={"pageSize": 200},
+                     headers={"x-goog-api-key": clave}, timeout=30)
+    if r.status_code == 200:
+        imagen = sorted(m["name"].removeprefix("models/") for m in r.json().get("models", []) if "image" in m["name"])
+        return {"ok": True, "tipo": "ai_studio", "modelos_imagen": imagen,
+                "detalle": "funciona (clave de AI Studio)" + (f" · modelos de imagen: {', '.join(imagen[:4])}" if imagen else "")}
+    from .imagenes.proveedores import VERTEX_URL
+
+    sirven, ultimo = [], None
+    for modelo in MODELOS_IMAGEN_GOOGLE:
+        rv = requests.post(VERTEX_URL.format(modelo=modelo, accion="countTokens"), params={"key": clave},
+                           json={"contents": [{"role": "user", "parts": [{"text": "hola"}]}]}, timeout=30)
+        ultimo = rv.status_code
+        if rv.status_code == 200:
+            sirven.append(modelo)
+    if sirven:
+        valores = _leer_env()                   # el nombre exacto del modelo en esta cuenta
+        valores["XANDART_MODELO_IMAGEN_GOOGLE"] = sirven[0]
+        (RAIZ / ".env").write_text("".join(f"{k}={v}\n" for k, v in valores.items()), encoding="utf-8")
+        return {"ok": True, "tipo": "vertex", "modelos_imagen": sirven,
+                "detalle": f"funciona (clave de Google Cloud · Agent Platform) · modelos de imagen: {', '.join(sirven)}"}
+    return {"ok": False, "detalle": _explicar("gemini", ultimo or r.status_code)}
+
+
+class ProveedorImagenes(BaseModel):
+    proveedor: str
+
+
+@app.get("/api/proveedor-imagenes")
+def ver_proveedor_imagenes():
+    from .config import leer_config
+
+    return {"proveedor": clave_api("XANDART_PROVEEDOR_IMAGENES") or leer_config("proveedores.json")["imagenes"]["proveedor"]}
+
+
+@app.post("/api/proveedor-imagenes")
+def elegir_proveedor_imagenes(p: ProveedorImagenes):
+    """Con quién se hacen las imágenes de ahora en adelante (queda en .env; los videos no cambian)."""
+    if p.proveedor not in ("together", "vertex", "gemini"):
+        raise HTTPException(400, "proveedor no válido")
+    if p.proveedor != "together" and not clave_api("GEMINI_API_KEY"):
+        raise HTTPException(400, "Primero guarda y prueba la clave de Google")
+    valores = _leer_env()
+    valores["XANDART_PROVEEDOR_IMAGENES"] = p.proveedor
+    (RAIZ / ".env").write_text("".join(f"{k}={v}\n" for k, v in valores.items()), encoding="utf-8")
+    return ver_proveedor_imagenes()
+
+
 class Prueba_clave(BaseModel):
     clave: str | None = None     # la que está escrita en Ajustes (aún sin guardar)
 
@@ -271,14 +329,7 @@ def probar(servicio: str, p: Prueba_clave = Prueba_clave()):
                              headers={"Authorization": f"Token {clave_api('FREESOUND_API_KEY') or ''}"}, timeout=30)
             return {"ok": r.status_code == 200, "detalle": _explicar("freesound", r.status_code)}
         if servicio == "gemini":
-            # listar modelos no genera nada ni cuesta: solo confirma la clave y qué modelos de imagen hay
-            r = requests.get("https://generativelanguage.googleapis.com/v1beta/models", params={"pageSize": 200},
-                             headers={"x-goog-api-key": clave_api("GEMINI_API_KEY") or ""}, timeout=30)
-            if r.status_code != 200:
-                return {"ok": False, "detalle": _explicar("gemini", r.status_code)}
-            imagen = sorted(m["name"].removeprefix("models/") for m in r.json().get("models", []) if "image" in m["name"])
-            return {"ok": True, "detalle": "funciona" + (f" · modelos de imagen: {', '.join(imagen[:4])}" if imagen else ""),
-                    "modelos_imagen": imagen}
+            return _probar_google(clave_api("GEMINI_API_KEY") or "")
         if servicio == "minimax":
             from .config import ConfigCostos, leer_config
             from .voz import VozMiniMax
