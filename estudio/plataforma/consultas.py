@@ -63,3 +63,26 @@ def registrar_video(slug: str, titulo: str, carpeta: str, canal: str, minutos: f
             v.minutos, v.formato, v.estado = minutos, formato, estado
     except Exception:  # noqa: BLE001 — el video existe igual en su carpeta
         pass
+
+
+def personaje_del_canal(clave_canal: str):
+    """Carpeta del personaje hecho con el asistente que el canal tiene asignado, o None
+    (los personajes que vienen del estilo, como la mascota de Peligro Tropical, siguen igual)."""
+    try:
+        from sqlalchemy import select
+
+        from . import almacen, contexto, db
+        from .modelos import Canal, Personaje
+
+        esp = contexto.espacio_actual()
+        if not esp:
+            return None
+        with db.sesion() as s:
+            c = s.scalar(select(Canal).where(Canal.espacio_id == esp, Canal.clave == clave_canal))
+            p = s.get(Personaje, c.personaje_id) if c and c.personaje_id else None
+            if p is None or not (p.datos or {}).get("asistente"):
+                return None
+            ruta = almacen.ruta(esp, "personajes", p.clave)
+            return ruta if (ruta / "personaje.json").exists() else None
+    except Exception:  # noqa: BLE001 — sin base, el video usa el personaje del estilo
+        return None

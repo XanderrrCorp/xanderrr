@@ -141,7 +141,13 @@ def crear_video(tema: str, giro: str, villano: str, minutos: float, notas: str =
     p.disfraz_mascota = bool(disfraz)
     c.guardar(p)
     _copiar_mascota(c, estilo_id)
-    from .plataforma.consultas import registrar_video
+    from .plataforma.consultas import personaje_del_canal, registrar_video
+
+    propio = personaje_del_canal(canal)
+    if propio is not None:                   # personaje del asistente: reemplaza a la mascota del estilo
+        from .personajes import usar_en_video
+
+        usar_en_video(propio, c.ruta)
 
     registrar_video(slug, tema, str(c.ruta), canal, minutos)
     return c

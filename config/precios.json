@@ -66,6 +66,13 @@
       "costo_ref_usd": 0.6
     },
     {
+      "clave": "personaje_imagen",
+      "nombre": "Imagen del asistente de personaje (variante, ajuste, vista o prueba)",
+      "unidad": "imagen",
+      "creditos": 15,
+      "costo_ref_usd": 0.07
+    },
+    {
       "clave": "crear_estilo",
       "nombre": "Crear estilo (4 imágenes de prueba)",
       "unidad": "estilo",
