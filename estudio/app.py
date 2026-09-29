@@ -538,11 +538,12 @@ def _mini_estado(slug: str) -> dict:
 
     from .miniaturas import servicio
 
-    datos = servicio.estado(_proyecto(slug))
-    t = pipeline.TRABAJOS.get(_mini_clave(slug))
-    datos["trabajo"] = None if t is None else {
+    t = pipeline.TRABAJOS.get(_mini_clave(slug))     # antes que el archivo (ver api_personajes._detalle)
+    trabajo = None if t is None else {
         "paso": t.paso, "mensaje": t.mensaje, "progreso": round(t.progreso, 3), "activo": t.activo,
         "error": t.error, "segundos": int(time.time() - t.inicio)}
+    datos = servicio.estado(_proyecto(slug))
+    datos["trabajo"] = trabajo
     datos["slug"] = slug
     return datos
 

@@ -1125,7 +1125,18 @@ def _renderizar(carpeta: CarpetaProyecto, ffmpeg: str, destino: Path | None, des
                              "-c:v", "libx264", "-preset", preset, "-crf", crf,
                              "-profile:v", "high", "-g", str(FPS * 2), "-bf", "2",
                              *(["-threads", hilos_x264] if hilos_x264 else []),
-                             "-pix_fmt", "yuv420p", str(video_tmp)], stdin=subprocess.PIPE)
+                             "-pix_fmt", "yuv420p", str(video_tmp)], stdin=subprocess.PIPE,
+                            stderr=(registro_ffmpeg := open(destino.with_suffix(".ffmpeg.log"), "wb")))  # noqa: SIM115
+
+    def _ffmpeg_cayo(ex: Exception) -> RuntimeError:
+        """ffmpeg se cerró a mitad: se dice por qué (su mensaje), no solo «Invalid argument»."""
+        proc.kill()
+        registro_ffmpeg.close()
+        dijo = destino.with_suffix(".ffmpeg.log").read_text("utf-8", "replace").strip()[-400:]
+        libre = memoria_libre_gb()
+        memoria = f" (memoria libre: {libre:.1f} GB)" if libre is not None else ""
+        return RuntimeError(f"el programa que arma el video (ffmpeg) se cerró{memoria}: {dijo or ex}")
+
     temblor = random.Random(proyecto.semilla)
     capa_foco = Foco()
     lector = LectorClips(raiz, ffmpeg)
@@ -1304,15 +1315,23 @@ def _renderizar(carpeta: CarpetaProyecto, ffmpeg: str, destino: Path | None, des
                 else:
                     img.paste(si, ((W - si.width) // 2, H - 150 - si.height // 2), si)
                 break
-        proc.stdin.write(img.tobytes())
+        try:
+            proc.stdin.write(img.tobytes())
+        except OSError as ex:            # en Windows un tubo roto llega como «Invalid argument»
+            raise _ffmpeg_cayo(ex) from ex
         ultimo = horizontal if vertical else img
         if n % (FPS * 30) == 0:
             avisar(f"  render {tt / 60:.1f} / {total / 60:.1f} min")
         if solo_video and n % (FPS * 3) == 0:
             destino.with_suffix(".avance").write_text(f"{tt - desde:.1f}")
     lector.cerrar()
-    proc.stdin.close()
+    try:
+        proc.stdin.close()
+    except OSError as ex:
+        raise _ffmpeg_cayo(ex) from ex
     proc.wait()
+    registro_ffmpeg.close()
+    destino.with_suffix(".ffmpeg.log").unlink(missing_ok=True)
     if solo_video:                      # un tramo del render en paralelo: el audio lo pone quien une
         if proc.returncode != 0:
             raise RuntimeError(f"ffmpeg terminó con error ({proc.returncode})")

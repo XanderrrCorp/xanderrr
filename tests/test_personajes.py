@@ -117,12 +117,14 @@ def test_api_del_asistente_y_asignacion_al_canal(monkeypatch):
     nombre = d["variantes"][0]["archivo"].split("/")[-1]
     assert cli.get(f"/api/v2/personajes/{pid}/archivos/imagenes/{nombre}").status_code == 200
     assert cli.get(f"/api/v2/personajes/{pid}/archivos/imagenes/..%2Fpersonaje.json").status_code == 404
-    cli.post(f"/api/v2/personajes/{pid}/elegir", json={"archivo": d["variantes"][0]["archivo"]})
+    r = cli.post(f"/api/v2/personajes/{pid}/elegir", json={"archivo": d["variantes"][0]["archivo"]})
+    assert r.status_code == 200 and r.json()["paso"] == "afinar", r.text
     canal = next(c for c in d["canales"] if c["nombre"] == "Paradoja Sapiens")
     assert cli.post(f"/api/v2/personajes/{pid}/canal", json={"canal_id": canal["id"]}).status_code == 400   # sin hoja
-    cli.post(f"/api/v2/personajes/{pid}/hoja", json={})
+    r = cli.post(f"/api/v2/personajes/{pid}/hoja", json={})
+    assert r.status_code == 200, r.text
     d = _esperar(cli, pid)
-    assert d["paso"] == "probar"
+    assert d["paso"] == "probar", d["trabajo"]
     d = cli.post(f"/api/v2/personajes/{pid}/canal", json={"canal_id": canal["id"]}).json()
     assert next(c for c in d["canales"] if c["id"] == canal["id"])["asignado"]
     assert cli.put(f"/api/v2/personajes/{pid}", json={"bloqueo": "corto"}).status_code == 400

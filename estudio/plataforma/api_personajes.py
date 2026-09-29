@@ -47,16 +47,19 @@ def _detalle(s: Session, q: Quien, p: Personaje) -> dict:
     from .. import pipeline
 
     ruta = _ruta(q, p)
-    e = ps.cargar(ruta)
+    # primero el trabajo y después el archivo: si termina entre las dos lecturas, la página ve
+    # «en marcha» y vuelve a preguntar, en vez de ver «listo» con la última imagen sin guardar
     t = pipeline.TRABAJOS.get(_clave_trabajo(p))
+    trabajo = None if t is None else {
+        "paso": t.paso, "nombre": NOMBRES_PASO.get(t.paso, t.paso), "mensaje": t.mensaje,
+        "progreso": round(t.progreso, 3), "activo": t.activo, "error": t.error,
+        "segundos": int(time.time() - t.inicio)}
+    e = ps.cargar(ruta)
     canales = s.scalars(select(Canal).where(Canal.espacio_id == q.espacio.id, Canal.archivado.is_(False))).all()
     return {"id": p.id, **e.model_dump(), "paso": e.paso, "gastado_usd": round(ps.gastado_usd(ruta), 3),
             "imagenes_por_paso": ps.imagenes_por_paso(),
             "canales": [{"id": c.id, "nombre": c.nombre, "asignado": c.personaje_id == p.id} for c in canales],
-            "trabajo": None if t is None else {
-                "paso": t.paso, "nombre": NOMBRES_PASO.get(t.paso, t.paso), "mensaje": t.mensaje,
-                "progreso": round(t.progreso, 3), "activo": t.activo, "error": t.error,
-                "segundos": int(time.time() - t.inicio)}}
+            "trabajo": trabajo}
 
 
 @rutas.get("")
