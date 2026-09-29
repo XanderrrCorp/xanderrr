@@ -306,7 +306,7 @@ def probar(servicio: str, p: Prueba_clave = Prueba_clave()):
                 valores.pop(nombre, None)
             (RAIZ / ".env").write_text("".join(f"{k}={v}\n" for k, v in valores.items()), encoding="utf-8")
         else:
-            r["detalle"] = "funciona y quedó guardada"
+            r["detalle"] = f"{r.get('detalle') or 'funciona'} · quedó guardada"
         return r
     try:
         if servicio == "together":
