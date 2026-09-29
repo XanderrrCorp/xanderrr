@@ -29,7 +29,8 @@ from .config import RAIZ, escribir_json, leer_json
 
 TIPOS_SFX = ("golpe_grave", "pop", "zumbido", "latido", "subida_tension", "alerta", "comico", "barrido",
              "stinger_terror", "piano_miedo", "ruleta")
-ANIMOS_MUSICA = ("tension", "misterio", "epico", "alivio", "curiosidad", "final")
+ANIMOS_MUSICA = ("suave", "tension", "misterio", "epico", "alivio", "curiosidad", "final")
+# «suave»: una sola pista tranquila de fondo en todo el video (lo pidió el dueño); si no hay, por secciones
 EXTENSIONES = (".wav", ".mp3", ".ogg", ".flac", ".m4a", ".aac")
 # Licencias que permiten usar el audio en un video de YouTube monetizado. «Otra»
 # obliga a escribir el detalle y queda marcada para que el dueño la revise.

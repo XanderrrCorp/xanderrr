@@ -651,6 +651,9 @@ def paso_video(c: CarpetaProyecto, t: Trabajo, permiso: bool = False, fps: int |
             elegir_reacciones(c.ruta, avisar=t.avisar)
         except Exception as ex:  # noqa: BLE001 — sin Claude se usan las reglas por intención
             t.avisar(f"Reacciones por reglas (Claude no respondió: {str(ex)[:120]})")
+    from .freesound import asegurar_musica_suave
+
+    asegurar_musica_suave(avisar=t.avisar)
     t.avisar("Editando: cortes, movimientos, textos y subtítulos…")
     edl = construir_edl(c)
     avisos = validar(edl, _perfil(c))

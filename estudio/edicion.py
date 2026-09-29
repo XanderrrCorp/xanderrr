@@ -38,9 +38,11 @@ MAX_SIN_CAMBIO = 4.5
 # prioridad al recortar efectos de sonido por frecuencia: se quitan primero los bajos
 PRIORIDAD = {"golpe_grave": 6, "stinger_terror": 6, "subida_tension": 5, "piano_miedo": 5, "ruleta": 5, "barrido": 4,
              "alerta": 3, "pop": 3, "comico": 3, "zumbido": 2, "latido": 2}
-VOLUMEN = {"barrido": 0.42, "golpe_grave": 0.9, "pop": 0.32, "zumbido": 0.33, "latido": 0.55,
-           "subida_tension": 0.45, "alerta": 0.4, "comico": 0.45, "stinger_terror": 0.75, "piano_miedo": 0.6,
-           "ruleta": 0.5}
+# el render iguala el volumen de cada archivo antes de aplicar esto: son niveles RELATIVOS a la voz.
+# El dueño los oía duros y sin emoción: todos por debajo de la voz, los golpes solo como acento
+VOLUMEN = {"barrido": 0.22, "golpe_grave": 0.5, "pop": 0.3, "zumbido": 0.16, "latido": 0.3,
+           "subida_tension": 0.26, "alerta": 0.2, "comico": 0.28, "stinger_terror": 0.4, "piano_miedo": 0.32,
+           "ruleta": 0.4}
 VARIANTES = 4
 # recursos estructurales (tira, pixelado) que no cuentan para uso_maximo_por_recurso
 ESTRUCTURALES = {"tira_deslizar_a_nivel", "pixelar", "revelar_pixelado", "destello_rojo", "paneo_lento", "zoom_golpe",
@@ -116,9 +118,14 @@ def _sonido_en_cada_corte(sfx: list, escenas: list, clips: list, rng: random.Ran
             _sfx(sfx, "golpe_grave", c["inicio"] + 0.05, idx, "Golpe con la respuesta seca a la pregunta")
             previo = "golpe_grave"
             continue
-        opciones = list(SONIDO_DE_CORTE.get(e.intencion, ("barrido", "pop")))
-        opciones += ["barrido", "pop"]
-        tipo = next((t for t in opciones if t != previo), "barrido")
+        # en los cortes, un pop suave (al dueño le aportan más que golpes y barridos); solo el gancho, la
+        # revelación y el giro llevan un acento más fuerte
+        opciones = list(SONIDO_DE_CORTE[e.intencion][:1]) if e.intencion in ("gancho", "revelacion", "giro") else []
+        opciones += ["pop"]
+        tipo = next((t for t in opciones if t != previo), None)
+        if tipo is None:                     # dos pops seguidos no: este corte queda sin sonido
+            previo = None
+            continue
         _sfx(sfx, tipo, c["inicio"] + rng.uniform(0.0, 0.08), idx,
              f"Sonido en el corte ({tipo}) para que el ritmo no se caiga")
         sfx[-1]["prioridad"] = 0
@@ -431,6 +438,8 @@ def _musica(escenas: list, clips: list, revelacion: int | None, total: float, rn
                    for a in biblioteca.ANIMOS_MUSICA}
     if not any(disponibles.values()):
         return []
+    if disponibles.get("suave"):
+        return _musica_suave(disponibles["suave"], escenas, clips, revelacion, total, rng)
     secciones: list[list] = []
     for e, c in zip(escenas, clips):
         if not secciones or secciones[-1][0][0].seccion != e.seccion:
@@ -460,6 +469,20 @@ def _musica(escenas: list, clips: list, revelacion: int | None, total: float, rn
             clip["razon"] += "; cae antes de la revelación"
         salida.append(clip)
     return salida
+
+
+def _musica_suave(pistas: list[str], escenas: list, clips: list, revelacion: int | None, total: float,
+                  rng: random.Random) -> list:
+    """Una sola pista tranquila de fondo de principio a fin (se repite sola si es corta), baja debajo de la
+    voz y se apaga justo antes de la revelación para que el golpe se sienta."""
+    clip = {"id": "m00", "inicio": 0.0, "fin": round(total, 3), "archivo": rng.choice(pistas), "volumen": 0.16,
+            "ducking": True, "animo": "suave", "desde": 0.0, "razon": "Música suave de fondo en todo el video"}
+    if revelacion:
+        c_rev = next((c for e, c in zip(escenas, clips) if e.id == revelacion), None)
+        if c_rev:
+            clip["caidas"] = [(round(c_rev["inicio"] + 0.55 - 0.6, 3), round(c_rev["inicio"] + 0.55, 3))]
+            clip["razon"] += "; se apaga un momento antes de la revelación"
+    return [clip]
 
 
 def _escala(en: float, dur: float, valor: int, nivel) -> dict:

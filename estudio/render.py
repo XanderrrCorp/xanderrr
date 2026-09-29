@@ -712,6 +712,19 @@ def _sonido(tipo: str, variante: int, ffmpeg: str | None) -> tuple[np.ndarray, s
     return _sfx(tipo, variante).astype(np.float32), None
 
 
+def _igualar(x: np.ndarray, rms_objetivo: float) -> np.ndarray:
+    """Lleva un sonido a una fuerza pareja (los archivos de Freesound vienen muy distintos: unos casi
+    mudos, otros saturados), sin pasar del pico 0,98."""
+    if not len(x):
+        return x
+    activo = x[np.abs(x) > 1e-3]
+    rms = float(np.sqrt(np.mean(activo ** 2))) if len(activo) else 0.0
+    if rms < 1e-5:
+        return x
+    ganancia = min(rms_objetivo / rms, 0.98 / max(float(np.max(np.abs(x))), 1e-6))
+    return (x * ganancia).astype(np.float32)
+
+
 def _envolvente(x: np.ndarray, ventana_s: float = 0.25) -> np.ndarray:
     """Qué tan fuerte suena la voz, suavizado (para bajar la música debajo de ella)."""
     n = max(1, int(SR * ventana_s))
@@ -742,7 +755,7 @@ def _mezclar_musica(musica: list, voz: np.ndarray, total: int, ffmpeg: str, usad
                 cruz = unido[-f:] * np.linspace(1, 0, f) + r[:f] * np.linspace(0, 1, f)
                 unido = np.concatenate([unido[:-f], cruz, r[f:]])
             seg = unido
-        seg = seg[:largo].astype(np.float32).copy()
+        seg = _igualar(seg[:largo].astype(np.float32), 0.12).copy()     # cada pista suena parecido de fuerte
         f = min(fundido, len(seg) // 2)
         if f:
             seg[:f] *= np.linspace(0, 1, f)
@@ -778,7 +791,7 @@ def mezclar_audio(raiz: Path, edl: dict, ffmpeg: str | None = None) -> np.ndarra
             usados.append(archivo)
         tono = s.get("tono", 1.0)
         idx = np.arange(0, len(x) - 1, tono)
-        x = np.interp(idx, np.arange(len(x)), x) * s.get("volumen", 0.7) * 0.6
+        x = _igualar(np.interp(idx, np.arange(len(x)), x), 0.2) * s.get("volumen", 0.7) * 0.6
         if s.get("duracion_max") and len(x) > s["duracion_max"] * SR:
             n = int(s["duracion_max"] * SR)
             x = (x[-n:] if s.get("termina_en") is not None else x[:n]).copy()

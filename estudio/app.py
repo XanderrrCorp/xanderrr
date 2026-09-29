@@ -737,6 +737,7 @@ def llenar_freesound():
 
     try:
         agregados = freesound.llenar(avisar=lambda *_: None)
+        agregados.update({f"musica_{k}": v for k, v in freesound.llenar_musica(avisar=lambda *_: None).items()})
     except freesound.SinClaveFreesound as ex:
         raise HTTPException(400, str(ex)) from ex
     except Exception as ex:  # noqa: BLE001

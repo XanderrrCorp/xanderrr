@@ -81,6 +81,19 @@
           7.0
         ]
       }
+    },
+    "musica": {
+      "_nota": "Música de fondo tranquila (ánimo «suave»): solo CC0 y de 1 a 8 minutos.",
+      "pistas_por_animo": 3,
+      "animos": {
+        "suave": {
+          "buscar": "calm soft ambient background music",
+          "duracion": [
+            60,
+            480
+          ]
+        }
+      }
     }
   }
 }

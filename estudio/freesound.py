@@ -27,8 +27,8 @@ def _clave() -> str:
     return clave
 
 
-def buscar(tipo: str, ajustes: dict, sesion=requests) -> list[dict]:
-    conf = ajustes["tipos"][tipo]
+def buscar(tipo: str, ajustes: dict, sesion=requests, conf: dict | None = None) -> list[dict]:
+    conf = conf or ajustes["tipos"][tipo]
     lo, hi = conf["duracion"]
     r = sesion.get(API, params={"query": conf["buscar"], "filter": f'license:"Creative Commons 0" duration:[{lo} TO {hi}]',
                                 "sort": "rating_desc", "fields": CAMPOS, "page_size": 30},
@@ -67,3 +67,44 @@ def llenar(tipos: list[str] | None = None, sesion=requests, avisar=print) -> dic
             ya.add(s["url"])
             salida[tipo] += 1
     return salida
+
+
+def llenar_musica(sesion=requests, avisar=print) -> dict:
+    """Música de fondo tranquila (ánimo «suave»), también solo CC0. Lo ya registrado no se repite."""
+    ajustes = leer_config("fuentes_audio.json")["freesound"]
+    conf = ajustes["musica"]
+    _clave()
+    ya = {a["fuente"] for a in biblioteca.indice()}
+    salida: dict[str, int] = {}
+    for animo, busqueda in conf["animos"].items():
+        falta = conf["pistas_por_animo"] - len(biblioteca.utilizables("musica", animo))
+        salida[animo] = 0
+        if falta <= 0:
+            continue
+        avisar(f"Buscando música {animo} en Freesound (solo CC0)…")
+        for s in buscar(animo, ajustes, sesion, conf=busqueda):
+            if salida[animo] >= falta:
+                break
+            if s["url"] in ya:
+                continue
+            audio = sesion.get(s["previews"]["preview-hq-mp3"], timeout=120)
+            audio.raise_for_status()
+            try:
+                biblioteca.registrar(audio.content, f"{s['name'][:40]}.mp3", "musica", animo, s["url"], "cc0",
+                                     detalle_licencia=f"Freesound · autor {s['username']} · id {s['id']} · CC0 1.0")
+            except ValueError:
+                continue
+            ya.add(s["url"])
+            salida[animo] += 1
+    return salida
+
+
+def asegurar_musica_suave(avisar=print) -> None:
+    """Antes de editar: si no hay música suave y hay clave de Freesound, se busca (gratis). Si falla,
+    el video sigue con la música que haya."""
+    try:
+        if biblioteca.utilizables("musica", "suave") or not clave_api("FREESOUND_API_KEY"):
+            return
+        llenar_musica(avisar=avisar)
+    except Exception as ex:  # noqa: BLE001 — la música nunca frena el video
+        avisar(f"Sin música nueva de Freesound ({str(ex)[:100]})")
