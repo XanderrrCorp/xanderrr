@@ -968,7 +968,7 @@ def _renderizar_paralelo(carpeta: CarpetaProyecto, ffmpeg: str, destino: Path | 
     shutil.rmtree(carpeta_tramos, ignore_errors=True)
     carpeta_tramos.mkdir(parents=True)
     avisar(f"  render en {len(partes)} tramos a la vez ({n} núcleos)")
-    procs = []
+    procs, registros = [], []
     sin_ventana = 0x08000000 if os.name == "nt" else 0            # sin ventanas negras en Windows
     from .plataforma import contexto
 
@@ -977,8 +977,11 @@ def _renderizar_paralelo(carpeta: CarpetaProyecto, ffmpeg: str, destino: Path | 
         cmd = [sys.executable, "-m", "estudio.render_tramo", str(raiz), str(carpeta_tramos / f"t{k:02d}.mp4"),
                f"{a:.6f}", f"{b:.6f}", calidad, str(salida[0]), str(salida[1]), str(salida[2]),
                "1" if vertical else "0", str(max(1, (os.cpu_count() or 2) // len(partes)))]
-        procs.append(subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, creationflags=sin_ventana,
+        # lo que el tramo diga va a un archivo: un tubo lleno lo dejaría colgado
+        registro = open(carpeta_tramos / f"t{k:02d}.log", "wb")  # noqa: SIM115 — se cierra al terminar
+        procs.append(subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=registro, creationflags=sin_ventana,
                                       env=entorno))
+        registros.append(registro)
     # mientras dibujan: se mezcla el audio y se informa el avance
     with cf.ThreadPoolExecutor(1) as ex:
         audio = ex.submit(mezclar_audio, raiz, edl, ffmpeg)
@@ -990,9 +993,16 @@ def _renderizar_paralelo(carpeta: CarpetaProyecto, ffmpeg: str, destino: Path | 
             avisar(f"  render {min(hecho, total) / 60:.1f} / {total / 60:.1f} min")
             time.sleep(5)
         mezcla = audio.result()
-    errores = [p.stderr.read().decode("utf-8", "replace")[-600:] for p in procs if p.returncode != 0]
-    if errores:
-        raise RuntimeError("falló un tramo del render: " + errores[0])
+    for r in registros:
+        r.close()
+    fallidos = [k for k, p in enumerate(procs) if p.returncode != 0]
+    if fallidos:
+        # no se pierde el video: se guarda por qué falló y se hace en un solo proceso, como antes
+        detalle = (carpeta_tramos / f"t{fallidos[0]:02d}.log").read_text("utf-8", "replace")[-1500:]
+        (destino.parent / "render_paralelo_error.txt").write_text(detalle, encoding="utf-8")
+        avisar("  un tramo del render falló: sigo en un solo proceso (más lento, mismo resultado)")
+        shutil.rmtree(carpeta_tramos, ignore_errors=True)
+        return None
     # unir los tramos (sin volver a comprimir) y ponerles el audio
     lista = carpeta_tramos / "lista.txt"
     lista.write_text("".join(f"file '{(carpeta_tramos / f't{k:02d}.mp4').as_posix()}'\n" for k in range(len(partes))),

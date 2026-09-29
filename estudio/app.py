@@ -63,8 +63,10 @@ class EspacioDeLaPeticion:
 app.add_middleware(EspacioDeLaPeticion)
 
 from .plataforma.api import api as api_v2  # noqa: E402 — la API de la plataforma (cuenta, créditos, admin)
+from .plataforma.api_personajes import rutas as api_personajes  # noqa: E402 — asistente de personaje
 
 app.include_router(api_v2)
+app.include_router(api_personajes)
 
 
 def _proyecto(slug: str) -> CarpetaProyecto:
@@ -286,7 +288,8 @@ def sesion_claude():
     if not exe:
         raise HTTPException(400, "Claude no está instalado: corre de nuevo el instalador")
     if os.name == "nt":
-        subprocess.Popen(["cmd", "/c", "start", "Claude", "cmd", "/k", exe])
+        # esta ventana sí se ve: es para que la persona inicie sesión en Claude
+        subprocess.Popen(["cmd", "/c", "start", "Claude", "cmd", "/k", exe], creationflags=subprocess.CREATE_NEW_CONSOLE)
     else:
         subprocess.Popen(["x-terminal-emulator", "-e", exe])
     return {"ok": True}
