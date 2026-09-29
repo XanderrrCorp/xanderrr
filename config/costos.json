@@ -1,7 +1,7 @@
 {
   "trm_cop_por_usd": 3100,
-  "presupuesto_objetivo_cop": 15000,
-  "presupuesto_maximo_cop": 16000,
+  "presupuesto_objetivo_cop": 28000,
+  "presupuesto_maximo_cop": 30000,
   "precios_usd": {
     "claude_por_millon_tokens": {
       "claude-opus-5": {
