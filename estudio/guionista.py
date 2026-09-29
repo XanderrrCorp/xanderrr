@@ -34,6 +34,7 @@ class Encargo:
     villano: str = ""
     minutos: float = 9.0
     notas: str = ""
+    formula: str = "escala_peligro"          # la estructura del guion (dato del catálogo o del espacio)
 
 
 def cargar_formula(clave: str = "escala_peligro") -> dict:
@@ -49,8 +50,10 @@ def cargar_formula(clave: str = "escala_peligro") -> dict:
 
 def instruccion(encargo: Encargo, estilo: Estilo, niveles_fijos: list[dict] | None = None,
                 formula: dict | None = None, narrador: str | None = None) -> str:
-    formula = formula or cargar_formula()
+    formula = formula or cargar_formula(encargo.formula or "escala_peligro")
     palabras = int(encargo.minutos * 60 * PALABRAS_POR_SEGUNDO)
+    if not formula.get("usa_niveles", True):
+        return _instruccion_sin_niveles(encargo, formula, palabras, narrador)
     fijos = ""
     if niveles_fijos:
         lista = "\n".join(f"  {n['numero']}. {n['nombre']}{' (VILLANO, último)' if n.get('villano') else ''}"
@@ -86,7 +89,23 @@ SECCION: Cierre
 <escenas del cierre>"""
 
 
-def leer_historia(texto: str) -> dict:
+def _instruccion_sin_niveles(encargo: Encargo, formula: dict, palabras: int, narrador: str | None) -> str:
+    estructura = formula["estructura"].replace("<<narrador>>", narrador or formula.get("narrador_por_defecto", "el narrador"))
+    return f"""{formula["presentacion"]}
+
+== ENCARGO ==
+Tema: {encargo.tema}
+{("Enfoque o giro: " + encargo.giro) if encargo.giro else ""}
+Duración: unos {encargo.minutos:g} minutos de voz = entre {int(palabras * 0.93)} y {int(palabras * 1.07)} palabras en total.
+{("Notas del dueño: " + encargo.notas) if encargo.notas else ""}
+
+{estructura}
+== FORMATO DE SALIDA (texto, no JSON) ==
+Responde SOLO con esto, sin nada antes ni después:
+{formula["formato_salida"]}"""
+
+
+def leer_historia(texto: str, usa_niveles: bool = True) -> dict:
     """Lee la respuesta de la fase 1 (texto con TITULO / NIVEL / SECCION)."""
     import re
 
@@ -111,6 +130,8 @@ def leer_historia(texto: str) -> dict:
         if secciones and not re.search(r"(?i)pixel", linea):    # lo pixelado es visual, la voz no lo dice
             secciones[-1][1].append(linea)
     secciones = [(n, ls) for n, ls in secciones if ls]
+    if not usa_niveles and titulo and len(secciones) >= 3:
+        return {"titulo": titulo, "niveles": [], "secciones": secciones}
     if not titulo or len(niveles) < 4 or len(niveles) > 8 or len(secciones) < 3:
         raise ValueError(f"historia incompleta: título={bool(titulo)}, niveles={len(niveles)}, secciones={len(secciones)}")
     return {"titulo": titulo, "niveles": niveles, "secciones": secciones}
@@ -138,7 +159,8 @@ def instruccion_detalles(historia: dict, k: int, estilo: Estilo, catalogo: list[
     solo_mascota = next((t.id for t in estilo.tipos_de_escena if "{personaje}" in t.plantilla_prompt
                          and "{bloque_estilo}" not in t.plantilla_prompt), None)
     nota_mascota = (f" En escenas de tipo {solo_mascota} describe solo su pose y su cara." if solo_mascota else "")
-    villano = next((n for n in historia["niveles"] if n["villano"]), historia["niveles"][-1])
+    con_niveles = bool(historia["niveles"])
+    villano = next((n for n in historia["niveles"] if n["villano"]), historia["niveles"][-1] if con_niveles else None)
     niveles = "\n".join(f"  {n['numero']}. {n['nombre']}{' (VILLANO)' if n['villano'] else ''}" for n in historia["niveles"])
     numeradas = "\n".join(f"{i + 1}. {t}" for i, t in enumerate(lineas))
     es_gancho = k == 0
@@ -148,7 +170,7 @@ def instruccion_detalles(historia: dict, k: int, estilo: Estilo, catalogo: list[
     especiales.append('- Si la escena es parte de una anécdota del narrador (habla en primera persona: «yo», «me», '
                       '«mi amigo»), usa pov_personaje para lo que él vio con sus ojos, o escena_cartoon_completa con él '
                       'en ese lugar reaccionando (por ejemplo congelado del susto en una calle).')
-    if es_gancho:
+    if es_gancho and con_niveles:
         especiales.append('- Esta es la sección del GANCHO: la escena que presenta la lista de niveles lleva '
                           '"accion": "componer" (el sistema muestra la tira). Si una escena muestra al villano, pon '
                           '"muestra_villano": true: el sistema lo oculta en pantalla hasta su revelación (la narración '
@@ -170,11 +192,12 @@ parece, o hay duda, pide imagen nueva ("generar"): una imagen que no cuadra con 
 No pongas la misma imagen en dos escenas seguidas.
 {filas}
 """
-    return f"""Eres el director visual de un video de YouTube en español: «{historia['titulo']}».
-Niveles (de menos a más peligro):
+    contexto = (f"""Niveles (de menos a más peligro):
 {niveles}
 El villano ({villano['nombre']}) no se muestra claramente antes de su revelación.
-
+""" if con_niveles else "Es un documental de curiosidad: cada imagen muestra con claridad lo que explica la voz.\n")
+    return f"""Eres el director visual de un video de YouTube en español: «{historia['titulo']}».
+{contexto}
 Sección «{nombre}». Estas son sus escenas (lo que dice la voz), numeradas:
 {numeradas}
 
@@ -263,7 +286,7 @@ def _clave_en(clave, narracion: str) -> str | None:
 def a_escenas(datos: dict, estilo: Estilo, canal: str) -> tuple[dict, dict, str]:
     """JSON del guionista → (escenas.json v2, direccion.json, guion.md)."""
     niveles_in = sorted(datos["niveles"], key=lambda n: n["numero"])
-    if not any(n.get("villano") for n in niveles_in):
+    if niveles_in and not any(n.get("villano") for n in niveles_in):
         niveles_in[-1]["villano"] = True
     assets = [{"id": "mascota_base", "tipo": "personaje", "archivo": "assets/mascota_base.png",
                "quitar_fondo": True, "prompt": None}]
@@ -379,6 +402,9 @@ def escribir_guion(encargo: Encargo, estilo: Estilo, carpeta: Path, canal: str,
     ejecutar = _con(base, v.get("modelo_historia"), v.get("pensamiento_historia_tokens"))
     ejecutar_detalles = _con(base, v.get("modelo_detalles"), v.get("pensamiento_detalles_tokens"))
     tolerancia = float(v.get("tolerancia_largo", 0.15))
+    usa_niveles = cargar_formula(encargo.formula or "escala_peligro").get("usa_niveles", True)
+    if not usa_niveles:
+        niveles_fijos = None
     prompt = instruccion(encargo, estilo, niveles_fijos)
     error = ""
     borrador = carpeta / "_borrador_guion"
@@ -395,7 +421,7 @@ def escribir_guion(encargo: Encargo, estilo: Estilo, carpeta: Path, canal: str,
                                 prompt + f"\n\n== CORRIGE ==\nTu respuesta anterior falló: {error}. "
                                          "Devuelve la historia completa en el formato pedido.", cwd=carpeta)
         try:
-            historia = leer_historia(texto)
+            historia = leer_historia(texto, usa_niveles)
             if niveles_fijos:
                 _niveles_coinciden(historia, niveles_fijos)
             break
@@ -421,7 +447,7 @@ def escribir_guion(encargo: Encargo, estilo: Estilo, carpeta: Path, canal: str,
                                       "sin cambiar la estructura ni los niveles, y devuélvela completa en el mismo formato.\n\n"
                                       + texto, cwd=carpeta)
         try:
-            ajustada = leer_historia(texto2)
+            ajustada = leer_historia(texto2, usa_niveles)
             if niveles_fijos:
                 _niveles_coinciden(ajustada, niveles_fijos)
                 ajustada["niveles"] = niveles_fijos

@@ -168,3 +168,31 @@ def test_la_voz_nunca_dice_que_el_villano_esta_pixelado():
     historia = leer_historia(texto)
     gancho = historia["secciones"][0][1]
     assert gancho == ["Y el último no te lo esperas.", "Hay algo de él que no sabes."]
+
+
+def test_documental_por_que_sin_niveles(tmp_path, estilo):
+    """Formato «¿Por qué…?»: guion sin niveles ni villano, con la fórmula del formato elegido."""
+    import json
+
+    from estudio.guionista import Encargo, escribir_guion, instruccion
+
+    enc = Encargo("¿Por qué no podemos explorar el Congo?", minutos=12, formula="paradoja_documental")
+    p = instruccion(enc, estilo)
+    assert "¿Por qué" in p and "NIVEL:" not in p and "Villano" not in p
+
+    historia = ("TITULO: ¿Por qué nadie puede cruzar el Congo?\n"
+                + "".join(f"SECCION: Parte {k}\n" + "".join(f"Frase {k}.{j} con varias palabras para la voz del video.\n"
+                                                            for j in range(12)) for k in range(4)))
+
+    def claude(prompt, **_):
+        if "Para CADA escena" in prompt:
+            n = prompt.count("\n", prompt.index("numeradas:"), prompt.index("Para CADA")) - 2
+            return json.dumps({"escenas": [{"n": i + 1, "intencion": "explicacion", "intensidad": 2, "accion": "generar",
+                                            "tipo": "escena_cartoon_completa", "descripcion": "a jungle river"}
+                                           for i in range(n)]}), {}
+        return historia, {}
+
+    r = escribir_guion(enc, estilo, tmp_path, "animales-peligrosos", ejecutar=claude, avisar=lambda *_: None)
+    doc = json.loads((tmp_path / "escenas.json").read_text(encoding="utf-8"))
+    assert r["escenas"] == 48 and doc["niveles"] == [] and doc["video"].startswith("¿Por qué")
+    assert "villano_revelacion" not in json.loads((tmp_path / "direccion.json").read_text(encoding="utf-8"))

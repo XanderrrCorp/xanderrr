@@ -127,7 +127,8 @@ def _canal_y_estilo(canal: str | None, estilo_id: str | None) -> tuple[str, str]
 
 
 def crear_video(tema: str, giro: str, villano: str, minutos: float, notas: str = "",
-                canal: str | None = None, estilo_id: str | None = None, disfraz: bool = False) -> CarpetaProyecto:
+                canal: str | None = None, estilo_id: str | None = None, disfraz: bool = False,
+                formula: str | None = None) -> CarpetaProyecto:
     canal, estilo_id = _canal_y_estilo(canal, estilo_id)
     base = slugificar(tema)[:40] or "video"
     slug, n = base, 2
@@ -139,6 +140,7 @@ def crear_video(tema: str, giro: str, villano: str, minutos: float, notas: str =
     p = c.cargar()
     p.notas = [f"giro: {giro}", f"villano: {villano}", f"notas: {notas}"]
     p.disfraz_mascota = bool(disfraz)
+    p.formula = formula or None
     c.guardar(p)
     _copiar_mascota(c, estilo_id)
     from .plataforma.consultas import personaje_del_canal, registrar_video
@@ -247,7 +249,7 @@ def paso_guion(c: CarpetaProyecto, t: Trabajo, ejecutar=None) -> None:
     p = c.cargar()
     notas = {x.split(":", 1)[0]: x.split(":", 1)[1].strip() for x in p.notas if ":" in x}
     encargo = Encargo(p.titulo, notas.get("giro", ""), notas.get("villano", ""),
-                      p.duracion_objetivo_seg / 60, notas.get("notas", ""))
+                      p.duracion_objetivo_seg / 60, notas.get("notas", ""), formula=p.formula or "escala_peligro")
     t.avisar("Claude está escribiendo el guion (unos minutos)…")
     t.progreso = 0.1
     c.marcar("guionista", "en_curso")
@@ -261,13 +263,29 @@ def paso_guion(c: CarpetaProyecto, t: Trabajo, ejecutar=None) -> None:
     t.avisar(f"Guion listo: {r['escenas']} escenas, {r['palabras']} palabras")
 
 
+def precio_imagen_usd(config: ConfigCostos) -> float:
+    """Lo que cuesta una imagen con el proveedor elegido en Ajustes (Together cobra por imagen; Google, por
+    tokens: se calcula con los de una imagen típica)."""
+    from .config import clave_api
+
+    ajustes = leer_config("proveedores.json")["imagenes"]
+    nombre = clave_api("XANDART_PROVEEDOR_IMAGENES") or ajustes["proveedor"]
+    op = ajustes["opciones"].get(nombre) or ajustes["opciones"][ajustes["proveedor"]]
+    modelo = (clave_api("XANDART_MODELO_IMAGEN_GOOGLE") if nombre == "vertex" else None) or op.get("modelo")
+    t = config.precios["imagenes_por_modelo"].get(modelo) or {}
+    if t.get("precio_por_imagen") is not None:
+        return float(t["precio_por_imagen"])
+    if t.get("salida_por_millon_tokens"):
+        return (t["salida_por_millon_tokens"] * t.get("tokens_salida_por_imagen", 1290)
+                + t.get("entrada_por_millon_tokens", 0) * (300 + t.get("tokens_por_imagen_de_referencia", 0))) / 1e6
+    return 0.07
+
+
 def estimar_imagenes(c: CarpetaProyecto) -> dict:
     from .imagenes.generador import total_a_generar
 
     config = ConfigCostos.cargar()
-    ajustes = leer_config("proveedores.json")["imagenes"]
-    op = ajustes["opciones"][ajustes["proveedor"]]
-    precio = (config.precios["imagenes_por_modelo"].get(op["modelo"]) or {}).get("precio_por_imagen", 0.04)
+    precio = precio_imagen_usd(config)
     esc = c.cargar_escenas()
     hechas = 0
     man = c.ruta / "imagenes" / "manifiesto.json"

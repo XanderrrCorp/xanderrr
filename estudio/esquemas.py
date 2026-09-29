@@ -600,6 +600,7 @@ class Proyecto(Modelo):
     # marcar «contenido alterado o sintético» en YouTube
     requiere_divulgacion_contenido_sintetico: bool = False
     # la mascota sale con un hoodie del animal del tema solo en este video (una imagen extra)
+    formula: str | None = None           # estructura del guion (None = escala de peligro, la de siempre)
     disfraz_mascota: bool = False
     disfraz_tema: str | None = None
 
