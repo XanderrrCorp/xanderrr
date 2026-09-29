@@ -12,7 +12,7 @@ def test_en_windows_se_lanzan_sin_ventana_salvo_que_se_pida(monkeypatch):
     sin_ventanas.activar()
     subprocess.Popen(["ffmpeg", "-version"])
     subprocess.Popen(["cmd"], creationflags=0x10)             # quien pide su ventana, la tiene
-    assert vistos == [sin_ventanas.SIN_VENTANA, 0x10]
+    assert vistos == [sin_ventanas.SIN_VENTANA | sin_ventanas.PRIORIDAD_BAJA, 0x10]
 
 
 def test_fuera_de_windows_no_cambia_nada(monkeypatch):

@@ -911,7 +911,8 @@ def renderizar(carpeta: CarpetaProyecto, ffmpeg: str, destino: Path | None = Non
 
 
 def _procesos(pedidos: int | None) -> int:
-    """Cuántos tramos a la vez: los núcleos menos uno (para que el PC siga usable), hasta 6."""
+    """Cuántos tramos a la vez. Por defecto la mitad de los núcleos (hasta 4) y solo los que quepan
+    en la memoria libre: con más, el PC se traba y el render hasta va más lento."""
     if pedidos:
         return max(1, int(pedidos))
     try:
@@ -920,7 +921,38 @@ def _procesos(pedidos: int | None) -> int:
         conf = 0
     if conf:
         return max(1, conf)
-    return max(1, min(6, (os.cpu_count() or 2) - 1))
+    n = min(4, (os.cpu_count() or 2) // 2)
+    libre = memoria_libre_gb()
+    if libre is not None:
+        n = min(n, int((libre - 1.0) // 1.2))          # ~1,2 GB por tramo y 1 GB para el resto del PC
+    return max(1, n)
+
+
+def memoria_libre_gb() -> float | None:
+    """Memoria RAM libre ahora mismo (None si no se puede saber)."""
+    try:
+        if os.name == "nt":
+            import ctypes
+
+            class _Estado(ctypes.Structure):
+                _fields_ = [("dwLength", ctypes.c_ulong), ("dwMemoryLoad", ctypes.c_ulong),
+                            ("ullTotalPhys", ctypes.c_ulonglong), ("ullAvailPhys", ctypes.c_ulonglong),
+                            ("ullTotalPageFile", ctypes.c_ulonglong), ("ullAvailPageFile", ctypes.c_ulonglong),
+                            ("ullTotalVirtual", ctypes.c_ulonglong), ("ullAvailVirtual", ctypes.c_ulonglong),
+                            ("ullAvailExtendedVirtual", ctypes.c_ulonglong)]
+
+            e = _Estado()
+            e.dwLength = ctypes.sizeof(_Estado)
+            if ctypes.windll.kernel32.GlobalMemoryStatusEx(ctypes.byref(e)):
+                return e.ullAvailPhys / 1024 ** 3
+            return None
+        with open("/proc/meminfo", encoding="ascii") as f:
+            for linea in f:
+                if linea.startswith("MemAvailable:"):
+                    return int(linea.split()[1]) / 1024 ** 2
+    except Exception:  # noqa: BLE001
+        return None
+    return None
 
 
 def tramos(edl: dict, n: int, minimo_s: float = 25.0) -> list[tuple[float, float]]:
@@ -969,14 +1001,15 @@ def _renderizar_paralelo(carpeta: CarpetaProyecto, ffmpeg: str, destino: Path | 
     carpeta_tramos.mkdir(parents=True)
     avisar(f"  render en {len(partes)} tramos a la vez ({n} núcleos)")
     procs, registros = [], []
-    sin_ventana = 0x08000000 if os.name == "nt" else 0            # sin ventanas negras en Windows
+    # en Windows: sin ventanas negras y con prioridad baja, para que el PC siga usable mientras tanto
+    sin_ventana = (0x08000000 | 0x00004000) if os.name == "nt" else 0
     from .plataforma import contexto
 
     entorno = {**os.environ, "XANDART_ESPACIO": contexto.espacio_actual() or ""}   # mismo estilo que aquí
     for k, (a, b) in enumerate(partes):
         cmd = [sys.executable, "-m", "estudio.render_tramo", str(raiz), str(carpeta_tramos / f"t{k:02d}.mp4"),
                f"{a:.6f}", f"{b:.6f}", calidad, str(salida[0]), str(salida[1]), str(salida[2]),
-               "1" if vertical else "0", str(max(1, (os.cpu_count() or 2) // len(partes)))]
+               "1" if vertical else "0", str(max(1, (os.cpu_count() or 2) // (2 * len(partes))))]
         # lo que el tramo diga va a un archivo: un tubo lleno lo dejaría colgado
         registro = open(carpeta_tramos / f"t{k:02d}.log", "wb")  # noqa: SIM115 — se cierra al terminar
         procs.append(subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=registro, creationflags=sin_ventana,
