@@ -102,7 +102,36 @@ def escribir_json(ruta: Path, datos: Any) -> None:
     with open(tmp, "w", encoding="utf-8") as f:
         json.dump(datos, f, ensure_ascii=False, indent=2)
         f.write("\n")
-    os.replace(tmp, ruta)
+    _reemplazar(tmp, ruta)
+
+
+def _reemplazar(tmp: Path, ruta: Path, intentos: int = 12) -> None:
+    """En Windows no se puede reemplazar un archivo mientras otro lo tiene abierto (la página que lo
+    lee cada 2 s, el antivirus, un respaldo): «Acceso denegado». Se espera un momento y se reintenta."""
+    import time
+
+    for k in range(intentos):
+        try:
+            os.replace(tmp, ruta)
+            return
+        except PermissionError:
+            if k == intentos - 1:
+                raise
+            time.sleep(0.05 * (k + 1))
+
+
+def leer_json_con_pendiente(ruta: Path) -> Any:
+    """Como leer_json, pero si quedó un .tmp más nuevo y completo (una escritura que Windows no dejó
+    terminar), se usa ese: así no se pierde lo último que se registró (por ejemplo una imagen pagada)."""
+    tmp = ruta.with_suffix(ruta.suffix + ".tmp")
+    if tmp.exists() and (not ruta.exists() or tmp.stat().st_mtime >= ruta.stat().st_mtime):
+        try:
+            datos = leer_json(tmp)
+            _reemplazar(tmp, ruta)
+            return datos
+        except (ValueError, OSError):
+            pass
+    return leer_json(ruta)
 
 
 class ConfigCostos:

@@ -42,3 +42,32 @@ def test_precio_null_avisa(config):
 
 def test_formato_cop():
     assert formato_cop(15000) == "15.000 COP"
+
+
+def test_escribir_json_reintenta_si_windows_niega_el_acceso(tmp_path, monkeypatch):
+    import os
+
+    from estudio import config
+
+    reales, fallos = os.replace, [2]
+
+    def replace(a, b):
+        if fallos[0]:
+            fallos[0] -= 1
+            raise PermissionError(5, "Acceso denegado")
+        reales(a, b)
+
+    monkeypatch.setattr(config.os, "replace", replace)
+    config.escribir_json(tmp_path / "m.json", {"a": 1})
+    assert config.leer_json(tmp_path / "m.json") == {"a": 1}
+
+
+def test_manifiesto_pendiente_no_se_pierde(tmp_path):
+    from estudio import config
+
+    (tmp_path / "m.json").write_text('{"a": 1}', encoding="utf-8")
+    (tmp_path / "m.json.tmp").write_text('{"a": 1, "b": 2}', encoding="utf-8")   # escritura que no terminó
+    assert config.leer_json_con_pendiente(tmp_path / "m.json") == {"a": 1, "b": 2}
+    assert not (tmp_path / "m.json.tmp").exists() and config.leer_json(tmp_path / "m.json")["b"] == 2
+    (tmp_path / "m.json.tmp").write_text('{"roto', encoding="utf-8")               # a medias: se ignora
+    assert config.leer_json_con_pendiente(tmp_path / "m.json") == {"a": 1, "b": 2}

@@ -146,7 +146,10 @@ def generar_imagenes(carpeta: CarpetaProyecto, *, primeras: int | None = None, i
     personaje = prompts.personaje_del_proyecto(carpeta.ruta, estilo)
     libro = carpeta.libro(config)
     ruta_manifiesto = carpeta.ruta / "imagenes" / "manifiesto.json"
-    manifiesto: dict = leer_json(ruta_manifiesto) if ruta_manifiesto.exists() else {}
+    from ..config import leer_json_con_pendiente
+
+    hay = ruta_manifiesto.exists() or ruta_manifiesto.with_suffix(".json.tmp").exists()
+    manifiesto: dict = leer_json_con_pendiente(ruta_manifiesto) if hay else {}
     reporte = Reporte(proveedor.nombre, proveedor.modelo)
 
     seleccion = [] if solo_assets is not None else _seleccion(esc, primeras, ids)
