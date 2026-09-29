@@ -330,11 +330,22 @@ def usar_pexels_en_escenas(c: CarpetaProyecto, t=None, ejecutar_claude=None) -> 
     datos = esc.model_dump()
     assets = {a["id"] for a in datos["assets"]}
     videos = direccion.setdefault("video_escena", {})
-    cambiadas, ultima = 0, -9
+    # si ya se usó antes (el botón se puede dar dos veces), se cuenta lo que ya está puesto: cada toma
+    # sigue saliendo como mucho USOS_POR_TOMA veces y nunca en escenas seguidas
+    por_stem = {Path(a["archivo"]).stem: a["archivo"] for a in tomas}
+    con_pexels = set()
+    for k, e in enumerate(datos["escenas"]):
+        ref = e["visual"].get("reusar_de")
+        if e["visual"]["accion"] == "reusar" and isinstance(ref, str) and ref.startswith("pexels_"):
+            con_pexels.add(k)
+            archivo = por_stem.get(ref.removeprefix("pexels_"))
+            if archivo:
+                usos[archivo] += 1
+    cambiadas = 0
     for k, e in enumerate(datos["escenas"]):
         v = e["visual"]
         if (v["accion"] != "generar" or f"escena:{e['id']}" in man or v.get("tipo") not in solo_animal
-                or e["id"] in ocultas or e["intencion"] in PROTEGIDAS or k - ultima < 2):
+                or e["id"] in ocultas or e["intencion"] in PROTEGIDAS or k - 1 in con_pexels or k + 1 in con_pexels):
             continue
         nivel = next((n for n in esc.niveles if e["seccion"].lower().startswith(f"nivel {n.numero} ")
                       or n.nombre.lower() in e["seccion"].lower()), None)
@@ -361,7 +372,7 @@ def usar_pexels_en_escenas(c: CarpetaProyecto, t=None, ejecutar_claude=None) -> 
         e["visual"] = {**v, "accion": "reusar", "reusar_de": aid, "prompt": None, "tipo": None, "referencias": []}
         e["notas_edicion"] = ((e.get("notas_edicion") or "") + f" · {toma['tipo']} real de Pexels").strip(" ·")
         cambiadas += 1
-        ultima = k
+        con_pexels.add(k)
     c.guardar_escenas(EscenasV2.model_validate(datos))
     escribir_json(c.ruta / "direccion.json", direccion)
     avisar(f"{cambiadas} escenas usan fotos o videos reales de Pexels en vez de imágenes nuevas")

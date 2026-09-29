@@ -145,3 +145,29 @@ def test_pexels_como_escena_y_ajuste_al_presupuesto(monkeypatch):
     assert all(not e.seccion.startswith("Nivel 4") or e.id > 40 for e in reales)
     ids = sorted(e.id for e in reales)
     assert all(b - a >= 2 for a, b in zip(ids, ids[1:]))                                      # nunca seguidas
+
+
+def test_dar_dos_veces_a_pexels_no_repite_de_mas(monkeypatch):
+    """La segunda vez cuenta lo que ya puso la primera: cada toma sale como mucho 2 veces en todo el
+    video y nunca en escenas seguidas."""
+    from collections import Counter
+
+    from estudio import pipeline
+
+    test_pexels_como_escena_y_ajuste_al_presupuesto(monkeypatch)
+    from estudio.proyecto import CarpetaProyecto
+    from estudio.config import ruta_proyectos
+
+    c = CarpetaProyecto(next(p for p in ruta_proyectos().iterdir() if p.is_dir()))
+
+    def claude(prompt, cwd=None, herramientas=None):
+        if "búsqueda" in prompt:
+            return json.dumps({str(k): f"animal {k}" for k in range(1, 5)}), {}
+        return '{"aprobados": [{"numero": 1, "razon": "sí"}, {"numero": 4, "razon": "video"}]}', {}
+
+    pipeline.usar_pexels_en_escenas(c, ejecutar_claude=claude)
+    esc = c.cargar_escenas()
+    reales = [e for e in esc.escenas if isinstance(e.visual.reusar_de, str) and e.visual.reusar_de.startswith("pexels_")]
+    assert max(Counter(e.visual.reusar_de for e in reales).values()) <= pipeline.USOS_POR_TOMA
+    pos = sorted(k for k, e in enumerate(esc.escenas) if e in reales)
+    assert all(b - a >= 2 for a, b in zip(pos, pos[1:]))
