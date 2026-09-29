@@ -513,6 +513,13 @@ class HacerVideo(BaseModel):
     fps: int | None = None          # 60 = más fluido (tarda el doble), 30 = rápido
 
 
+@app.post("/api/videos/{slug}/usar-las-que-hay")
+def usar_las_que_hay(slug: str):
+    """Seguir con las imágenes que ya hay: las escenas que faltan reusan una cercana (no gasta)."""
+    c = _proyecto(slug)
+    return _lanzar(slug, "imagenes", lambda t: pipeline.usar_las_que_hay(c, t))
+
+
 @app.post("/api/videos/{slug}/video")
 def video(slug: str, p: HacerVideo = HacerVideo()):
     c = _proyecto(slug)

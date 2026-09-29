@@ -52,6 +52,7 @@ export function Revision() {
   const imgOk = v.pasos.assets === 'completo';
   const vidOk = !!v.video;
   const e = v.estimacion_imagenes;
+  const yaHayImagenes = v.escenas.some((x) => x.accion === 'generar' && !!x.imagen);
 
   const aprobar = () => {
     if (!e) return;
@@ -136,6 +137,9 @@ export function Revision() {
             }}>Usar Pexels y ajustar al presupuesto (gratis)</button>
             <button className={e.pasa_maximo ? 'boton-borde' : 'boton-primario'} onClick={aprobar}>Aprobar y hacer las imágenes ({e.faltan} ≈ {e.texto})</button>
             {e.prueba > 0 && <button className="boton-borde" onClick={() => accion('prueba')}>Probar 10 escenas ({e.prueba} ≈ {e.prueba_texto})</button>}
+            {yaHayImagenes && <button className="boton-borde" onClick={() => {
+              if (window.confirm(`Las ${e.faltan} imágenes que faltan no se hacen: cada escena sin imagen usa la de la escena más cercana. No gasta nada y el texto no cambia. ¿Seguir al video con las que hay?`)) accion('usar-las-que-hay');
+            }}>Seguir con las imágenes que hay (gratis)</button>}
             <button className="boton-icono pequeno" onClick={() => { if (window.confirm('¿Escribir otro guion desde cero?')) accion('guion'); }}>Escribir otro guion</button>
           </div>
         </section>

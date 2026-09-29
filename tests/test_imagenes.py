@@ -272,3 +272,27 @@ def test_arreglo_de_las_corazas_no_vuelve_a_pagar_imagenes(proyecto, config, est
     assert viejo not in f.read_text(encoding="utf-8") and nuevo in f.read_text(encoding="utf-8")
     assert viejo in (f.parent / "estilo.antes_del_arreglo.json").read_text(encoding="utf-8")
     assert arreglos.corregir_estilos(tmp_path / "datos") == []                # una sola vez
+
+
+def test_seguir_con_las_imagenes_que_hay(proyecto, config, monkeypatch):
+    """Si falta alguna imagen y no se quiere pagar más: la escena reusa la más cercana y el video sigue."""
+    from estudio import pipeline
+
+    generar_imagenes(proyecto, proveedor=ProveedorSimulado(config), config=config, avisar=silencio)
+    esc = proyecto.cargar_escenas()
+    propias = [e for e in esc.escenas if e.visual.accion == "generar"]
+    faltante = propias[2]
+    (proyecto.ruta / faltante.visual.archivo).unlink()                 # esta no se alcanzó a hacer
+    for n in ("_ubicar_focos", "_stock"):
+        monkeypatch.setattr(pipeline, n, lambda *a, **k: None)
+    monkeypatch.setattr(pipeline, "armar_tira", lambda *a, **k: None, raising=False)
+    import estudio.tira as tira
+
+    monkeypatch.setattr(tira, "armar_tira", lambda *a, **k: None)
+    r = pipeline.usar_las_que_hay(proyecto, pipeline.Trabajo("imagenes"))
+    esc2 = proyecto.cargar_escenas()
+    e = next(x for x in esc2.escenas if x.id == faltante.id)
+    assert r["escenas"] == [faltante.id] and e.visual.accion == "reusar" and e.visual.reusar_de == propias[1].id
+    assert e.narracion == faltante.narracion                            # el texto no cambia
+    assert all(x.visual.reusar_de != faltante.id for x in esc2.escenas)  # nadie apunta a la que no tiene imagen
+    assert proyecto.cargar().pasos["assets"].estado == "completo"

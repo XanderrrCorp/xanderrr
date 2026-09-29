@@ -496,6 +496,57 @@ def paso_imagenes(c: CarpetaProyecto, t: Trabajo, permiso: bool = False, ejecuta
     c.marcar("assets", "completo", ["imagenes/", "assets/tira/"])
 
 
+def usar_las_que_hay(c: CarpetaProyecto, t: Trabajo, ejecutar_claude=None) -> dict:
+    """Sin gastar más: cada escena que se quedó sin imagen reusa la de la escena más cercana que sí
+    tiene (primero la anterior) y se sigue al video. El texto no cambia. Las tarjetas de los niveles
+    sí hacen falta (la tira no se puede armar sin ellas)."""
+    from .esquemas import EscenasV2
+    from .guionista import ubicar_villano
+    from .tira import armar_tira
+
+    esc = c.cargar_escenas()
+    sin_tarjeta = [n.nombre for n in esc.niveles
+                   if not any((c.ruta / a.archivo).exists() for a in esc.assets if a.id == n.asset)]
+    if sin_tarjeta:
+        raise RuntimeError("Falta la imagen de la tarjeta de " + ", ".join(sin_tarjeta)
+                           + ": esa sí hace falta para la tira de niveles")
+    datos = esc.model_dump()
+    con_imagen = [k for k, e in enumerate(datos["escenas"]) if e["visual"]["accion"] == "generar"
+                  and e["visual"].get("archivo") and (c.ruta / e["visual"]["archivo"]).exists()]
+    if not con_imagen:
+        raise RuntimeError("Todavía no hay imágenes hechas en este video")
+    cambiadas = []
+    for k, e in enumerate(datos["escenas"]):
+        v = e["visual"]
+        if v["accion"] != "generar" or (v.get("archivo") and (c.ruta / v["archivo"]).exists()):
+            continue
+        antes = [j for j in con_imagen if j < k]
+        fuente = datos["escenas"][antes[-1] if antes else min(con_imagen, key=lambda j: abs(j - k))]
+        e["visual"] = {**v, "accion": "reusar", "reusar_de": fuente["id"], "prompt": None, "tipo": None,
+                       "referencias": [], "archivo": None}
+        e["notas_edicion"] = ((e.get("notas_edicion") or "") + " · sin imagen propia: reusa una cercana").strip(" ·")
+        cambiadas.append(e["id"])
+    # las que reusaban una escena que se quedó sin imagen apuntan ahora a la misma fuente que ella
+    nueva_fuente = {e["id"]: e["visual"]["reusar_de"] for e in datos["escenas"] if e["id"] in cambiadas}
+    for e in datos["escenas"]:
+        if e["visual"]["accion"] == "reusar" and e["visual"].get("reusar_de") in nueva_fuente:
+            e["visual"]["reusar_de"] = nueva_fuente[e["visual"]["reusar_de"]]
+    c.guardar_escenas(EscenasV2.model_validate(datos))
+    t.avisar(f"{len(cambiadas)} escenas sin imagen reusan una cercana (gratis)")
+    if esc.niveles:
+        t.avisar("Armando la tira de niveles…")
+        p = c.cargar()
+        armar_tira(c.cargar_escenas(), cargar_estilo(p.estilo), c.ruta, seed=p.semilla)
+    if (c.ruta / "direccion.json").exists() and leer_json(c.ruta / "direccion.json").get("pixelar_pendiente"):
+        from . import claude_cli
+
+        ubicar_villano(c.ruta, ejecutar=ejecutar_claude or claude_cli.ejecutar)
+    _ubicar_focos(c, t, ejecutar_claude)
+    _stock(c, t, ejecutar_claude)
+    c.marcar("assets", "completo", ["imagenes/", "assets/tira/"])
+    return {"escenas": cambiadas}
+
+
 def _stock(c: CarpetaProyecto, t: Trabajo, ejecutar_claude=None) -> None:
     """Fotos y videos reales verificados (Pexels). Sin clave o si falla, el video sale igual."""
     from . import claude_cli
