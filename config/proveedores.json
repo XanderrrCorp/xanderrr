@@ -39,6 +39,12 @@
     "variable_clave": "MINIMAX_API_KEY",
     "_nota": "voz_id es la voz clonada del dueño (no es secreto). La clave va como credencial Bearer del entorno para api.minimax.io o en .env. Medido: ~2,9 palabras por segundo a velocidad 1; a 1,3 (ritmo rápido de YouTube, pedido del dueño) ~3,8."
   },
+  "whisper": {
+    "modelo": "small",
+    "dispositivo": "auto",
+    "idioma": "es",
+    "_nota": "Whisper local (faster-whisper) para los tiempos reales por oración del modo Tracy. Se instala con pip install -e \".[tracy]\"; la primera vez baja el modelo (small ≈ 480 MB). medium es más preciso pero bastante más lento en CPU."
+  },
   "claude": {
     "_nota": "Velocidad del guion: la historia la escribe el modelo por defecto de tu suscripción con el razonamiento limitado; los detalles de cada sección (intención, imagen, textos) los hace un modelo más rápido, todas las secciones a la vez.",
     "modelo_historia": null,

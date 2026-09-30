@@ -9,6 +9,9 @@
     python -m estudio costos --slug alacranes
     python -m estudio generar-imagenes --slug alacranes --primeras 10
     python -m estudio generar-imagenes --slug prueba --primeras 10 --proveedor simulado
+    python -m estudio tracy-canal --clip-base "C:\\ruta\\seminario.mp4"   (crea o ajusta el canal Tracy)
+    python -m estudio tracy-audio --guion guion.txt [--proveedor simulado]  (modo Tracy, fase 1)
+    python -m estudio tracy-segmentar --slug X                           (rehace los segmentos sin pagar)
 """
 from __future__ import annotations
 
@@ -216,6 +219,61 @@ def _cmd_render(a: argparse.Namespace) -> int:
     return 0
 
 
+def _imprimir_segmentos(segs: list[dict]) -> None:
+    print(f"{'#':>3}  {'inicio':>8}  {'fin':>8}  {'dur':>5}  texto")
+    for g in segs:
+        texto = g["texto"] if len(g["texto"]) <= 90 else g["texto"][:87] + "..."
+        marca = " (oración partida)" if g["oracion_partida"] else ""
+        print(f"{g['id']:>3}  {_mmss(g['inicio']):>8}  {_mmss(g['fin']):>8}  {g['duracion']:>5.1f}  {texto}{marca}")
+
+
+def _mmss(t: float) -> str:
+    return f"{int(t // 60)}:{t % 60:05.2f}"
+
+
+def _cmd_tracy_canal(a: argparse.Namespace) -> int:
+    from .tracy.preset import crear_canal_tracy
+
+    objetivo = [float(x) for x in a.objetivo.split("-")] if a.objetivo else None
+    preset = crear_canal_tracy(a.clave, voz_id=a.voz, clip_base=a.clip_base, proporcion_seminario=a.proporcion,
+                               clip_max_s=a.maximo, clip_objetivo_s=objetivo)
+    print(f"Canal «{a.clave}» en modo stock:")
+    for k, v in preset.items():
+        print(f"  {k}: {v}")
+    return 0
+
+
+def _cmd_tracy_audio(a: argparse.Namespace) -> int:
+    from pathlib import Path
+
+    from .tracy.flujo import crear_proyecto, paso_audio
+
+    if a.slug:
+        c = CarpetaProyecto.abrir(a.slug)
+    else:
+        if not a.guion:
+            print("error: falta --guion (o --slug para seguir uno)", file=sys.stderr)
+            return 1
+        c = crear_proyecto(Path(a.guion).read_text(encoding="utf-8"), canal=a.canal or "tracy", titulo=a.titulo)
+        print(f"Proyecto: {c.ruta}")
+    config = ConfigCostos.cargar()
+    antes = c.libro(config).total_cop()
+    r = paso_audio(c, proveedor=a.proveedor, permiso=a.permiso)
+    print(f"Voz: {r['duracion'] / 60:.2f} min en {r['bloques']} bloques · {r['oraciones']} oraciones · "
+          f"coincidencia con el guion {r['confianza']:.0%}")
+    _imprimir_segmentos(r["segmentos"])
+    print(f"Costo de esta corrida: {formato_cop(c.libro(config).total_cop() - antes)} · segmentos en "
+          f"{c.ruta / 'segmentos.json'}")
+    return 0
+
+
+def _cmd_tracy_segmentar(a: argparse.Namespace) -> int:
+    from .tracy.flujo import rehacer_segmentos
+
+    _imprimir_segmentos(rehacer_segmentos(CarpetaProyecto.abrir(a.slug)))
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(prog="estudio", description="Estudio de producción · Buscanichos")
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -284,6 +342,26 @@ def main(argv: list[str] | None = None) -> int:
     rd.add_argument("--salida")
     rd.set_defaults(fn=_cmd_render)
 
+    tc = sub.add_parser("tracy-canal", help="crea o ajusta el canal Tracy (modo visual stock + clip base)")
+    tc.add_argument("--clave", default="tracy")
+    tc.add_argument("--voz", help="voz_id de MiniMax (vacío = la de proveedores.json)")
+    tc.add_argument("--clip-base", help="ruta del video base del seminario")
+    tc.add_argument("--proporcion", type=float, help="parte de seminario, de 0 a 1 (0.4 = 40 %%)")
+    tc.add_argument("--maximo", type=float, help="duración máxima de clip en segundos")
+    tc.add_argument("--objetivo", help="rango objetivo de clip, p. ej. 8-20")
+    tc.set_defaults(fn=_cmd_tracy_canal)
+    ta = sub.add_parser("tracy-audio", help="modo Tracy: voz por bloques, Whisper y segmentos")
+    ta.add_argument("--guion", help="archivo .txt con el guion pegado")
+    ta.add_argument("--slug", help="seguir un proyecto Tracy ya creado")
+    ta.add_argument("--canal", help="clave del canal (por defecto: tracy)")
+    ta.add_argument("--titulo")
+    ta.add_argument("--proveedor", help="simulado = ensayo sin gastar (voz y alineación simuladas)")
+    ta.add_argument("--permiso", action="store_true", help="permite pasar el máximo de presupuesto")
+    ta.set_defaults(fn=_cmd_tracy_audio)
+    ts = sub.add_parser("tracy-segmentar", help="rehace los segmentos de un proyecto Tracy (sin pagar)")
+    ts.add_argument("--slug", required=True)
+    ts.set_defaults(fn=_cmd_tracy_segmentar)
+
     a = ap.parse_args(argv)
     from .pipeline import _canal_y_estilo
     from .plataforma import contexto, local
@@ -296,7 +374,7 @@ def main(argv: list[str] | None = None) -> int:
             a.canal = canal
     try:
         return a.fn(a)
-    except (FileNotFoundError, FileExistsError, ValueError) as ex:
+    except (FileNotFoundError, FileExistsError, ValueError, RuntimeError) as ex:
         print(f"error: {ex}", file=sys.stderr)
         return 1
 

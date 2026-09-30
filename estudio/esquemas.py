@@ -607,6 +607,8 @@ class Proyecto(Modelo):
     formula: str | None = None           # estructura del guion (None = escala de peligro, la de siempre)
     disfraz_mascota: bool = False
     disfraz_tema: str | None = None
+    # «generated» = imágenes generadas (stickman, mascota…); «stock» = modo Tracy (clip base + stock)
+    visual_mode: Literal["generated", "stock"] = "generated"
 
     @model_validator(mode="after")
     def _pasos_completos(self) -> "Proyecto":
