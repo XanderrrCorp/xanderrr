@@ -151,12 +151,13 @@ class Escenario:
         if capas is None:
             return None
         (sombra, (sx, sy)), (obj, (x, y)) = capas
-        lienzo = self.papel.copy().convert("RGBA")
+        if getattr(self, "_papel_rgba", None) is None:
+            self._papel_rgba = self.papel.convert("RGBA")      # una vez, no en cada cuadro
+        lienzo = self._papel_rgba.copy()
         if abs(escala - 1) > 0.002:
             cx, cy = x + obj.width / 2, y + obj.height / 2
-            obj = obj.resize((max(1, int(obj.width * escala)), max(1, int(obj.height * escala))), Image.Resampling.BILINEAR)
-            sombra = sombra.resize((max(1, int(sombra.width * escala)), max(1, int(sombra.height * escala))),
-                                   Image.Resampling.BILINEAR)
+            obj = _escalar(obj, (max(1, int(obj.width * escala)), max(1, int(obj.height * escala))))
+            sombra = _escalar(sombra, (max(1, int(sombra.width * escala)), max(1, int(sombra.height * escala))))
             x, y = cx - obj.width / 2, cy - obj.height / 2
             sx, sy = x + (sx - capas[1][1][0]) * escala, y + (sy - capas[1][1][1]) * escala
         lienzo.alpha_composite(sombra, (int(max(-sombra.width + 1, min(W - 1, sx + dx))), int(max(-sombra.height + 1, min(H - 1, sy + dy)))))
@@ -259,6 +260,20 @@ def _encajar(im: Image.Image, caja_max: tuple[int, int]) -> Image.Image:
     return im.resize((max(1, round(im.width * k)), max(1, round(im.height * k))), Image.Resampling.LANCZOS)
 
 
+try:                        # OpenCV hace el zoom y el escalado de cada cuadro varias veces más rápido
+    import cv2 as _cv2           # que Pillow; si no está instalado, se usa Pillow (mismo resultado)
+    _cv2.setNumThreads(1)        # cada tramo ya corre en su propio proceso
+except Exception:  # noqa: BLE001
+    _cv2 = None
+
+
+def _escalar(im: Image.Image, tam: tuple[int, int]) -> Image.Image:
+    """Cambio de tamaño bilineal de cada cuadro (objetos que respiran o rebotan)."""
+    if _cv2 is None:
+        return im.resize(tam, Image.Resampling.BILINEAR)
+    return Image.fromarray(_cv2.resize(np.asarray(im), tam, interpolation=_cv2.INTER_LINEAR), im.mode)
+
+
 def _camara(img: Image.Image, s: float, foco: tuple[float, float], dx: float = 0, dy: float = 0) -> Image.Image:
     if s <= 1.0005 and not dx and not dy:
         return img
@@ -266,7 +281,15 @@ def _camara(img: Image.Image, s: float, foco: tuple[float, float], dx: float = 0
     w, h = W / s, H / s
     cx = min(max(foco[0] * W + dx, w / 2), W - w / 2)
     cy = min(max(foco[1] * H + dy, h / 2), H - h / 2)
-    return img.resize((W, H), Image.Resampling.BILINEAR, box=(cx - w / 2, cy - h / 2, cx + w / 2, cy + h / 2))
+    x0, y0 = cx - w / 2, cy - h / 2
+    if _cv2 is not None and img.size == (W, H):
+        # la misma ventana que el box de Pillow (centros de píxel alineados), en una sola pasada
+        kx, ky = w / W, h / H
+        m = np.float32([[kx, 0, x0 + 0.5 * kx - 0.5], [0, ky, y0 + 0.5 * ky - 0.5]])
+        out = _cv2.warpAffine(np.asarray(img), m, (W, H), flags=_cv2.INTER_LINEAR | _cv2.WARP_INVERSE_MAP,
+                              borderMode=_cv2.BORDER_REPLICATE)
+        return Image.fromarray(out, img.mode)
+    return img.resize((W, H), Image.Resampling.BILINEAR, box=(x0, y0, x0 + w, y0 + h))
 
 
 # ------------------------------------------------------------------ foco y flechas
@@ -954,6 +977,8 @@ def renderizar(carpeta: CarpetaProyecto, ffmpeg: str, destino: Path | None = Non
     ancho, alto, fps = salida or _salida()
     if vertical:
         ancho, alto = VW, VH
+    if not solo_video and codificador(ffmpeg) == "h264_nvenc":
+        avisar("Codificando con la tarjeta NVIDIA (el procesador queda libre para dibujar)")
     if not solo_video and desde == 0 and hasta is None:
         n = _procesos(procesos)
         if n > 1:
@@ -965,6 +990,37 @@ def renderizar(carpeta: CarpetaProyecto, ffmpeg: str, destino: Path | None = Non
         return _renderizar(carpeta, ffmpeg, destino, desde, hasta, avisar, calidad, ancho, alto, vertical, solo_video)
     finally:
         FPS = anterior
+
+
+_CODIFICADOR: dict[str, str] = {}
+
+
+def codificador(ffmpeg: str) -> str:
+    """«h264_nvenc» si hay una tarjeta NVIDIA que codifique (se prueba una vez con un video mínimo);
+    si no, «libx264» (el procesador). XANDART_CODIFICADOR=cpu obliga a usar el procesador."""
+    if ffmpeg in _CODIFICADOR:
+        return _CODIFICADOR[ffmpeg]
+    elegido = "libx264"
+    if os.environ.get("XANDART_CODIFICADOR", "").lower() not in ("cpu", "libx264"):
+        try:
+            r = subprocess.run([ffmpeg, "-hide_banner", "-loglevel", "error", "-f", "lavfi", "-i",
+                                "color=c=black:s=320x240:r=30:d=0.5", "-c:v", "h264_nvenc", "-f", "null", "-"],
+                               capture_output=True, timeout=30)
+            if r.returncode == 0:
+                elegido = "h264_nvenc"
+        except Exception:  # noqa: BLE001 — sin NVIDIA (o sin driver): el procesador
+            pass
+    _CODIFICADOR[ffmpeg] = elegido
+    return elegido
+
+
+def _argumentos_codificador(ffmpeg: str, preset: str, crf: str, hilos_x264: str | None) -> list[str]:
+    if codificador(ffmpeg) == "h264_nvenc":
+        # la tarjeta de video codifica y el procesador queda libre para dibujar los cuadros;
+        # cq ≈ crf + 3 da una calidad parecida a la de x264
+        return ["-c:v", "h264_nvenc", "-preset", "p5", "-tune", "hq", "-rc", "vbr", "-cq", str(int(crf) + 3),
+                "-b:v", "0"]
+    return ["-c:v", "libx264", "-preset", preset, "-crf", crf, *(["-threads", hilos_x264] if hilos_x264 else [])]
 
 
 def _procesos(pedidos: int | None) -> int:
@@ -1179,9 +1235,8 @@ def _renderizar(carpeta: CarpetaProyecto, ffmpeg: str, destino: Path | None, des
     proc = subprocess.Popen([ffmpeg, "-y", "-loglevel", "error", "-f", "rawvideo", "-pix_fmt", "rgb24",
                              "-s", f"{lado[0]}x{lado[1]}", "-r", str(FPS), "-i", "-",
                              *(["-vf", f"scale={ancho}:{alto}:flags=lanczos"] if (ancho, alto) != lado else []),
-                             "-c:v", "libx264", "-preset", preset, "-crf", crf,
+                             *_argumentos_codificador(ffmpeg, preset, crf, hilos_x264),
                              "-profile:v", "high", "-g", str(FPS * 2), "-bf", "2",
-                             *(["-threads", hilos_x264] if hilos_x264 else []),
                              "-pix_fmt", "yuv420p", str(video_tmp)], stdin=subprocess.PIPE,
                             stderr=(registro_ffmpeg := open(destino.with_suffix(".ffmpeg.log"), "wb")))  # noqa: SIM115
 

@@ -129,6 +129,8 @@ ESPERAS_LIMITE = 8
 ESPERA_LIMITE_S = 10.0
 ESPERA_LIMITE_MAX_S = 90.0
 dormir = time.sleep
+VUELTAS_LIMITE = 2          # vueltas extra al final para las que Google dejó esperando
+PAUSA_VUELTA_S = 60.0
 
 
 def tope_llamadas(esc: EscenasV2, config: ConfigCostos, reintentos: int) -> int:
@@ -347,6 +349,18 @@ def generar_imagenes(carpeta: CarpetaProyecto, *, primeras: int | None = None, i
     else:
         with ThreadPoolExecutor(max_workers=hilos) as grupo:
             list(grupo.map(hacer, escenas))
+    # las que se quedaron por el límite de Google (429, que no cobra) tienen otra vuelta al final,
+    # una por una y después de una pausa: para entonces Google suele tener capacidad otra vez
+    for vuelta in range(VUELTAS_LIMITE):
+        limitadas = [t for t in escenas if "HTTP 429" in reporte.fallidas.get(t.clave, "")]
+        if not limitadas or reporte.frenado:
+            break
+        avisar(f"Google estaba ocupado con {len(limitadas)} imagen(es); espero {PAUSA_VUELTA_S:.0f} s y las intento "
+               "otra vez una por una")
+        dormir(PAUSA_VUELTA_S)
+        for t in limitadas:
+            reporte.fallidas.pop(t.clave, None)
+            hacer(t)
     return reporte
 
 

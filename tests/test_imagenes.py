@@ -377,3 +377,30 @@ def test_escenas_se_piden_varias_a_la_vez(proyecto, config):
                     Contador.activas -= 1
     r = generar_imagenes(proyecto, primeras=10, proveedor=Contador(config), config=config, avisar=silencio)
     assert r.fallidas == {} and Contador.maximo > 1
+
+
+def test_las_que_google_dejo_esperando_tienen_otra_vuelta_al_final(proyecto, config, monkeypatch):
+    esperas = []
+    monkeypatch.setattr("estudio.imagenes.generador.dormir", esperas.append)
+    monkeypatch.setattr("estudio.imagenes.generador.ESPERAS_LIMITE", 1)
+
+    class Ocupado(ProveedorSimulado):
+        def __init__(self, c):
+            super().__init__(c)
+            self.bloqueado = True
+
+        def generar(self, prompt, referencias):
+            if self.bloqueado and self.llamadas >= 1:  # la primera (el personaje) pasa; luego Google se satura
+                raise ErrorProveedor("HTTP 429: Resource has been exhausted", limite=True)
+            return super().generar(prompt, referencias)
+
+    prov = Ocupado(config)
+    original = esperas.append
+
+    def dormir(s):
+        original(s)
+        if s == 60.0:
+            prov.bloqueado = False          # tras la pausa larga Google vuelve a tener capacidad
+    monkeypatch.setattr("estudio.imagenes.generador.dormir", dormir)
+    r = generar_imagenes(proyecto, primeras=3, proveedor=prov, config=config, avisar=silencio)
+    assert r.fallidas == {} and r.generadas and 60.0 in esperas

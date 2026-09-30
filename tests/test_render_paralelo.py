@@ -50,3 +50,21 @@ def test_render_en_paralelo_da_el_mismo_video(estilo):
     assert abs(_duracion(ffmpeg(), uno) - _duracion(ffmpeg(), par)) < 0.25
     assert not (c.ruta / "render" / "tramos").exists()                  # los tramos se limpian
     assert par.with_suffix(".srt").exists()
+
+
+def test_codificador_usa_nvidia_si_hay_y_si_no_el_procesador(monkeypatch):
+    import estudio.render as r
+
+    class Resp:
+        def __init__(self, code):
+            self.returncode = code
+
+    r._CODIFICADOR.clear()
+    monkeypatch.setattr(r.subprocess, "run", lambda *a, **k: Resp(0))
+    assert r.codificador("ff-con-nvidia") == "h264_nvenc"
+    assert "h264_nvenc" in r._argumentos_codificador("ff-con-nvidia", "medium", "16", None)
+    monkeypatch.setattr(r.subprocess, "run", lambda *a, **k: Resp(1))
+    assert r.codificador("ff-sin-nvidia") == "libx264"
+    monkeypatch.setenv("XANDART_CODIFICADOR", "cpu")
+    assert r.codificador("otro") == "libx264"
+    r._CODIFICADOR.clear()
