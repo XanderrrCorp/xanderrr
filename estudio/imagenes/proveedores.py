@@ -28,10 +28,11 @@ TIPOS_MIME = {".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", 
 class ErrorProveedor(Exception):
     """Fallo de la llamada. `reintentable` dice si tiene sentido volver a pedir."""
 
-    def __init__(self, mensaje: str, reintentable: bool = True, uso: "Uso | None" = None):
+    def __init__(self, mensaje: str, reintentable: bool = True, uso: "Uso | None" = None, limite: bool = False):
         super().__init__(mensaje)
         self.reintentable = reintentable
         self.uso = uso  # si la API cobró aunque no devolviera imagen
+        self.limite = limite  # HTTP 429: pidió ir más despacio; no cobra y se espera sin gastar un reintento
 
 
 @dataclass
@@ -138,7 +139,8 @@ class ProveedorGemini:
             espera = _espera_sugerida(r) or (ESPERA_429_S if r.status_code == 429 else 0)
             if espera:
                 time.sleep(min(espera, 60))
-            raise ErrorProveedor(f"HTTP {r.status_code}: {r.text[:300]}", reintentable=True)
+            raise ErrorProveedor(f"HTTP {r.status_code}: {r.text[:300]}", reintentable=True,
+                                 limite=r.status_code == 429)
         if r.status_code >= 400:
             raise ErrorProveedor(f"HTTP {r.status_code}: {r.text[:300]}", reintentable=False)
         datos = r.json()
@@ -233,7 +235,8 @@ class ProveedorTogether:
             espera = _espera_sugerida(r) or (ESPERA_429_S if r.status_code == 429 else 0)
             if espera:
                 time.sleep(min(espera, 60))
-            raise ErrorProveedor(f"HTTP {r.status_code}: {r.text[:300]}", reintentable=True)
+            raise ErrorProveedor(f"HTTP {r.status_code}: {r.text[:300]}", reintentable=True,
+                                 limite=r.status_code == 429)
         if r.status_code in (401, 403):
             raise ErrorProveedor(f"HTTP {r.status_code}: Together no aceptó la clave. Revisa TOGETHER_API_KEY "
                                  "en .env o la credencial del entorno para api.together.xyz", reintentable=False)

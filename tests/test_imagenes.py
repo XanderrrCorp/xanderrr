@@ -88,6 +88,23 @@ def test_error_no_reintentable_queda_como_fallida(proyecto, config):
     assert r.fallidas and not r.generadas
 
 
+def test_limite_de_google_espera_y_sigue_sin_gastar_reintentos(proyecto, config, monkeypatch):
+    esperas = []
+    monkeypatch.setattr("estudio.imagenes.generador.dormir", esperas.append)
+
+    class Lento(ProveedorSimulado):
+        veces = 0
+
+        def generar(self, prompt, referencias):
+            Lento.veces += 1
+            if Lento.veces % 4:                        # tres 429 seguidos antes de cada imagen
+                raise ErrorProveedor("HTTP 429: Resource has been exhausted", limite=True)
+            return super().generar(prompt, referencias)
+    r = generar_imagenes(proyecto, primeras=3, proveedor=Lento(config), config=config, avisar=silencio)
+    assert r.fallidas == {} and r.generadas and esperas and max(esperas) <= 90
+    assert r.llamadas == len(r.generadas)             # las esperas no cuentan como llamadas pagadas
+
+
 def test_tope_de_llamadas(proyecto, config):
     esc = proyecto.cargar_escenas()
     assert tope_llamadas(esc, config, 2) >= 6

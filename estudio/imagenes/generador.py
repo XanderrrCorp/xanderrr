@@ -13,6 +13,7 @@ import hashlib
 import io
 import json
 import math
+import time
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Callable
@@ -121,6 +122,13 @@ def total_a_generar(esc: EscenasV2) -> int:
     return sum(1 for e in esc.escenas if e.visual.accion == "generar") + len(esc.assets)
 
 
+# HTTP 429 (límite por minuto de Google): esperas crecientes, unos 8 minutos en total por imagen
+ESPERAS_LIMITE = 8
+ESPERA_LIMITE_S = 10.0
+ESPERA_LIMITE_MAX_S = 90.0
+dormir = time.sleep
+
+
 def tope_llamadas(esc: EscenasV2, config: ConfigCostos, reintentos: int) -> int:
     tasa = config.consumo.get("tasa_reintentos_imagen", 0.1)
     return math.ceil(total_a_generar(esc) * (1 + max(tasa, 0.0))) + reintentos
@@ -222,7 +230,9 @@ def generar_imagenes(carpeta: CarpetaProyecto, *, primeras: int | None = None, i
             continue
 
         costo_trabajo, aviso_calidad, ultimo_error, exito = 0.0, None, "", False
-        for intento in range(1 + reintentos):
+        intento, esperas = -1, 0
+        while intento + 1 < 1 + reintentos:
+            intento += 1
             if not permiso and llamadas_previas + reporte.llamadas >= tope:
                 reporte.frenado = (f"se alcanzó el tope de {tope} llamadas de imagen para este video; "
                                    "hace falta permiso explícito para seguir")
@@ -243,6 +253,16 @@ def generar_imagenes(carpeta: CarpetaProyecto, *, primeras: int | None = None, i
                                     unidades=ex.uso.unidades(), costo_usd=ex.uso.costo_usd,
                                     detalle=f"{t.clave} intento {intento + 1} fallido")
                     costo_trabajo += ex.uso.costo_usd
+                if ex.limite and esperas < ESPERAS_LIMITE:
+                    # Google limita cuántas imágenes por minuto: no cobró, así que se espera y se repite
+                    # sin gastar un reintento ni una llamada del tope
+                    espera = min(ESPERA_LIMITE_MAX_S, ESPERA_LIMITE_S * 2 ** esperas)
+                    esperas += 1
+                    reporte.llamadas -= 1
+                    intento -= 1
+                    avisar(f"  {t.clave}: Google pide ir más despacio; espero {espera:.0f} s y sigo")
+                    dormir(espera)
+                    continue
                 avisar(f"  {t.clave}: intento {intento + 1} falló ({ex})")
                 if not ex.reintentable:
                     break
