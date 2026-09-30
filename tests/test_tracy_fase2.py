@@ -274,3 +274,24 @@ def test_presentador_sale_en_blanco_y_negro_con_fondo_transparente(tmp_path):
     r, g, b, a = out.getpixel((out.width // 2 - 60, 600))
     assert r == g == b and a > 0 and out.getpixel((5, 5))[3] == 0
     assert preparar_presentador(str(tmp_path / "no.png"), tmp_path / "x.png") is None
+
+
+def test_swoosh_solo_en_los_cambios_de_escena(tmp_path):
+    import wave
+
+    import numpy as np
+
+    from estudio.pipeline import ffmpeg
+    from estudio.tracy.ensamblar import cortes_de_escena, pista_swoosh
+
+    clips = [{"tipo": "stock", "inicio": 0}, {"tipo": "seminario", "inicio": 10}, {"tipo": "final", "inicio": 20},
+             {"tipo": "final", "inicio": 30}, {"tipo": "final", "inicio": 40}]
+    cortes = cortes_de_escena(clips)
+    assert cortes == [10.0, 20.0]                       # dentro de la escena final no hay swoosh
+    ruta = pista_swoosh(cortes, 50.0, ffmpeg(), tmp_path / "s.wav")
+    with wave.open(str(ruta)) as w:
+        x = np.frombuffer(w.readframes(w.getnframes()), "<i2").astype(np.float32)
+        sr = w.getframerate()
+    fuerte = lambda a, b: np.abs(x[int(a * sr):int(b * sr)]).max()  # noqa: E731
+    assert fuerte(9.5, 10.5) > 1000 and fuerte(19.5, 20.5) > 1000
+    assert fuerte(25, 29) == 0 and fuerte(35, 39) == 0

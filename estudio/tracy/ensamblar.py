@@ -8,8 +8,9 @@ Por cada segmento se codifica un tramo de video:
 - con los subtítulos encima: PNG hechos con Pillow en Bebas Neue, centrados en la mitad de la
   pantalla (no depende de que el FFmpeg instalado traiga libass).
 
-Luego los tramos se pegan con corte directo (sin transición). El audio es la narración y, si el
-canal tiene una, la música de fondo bajita (el audio de los clips nunca suena). Queda `render/final.mp4` + `.srt`, y una copia en la carpeta de Videos.
+Luego los tramos se pegan con corte directo (sin transición). El audio es la narración, un swoosh en
+cada cambio de escena y, si el canal tiene una, la música de fondo bajita en todo el video (el audio de
+los clips nunca suena). Queda `render/final.mp4` + `.srt`, y una copia en la carpeta de Videos.
 """
 from __future__ import annotations
 
@@ -173,6 +174,43 @@ def _subs_del_tramo(clip: dict, trozos: list[dict], carpeta: Path, color: str = 
     return salida
 
 
+def cortes_de_escena(clips: list[dict]) -> list[float]:
+    """Dónde cambia lo que se ve: cada corte entre clips, menos dentro de la escena final (ahí el fondo
+    sigue igual y no hay cambio de escena)."""
+    return [round(_cuadros(c["inicio"]) / FPS, 3) for prev, c in zip(clips, clips[1:])
+            if not (prev["tipo"] == "final" and c["tipo"] == "final")]
+
+
+def pista_swoosh(cortes: list[float], duracion: float, ffmpeg: str, destino: Path) -> Path | None:
+    """Un «swoosh» en cada cambio de escena (su punto más fuerte cae justo en el corte). Usa los de la
+    biblioteca con licencia (tipo «barrido») o el sintético de Xandart."""
+    import wave
+
+    import numpy as np
+
+    from ..render import SR, _igualar, _sonido
+
+    if not cortes:
+        return None
+    pista = np.zeros(int((duracion + 1) * SR), np.float32)
+    for k, t in enumerate(cortes):
+        x, _ = _sonido("barrido", k % 3 + 1, ffmpeg)
+        x = _igualar(np.asarray(x, np.float32), 0.2) * 0.5
+        pico = int(np.argmax(np.abs(x))) if len(x) else 0
+        i = int(t * SR) - min(pico, int(0.25 * SR))
+        if i < 0:
+            x, i = x[-i:], 0
+        pista[i:i + len(x)] += x[: max(0, len(pista) - i)]
+    pista = np.clip(pista, -1, 1)
+    destino.parent.mkdir(parents=True, exist_ok=True)
+    with wave.open(str(destino), "wb") as w:
+        w.setnchannels(1)
+        w.setsampwidth(2)
+        w.setframerate(SR)
+        w.writeframes((pista * 32767).astype("<i2").tobytes())
+    return destino
+
+
 def _procesos() -> int:
     from ..render import _procesos as procesos
 
@@ -234,25 +272,34 @@ def ensamblar(carpeta: CarpetaProyecto, ffmpeg: str, avisar=print, progreso=None
     final = dir_r / "final.mp4"
     tmp = dir_r / "final.tmp.mp4"
     voz = carpeta.ruta / "audio" / "voz.wav"
+    # único efecto de sonido: un swoosh en cada cambio de escena
+    swoosh = pista_swoosh(cortes_de_escena(clips), duracion, ffmpeg, dir_t / "swoosh.wav")
     musica = Path(musica) if musica else None
+    entradas = ["-i", str(mudo), "-i", str(voz)]
+    filtro = "[1:a]aresample=48000[v1]"
+    if swoosh:
+        entradas += ["-i", str(swoosh)]
+        filtro += f";[v1][2:a]amix=inputs=2:duration=first:normalize=0[vz]"
+    else:
+        filtro += ";[v1]anull[vz]"
     if musica and musica.exists():
-        # música de fondo suave: bajita, sin agudos chillones, en bucle con entrada y salida suaves,
-        # y se agacha sola mientras hay voz (sube apenas en las pausas). La voz siempre manda.
-        avisar(f"Poniendo la narración y la música de fondo ({musica.name})…")
+        # música de fondo suave durante TODO el video: bajita, sin agudos chillones, en bucle, con
+        # entrada y salida suaves, y se agacha sola mientras hay voz. La voz siempre manda.
+        avisar(f"Poniendo la narración, los swoosh y la música de fondo ({musica.name})…")
+        k = len(entradas) // 2
+        entradas += ["-stream_loop", "-1", "-i", str(musica)]
         sale = max(0.0, duracion - 3)
-        filtro = (f"[1:a]asplit=2[voz][guia];"
-                  f"[2:a]aresample=48000,lowpass=f=5500,volume={volumen_musica_db}dB,"
-                  f"afade=t=in:d=3,afade=t=out:st={sale:.3f}:d=3,atrim=0:{duracion:.3f}[m];"
-                  f"[m][guia]sidechaincompress=threshold=0.02:ratio=4:attack=30:release=600[mb];"
-                  f"[voz][mb]amix=inputs=2:duration=first:normalize=0[a]")
-        cmd = [ffmpeg, "-y", "-loglevel", "error", "-i", str(mudo), "-i", str(voz),
-               "-stream_loop", "-1", "-i", str(musica), "-filter_complex", filtro,
-               "-map", "0:v", "-map", "[a]"]
+        filtro += (f";[1:a]aresample=48000[guia];"
+                   f"[{k}:a]aresample=48000,lowpass=f=5500,volume={volumen_musica_db}dB,"
+                   f"afade=t=in:d=3,afade=t=out:st={sale:.3f}:d=3,atrim=0:{duracion:.3f}[m];"
+                   f"[m][guia]sidechaincompress=threshold=0.02:ratio=4:attack=30:release=600[mb];"
+                   f"[vz][mb]amix=inputs=2:duration=first:normalize=0[a]")
     else:
         if musica:
             avisar(f"  no encontré la música de fondo en «{musica}»: el video sale solo con la voz")
-        avisar("Poniendo la narración…")
-        cmd = [ffmpeg, "-y", "-loglevel", "error", "-i", str(mudo), "-i", str(voz), "-map", "0:v", "-map", "1:a"]
+        avisar("Poniendo la narración y los swoosh…")
+        filtro += ";[vz]anull[a]"
+    cmd = [ffmpeg, "-y", "-loglevel", "error", *entradas, "-filter_complex", filtro, "-map", "0:v", "-map", "[a]"]
     subprocess.run(cmd + ["-c:v", "copy", "-c:a", "aac", "-b:a", "192k", "-movflags", "+faststart", str(tmp)],
                    check=True, capture_output=True)
     os.replace(tmp, final)
