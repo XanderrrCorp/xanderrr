@@ -182,6 +182,21 @@ class Asset(ConFechas, Base):
     meta: Mapped[dict] = mapped_column(JSON, default=dict)        # licencia, origen, etiquetas, video…
 
 
+class UsoClip(Base):
+    """Qué clip usó cada video del modo Tracy (stock de Pexels o tramo del seminario), para no
+    repetir: el stock de los últimos 15 videos del canal y los tramos de los últimos 5."""
+    __tablename__ = "usos_clip"
+    id: Mapped[str] = mapped_column(String(32), primary_key=True, default=nuevo_id)
+    espacio_id: Mapped[str] = mapped_column(ForeignKey("espacios.id", ondelete="CASCADE"), index=True)
+    canal: Mapped[str] = mapped_column(String(80), index=True)        # clave del canal
+    slug: Mapped[str] = mapped_column(String(80))                     # video que lo usó
+    tipo: Mapped[str] = mapped_column(String(20))                     # stock | seminario
+    clip: Mapped[str] = mapped_column(String(200))                    # id de Pexels o ruta del clip base
+    inicio: Mapped[float | None] = mapped_column(Float, nullable=True)   # tramo (solo seminario)
+    fin: Mapped[float | None] = mapped_column(Float, nullable=True)
+    creado: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=ahora)
+
+
 # ------------------------------------------------------------------ créditos
 
 class Movimiento(Base):

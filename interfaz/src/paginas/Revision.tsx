@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, Navigate, useNavigate, useParams } from 'react-router-dom';
 import { api, archivo, paginaVieja, type Escena, type VideoDetalle } from '../api';
 import { Icono } from '../componentes/Icono';
 
@@ -45,6 +45,7 @@ export function Revision() {
 
   if (error && !v) return <div className="pagina"><p className="error">{error}</p><Link to="/videos">← Mis videos</Link></div>;
   if (!v) return <div className="pagina"><p className="tenue">Cargando…</p></div>;
+  if (v.modo === 'stock') return <Navigate to={`/tracy/${slug}`} replace />;
 
   const t = v.trabajo;
   const trabajando = !!t?.activo;

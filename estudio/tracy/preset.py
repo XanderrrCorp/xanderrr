@@ -19,10 +19,32 @@ POR_DEFECTO: dict[str, Any] = {
     "velocidad": None,              # None = la de config/proveedores.json
     "clip_base": r"C:\Users\USUARIO\Videos\el mero mero.mp4",
     "proporcion_seminario": 0.4,    # 40 % seminario / 60 % stock
+    "musica": r"C:\Users\USUARIO\Videos\musica tracy.mp3",   # de fondo, bajita; si no existe, sin música
+    "volumen_musica_db": -24.0,     # respecto a la voz: se oye pero no tapa
     "clip_max_s": 30.0,
     "clip_objetivo_s": [8.0, 20.0],
     "bloque_tts_max": 2500,         # caracteres por llamada a MiniMax
 }
+
+
+EXT_VIDEO = (".mp4", ".mov", ".mkv", ".avi", ".webm", ".m4v")
+EXT_AUDIO = (".mp3", ".m4a", ".wav", ".aac", ".ogg", ".flac", ".wma")
+
+
+def encontrar(ruta: str | None, extensiones: tuple[str, ...]) -> str | None:
+    """La ruta tal cual o, si no está, la variante que dejó Windows al esconder las extensiones
+    («musica tracy.mp3.mp3») o con otra extensión («musica tracy.m4a»). None si no hay nada."""
+    if not ruta:
+        return None
+    from pathlib import Path
+
+    r = Path(ruta)
+    if r.is_file():
+        return str(r)
+    base = r.with_suffix("") if r.suffix.lower() in extensiones else r
+    candidatos = [Path(f"{r}{e}") for e in extensiones] + [base.with_suffix(e) for e in extensiones]
+    candidatos += [Path(f"{base.with_suffix(e)}{e2}") for e in extensiones for e2 in extensiones]
+    return next((str(c) for c in candidatos if c.is_file()), None)
 
 
 def preset_por_defecto() -> dict[str, Any]:
@@ -42,6 +64,7 @@ def completar(tracy: dict[str, Any] | None) -> dict[str, Any]:
         raise ValueError(f"clip_objetivo_s {lo}-{hi} debe quedar dentro de 0 y clip_max_s ({p['clip_max_s']})")
     p["clip_objetivo_s"] = [lo, hi]
     p["bloque_tts_max"] = int(p["bloque_tts_max"])
+    p["volumen_musica_db"] = max(-40.0, min(0.0, float(p["volumen_musica_db"])))
     return p
 
 

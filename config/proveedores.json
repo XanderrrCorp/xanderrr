@@ -52,6 +52,8 @@
     "modelo_detalles": "sonnet",
     "pensamiento_detalles_tokens": 2000,
     "secciones_en_paralelo": 8,
+    "modelo_tracy": "haiku",
+    "_nota_tracy": "El planificador visual del modo Tracy usa el modelo más económico (va por la suscripción: 0 pesos).",
     "tolerancia_largo": 0.15
   },
   "animacion_escenas": {

@@ -59,3 +59,70 @@ def paso_audio(c: CarpetaProyecto, proveedor: str | None = None, permiso: bool =
 
 def rehacer_segmentos(c: CarpetaProyecto) -> list[dict]:
     return segmentar_proyecto(c, cargar_preset(c.cargar().canal))
+
+
+# ------------------------------------------------------------------ fase 2: visuales y ensamblaje
+
+def paso_visual(c: CarpetaProyecto, avisar=print, ejecutar=None, sesion=None, progreso=None) -> dict:
+    """Plan visual (Claude) → clips (Pexels + seminario, sin repetir) → video con subtítulos."""
+    import requests
+
+    from ..pipeline import ffmpeg
+    from .clips import elegir_clips
+    from .ensamblar import ensamblar
+    from .planificador import planificar
+
+    from .preset import EXT_AUDIO, EXT_VIDEO, encontrar
+
+    p = c.cargar()
+    preset = cargar_preset(p.canal)
+    preset["clip_base"] = encontrar(preset["clip_base"], EXT_VIDEO) or preset["clip_base"]
+    preset["musica"] = encontrar(preset.get("musica"), EXT_AUDIO) or preset.get("musica")
+    config = ConfigCostos.cargar()
+    plan = planificar(c, preset, ejecutar=ejecutar, avisar=avisar, config=config)
+    avisar("Buscando los clips (Pexels y seminario)…")
+    r = elegir_clips(c, plan, preset, ffmpeg(), avisar=avisar, sesion=sesion or requests)
+    final = ensamblar(c, ffmpeg(), avisar=avisar, progreso=progreso, musica=preset.get("musica"),
+                      volumen_musica_db=preset.get("volumen_musica_db", -24.0))
+    return {"final": final, "stock": r["stock"], "seminario": r["seminario"], "segmentos": len(plan)}
+
+
+def producir(c: CarpetaProyecto, t, proveedor: str | None = None, permiso: bool = False, ejecutar=None,
+             sesion=None, voz=None, transcriptor=None) -> Path:
+    """Todo el video Tracy de una vez (lo que corre el botón de la página). Reanudable: la voz,
+    Whisper, el plan y las descargas ya hechas no se repiten."""
+    from ..plataforma import cobro
+    from .ensamblar import entregar
+
+    config = ConfigCostos.cargar()
+    try:
+        apartado = cobro.abrir_video(c.ruta, c.cargar().duracion_objetivo_seg / 60)
+        if apartado and apartado.get("creditos"):
+            t.avisar(f"Créditos apartados para el video: {apartado['creditos']}")
+    except Exception as ex:  # noqa: BLE001 — sin saldo se avisa y no se gasta nada
+        raise RuntimeError(str(ex)) from ex
+    t.paso, t.progreso = "voz", 0.02
+    a = paso_audio(c, proveedor=proveedor, permiso=permiso, avisar=t.avisar, voz=voz, transcriptor=transcriptor)
+    t.avisar(f"Voz lista: {a['duracion'] / 60:.1f} min, {len(a['segmentos'])} segmentos, coincidencia con el "
+             f"guion {a['confianza']:.0%}")
+    t.paso, t.progreso = "visual", 0.35
+
+    def avance(x: float) -> None:
+        t.progreso = 0.5 + 0.45 * x
+
+    r = paso_visual(c, avisar=t.avisar, ejecutar=ejecutar, sesion=sesion, progreso=avance)
+    t.paso, t.progreso = "entrega", 0.97
+    destino = entregar(c, r["final"])
+    c.marcar("export_final", "completo", [str(destino)])
+    try:
+        cobrado = cobro.cerrar_video(c.ruta, a["duracion"] / 60)
+        if cobrado:
+            t.avisar(f"Créditos cobrados: {cobrado['cobrado']}")
+    except Exception:  # noqa: BLE001
+        pass
+    from ..config import formato_cop
+
+    t.avisar(f"Costo del video: {formato_cop(c.libro(config).total_cop())} · {r['stock']} clips de stock y "
+             f"{r['seminario']} de seminario")
+    t.avisar(f"Video listo: {destino}")
+    return destino

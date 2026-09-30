@@ -67,6 +67,9 @@ from .plataforma.api_personajes import rutas as api_personajes  # noqa: E402 —
 
 app.include_router(api_v2)
 app.include_router(api_personajes)
+from .tracy.api import rutas as api_tracy  # noqa: E402 — modo Tracy (guion pegado → video stock + seminario)
+
+app.include_router(api_tracy)
 
 
 def _proyecto(slug: str) -> CarpetaProyecto:

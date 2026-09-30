@@ -869,7 +869,8 @@ def resumen(c: CarpetaProyecto) -> dict:
              "pasos": {k: v.estado for k, v in p.pasos.items()},
              "costo": formato_cop(c.libro(config).total_cop()), "escenas": [], "guion": None,
              "video": None, "trabajo": None, "prueba": None,
-             "divulgacion": p.requiere_divulgacion_contenido_sintetico, "vertical": False}
+             "divulgacion": p.requiere_divulgacion_contenido_sintetico, "vertical": False,
+             "modo": p.visual_mode}
     if c.archivo_escenas.exists():
         esc = c.cargar_escenas()
         datos["vertical"] = esc.relacion_aspecto == "9:16"

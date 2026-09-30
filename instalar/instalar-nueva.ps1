@@ -92,6 +92,9 @@ if ($LASTEXITCODE -ne 0) { throw 'Fallo la instalacion de las dependencias (revi
 # quitar fondos de las miniaturas (opcional: si falla, Xandart usa el recorte simple)
 & $Uv pip install --python "$Venv\Scripts\python.exe" "rembg[cpu]>=2.0.50"
 if ($LASTEXITCODE -ne 0) { Write-Host '   (no se pudo instalar rembg: las miniaturas usan el recorte simple)' }
+# Whisper local para el modo Tracy (tiempos reales de la voz; el modelo se baja la primera vez que se usa)
+& $Uv pip install --python "$Venv\Scripts\python.exe" "faster-whisper>=1.0"
+if ($LASTEXITCODE -ne 0) { Write-Host '   (no se pudo instalar Whisper: el modo Tracy no podra alinear la voz)' }
 Remove-Item $env:UV_CACHE_DIR -Recurse -Force -ErrorAction SilentlyContinue
 Write-Host '   listo'
 

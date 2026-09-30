@@ -48,7 +48,7 @@ export interface VideoDetalle {
   slug: string; titulo: string; minutos: number; pasos: Record<string, string>; costo: string;
   escenas: Escena[]; video: string | null; trabajo: (Trabajo & { segundos: number }) | null;
   estimacion_imagenes?: Estimacion; prueba: Prueba | null; puede_short?: boolean; vertical: boolean;
-  divulgacion: boolean; guion: string | null;
+  divulgacion: boolean; guion: string | null; modo?: string;
 }
 
 export interface Cotizacion {

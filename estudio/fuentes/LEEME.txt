@@ -9,3 +9,6 @@ Licencia: SIL Open Font License 1.1. Fuente: https://fonts.google.com/specimen/M
 PatrickHand-Regular.ttf · Patrick Hand (Patrick Wagesreiter), ComicNeue-Bold.ttf · Comic Neue (Craig Rozynski)
 y ArchivoBlack-Regular.ttf · Archivo Black (Omnibus-Type), de Google Fonts. Para la producción de miniaturas
 (etiquetas tipo cómic y hero_text). Licencia: SIL Open Font License 1.1.
+
+BebasNeue-Regular.ttf · Bebas Neue (Dharma Type), de Google Fonts. Subtítulos del modo Tracy.
+Licencia: SIL Open Font License 1.1. Fuente: https://fonts.google.com/specimen/Bebas+Neue
