@@ -685,6 +685,12 @@ def _sfx(tipo: str, variante: int) -> np.ndarray:
                        for f in (880 * (1 + 0.01 * variante), 932, 1245)) * np.exp(-x * 1.8) * 0.12
         ruido = rng.normal(0, 1, len(x)) * np.exp(-x * 25) * 0.4
         return (boom * 0.7 + chillido + ruido) * 0.8
+    if tipo == "camara":
+        # disparo de cámara: dos clics secos (obturador que abre y cierra) con un soplo de ruido
+        x = t(0.16)
+        clic = lambda t0, f0: np.sin(2 * math.pi * f0 * (x - t0)) * np.exp(-np.clip(x - t0, 0, None) * 160) * (x >= t0)
+        ruido = rng.normal(0, 1, len(x)) * np.exp(-x * 45) * 0.25
+        return (clic(0, 3200 + 120 * variante) + 0.8 * clic(0.07, 2600) + ruido) * 0.5
     if tipo == "ruleta":
         # ruleta de premios: clics que se van frenando y un último «clac» al detenerse
         largo = 5.0
@@ -802,7 +808,10 @@ def mezclar_audio(raiz: Path, edl: dict, ffmpeg: str | None = None) -> np.ndarra
             usados.append(archivo)
         tono = s.get("tono", 1.0)
         idx = np.arange(0, len(x) - 1, tono)
-        x = _igualar(np.interp(idx, np.arange(len(x)), x), 0.2) * s.get("volumen", 0.7) * 0.6
+        x = np.interp(idx, np.arange(len(x)), x)
+        if (edl.get("audio") or {}).get("igualar"):
+            x = _igualar(x, 0.2)
+        x = x * s.get("volumen", 0.7) * 0.6
         if s.get("duracion_max") and len(x) > s["duracion_max"] * SR:
             n = int(s["duracion_max"] * SR)
             x = (x[-n:] if s.get("termina_en") is not None else x[:n]).copy()

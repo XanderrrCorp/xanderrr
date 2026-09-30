@@ -239,6 +239,9 @@ class PerfilEdicion(Modelo):
     # Variación observada en el video de referencia (desviación estándar o coeficiente de
     # variación por métrica), no solo promedios. Ej.: {"cv_duracion_escenas": 0.42}
     variacion_referencia: dict[str, float] = {}
+    # «clasica»: la edición de los peces del Amazonas (la favorita del dueño): mucho movimiento, sin música,
+    # pops, whoosh y cámara. «calmada»: menos movimiento, escenas a pantalla completa y música suave.
+    estilo_edicion: Literal["clasica", "calmada"] = "clasica"
 
 
 # ---------------------------------------------------------- perfil_canal.json
@@ -555,6 +558,7 @@ class EDL(Modelo):
     version: int = Field(ge=1)
     duracion_total: float = Field(gt=0)
     pistas: Pistas
+    audio: dict = {}                     # {"igualar": bool}: igualar el volumen de cada efecto al mezclar
     historial: list[CambioHistorial] = []
 
     @model_validator(mode="after")

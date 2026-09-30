@@ -61,6 +61,13 @@ def quitar_fondo_liso(img: Image.Image, tolerancia: int = 38) -> Image.Image:
     return salida
 
 
+def recorte_valido(rgba: Image.Image, minimo: float = 0.03, maximo: float = 0.97) -> bool:
+    """Que el recorte deje un sujeto visible: ni vacío (se lo comió el fondo) ni la imagen entera."""
+    a = np.asarray(rgba.getchannel("A").resize((96, 54)))
+    cubierto = float((a > 32).mean())
+    return minimo <= cubierto <= maximo
+
+
 def pixelar(img: Image.Image, bloque: int) -> Image.Image:
     if bloque <= 1:
         return img
@@ -182,11 +189,19 @@ def armar_tira(esc: EscenasV2, estilo: Estilo, carpeta: Path, seed: int = 0, gua
         original = carpeta / a.archivo
         if sin_fondo.exists():
             sujeto = Image.open(sin_fondo).convert("RGBA")
-        elif original.exists():
+            if not recorte_valido(sujeto) and original.exists():
+                sujeto = None                                # un recorte vacío guardado de antes: se rehace
+        if sujeto is None and original.exists():
             sujeto = quitar_fondo_liso(Image.open(original))
+            if not recorte_valido(sujeto):
+                # el fondo no era liso (o el recorte se comió al sujeto): mejor la imagen entera que un hueco
+                sujeto = Image.open(original).convert("RGBA")
             if guardar:
                 sin_fondo.parent.mkdir(parents=True, exist_ok=True)
                 sujeto.save(sin_fondo)
+        if sujeto is None:
+            raise ValueError(f"Falta la imagen de la tarjeta de «{nivel.nombre}» ({a.archivo}): "
+                             "dale «Completar imágenes que faltan» antes de hacer el video")
         tarjeta = _tarjeta(sujeto, i, n, t, seed)
         tarjeta_px = _pixelar_interior(tarjeta, t) if nivel.villano else tarjeta
         x = t.separacion + i * (t.tarjeta_ancho + t.separacion)

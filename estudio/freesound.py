@@ -108,3 +108,14 @@ def asegurar_musica_suave(avisar=print) -> None:
         llenar_musica(avisar=avisar)
     except Exception as ex:  # noqa: BLE001 — la música nunca frena el video
         avisar(f"Sin música nueva de Freesound ({str(ex)[:100]})")
+
+
+def asegurar_efectos(tipos: list[str], avisar=print) -> None:
+    """Antes de editar: los efectos que falten se buscan en Freesound (solo CC0, gratis). Si no hay clave o
+    falla, se usa el provisional sintetizado."""
+    try:
+        faltan = [t for t in tipos if not biblioteca.utilizables("sfx", t)]
+        if faltan and clave_api("FREESOUND_API_KEY"):
+            llenar(faltan, avisar=avisar)
+    except Exception as ex:  # noqa: BLE001 — un efecto nunca frena el video
+        avisar(f"Sin efectos nuevos de Freesound ({str(ex)[:100]})")

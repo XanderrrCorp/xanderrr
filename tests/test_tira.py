@@ -81,3 +81,21 @@ def test_clip_de_prueba(tmp_path, estilo):
     armada = armar_tira(esc, estilo, tmp_path)
     destino = clip_tira(armada, tmp_path / "clip.mp4", imageio_ffmpeg.get_ffmpeg_exe(), fps=10, tam=(320, 180))
     assert destino.exists() and destino.stat().st_size > 1000
+
+
+def test_tarjeta_nunca_queda_vacia(tmp_path, estilo):
+    """Si el recorte del fondo se come al sujeto, la tarjeta usa la imagen entera; si falta la imagen, avisa."""
+    esc = EscenasV2.model_validate(_doc())
+    _sujetos(tmp_path, 4)
+    Image.new("RGB", (400, 240), (128, 128, 128)).save(tmp_path / "assets" / "tira_2.png")   # todo «fondo»
+    armada = armar_tira(esc, estilo, tmp_path)
+    t = estilo.tira_niveles
+    x = armada.centros_x[1] - t.tarjeta_ancho // 2
+    tarjeta = armada.normal.crop((x + 20, t.y_tarjeta + 20, x + t.tarjeta_ancho - 20, t.y_tarjeta + t.tarjeta_alto - 20))
+    assert tarjeta.getbbox() is not None                                  # no es un hueco
+    (tmp_path / "assets" / "tira_3.png").unlink()
+    import shutil
+
+    shutil.rmtree(tmp_path / "assets" / "sin_fondo")
+    with pytest.raises(ValueError, match="Bicho 3"):
+        armar_tira(esc, estilo, tmp_path)

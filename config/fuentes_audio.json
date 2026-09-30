@@ -80,6 +80,13 @@
           1.0,
           7.0
         ]
+      },
+      "camara": {
+        "buscar": "camera shutter click",
+        "duracion": [
+          0.08,
+          0.9
+        ]
       }
     },
     "musica": {

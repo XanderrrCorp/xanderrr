@@ -43,6 +43,14 @@ PRIORIDAD = {"golpe_grave": 6, "stinger_terror": 6, "subida_tension": 5, "piano_
 VOLUMEN = {"barrido": 0.22, "golpe_grave": 0.5, "pop": 0.3, "zumbido": 0.16, "latido": 0.3,
            "subida_tension": 0.26, "alerta": 0.2, "comico": 0.28, "stinger_terror": 0.4, "piano_miedo": 0.32,
            "ruleta": 0.4}
+# edición clásica (la de los peces del Amazonas): los volúmenes de entonces, sin igualar
+VOLUMEN_CLASICO = {"barrido": 0.42, "golpe_grave": 0.9, "pop": 0.32, "zumbido": 0.33, "latido": 0.55,
+                   "subida_tension": 0.45, "alerta": 0.4, "comico": 0.45, "stinger_terror": 0.75, "piano_miedo": 0.6,
+                   "ruleta": 0.5, "camara": 0.4}
+VOLUMEN["camara"] = 0.3
+PRIORIDAD["camara"] = 3
+# sonidos de relleno en los cortes de la clásica: dan vida sin tapar la voz (pedido del dueño)
+RELLENO_CLASICO = ("pop", "barrido", "camara")
 VARIANTES = 4
 # recursos estructurales (tira, pixelado) que no cuentan para uso_maximo_por_recurso
 ESTRUCTURALES = {"tira_deslizar_a_nivel", "pixelar", "revelar_pixelado", "destello_rojo", "paneo_lento", "zoom_golpe",
@@ -101,7 +109,7 @@ SONIDO_DE_CORTE = {
 }
 
 
-def _sonido_en_cada_corte(sfx: list, escenas: list, clips: list, rng: random.Random) -> None:
+def _sonido_en_cada_corte(sfx: list, escenas: list, clips: list, rng: random.Random, clasica: bool = False) -> None:
     """A cada escena que quedó muda se le propone un sonido en el corte, alternando para que
     nunca suene el mismo tipo dos cortes seguidos. Tienen la prioridad más baja: el recorte
     por sfx_por_minuto del perfil decide cuántos quedan (muchos en el short, menos en el largo)."""
@@ -118,17 +126,23 @@ def _sonido_en_cada_corte(sfx: list, escenas: list, clips: list, rng: random.Ran
             _sfx(sfx, "golpe_grave", c["inicio"] + 0.05, idx, "Golpe con la respuesta seca a la pregunta")
             previo = "golpe_grave"
             continue
-        # en los cortes, un pop suave (al dueño le aportan más que golpes y barridos); solo el gancho, la
-        # revelación y el giro llevan un acento más fuerte
-        opciones = list(SONIDO_DE_CORTE[e.intencion][:1]) if e.intencion in ("gancho", "revelacion", "giro") else []
-        opciones += ["pop"]
+        if clasica:
+            # pop, whoosh o disparo de cámara, alternando (nunca el mismo dos cortes seguidos); la cámara
+            # suena sobre todo cuando entra una foto real
+            real = any(x["efecto"] == "video_real" for x in c["efectos"]) or "pexels" in str(c.get("archivo", ""))
+            opciones = (["camara"] if real else []) + rng.sample(list(RELLENO_CLASICO), len(RELLENO_CLASICO))
+        else:
+            # en los cortes, un pop suave; solo el gancho, la revelación y el giro llevan un acento más fuerte
+            opciones = list(SONIDO_DE_CORTE[e.intencion][:1]) if e.intencion in ("gancho", "revelacion", "giro") else []
+            opciones += ["pop"]
         tipo = next((t for t in opciones if t != previo), None)
         if tipo is None:                     # dos pops seguidos no: este corte queda sin sonido
             previo = None
             continue
         _sfx(sfx, tipo, c["inicio"] + rng.uniform(0.0, 0.08), idx,
              f"Sonido en el corte ({tipo}) para que el ritmo no se caiga")
-        sfx[-1]["prioridad"] = 0
+        # clásica: el relleno vale tanto como los latidos (el dueño quiere más pop, whoosh y cámara)
+        sfx[-1]["prioridad"] = 3 if clasica else 0
         previo = tipo
 
 
@@ -194,7 +208,7 @@ def _recortar_sonidos(sfx: list, n_clips: int, total: float, perfil, rng: random
     return vivos
 
 
-def _pistas_sfx(vivos: list, rng: random.Random) -> list:
+def _pistas_sfx(vivos: list, rng: random.Random, volumen: dict | None = None) -> list:
     """14.7: variante de un grupo sin repetir dos veces seguidas, tono ±5 % y volumen variado."""
     pistas, ultima = [], {}
     for k, s in enumerate(sorted(vivos, key=lambda x: x["inicio"])):
@@ -203,7 +217,7 @@ def _pistas_sfx(vivos: list, rng: random.Random) -> list:
         pista = {"id": f"s{k:03d}", "inicio": round(s["inicio"], 3), "tipo": s["tipo"],
                  "archivo": f"biblioteca/sfx/{s['tipo']}", "variante": f"{s['tipo']}_{variante}",
                  "tono": round(rng.uniform(0.955, 1.045), 3),
-                 "volumen": round(min(1.0, VOLUMEN.get(s["tipo"], 0.5) * rng.uniform(0.85, 1.1)), 3),
+                 "volumen": round(min(1.0, (volumen or VOLUMEN).get(s["tipo"], 0.5) * rng.uniform(0.85, 1.1)), 3),
                  "razon": s["razon"]}
         if s.get("termina_en") is not None:
             pista["termina_en"] = round(s["termina_en"], 3)
@@ -514,6 +528,7 @@ def construir_edl(carpeta: CarpetaProyecto) -> dict:
     esc: EscenasV2 = carpeta.cargar_escenas()
     vertical = esc.relacion_aspecto == "9:16"
     perfil = cargar_perfil_edicion(estilo, PERFIL_SHORT if vertical else None)
+    clasica = perfil.estilo_edicion == "clasica"
     direccion = leer_json(carpeta.ruta / "direccion.json") if (carpeta.ruta / "direccion.json").exists() else {}
     focos = direccion.get("focos") or {}
     rng = random.Random(proyecto.semilla)
@@ -617,7 +632,8 @@ def construir_edl(carpeta: CarpetaProyecto) -> dict:
                 t_estilo = next((x for x in estilo.tipos_de_escena if x.quitar_fondo == quitar),
                                 estilo.tipos_de_escena[0])
             modo = t_estilo.modo_montaje
-            if _a_pantalla_completa(estilo, modo, e, (direccion.get("pixelar") or {}).get(str(e.id)), revelacion, rng):
+            if not clasica and _a_pantalla_completa(estilo, modo, e, (direccion.get("pixelar") or {}).get(str(e.id)),
+                                                    revelacion, rng):
                 modo = "pantalla_completa"
                 razon = (razon + "; " if razon else "") + "Escena completa a pantalla completa, sin papel"
             if nueva_seccion:
@@ -658,7 +674,7 @@ def construir_edl(carpeta: CarpetaProyecto) -> dict:
             if mov_nombre == "zoom_golpe":
                 foco = [round(rng.uniform(0.42, 0.58), 3), round(rng.uniform(0.40, 0.54), 3)]
                 golpe = round(min(ini + 0.35 * dur, fin - 0.4), 3)
-                movimiento = {"tipo": "zoom_golpe", "de": 1.0, "a": 1.045, "punto_foco": foco}
+                movimiento = {"tipo": "zoom_golpe", "de": 1.0, "a": 1.07 if clasica else 1.045, "punto_foco": foco}
                 efectos.append({"efecto": "zoom_golpe", "en": golpe})
                 _sfx(sfx, "golpe_grave", golpe, idx, f"Golpe con el zoom de {e.intencion.replace('_', ' ')}")
             else:
@@ -668,7 +684,7 @@ def construir_edl(carpeta: CarpetaProyecto) -> dict:
                     movimiento["a"] = round(1 + rng.uniform(0.012, 0.022), 3)
             # ráfaga: 2 o 3 acercamientos cortos al ritmo de un latido, solo en tension_creciente
             if (e.intencion == "tension_creciente" and dur >= 1.8 and not previo_rafaga
-                    and not zonas and rng.random() < 0.35):
+                    and not zonas and rng.random() < (0.75 if clasica else 0.35)):
                 n_golpes = 3 if dur >= 2.6 else 2
                 t, tiempos = ini + rng.uniform(0.2, 0.35), []
                 for _ in range(n_golpes):
@@ -794,7 +810,7 @@ def construir_edl(carpeta: CarpetaProyecto) -> dict:
                 and not any(x["efecto"] == "revelar_pixelado" for x in efectos):
             opciones = ["entrada_abajo", "entrada_lado", "entrada_rebote"]
             con_cupo = [o for o in opciones if usos_entrada[o] / (idx + 1) < tope_recurso and o != ultima_entrada]
-            if con_cupo and rng.random() < 0.35:          # el dueño lo veía exagerado: pocas entradas
+            if con_cupo and rng.random() < (0.85 if clasica else 0.35):   # la calmada: pocas entradas
                 o = min(con_cupo, key=lambda r: (usos_entrada[r], rng.random()))
                 usos_entrada[o] += 1
                 ultima_entrada = o
@@ -802,12 +818,20 @@ def construir_edl(carpeta: CarpetaProyecto) -> dict:
                 if o == "entrada_lado":
                     datos["desde"] = rng.choice(["izquierda", "derecha"])
                 efectos.append(datos)
-                _sfx(sfx, "pop", ini + datos["dur"] * 0.7, idx, "Pop cuando la imagen entra y se asienta")
+                sonido_entrada = "pop"
+                if clasica and o == "entrada_lado":
+                    sonido_entrada = "barrido"               # whoosh: la imagen cruza de lado
+                elif clasica and "pexels" in str(archivo):
+                    sonido_entrada = "camara"                # foto real: como si la tomaras
+                _sfx(sfx, sonido_entrada, ini + datos["dur"] * (0.2 if sonido_entrada == "barrido" else 0.7), idx,
+                     f"{sonido_entrada.capitalize()} cuando la imagen entra y se asienta")
                 razon = (razon + "; " if razon else "") + {"entrada_abajo": "la imagen sale desde abajo",
                                                            "entrada_lado": "la imagen entra de lado",
                                                            "entrada_rebote": "la imagen aparece con rebote"}[o]
-        if modo not in ("tira", "pantalla_completa") and rng.random() < 0.25:   # vaivén leve, solo a ratos
-            efectos.append({"efecto": "vaiven", "hz": round(rng.uniform(0.4, 0.6), 2), "px": round(rng.uniform(2, 3.5), 1),
+        if modo not in ("tira", "pantalla_completa") and (clasica or rng.random() < 0.25):
+            # clásica: vaivén en todas (como los peces del Amazonas); calmada: leve y solo a ratos
+            efectos.append({"efecto": "vaiven", "hz": round(rng.uniform(0.55, 0.85) if clasica else rng.uniform(0.4, 0.6), 2),
+                            "px": round(rng.uniform(4, 7) if clasica else rng.uniform(2, 3.5), 1),
                             "fase": round(rng.uniform(0, 6.28), 2)})
         previo_golpe = bool(movimiento and movimiento["tipo"] == "zoom_golpe")
         previo_rafaga = any(x["efecto"] == "rafaga" for x in efectos)
@@ -852,12 +876,12 @@ def construir_edl(carpeta: CarpetaProyecto) -> dict:
         if not p.requiere_divulgacion_contenido_sintetico:
             p.requiere_divulgacion_contenido_sintetico = True
             carpeta.guardar(p)
-    musica = _musica(escenas, clips, revelacion, total, rng)
+    musica = [] if clasica else _musica(escenas, clips, revelacion, total, rng)   # clásica: sin música
     _equilibrar_movimientos(clips, perfil, rng, estilo.movimiento_maximo)
-    _sonido_en_cada_corte(sfx, escenas, clips, rng)       # el recorte deja solo sfx_por_minuto
+    _sonido_en_cada_corte(sfx, escenas, clips, rng, clasica)   # el recorte deja solo sfx_por_minuto
     vivos = _recortar_sonidos(sfx, len(clips), total, perfil, rng)
-    pistas_sfx = _pistas_sfx(vivos, rng)
-    edl = {"version": 1, "duracion_total": total,
+    pistas_sfx = _pistas_sfx(vivos, rng, VOLUMEN_CLASICO if clasica else VOLUMEN)
+    edl = {"version": 1, "duracion_total": total, "audio": {"igualar": not clasica},
            "pistas": {"fondo": [{"id": "f1", "inicio": 0, "fin": total, "tipo": "textura",
                                  "archivo": "assets/papel_arrugado.png"}],
                       "escenas": clips, "elementos": [], "textos": textos, "subtitulos": subtitulos,
