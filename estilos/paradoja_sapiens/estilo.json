@@ -1,10 +1,10 @@
 {
   "id": "paradoja_sapiens",
   "nombre": "Paradoja Sapiens · doodle",
-  "descripcion": "Dibujo plano tipo doodle: contornos negros gruesos, colores sólidos, animales reconocibles con ojos saltones de caricatura, escenas de un color con trazos de lápiz. Personaje fijo: stickman explorador-cavernícola (casco de explorador, túnica de piel de leopardo, gafitas). Recortes y recuadros sobre fondo turquesa liso.",
+  "descripcion": "Dibujo plano tipo doodle: contornos negros gruesos, colores sólidos, animales reconocibles con ojos saltones de caricatura, escenas de un color con trazos de lápiz. Personaje fijo: stickman cavernícola (cabeza blanca redonda, túnica de piel café rota amarrada con cuerda, descalzo), como en la miniatura del dueño. Recortes y recuadros sobre fondo turquesa liso.",
   "con_personaje": true,
   "bloque_estilo": "Flat 2D cartoon doodle illustration, thick bold black outlines, solid flat bright colors with minimal cel shading, simple rounded shapes, funny and expressive, any animal drawn as a recognizable real species but with big round white googly cartoon eyes.",
-  "personaje_por_defecto": "a cartoon stick figure with a big round white head, thin black stick arms and legs, big round googly eyes, wearing an odd explorer-caveman outfit: a spotted leopard-print fur tunic over one shoulder, a tan explorer pith helmet and small round glasses, carrying a short wooden club like a walking stick",
+  "personaje_por_defecto": "a cartoon stick figure with a big round plain white head, a simple expressive face with small eyes and eyebrows, thin black stick arms and legs, small round white hands and bare feet, wearing a torn brown fur caveman tunic over one shoulder with a ragged hem, tied at the waist with a thin rope belt",
   "tipos_de_escena": [
     {
       "id": "animal_fondo_gris",
@@ -44,7 +44,7 @@
     {
       "id": "pov_personaje",
       "descripcion": "Anécdota del narrador en primera persona: lo que él ve con sus propios ojos (se ven sus manos y rodillas abajo); el animal de frente, mirándolo",
-      "plantilla_prompt": "{bloque_estilo} First-person point of view through the eyes of this character: {personaje}. We only see his own thin black stick hands at the bottom corners of the frame and the edge of the leopard-print tunic. {descripcion}. Aspect ratio 16:9, no text, no signs, no letters, no logos.",
+      "plantilla_prompt": "{bloque_estilo} First-person point of view through the eyes of this character: {personaje}. We only see his own thin black stick hands at the bottom corners of the frame and the edge of the brown fur tunic. {descripcion}. Aspect ratio 16:9, no text, no signs, no letters, no logos.",
       "quitar_fondo": false,
       "modo_montaje": "recuadro_sobre_papel"
     },

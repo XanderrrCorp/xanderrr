@@ -196,3 +196,14 @@ def test_documental_por_que_sin_niveles(tmp_path, estilo):
     doc = json.loads((tmp_path / "escenas.json").read_text(encoding="utf-8"))
     assert r["escenas"] == 48 and doc["niveles"] == [] and doc["video"].startswith("¿Por qué")
     assert "villano_revelacion" not in json.loads((tmp_path / "direccion.json").read_text(encoding="utf-8"))
+
+
+def test_accion_pegada_a_la_referencia():
+    """Claude a veces escribe «reusar:escena:…» en el campo acción: se entiende igual."""
+    from estudio.guionista import _accion
+
+    e = {"accion": "reusar:escena:Lo que casi nadie sabe es que puede ganarle una carrera."}
+    assert _accion(e) == "reusar" and e["reusar"] == "escena:Lo que casi nadie sabe es que puede ganarle una carrera."
+    assert _accion({"accion": "GENERAR", "tipo": "x"}) == "generar"
+    assert _accion({"accion": "algo raro", "tipo": "x"}) == "generar"
+    assert _accion({"accion": "", "reusar": "escena:Hola"}) == "reusar"

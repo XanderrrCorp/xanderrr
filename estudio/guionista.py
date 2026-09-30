@@ -288,6 +288,24 @@ def _clave_en(clave, narracion: str) -> str | None:
     return None
 
 
+ACCIONES = ("generar", "reusar", "componer", "solo_edicion")
+
+
+def _accion(e: dict) -> str:
+    """La acción de la escena, aunque Claude la escriba pegada a la referencia («reusar:escena:Lo que…»):
+    se separa y lo de después queda como «reusar». Algo irreconocible se dibuja (generar)."""
+    crudo = str(e.get("accion") or "generar").strip()
+    base = crudo.split(":", 1)[0].strip().lower()
+    if base == "reusar" and ":" in crudo and not e.get("reusar"):
+        e["reusar"] = crudo.split(":", 1)[1].strip()
+    if base not in ACCIONES:
+        base = "generar"
+    if base == "generar" and not e.get("tipo") and e.get("reusar"):
+        base = "reusar"
+    e["accion"] = base
+    return base
+
+
 def a_escenas(datos: dict, estilo: Estilo, canal: str) -> tuple[dict, dict, str]:
     """JSON del guionista → (escenas.json v2, direccion.json, guion.md)."""
     niveles_in = sorted(datos["niveles"], key=lambda n: n["numero"])
@@ -310,7 +328,7 @@ def a_escenas(datos: dict, estilo: Estilo, canal: str) -> tuple[dict, dict, str]
     escenas, direccion = [], {"pixelar_pendiente": [], "textos": {}}
     t = 0.0
     for i, e in enumerate(crudas, 1):
-        accion = e.get("accion", "generar")
+        accion = _accion(e)
         vis = {"accion": accion, "tipo": e.get("tipo") if accion == "generar" else None,
                "archivo": f"imagenes/escena_{i:03d}.png" if accion == "generar" else None,
                "referencias": ["mascota_base"] if e.get("con_mascota") else [], "quitar_fondo": False}
@@ -329,12 +347,12 @@ def a_escenas(datos: dict, estilo: Estilo, canal: str) -> tuple[dict, dict, str]
             else:
                 inicio = ref.split(":", 1)[-1].strip().lower()
                 previas = [j for j, x in enumerate(crudas[:i - 1], 1)
-                           if x.get("accion", "generar") == "generar" and x["narracion"].lower().startswith(inicio[:40])]
+                           if _accion(x) == "generar" and x["narracion"].lower().startswith(inicio[:40])]
                 if previas:
                     vis["reusar_de"] = previas[0]
                 else:
                     # referencia rara: se reusa la última imagen propia anterior en vez de fallar
-                    anteriores = [j for j, x in enumerate(crudas[:i - 1], 1) if x.get("accion", "generar") == "generar"]
+                    anteriores = [j for j, x in enumerate(crudas[:i - 1], 1) if _accion(x) == "generar"]
                     if not anteriores:
                         raise ValueError(f"escena {i}: no encuentro la escena a reusar «{ref}»")
                     vis["reusar_de"] = anteriores[-1]
