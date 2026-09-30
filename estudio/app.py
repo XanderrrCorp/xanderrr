@@ -369,12 +369,13 @@ class Nuevo(BaseModel):
     canal: str | None = None        # clave del canal; si no, el primero del espacio
     disfraz: bool = False           # mascota con hoodie del animal del tema (una imagen extra)
     formula: str | None = None      # estructura del guion del formato elegido (None = escala de peligro)
+    estilo: str | None = None       # estilo visual del formato (None = el del canal)
 
 
 @app.post("/api/videos")
 def nuevo(n: Nuevo):
     c = pipeline.crear_video(n.tema, n.giro, n.villano, n.minutos, n.notas, canal=n.canal or None, disfraz=n.disfraz,
-                             formula=n.formula or None)
+                             formula=n.formula or None, estilo_id=n.estilo or None)
     pipeline.lanzar(c.ruta.name, "guion", lambda t: pipeline.paso_guion(c, t))
     return pipeline.resumen(c)
 

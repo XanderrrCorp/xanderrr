@@ -223,8 +223,8 @@ Para CADA escena, en orden, decide:
   (cazar, esconderse, un tamaño, un lugar), eso es lo que se ve. Concreto: sujeto, acción, lugar, luz. Nunca texto, letras, números ni letreros
   en la imagen. Nada de sangre ni heridas gráficas. Nunca termómetros, medidores
   ni barras de peligro: la escala de peligro 0–10 la pone el montaje a pantalla completa.
-- "con_mascota": true si aparece la mascota (un hombre de dibujo de cabeza blanca redonda); en la descripción
-  llámala "the cartoon man".{nota_mascota}
+- "con_mascota": true si aparece el personaje fijo del canal ({(estilo.personaje_por_defecto or "la mascota")[:110]}…);
+  en la descripción llámalo "the cartoon man".{nota_mascota}
 {nota_real}- "palabra_clave": la palabra MÁS importante de esa escena, copiada tal cual (sustantivo o número en palabras).
 - "texto_pantalla": solo en 1 o 2 escenas fuertes de la sección, un título corto de 2 a 6 palabras escrito
   normal, como lo diría una persona («Es aterrador»); y "palabra": la palabra de la escena donde aparece.

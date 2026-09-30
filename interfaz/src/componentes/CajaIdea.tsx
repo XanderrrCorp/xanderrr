@@ -35,7 +35,7 @@ export function CajaIdea({ creado }: { creado: (slug: string) => void }) {
     if (idea.trim().length < 3) { setError('Escribe la idea del video (por ejemplo, el tema y el giro).'); return; }
     setEnviando(true); setError('');
     try {
-      const v = await api<VideoDetalle>('/api/videos', { cuerpo: { tema: idea.trim(), minutos, canal: canal || null, disfraz, formula: f?.datos.formula || null } });
+      const v = await api<VideoDetalle>('/api/videos', { cuerpo: { tema: idea.trim(), minutos, canal: canal || null, disfraz, formula: f?.datos.formula || null, estilo: f?.datos.estilo || null } });
       setIdea('');
       if (modo === 'personalizado') ir(`/videos/${v.slug}`);
       else creado(v.slug);

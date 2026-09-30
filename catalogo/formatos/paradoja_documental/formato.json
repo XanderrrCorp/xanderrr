@@ -2,7 +2,7 @@
   "nombre": "¿Por qué…? (documental)",
   "descripcion": "Documental de curiosidad: una gran pregunta sobre la naturaleza, un lugar o un animal, respondida obstáculo por obstáculo, con el montaje de siempre (papel, escenas a pantalla completa, focos y textos).",
   "formula": "paradoja_documental",
-  "estilo": "",
+  "estilo": "paradoja_sapiens",
   "perfil": "",
   "duraciones_min": [
     12,

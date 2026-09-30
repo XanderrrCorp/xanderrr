@@ -23,7 +23,7 @@ export interface Ref { id: string; clave: string; nombre: string }
 export interface Canal { id: string; clave: string; nombre: string; formato: Ref | null; videos: number }
 export interface Formato {
   id: string; clave: string; nombre: string; descripcion: string; publico: boolean;
-  datos: { duraciones_min?: number[]; duracion_min?: number; idea_ejemplo?: string; relacion_aspecto?: string; formula?: string };
+  datos: { duraciones_min?: number[]; duracion_min?: number; idea_ejemplo?: string; relacion_aspecto?: string; formula?: string; estilo?: string };
 }
 
 export interface Trabajo { paso: string; progreso: number; mensaje: string; activo: boolean; error: string | null }

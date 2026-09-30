@@ -1,0 +1,172 @@
+{
+  "id": "paradoja_sapiens",
+  "nombre": "Paradoja Sapiens · doodle",
+  "descripcion": "Dibujo plano tipo doodle: contornos negros gruesos, colores sólidos, animales reconocibles con ojos saltones de caricatura, escenas de un color con trazos de lápiz. Personaje fijo: stickman explorador-cavernícola (casco de explorador, túnica de piel de leopardo, gafitas). Recortes y recuadros sobre fondo turquesa liso.",
+  "con_personaje": true,
+  "bloque_estilo": "Flat 2D cartoon doodle illustration, thick bold black outlines, solid flat bright colors with minimal cel shading, simple rounded shapes, funny and expressive, any animal drawn as a recognizable real species but with big round white googly cartoon eyes.",
+  "personaje_por_defecto": "a cartoon stick figure with a big round white head, thin black stick arms and legs, big round googly eyes, wearing an odd explorer-caveman outfit: a spotted leopard-print fur tunic over one shoulder, a tan explorer pith helmet and small round glasses, carrying a short wooden club like a walking stick",
+  "tipos_de_escena": [
+    {
+      "id": "animal_fondo_gris",
+      "descripcion": "Animal o sujeto principal aislado para recortar",
+      "plantilla_prompt": "Flat 2D cartoon doodle illustration, thick bold black outlines, solid flat bright colors with minimal cel shading, simple rounded shapes, funny and expressive, any animal drawn as a recognizable real species but with big round white googly cartoon eyes, the whole animal visible, lively funny pose. {descripcion}. Isolated on a flat solid medium-gray background (#808080), no shadow on the floor, no other objects, no text, no letters. Aspect ratio 16:9.",
+      "quitar_fondo": true,
+      "modo_montaje": "recorte_sobre_papel"
+    },
+    {
+      "id": "mascota_fondo_gris",
+      "descripcion": "Mascota reaccionando, aislada para recortar",
+      "plantilla_prompt": "Flat 2D cartoon doodle illustration, thick bold black outlines, solid flat bright colors with minimal cel shading, simple rounded shapes, funny and expressive, any animal drawn as a recognizable real species but with big round white googly cartoon eyes. Full body, the same character as the reference image: {personaje}. {descripcion}. Isolated on a flat solid medium-gray background (#808080), no shadow on the floor, no other objects, no text, no letters.",
+      "quitar_fondo": true,
+      "modo_montaje": "recorte_sobre_papel"
+    },
+    {
+      "id": "diagrama_fondo_blanco",
+      "descripcion": "Detalle anatómico o explicativo tipo lámina",
+      "plantilla_prompt": "Flat 2D cartoon doodle illustration, thick bold black outlines, solid flat bright colors with minimal cel shading, simple rounded shapes, funny and expressive, any animal drawn as a recognizable real species but with big round white googly cartoon eyes, simple educational cartoon diagram with clear shapes and arrows drawn in the same doodle style. {descripcion}. Isolated on a plain flat pure white background, lots of empty space at the top, aspect ratio 16:9, no text, no labels, no letters, no numbers.",
+      "quitar_fondo": true,
+      "modo_montaje": "recorte_sobre_papel"
+    },
+    {
+      "id": "escena_cartoon_completa",
+      "descripcion": "Escena completa con la mascota en un lugar",
+      "plantilla_prompt": "{bloque_estilo} {descripcion}. Full scene with a simple colorful background drawn in the same flat doodle style, open composition, aspect ratio 16:9, no text, no signs, no letters, no logos.",
+      "quitar_fondo": false,
+      "modo_montaje": "recuadro_sobre_papel"
+    },
+    {
+      "id": "escena_mixta",
+      "descripcion": "Mascota y animal juntos en una escena",
+      "plantilla_prompt": "{bloque_estilo} The character {personaje} next to the animal in the same scene. {descripcion}. Simple colorful background in the same flat doodle style, aspect ratio 16:9, no text, no signs, no letters, no logos.",
+      "quitar_fondo": false,
+      "modo_montaje": "recuadro_sobre_papel"
+    },
+    {
+      "id": "pov_personaje",
+      "descripcion": "Anécdota del narrador en primera persona: lo que él ve con sus propios ojos (se ven sus manos y rodillas abajo); el animal de frente, mirándolo",
+      "plantilla_prompt": "{bloque_estilo} First-person point of view through the eyes of this character: {personaje}. We only see his own thin black stick hands at the bottom corners of the frame and the edge of the leopard-print tunic. {descripcion}. Aspect ratio 16:9, no text, no signs, no letters, no logos.",
+      "quitar_fondo": false,
+      "modo_montaje": "recuadro_sobre_papel"
+    },
+    {
+      "id": "amenaza_cinematografica",
+      "descripcion": "Plano dramático del peligro",
+      "plantilla_prompt": "Flat 2D cartoon doodle illustration, thick bold black outlines, solid flat bright colors with minimal cel shading, simple rounded shapes, funny and expressive, any animal drawn as a recognizable real species but with big round white googly cartoon eyes, dramatic but still cartoon: the animal large and close, menacing googly eyes. {descripcion}. Dark flat teal-blue background with a few pale sketchy pencil lines, aspect ratio 16:9, no text, no letters.",
+      "quitar_fondo": false,
+      "modo_montaje": "recuadro_sobre_papel"
+    }
+  ],
+  "mezcla_recomendada": {
+    "animal_fondo_gris": 0.0,
+    "mascota_fondo_gris": 0.228,
+    "diagrama_fondo_blanco": 0.328,
+    "escena_cartoon_completa": 0.153,
+    "escena_mixta": 0.186,
+    "amenaza_cinematografica": 0.065,
+    "pov_personaje": 0.04
+  },
+  "fondo_montaje": {
+    "tipo": "color",
+    "valor": "#2E8F8C"
+  },
+  "modos_de_montaje_permitidos": [
+    "recorte_sobre_papel",
+    "recuadro_sobre_papel"
+  ],
+  "gramatica_edicion": "gramaticas/estandar.json",
+  "perfil_edicion": "perfiles/enciclopedia_ritmo_alto.json",
+  "movimiento_maximo": 0.05,
+  "subtitulos": {
+    "estilo": "blanco_contorno_negro",
+    "posicion": "abajo_centro"
+  },
+  "musica_por_defecto": [
+    "tension",
+    "curiosidad"
+  ],
+  "costo_relativo": 1.0,
+  "proporcion_imagenes_unicas": 0.5,
+  "proporcion_minima_unicas": 0.4,
+  "imagenes_fijas_por_video": 7,
+  "_variables_plantilla": "{bloque_estilo} = bloque de estilo; {personaje} = bloqueo literal del personaje del canal; {descripcion} = lo que muestra la escena (visual.prompt); {sujeto} {accion} {lugar} = campos opcionales si el Director visual los separa.",
+  "plantillas_assets": {
+    "personaje": "Flat 2D cartoon doodle illustration, thick bold black outlines, solid flat bright colors with minimal cel shading, simple rounded shapes, funny and expressive, any animal drawn as a recognizable real species but with big round white googly cartoon eyes. Full body, front view, standing relaxed, neutral friendly expression. {personaje}. {descripcion}. Isolated on a flat solid medium-gray background (#808080), no shadow on the floor, no other objects, no text, no letters.",
+    "_defecto": "Flat 2D cartoon doodle illustration, thick bold black outlines, solid flat bright colors with minimal cel shading, simple rounded shapes, funny and expressive, any animal drawn as a recognizable real species but with big round white googly cartoon eyes, the whole animal visible, lively funny pose. {descripcion}. Isolated on a flat solid medium-gray background (#808080), no shadow on the floor, no other objects, no text, no letters. Aspect ratio 16:9.",
+    "pose": "Flat 2D cartoon doodle illustration, thick bold black outlines, solid flat bright colors with minimal cel shading, simple rounded shapes, funny and expressive, any animal drawn as a recognizable real species but with big round white googly cartoon eyes. Full body, the same character as the reference image: {personaje}. {descripcion}. Isolated on a flat solid medium-gray background (#808080), no shadow on the floor, no other objects, no text, no letters.",
+    "presentador": "Photorealistic 16:9 video frame from a nature YouTube channel, medium shot from the waist up, eye-level camera, shallow depth of field, soft warm natural window light, natural skin texture, shot on a cinema camera. {persona}. {descripcion}. Setting: {escenario}. He is an invented person who does not resemble any real or famous person. No subtitles, no text, no letters anywhere.",
+    "miniatura": "Flat 2D cartoon doodle illustration, thick bold black outlines, solid flat bright colors with minimal cel shading, simple rounded shapes, funny and expressive, any animal drawn as a recognizable real species but with big round white googly cartoon eyes, drawn big, exaggerated and dramatic for a YouTube thumbnail, whole body visible and centered. {descripcion}. Isolated on a pure white background (#FFFFFF), no ground, no shadow, no other objects, no text, no letters."
+  },
+  "_fuente": "Estilo propio de Paradoja Sapiens inspirado en el doodle plano de los documentales «¿Por qué…?» (sin copiar personajes ni marcas).",
+  "tira_niveles": {
+    "tarjeta_ancho": 820,
+    "tarjeta_alto": 560,
+    "radio": 40,
+    "borde_color": "#FFFFFF",
+    "borde_grosor": 8,
+    "relleno_color": "#B9B3A8",
+    "relleno_ruido": 0.06,
+    "alto_lienzo": 1080,
+    "separacion": 120,
+    "y_tarjeta": 260,
+    "sujeto_ancho": 0.8,
+    "sombra_sujeto": true,
+    "drama_hacia_derecha": 0.35,
+    "brillo_villano": "#FF2A2A",
+    "brillo_radio": 46,
+    "pixel_bloque": 40,
+    "texto": {
+      "formato": "Nivel {n}",
+      "tamano": 104,
+      "color": "#FFFFFF",
+      "contorno_color": "#000000",
+      "contorno_grosor": 9,
+      "fuentes": [
+        "C:/Windows/Fonts/arialbd.ttf",
+        "C:/Windows/Fonts/segoeuib.ttf",
+        "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
+        "/System/Library/Fonts/Supplemental/Arial Bold.ttf"
+      ]
+    },
+    "fondo": {
+      "tipo": "niebla",
+      "color_a": "#060D18",
+      "color_b": "#1D3B5E",
+      "semilla": 7
+    }
+  },
+  "comportamiento_montaje": {
+    "recorte_sobre_papel": "recorte",
+    "recuadro_sobre_papel": "recuadro"
+  },
+  "poses_canal": [
+    {
+      "id": "senalando_susto",
+      "mira_a": "derecha",
+      "uso": "Al lado de una foto real: el personaje la señala asustado",
+      "descripcion": "Standing in three-quarter view turned to the right, right arm fully extended pointing with the index finger to the right side of the frame, other hand covering his open mouth, eyes wide open in fear, eyebrows raised, knees slightly bent"
+    },
+    {
+      "id": "senalando_asco",
+      "mira_a": "derecha",
+      "uso": "Al lado de algo asqueroso: el personaje lo señala con asco",
+      "descripcion": "Standing in three-quarter view turned to the right, right arm extended pointing with the index finger to the right side of the frame, leaning back away from it, disgusted face with tongue out and wrinkled nose, other hand held up as if saying stop"
+    },
+    {
+      "id": "senalando_sorpresa",
+      "mira_a": "derecha",
+      "uso": "Al lado de un dato o foto sorprendente",
+      "descripcion": "Standing in three-quarter view turned to the right, right arm extended pointing with the index finger to the right side of the frame, amazed face with big round eyes and open smiling mouth, other hand on his hat"
+    }
+  ],
+  "miniatura_expresiones": {
+    "villano": "Menacing and terrifying: glowing red eyes, exaggerated sharp mouthparts or fangs, aggressive attacking pose, slightly sickly dark tones",
+    "peligroso": "Threatening and intense: fierce eyes, visible sharp mouthparts, tense ready-to-attack pose",
+    "neutral": "Unsettling and alert: big detailed eyes, slightly creepy expression",
+    "inofensivo": "Harmless and calm, almost cute: soft round eyes, relaxed pose"
+  },
+  "tipos_reemplazables_por_foto_real": [
+    "animal_fondo_gris",
+    "amenaza_cinematografica",
+    "diagrama_fondo_blanco"
+  ]
+}

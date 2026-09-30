@@ -57,6 +57,30 @@ def _sale(x: float) -> float:
 
 # ------------------------------------------------------------------ recursos
 
+def fondo_liso(w: int, h: int, color: str, semilla: int = 5) -> Image.Image:
+    """Fondo de un color con trazos de lápiz suaves (estilo doodle): unas líneas un poco más claras,
+    sueltas y torcidas, que dan textura sin distraer."""
+    rng = np.random.default_rng(semilla)
+    c = tuple(int(color.lstrip("#")[i:i + 2], 16) for i in (0, 2, 4))
+    img = Image.new("RGB", (w, h), c)
+    d = ImageDraw.Draw(img)
+    claro = tuple(min(255, int(v + (255 - v) * 0.12)) for v in c)
+    for _ in range(14):
+        x, y = rng.uniform(0, w), rng.uniform(0, h)
+        largo, ang = rng.uniform(120, 420), rng.uniform(-0.25, 0.25) + (0 if rng.random() < 0.6 else math.pi / 2)
+        pts = [(x + k / 6 * largo * math.cos(ang) + rng.normal(0, 3), y + k / 6 * largo * math.sin(ang) + rng.normal(0, 3))
+               for k in range(7)]
+        d.line(pts, fill=claro, width=3, joint="curve")
+    return img
+
+
+def fondo_de_estilo(estilo, w: int, h: int, semilla: int) -> Image.Image:
+    f = getattr(estilo, "fondo_montaje", None)
+    if f is not None and f.tipo == "color":
+        return fondo_liso(w, h, f.valor, semilla)
+    return papel_arrugado(w, h, semilla)
+
+
 def papel_arrugado(w: int, h: int, semilla: int = 5) -> Image.Image:
     rng = np.random.default_rng(semilla)
     base = np.array([236, 227, 207], np.float32)
@@ -1025,7 +1049,7 @@ def _renderizar_paralelo(carpeta: CarpetaProyecto, ffmpeg: str, destino: Path | 
     papel_ruta = raiz / "assets" / "papel_arrugado.png"
     if not papel_ruta.exists():
         papel_ruta.parent.mkdir(parents=True, exist_ok=True)
-        papel_arrugado(W, H, proyecto.semilla % 1000).save(papel_ruta)
+        fondo_de_estilo(cargar_estilo(proyecto.estilo), W, H, proyecto.semilla % 1000).save(papel_ruta)
     esc = carpeta.cargar_escenas()
     if esc.niveles:
         armar_tira(esc, cargar_estilo(proyecto.estilo), raiz, seed=proyecto.semilla)
@@ -1105,7 +1129,7 @@ def _renderizar(carpeta: CarpetaProyecto, ffmpeg: str, destino: Path | None, des
     papel_ruta = raiz / "assets" / "papel_arrugado.png"
     if not papel_ruta.exists():
         papel_ruta.parent.mkdir(parents=True, exist_ok=True)
-        papel_arrugado(W, H, proyecto.semilla % 1000).save(papel_ruta)
+        fondo_de_estilo(estilo, W, H, proyecto.semilla % 1000).save(papel_ruta)
     papel = Image.open(papel_ruta).convert("RGB").resize((W, H))
     escenario = Escenario(raiz, papel, estilo.comportamiento_montaje)
     hilos_x264 = os.environ.get("XANDART_HILOS_X264")
