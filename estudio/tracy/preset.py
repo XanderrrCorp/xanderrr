@@ -15,7 +15,7 @@ CLAVE_CANAL = "tracy"
 NOMBRE_CANAL = "Canal Tracy"
 
 POR_DEFECTO: dict[str, Any] = {
-    "voz_id": None,                 # None = la voz clonada de config/proveedores.json
+    "voz_id": "moss_audio_5f02d02b-2e0e-11f1-803b-3af0d76118b0",   # voz del canal Tracy (None = la de proveedores.json)
     "velocidad": None,              # None = la de config/proveedores.json
     "clip_base": r"C:\Users\USUARIO\Videos\el mero mero.mp4",
     "proporcion_seminario": 0.4,    # 40 % seminario / 60 % stock
@@ -32,7 +32,7 @@ def preset_por_defecto() -> dict[str, Any]:
 def completar(tracy: dict[str, Any] | None) -> dict[str, Any]:
     """Mezcla lo guardado con los valores por defecto y valida los rangos."""
     p = preset_por_defecto()
-    p.update({k: v for k, v in (tracy or {}).items() if v is not None or k in ("voz_id", "velocidad")})
+    p.update({k: v for k, v in (tracy or {}).items() if v is not None or k == "velocidad"})   # sin voz guardada = la del canal Tracy
     p["proporcion_seminario"] = float(p["proporcion_seminario"])
     if not 0 <= p["proporcion_seminario"] <= 1:
         raise ValueError("proporcion_seminario va de 0 a 1 (0,4 = 40 % seminario)")
