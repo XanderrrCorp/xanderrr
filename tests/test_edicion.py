@@ -46,3 +46,30 @@ def test_validador_detecta_plano_largo_y_golpes_seguidos():
     edl = {"pistas": {"escenas": [clip(1, 0, 6), clip(2, 6, 8, "zoom_golpe"), clip(3, 8, 9, "zoom_golpe")]}}
     avisos = validar(edl)
     assert any("sin cambio visual" in a for a in avisos) and any("seguidos" in a for a in avisos)
+
+
+def test_paradoja_sapiens_papel_claro_y_movimiento_suave():
+    from estudio.estilos import cargar_estilo, cargar_perfil_edicion
+
+    e = cargar_estilo("paradoja_sapiens")
+    assert e.fondo_montaje.tipo == "textura"
+    p = cargar_perfil_edicion(e)
+    assert p.estilo_edicion == "clasica" and p.movimiento == "sin_vaiven"   # dopamina de la clásica, sin mecerse
+    assert "teal" not in e.model_dump_json().lower()
+
+
+def test_arreglo_lleva_el_papel_claro_a_la_copia_del_espacio(tmp_path):
+    import json
+
+    from estudio.imagenes.arreglos import corregir_estilos
+
+    f = tmp_path / "espacios" / "e1" / "estilos" / "paradoja_sapiens" / "estilo.json"
+    f.parent.mkdir(parents=True)
+    f.write_text(json.dumps({"id": "paradoja_sapiens", "fondo_montaje": {"tipo": "color", "valor": "#2E8F8C"},
+                             "movimiento_maximo": 0.05, "x": "Dark flat teal-blue background with a few pale "
+                             "sketchy pencil lines, no text"}), encoding="utf-8")
+    assert corregir_estilos(tmp_path) == [f]
+    d = json.loads(f.read_text(encoding="utf-8"))
+    assert d["fondo_montaje"]["tipo"] == "textura" and d["movimiento_maximo"] == 0.05
+    assert "Light cream paper" in d["x"] and d["perfil_edicion"] == "perfiles/paradoja_documental.json"
+    assert corregir_estilos(tmp_path) == []                            # la segunda vez no toca nada

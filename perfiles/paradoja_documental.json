@@ -1,0 +1,19 @@
+{
+  "fuente": [],
+  "segundos_promedio_por_imagen": 3.2,
+  "interrupcion_de_patron_cada_seg": 3.5,
+  "efectos_por_minuto": 9,
+  "sfx_por_minuto": 16,
+  "cambios_de_musica": "por_seccion",
+  "texto_en_pantalla_por_minuto": 2,
+  "densidad_primeros_30s": "alta",
+  "variacion_minima_duracion": 0.3,
+  "respiros_max_por_minuto": 1,
+  "uso_maximo_por_recurso": 0.35,
+  "recursos_exentos_de_uso_maximo": [
+    "corte"
+  ],
+  "variacion_referencia": {},
+  "notas": "Paradoja Sapiens (documental «¿Por qué…?»): edición dopamínica tipo MrBeast (zooms de golpe, entradas con rebote, ráfagas, pops, swoosh y cámara, sin música) pero sin el vaivén constante: el dueño sintió que las fotos se movían demasiado (30-09).",
+  "movimiento": "sin_vaiven"
+}

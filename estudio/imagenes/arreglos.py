@@ -19,10 +19,27 @@ REEMPLAZOS: list[tuple[str, str]] = [
 ]
 
 
+# Cambios que el dueño pidió y que SÍ cambian cómo se ve la imagen (no cuentan como «la misma de antes»).
+CAMBIOS_DE_ESTILO: list[tuple[str, str]] = [
+    # Paradoja Sapiens (30-09): no quiso el fondo turquesa, papel claro como el de los peces del Amazonas
+    ("Dark flat teal-blue background with a few pale sketchy pencil lines",
+     "Light cream paper background with a few faint sketchy pencil lines"),
+]
+# Ajustes de campos por estilo (se aplican a la copia de cada espacio y a la de la base)
+CAMPOS: dict[str, dict] = {
+    "paradoja_sapiens": {"fondo_montaje": {"tipo": "textura", "valor": "assets/papel_arrugado.png"},
+                         "movimiento_maximo": 0.05, "perfil_edicion": "perfiles/paradoja_documental.json"},
+}
+
+
 def texto_corregido(texto: str) -> str:
-    for viejo, nuevo in REEMPLAZOS:
+    for viejo, nuevo in REEMPLAZOS + CAMBIOS_DE_ESTILO:
         texto = texto.replace(viejo, nuevo)
     return texto
+
+
+def _con_campos(clave: str, datos: dict) -> dict:
+    return {**datos, **CAMPOS.get(clave, {})}
 
 
 def prompt_anterior(prompt: str) -> str | None:
@@ -39,9 +56,12 @@ def corregir_estilos(carpeta_datos: Path) -> list[Path]:
     for f in sorted((carpeta_datos / "espacios").glob("*/estilos/*/estilo.json")):
         texto = f.read_text(encoding="utf-8")
         nuevo = texto_corregido(texto)
+        datos = json.loads(nuevo)                          # que siga siendo JSON válido
+        con_campos = _con_campos(f.parent.name, datos)
+        if con_campos != datos:
+            nuevo = json.dumps(con_campos, ensure_ascii=False, indent=2) + "\n"
         if nuevo == texto:
             continue
-        json.loads(nuevo)                                  # que siga siendo JSON válido
         respaldo = f.with_name("estilo.antes_del_arreglo.json")
         if not respaldo.exists():
             respaldo.write_text(texto, encoding="utf-8")
@@ -61,8 +81,9 @@ def corregir_base(s) -> int:
     n = 0
     for e in s.scalars(select(Estilo)):
         texto = json.dumps(e.datos or {}, ensure_ascii=False)
-        nuevo = texto_corregido(texto)
-        if nuevo != texto:
-            e.datos = json.loads(nuevo)
+        nuevo = json.loads(texto_corregido(texto))
+        nuevo = _con_campos(getattr(e, "clave", "") or nuevo.get("id", ""), nuevo)
+        if nuevo != (e.datos or {}):
+            e.datos = nuevo
             n += 1
     return n

@@ -242,6 +242,8 @@ class PerfilEdicion(Modelo):
     # «clasica»: la edición de los peces del Amazonas (la favorita del dueño): mucho movimiento, sin música,
     # pops, whoosh y cámara. «calmada»: menos movimiento, escenas a pantalla completa y música suave.
     estilo_edicion: Literal["clasica", "calmada"] = "clasica"
+    # «sin_vaiven»: la imagen no se mece sola en cada escena (zooms, entradas y ráfagas siguen igual)
+    movimiento: Literal["normal", "sin_vaiven"] = "normal"
 
 
 # ---------------------------------------------------------- perfil_canal.json

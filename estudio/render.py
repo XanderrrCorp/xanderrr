@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import io
 import math
+import json
 import os
 import random
 import shutil
@@ -79,6 +80,20 @@ def fondo_de_estilo(estilo, w: int, h: int, semilla: int) -> Image.Image:
     if f is not None and f.tipo == "color":
         return fondo_liso(w, h, f.valor, semilla)
     return papel_arrugado(w, h, semilla)
+
+
+def asegurar_fondo(raiz: Path, estilo, semilla: int) -> Path:
+    """assets/papel_arrugado.png del proyecto: se hace una vez y se rehace si el estilo cambió de fondo
+    (p. ej. de color liso a papel), para que un video viejo no se quede con el fondo de antes."""
+    ruta = raiz / "assets" / "papel_arrugado.png"
+    f = getattr(estilo, "fondo_montaje", None)
+    firma = json.dumps(f.model_dump() if f is not None else None, sort_keys=True)
+    marca = ruta.with_suffix(".fondo.json")
+    if not ruta.exists() or not marca.exists() or marca.read_text(encoding="utf-8") != firma:
+        ruta.parent.mkdir(parents=True, exist_ok=True)
+        fondo_de_estilo(estilo, W, H, semilla).save(ruta)
+        marca.write_text(firma, encoding="utf-8")
+    return ruta
 
 
 def papel_arrugado(w: int, h: int, semilla: int = 5) -> Image.Image:
@@ -1102,10 +1117,7 @@ def _renderizar_paralelo(carpeta: CarpetaProyecto, ffmpeg: str, destino: Path | 
     destino.parent.mkdir(parents=True, exist_ok=True)
     # lo que los tramos leen se prepara una vez aquí (así ninguno escribe a la vez que otro)
     proyecto = carpeta.cargar()
-    papel_ruta = raiz / "assets" / "papel_arrugado.png"
-    if not papel_ruta.exists():
-        papel_ruta.parent.mkdir(parents=True, exist_ok=True)
-        fondo_de_estilo(cargar_estilo(proyecto.estilo), W, H, proyecto.semilla % 1000).save(papel_ruta)
+    asegurar_fondo(raiz, cargar_estilo(proyecto.estilo), proyecto.semilla % 1000)
     esc = carpeta.cargar_escenas()
     if esc.niveles:
         armar_tira(esc, cargar_estilo(proyecto.estilo), raiz, seed=proyecto.semilla)
@@ -1182,10 +1194,7 @@ def _renderizar(carpeta: CarpetaProyecto, ffmpeg: str, destino: Path | None, des
     esc = carpeta.cargar_escenas()
     destino = destino or raiz / "render" / "final.mp4"
     destino.parent.mkdir(parents=True, exist_ok=True)
-    papel_ruta = raiz / "assets" / "papel_arrugado.png"
-    if not papel_ruta.exists():
-        papel_ruta.parent.mkdir(parents=True, exist_ok=True)
-        fondo_de_estilo(estilo, W, H, proyecto.semilla % 1000).save(papel_ruta)
+    papel_ruta = asegurar_fondo(raiz, estilo, proyecto.semilla % 1000)
     papel = Image.open(papel_ruta).convert("RGB").resize((W, H))
     escenario = Escenario(raiz, papel, estilo.comportamiento_montaje)
     hilos_x264 = os.environ.get("XANDART_HILOS_X264")

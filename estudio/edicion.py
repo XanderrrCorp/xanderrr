@@ -529,6 +529,11 @@ def construir_edl(carpeta: CarpetaProyecto) -> dict:
     vertical = esc.relacion_aspecto == "9:16"
     perfil = cargar_perfil_edicion(estilo, PERFIL_SHORT if vertical else None)
     clasica = perfil.estilo_edicion == "clasica"
+    # «movido»: la clásica con todo su movimiento. Con movimiento «sin_vaiven» (Paradoja Sapiens) se queda
+    # todo lo que da dopamina (zooms de golpe, entradas con rebote, ráfagas, pops y swoosh) pero la imagen
+    # ya no se mece sola todo el tiempo: el dueño lo sintió como «demasiado movimiento en las fotos»
+    movido = clasica
+    vaiven_siempre = clasica and perfil.movimiento != "sin_vaiven"
     direccion = leer_json(carpeta.ruta / "direccion.json") if (carpeta.ruta / "direccion.json").exists() else {}
     focos = direccion.get("focos") or {}
     rng = random.Random(proyecto.semilla)
@@ -674,7 +679,7 @@ def construir_edl(carpeta: CarpetaProyecto) -> dict:
             if mov_nombre == "zoom_golpe":
                 foco = [round(rng.uniform(0.42, 0.58), 3), round(rng.uniform(0.40, 0.54), 3)]
                 golpe = round(min(ini + 0.35 * dur, fin - 0.4), 3)
-                movimiento = {"tipo": "zoom_golpe", "de": 1.0, "a": 1.07 if clasica else 1.045, "punto_foco": foco}
+                movimiento = {"tipo": "zoom_golpe", "de": 1.0, "a": 1.07 if movido else 1.045, "punto_foco": foco}
                 efectos.append({"efecto": "zoom_golpe", "en": golpe})
                 _sfx(sfx, "golpe_grave", golpe, idx, f"Golpe con el zoom de {e.intencion.replace('_', ' ')}")
             else:
@@ -684,7 +689,7 @@ def construir_edl(carpeta: CarpetaProyecto) -> dict:
                     movimiento["a"] = round(1 + rng.uniform(0.012, 0.022), 3)
             # ráfaga: 2 o 3 acercamientos cortos al ritmo de un latido, solo en tension_creciente
             if (e.intencion == "tension_creciente" and dur >= 1.8 and not previo_rafaga
-                    and not zonas and rng.random() < (0.75 if clasica else 0.35)):
+                    and not zonas and rng.random() < (0.75 if movido else 0.35)):
                 n_golpes = 3 if dur >= 2.6 else 2
                 t, tiempos = ini + rng.uniform(0.2, 0.35), []
                 for _ in range(n_golpes):
@@ -810,7 +815,7 @@ def construir_edl(carpeta: CarpetaProyecto) -> dict:
                 and not any(x["efecto"] == "revelar_pixelado" for x in efectos):
             opciones = ["entrada_abajo", "entrada_lado", "entrada_rebote"]
             con_cupo = [o for o in opciones if usos_entrada[o] / (idx + 1) < tope_recurso and o != ultima_entrada]
-            if con_cupo and rng.random() < (0.85 if clasica else 0.35):   # la calmada: pocas entradas
+            if con_cupo and rng.random() < (0.85 if movido else 0.35):   # la calmada: pocas entradas
                 o = min(con_cupo, key=lambda r: (usos_entrada[r], rng.random()))
                 usos_entrada[o] += 1
                 ultima_entrada = o
@@ -828,10 +833,10 @@ def construir_edl(carpeta: CarpetaProyecto) -> dict:
                 razon = (razon + "; " if razon else "") + {"entrada_abajo": "la imagen sale desde abajo",
                                                            "entrada_lado": "la imagen entra de lado",
                                                            "entrada_rebote": "la imagen aparece con rebote"}[o]
-        if modo not in ("tira", "pantalla_completa") and (clasica or rng.random() < 0.25):
-            # clásica: vaivén en todas (como los peces del Amazonas); calmada: leve y solo a ratos
-            efectos.append({"efecto": "vaiven", "hz": round(rng.uniform(0.55, 0.85) if clasica else rng.uniform(0.4, 0.6), 2),
-                            "px": round(rng.uniform(4, 7) if clasica else rng.uniform(2, 3.5), 1),
+        if modo not in ("tira", "pantalla_completa") and (vaiven_siempre or rng.random() < 0.25):
+            # clásica: vaivén en todas (como los peces del Amazonas); calmada o sin vaivén: leve y solo a ratos
+            efectos.append({"efecto": "vaiven", "hz": round(rng.uniform(0.55, 0.85) if vaiven_siempre else rng.uniform(0.4, 0.6), 2),
+                            "px": round(rng.uniform(4, 7) if vaiven_siempre else rng.uniform(2, 3.5), 1),
                             "fase": round(rng.uniform(0, 6.28), 2)})
         previo_golpe = bool(movimiento and movimiento["tipo"] == "zoom_golpe")
         previo_rafaga = any(x["efecto"] == "rafaga" for x in efectos)

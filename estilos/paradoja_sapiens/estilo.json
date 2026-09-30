@@ -1,7 +1,7 @@
 {
   "id": "paradoja_sapiens",
   "nombre": "Paradoja Sapiens · doodle",
-  "descripcion": "Dibujo plano tipo doodle: contornos negros gruesos, colores sólidos, animales reconocibles con ojos saltones de caricatura, escenas de un color con trazos de lápiz. Personaje fijo: stickman cavernícola (cabeza blanca redonda, túnica de piel café rota amarrada con cuerda, descalzo), como en la miniatura del dueño. Recortes y recuadros sobre fondo turquesa liso.",
+  "descripcion": "Dibujo plano tipo doodle: contornos negros gruesos, colores sólidos, animales reconocibles con ojos saltones de caricatura, escenas de un color con trazos de lápiz. Personaje fijo: stickman cavernícola (cabeza blanca redonda, túnica de piel café rota amarrada con cuerda, descalzo), como en la miniatura del dueño. Recortes y recuadros sobre papel claro (el dueño no quiso el fondo turquesa).",
   "con_personaje": true,
   "bloque_estilo": "Flat 2D cartoon doodle illustration, thick bold black outlines, solid flat bright colors with minimal cel shading, simple rounded shapes, funny and expressive, any animal drawn as a recognizable real species but with big round white googly cartoon eyes.",
   "personaje_por_defecto": "a cartoon stick figure with a big round plain white head, a simple expressive face with small eyes and eyebrows, thin black stick arms and legs, small round white hands and bare feet, wearing a torn brown fur caveman tunic over one shoulder with a ragged hem, tied at the waist with a thin rope belt",
@@ -51,7 +51,7 @@
     {
       "id": "amenaza_cinematografica",
       "descripcion": "Plano dramático del peligro",
-      "plantilla_prompt": "Flat 2D cartoon doodle illustration, thick bold black outlines, solid flat bright colors with minimal cel shading, simple rounded shapes, funny and expressive, any animal drawn as a recognizable real species but with big round white googly cartoon eyes, dramatic but still cartoon: the animal large and close, menacing googly eyes. {descripcion}. Dark flat teal-blue background with a few pale sketchy pencil lines, aspect ratio 16:9, no text, no letters.",
+      "plantilla_prompt": "Flat 2D cartoon doodle illustration, thick bold black outlines, solid flat bright colors with minimal cel shading, simple rounded shapes, funny and expressive, any animal drawn as a recognizable real species but with big round white googly cartoon eyes, dramatic but still cartoon: the animal large and close, menacing googly eyes. {descripcion}. Light cream paper background with a few faint sketchy pencil lines, aspect ratio 16:9, no text, no letters.",
       "quitar_fondo": false,
       "modo_montaje": "recuadro_sobre_papel"
     }
@@ -66,15 +66,15 @@
     "pov_personaje": 0.04
   },
   "fondo_montaje": {
-    "tipo": "color",
-    "valor": "#2E8F8C"
+    "tipo": "textura",
+    "valor": "assets/papel_arrugado.png"
   },
   "modos_de_montaje_permitidos": [
     "recorte_sobre_papel",
     "recuadro_sobre_papel"
   ],
   "gramatica_edicion": "gramaticas/estandar.json",
-  "perfil_edicion": "perfiles/enciclopedia_ritmo_alto.json",
+  "perfil_edicion": "perfiles/paradoja_documental.json",
   "movimiento_maximo": 0.05,
   "subtitulos": {
     "estilo": "blanco_contorno_negro",
