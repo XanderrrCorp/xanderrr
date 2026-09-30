@@ -13,7 +13,9 @@ import hashlib
 import io
 import json
 import math
+import threading
 import time
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Callable
@@ -202,63 +204,87 @@ def generar_imagenes(carpeta: CarpetaProyecto, *, primeras: int | None = None, i
 
     tope = tope_llamadas(esc, config, reintentos)
     llamadas_previas = sum(1 for x in libro.entradas() if x["modulo"] == MODULO)
+    candado = threading.RLock()        # manifiesto, libro y reporte se tocan desde varios hilos
+    pausa = {"hasta": 0.0}             # si Google pide ir más despacio, todos los hilos esperan
+    en_vuelo = {"usd": 0.0}            # lo que cuestan las llamadas que están en camino (aún sin registrar)
 
-    for t in trabajos:
-        faltan = [r for r in t.referencias if not r.exists()]
-        if faltan:
-            reporte.fallidas[t.clave] = f"falta la referencia {faltan[0].name}"
-            continue
+    def guardar_manifiesto():
+        escribir_json(ruta_manifiesto, manifiesto)
+
+    def hacer(t: Trabajo) -> None:
+        with candado:
+            if reporte.frenado:
+                reporte.pendientes.append(t.clave)
+                return
+            faltan = [r for r in t.referencias if not r.exists()]
+            if faltan:
+                reporte.fallidas[t.clave] = f"falta la referencia {faltan[0].name}"
+                return
         huella = _huella(t, proveedor.modelo)
-        previo = manifiesto.get(t.clave)
-        if previo is None and t.clave.startswith("asset:") and t.destino.exists():
-            # Asset del canal que ya existe (p. ej. la mascota de un video anterior):
-            # se adopta tal cual y no se vuelve a pagar (5.3: los assets se reutilizan).
-            manifiesto[t.clave] = {"archivo": str(t.destino.relative_to(carpeta.ruta)), "sin_fondo": None,
-                                   "huella": huella, "prompt": t.prompt, "referencias": [],
-                                   "proveedor": "existente", "modelo": "", "intentos": 0,
-                                   "costo_usd": 0.0, "aviso": None}
-            escribir_json(ruta_manifiesto, manifiesto)
-            reporte.ya_estaban.append(t.clave)
-            continue
-        if previo and previo.get("huella") != huella and t.destino.exists() and _misma_de_antes(t, proveedor.modelo, previo):
-            # pagada con la plantilla de antes de un arreglo (ver arreglos.py): es la misma imagen
-            manifiesto[t.clave] = {**previo, "huella": huella, "prompt": t.prompt}
-            escribir_json(ruta_manifiesto, manifiesto)
-            previo = manifiesto[t.clave]
-        if previo and previo.get("huella") == huella and t.destino.exists():
-            reporte.ya_estaban.append(t.clave)
-            continue
+        with candado:
+            previo = manifiesto.get(t.clave)
+            if previo is None and t.clave.startswith("asset:") and t.destino.exists():
+                # Asset del canal que ya existe (p. ej. la mascota de un video anterior):
+                # se adopta tal cual y no se vuelve a pagar (5.3: los assets se reutilizan).
+                manifiesto[t.clave] = {"archivo": str(t.destino.relative_to(carpeta.ruta)), "sin_fondo": None,
+                                       "huella": huella, "prompt": t.prompt, "referencias": [],
+                                       "proveedor": "existente", "modelo": "", "intentos": 0,
+                                       "costo_usd": 0.0, "aviso": None}
+                guardar_manifiesto()
+                reporte.ya_estaban.append(t.clave)
+                return
+            if previo and previo.get("huella") != huella and t.destino.exists() and _misma_de_antes(t, proveedor.modelo, previo):
+                # pagada con la plantilla de antes de un arreglo (ver arreglos.py): es la misma imagen
+                manifiesto[t.clave] = {**previo, "huella": huella, "prompt": t.prompt}
+                guardar_manifiesto()
+                previo = manifiesto[t.clave]
+            if previo and previo.get("huella") == huella and t.destino.exists():
+                reporte.ya_estaban.append(t.clave)
+                return
 
         costo_trabajo, aviso_calidad, ultimo_error, exito = 0.0, None, "", False
         intento, esperas = -1, 0
         while intento + 1 < 1 + reintentos:
             intento += 1
-            if not permiso and llamadas_previas + reporte.llamadas >= tope:
-                reporte.frenado = (f"se alcanzó el tope de {tope} llamadas de imagen para este video; "
-                                   "hace falta permiso explícito para seguir")
-                break
-            estimado = proveedor.estimar_usd(t.prompt, t.referencias)
-            try:
-                libro.autorizar(estimado, permiso=permiso)
-            except FrenoPresupuesto as ex:
-                reporte.frenado = str(ex)
-                break
-            reporte.llamadas += 1
+            with candado:
+                if reporte.frenado:
+                    break
+                if not permiso and llamadas_previas + reporte.llamadas >= tope:
+                    reporte.frenado = (f"se alcanzó el tope de {tope} llamadas de imagen para este video; "
+                                       "hace falta permiso explícito para seguir")
+                    break
+                estimado = proveedor.estimar_usd(t.prompt, t.referencias)
+                try:
+                    # el freno cuenta también las imágenes que otros hilos están pidiendo en este momento
+                    libro.autorizar(en_vuelo["usd"] + estimado, permiso=permiso)
+                except FrenoPresupuesto as ex:
+                    reporte.frenado = str(ex)
+                    break
+                reporte.llamadas += 1
+                en_vuelo["usd"] += estimado
+            falta = pausa["hasta"] - time.monotonic()
+            if falta > 0:
+                dormir(falta)
             try:
                 res = proveedor.generar(t.prompt, t.referencias)
             except ErrorProveedor as ex:
+                with candado:
+                    en_vuelo["usd"] -= estimado
                 ultimo_error = str(ex)
-                if ex.uso and ex.uso.costo_usd:
-                    libro.registrar(modulo=MODULO, proveedor=proveedor.nombre, modelo=proveedor.modelo,
-                                    unidades=ex.uso.unidades(), costo_usd=ex.uso.costo_usd,
-                                    detalle=f"{t.clave} intento {intento + 1} fallido")
-                    costo_trabajo += ex.uso.costo_usd
+                with candado:
+                    if ex.uso and ex.uso.costo_usd:
+                        libro.registrar(modulo=MODULO, proveedor=proveedor.nombre, modelo=proveedor.modelo,
+                                        unidades=ex.uso.unidades(), costo_usd=ex.uso.costo_usd,
+                                        detalle=f"{t.clave} intento {intento + 1} fallido")
+                        costo_trabajo += ex.uso.costo_usd
                 if ex.limite and esperas < ESPERAS_LIMITE:
                     # Google limita cuántas imágenes por minuto: no cobró, así que se espera y se repite
                     # sin gastar un reintento ni una llamada del tope
                     espera = min(ESPERA_LIMITE_MAX_S, ESPERA_LIMITE_S * 2 ** esperas)
                     esperas += 1
-                    reporte.llamadas -= 1
+                    with candado:
+                        reporte.llamadas -= 1
+                        pausa["hasta"] = max(pausa["hasta"], time.monotonic() + espera)
                     intento -= 1
                     avisar(f"  {t.clave}: Google pide ir más despacio; espero {espera:.0f} s y sigo")
                     dormir(espera)
@@ -267,9 +293,11 @@ def generar_imagenes(carpeta: CarpetaProyecto, *, primeras: int | None = None, i
                 if not ex.reintentable:
                     break
                 continue
-            libro.registrar(modulo=MODULO, proveedor=res.proveedor, modelo=res.modelo,
-                            unidades={**res.uso.unidades(), "referencias": len(t.referencias)},
-                            costo_usd=res.uso.costo_usd, detalle=f"{t.clave} intento {intento + 1}")
+            with candado:
+                en_vuelo["usd"] -= estimado
+                libro.registrar(modulo=MODULO, proveedor=res.proveedor, modelo=res.modelo,
+                                unidades={**res.uso.unidades(), "referencias": len(t.referencias)},
+                                costo_usd=res.uso.costo_usd, detalle=f"{t.clave} intento {intento + 1}")
             costo_trabajo += res.uso.costo_usd
             try:
                 png, aviso_calidad = _validar_png(res.png, aspecto)
@@ -286,28 +314,39 @@ def generar_imagenes(carpeta: CarpetaProyecto, *, primeras: int | None = None, i
                 sf = t.destino.parent / "sin_fondo" / t.destino.name
                 if _quitar_fondo(t.destino, sf):
                     sin_fondo = str(sf.relative_to(carpeta.ruta))
-            manifiesto[t.clave] = {
-                "archivo": str(t.destino.relative_to(carpeta.ruta)), "sin_fondo": sin_fondo,
-                "huella": huella, "prompt": t.prompt, "referencias": [r.name for r in t.referencias],
-                "proveedor": res.proveedor, "modelo": res.modelo, "intentos": intento + 1,
-                "costo_usd": round(costo_trabajo, 6), "aviso": aviso_calidad,
-            }
-            escribir_json(ruta_manifiesto, manifiesto)  # reanudable tras cada imagen
-            reporte.generadas.append(t.clave)
-            reporte.costos_por_imagen[t.clave] = costo_trabajo
-            if aviso_calidad:
-                reporte.avisos.append(f"{t.clave}: {aviso_calidad}")
-            if t.quitar_fondo and not sin_fondo:
-                pass                                    # el montaje recorta el fondo liso
+            with candado:
+                manifiesto[t.clave] = {
+                    "archivo": str(t.destino.relative_to(carpeta.ruta)), "sin_fondo": sin_fondo,
+                    "huella": huella, "prompt": t.prompt, "referencias": [r.name for r in t.referencias],
+                    "proveedor": res.proveedor, "modelo": res.modelo, "intentos": intento + 1,
+                    "costo_usd": round(costo_trabajo, 6), "aviso": aviso_calidad,
+                }
+                guardar_manifiesto()  # reanudable tras cada imagen
+                reporte.generadas.append(t.clave)
+                reporte.costos_por_imagen[t.clave] = costo_trabajo
+                if aviso_calidad:
+                    reporte.avisos.append(f"{t.clave}: {aviso_calidad}")
             avisar(f"  {t.clave}: lista · {formato_usd(costo_trabajo)} · {formato_cop(config.a_cop(costo_trabajo))}")
             exito = True
             break
-        reporte.costo_usd += costo_trabajo
-        if reporte.frenado and not exito:
-            reporte.pendientes.append(t.clave)
-            break
-        if not exito:
-            reporte.fallidas[t.clave] = ultimo_error or "sin imagen tras los reintentos"
+        with candado:
+            reporte.costo_usd += costo_trabajo
+            if reporte.frenado and not exito:
+                reporte.pendientes.append(t.clave)
+            elif not exito:
+                reporte.fallidas[t.clave] = ultimo_error or "sin imagen tras los reintentos"
+
+    # los assets van primero y uno a uno (son referencia de las escenas); las escenas, varias a la vez
+    for t in [t for t in trabajos if t.clave.startswith("asset:")]:
+        hacer(t)
+    escenas = [t for t in trabajos if not t.clave.startswith("asset:")]
+    hilos = max(1, int(ajustes.get("en_paralelo", 3)))
+    if hilos == 1 or len(escenas) < 2:
+        for t in escenas:
+            hacer(t)
+    else:
+        with ThreadPoolExecutor(max_workers=hilos) as grupo:
+            list(grupo.map(hacer, escenas))
     return reporte
 
 

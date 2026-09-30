@@ -4,6 +4,8 @@
     "proveedor": "vertex",
     "relacion_aspecto": "16:9",
     "reintentos_por_escena": 2,
+    "en_paralelo": 3,
+    "_nota_en_paralelo": "Cuántas imágenes de escena se piden a la vez (los personajes y referencias van primero, una a una). Si Google responde 429, todas esperan juntas.",
     "tiempo_max_s": 120,
     "opciones": {
       "together": {

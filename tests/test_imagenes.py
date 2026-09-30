@@ -73,7 +73,7 @@ def test_freno_en_pesos_para_antes_de_gastar(proyecto):
 
 
 def test_reintentos_registran_lo_cobrado(proyecto, config):
-    prov = ProveedorSimulado(config, fallar_cada=2)     # falla una de cada dos llamadas
+    prov = ProveedorSimulado(config, fallar_cada=2)     # el primer intento de cada imagen falla
     r = generar_imagenes(proyecto, primeras=10, proveedor=prov, config=config, avisar=silencio)
     assert r.fallidas == {}
     fallidos = [x for x in proyecto.libro(config).entradas() if "fallido" in x.get("detalle", "")]
@@ -355,3 +355,25 @@ def test_el_dueno_elige_el_proveedor_en_ajustes(config, monkeypatch):
 
     monkeypatch.setenv("XANDART_PROVEEDOR_IMAGENES", "simulado")
     assert pv.crear_proveedor(config, {"proveedor": "together", "opciones": {}}).nombre == "simulado"
+
+
+def test_escenas_se_piden_varias_a_la_vez(proyecto, config):
+    import threading
+    import time as _t
+
+    class Contador(ProveedorSimulado):
+        activas = maximo = 0
+        cerrojo = threading.Lock()
+
+        def generar(self, prompt, referencias):
+            with Contador.cerrojo:
+                Contador.activas += 1
+                Contador.maximo = max(Contador.maximo, Contador.activas)
+            _t.sleep(0.05)
+            try:
+                return super().generar(prompt, referencias)
+            finally:
+                with Contador.cerrojo:
+                    Contador.activas -= 1
+    r = generar_imagenes(proyecto, primeras=10, proveedor=Contador(config), config=config, avisar=silencio)
+    assert r.fallidas == {} and Contador.maximo > 1

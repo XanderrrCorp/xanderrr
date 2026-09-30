@@ -264,6 +264,7 @@ class ProveedorSimulado:
         self.tarifa = _Tarifa(config, modelo)
         self.fallar_cada = fallar_cada
         self.llamadas = 0
+        self._por_prompt: dict[str, int] = {}   # las fallas se cuentan por imagen: igual con varios hilos
 
     def estimar_usd(self, prompt: str, referencias: list[Path]) -> float:
         return self.tarifa.estimar(prompt, referencias)
@@ -275,7 +276,8 @@ class ProveedorSimulado:
         tin = int(len(prompt) / 3.5 + len(referencias) * self.tarifa.por_referencia)
         uso = Uso(tin, len(referencias) * self.tarifa.por_referencia, self.tarifa.salida_por_imagen,
                   self.tarifa.costo(tin, self.tarifa.salida_por_imagen))
-        if self.fallar_cada and self.llamadas % self.fallar_cada == 0:
+        n = self._por_prompt[prompt] = self._por_prompt.get(prompt, 0) + 1
+        if self.fallar_cada and n % self.fallar_cada == 1:   # el primer intento de cada imagen falla
             raise ErrorProveedor("fallo simulado", reintentable=True, uso=uso)
         img = Image.new("RGB", (1344, 768), (58, 58, 64))
         d = ImageDraw.Draw(img)
