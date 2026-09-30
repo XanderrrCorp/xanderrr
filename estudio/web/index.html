@@ -25,7 +25,7 @@
 <dialog id="ajustes">
   <h2>Ajustes</h2>
   <p class="tenue">Las claves se guardan solo en este computador.</p>
-  <label>Clave de Together (imágenes)
+  <label>Clave de Together (solo para «Animar» en el editor; las imágenes van con Google)
     <input id="k-together" type="password" placeholder="tgp_v1_…" autocomplete="off">
   </label>
   <div class="fila"><span id="e-together" class="estado"></span><button class="mini" onclick="probar('together')">Probar</button></div>
@@ -47,7 +47,6 @@
   <div class="fila"><span id="e-gemini" class="estado"></span><button class="mini" onclick="probar('gemini')">Probar</button></div>
   <label>Las imágenes se hacen con
     <select id="proveedor-img" onchange="elegirProveedorImagenes(this.value)">
-      <option value="together">Together (saldo que recargas)</option>
       <option value="vertex">Google Cloud · Agent Platform (créditos de Google)</option>
       <option value="gemini">Google AI Studio</option>
     </select>

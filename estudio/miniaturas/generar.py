@@ -57,7 +57,11 @@ def crear_proveedor():
 
 
 def costo_por_imagen(proveedor=None) -> float:
-    proveedor = proveedor or crear_proveedor()
+    if proveedor is None:                       # solo el precio: no hace falta la clave para calcularlo
+        from ..config import ConfigCostos
+        from ..pipeline import precio_imagen_usd
+
+        return float(precio_imagen_usd(ConfigCostos.cargar()))
     return float(proveedor.estimar_usd("x", []))
 
 

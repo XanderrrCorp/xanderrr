@@ -289,9 +289,15 @@ class ProveedorSimulado:
         return ResultadoImagen(buf.getvalue(), uso, self.modelo, self.nombre)
 
 
+def proveedor_elegido(ajustes: dict) -> str:
+    """Con quién se hacen las imágenes: lo elegido en Ajustes (queda en .env) o el de la configuración.
+    Together ya no se usa para imágenes (pedido del dueño): quien lo tenía guardado pasa a Google Cloud."""
+    nombre = clave_api("XANDART_PROVEEDOR_IMAGENES") or ajustes.get("proveedor", "vertex")
+    return "vertex" if nombre == "together" else nombre
+
+
 def crear_proveedor(config: ConfigCostos, ajustes: dict, nombre: str | None = None) -> Proveedor:
-    # el dueño puede elegir en Ajustes con quién se hacen las imágenes (queda en .env)
-    nombre = nombre or clave_api("XANDART_PROVEEDOR_IMAGENES") or ajustes.get("proveedor", "gemini")
+    nombre = nombre or proveedor_elegido(ajustes)
     op = (ajustes.get("opciones") or {}).get(nombre, {})
     tiempo = ajustes.get("tiempo_max_s", 120)
     if nombre == "gemini":

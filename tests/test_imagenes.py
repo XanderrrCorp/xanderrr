@@ -208,11 +208,15 @@ def test_together_peticion_y_costo(tmp_path, config, monkeypatch):
     assert res.uso.costo_usd == pytest.approx(precio) and prov.estimar_usd("x", [ref]) == pytest.approx(precio)
 
 
-def test_proveedor_por_defecto_es_together(config, monkeypatch):
+def test_proveedor_por_defecto_es_google_cloud_aunque_quedara_together(config, monkeypatch):
     from estudio.config import leer_config
-    from estudio.imagenes.proveedores import ProveedorTogether, crear_proveedor
-    monkeypatch.setenv("TOGETHER_API_KEY", "x")
-    assert isinstance(crear_proveedor(config, leer_config("proveedores.json")["imagenes"]), ProveedorTogether)
+    from estudio.imagenes.proveedores import ProveedorVertex, crear_proveedor
+    monkeypatch.setenv("GEMINI_API_KEY", "x")
+    ajustes = leer_config("proveedores.json")["imagenes"]
+    monkeypatch.delenv("XANDART_PROVEEDOR_IMAGENES", raising=False)
+    assert isinstance(crear_proveedor(config, ajustes), ProveedorVertex)
+    monkeypatch.setenv("XANDART_PROVEEDOR_IMAGENES", "together")   # lo que quedó guardado de antes
+    assert isinstance(crear_proveedor(config, ajustes), ProveedorVertex)
 
 
 def test_together_sin_clave_local_deja_que_el_proxy_la_ponga(config, monkeypatch):

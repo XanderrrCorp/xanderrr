@@ -29,7 +29,7 @@ API_VIDEOS = "https://api.pexels.com/videos/search"
 LICENCIA = "Licencia de Pexels: uso gratis, también comercial; sin atribución obligatoria (pexels.com/license)"
 FOTOS_POR_NIVEL, VIDEOS_POR_NIVEL = 10, 6
 APROBADAS_POR_NIVEL = {"foto": 2, "video": 1}
-LICENCIA_IA = "Recreación generada con IA (Gemini Flash Image 2.5 vía Together): no es una foto real"
+LICENCIA_IA = "Recreación generada con IA (Gemini Flash Image): no es una foto real"
 PROMPT_REALISTA = ("Ultra-realistic wildlife photograph of a {especie} ({busqueda}), anatomically accurate, true natural "
                    "colors and textures, in its natural habitat, whole animal visible and centered, sharp focus on the "
                    "animal, shallow depth of field, soft natural light, shot on a professional camera with a macro "

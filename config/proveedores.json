@@ -1,7 +1,7 @@
 {
   "_nota": "Proveedor y modelo de cada servicio. Cambiar aquí no requiere tocar código. Las claves van en .env (nunca en el repositorio, que es público).",
   "imagenes": {
-    "proveedor": "together",
+    "proveedor": "vertex",
     "relacion_aspecto": "16:9",
     "reintentos_por_escena": 2,
     "tiempo_max_s": 120,
@@ -11,7 +11,7 @@
         "variable_clave": "TOGETHER_API_KEY",
         "ancho": 1376,
         "alto": 768,
-        "_nota": "Gemini 3.1 Flash Image solo acepta tamaños fijos: 1376x768 es su 16:9 (768x1376 el 9:16, 1024x1024 el cuadrado). flash-image-2.5 se apaga el 2-oct-2026."
+        "_nota": "Ya no se usa para imágenes (se quitó de Ajustes); queda por si se vuelve a necesitar. Gemini 3.1 Flash Image solo acepta tamaños fijos: 1376x768 es su 16:9 (768x1376 el 9:16, 1024x1024 el cuadrado). flash-image-2.5 se apaga el 2-oct-2026."
       },
       "gemini": {
         "modelo": "gemini-2.5-flash-image",
@@ -21,7 +21,7 @@
         "modelo": "simulado"
       },
       "vertex": {
-        "modelo": "gemini-3.1-flash-image-preview",
+        "modelo": "gemini-3.1-flash-image",
         "variable_clave": "GEMINI_API_KEY",
         "_nota": "Google Cloud · Agent Platform (antes Vertex AI) con clave de API: se cobra a la facturación de Cloud y a sus créditos de prueba. El nombre exacto del modelo lo confirma «Probar» en Ajustes (sin generar nada)."
       }

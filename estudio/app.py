@@ -253,15 +253,17 @@ class ProveedorImagenes(BaseModel):
 def ver_proveedor_imagenes():
     from .config import leer_config
 
-    return {"proveedor": clave_api("XANDART_PROVEEDOR_IMAGENES") or leer_config("proveedores.json")["imagenes"]["proveedor"]}
+    from .imagenes.proveedores import proveedor_elegido
+
+    return {"proveedor": proveedor_elegido(leer_config("proveedores.json")["imagenes"])}
 
 
 @app.post("/api/proveedor-imagenes")
 def elegir_proveedor_imagenes(p: ProveedorImagenes):
     """Con quién se hacen las imágenes de ahora en adelante (queda en .env; los videos no cambian)."""
-    if p.proveedor not in ("together", "vertex", "gemini"):
+    if p.proveedor not in ("vertex", "gemini"):
         raise HTTPException(400, "proveedor no válido")
-    if p.proveedor != "together" and not clave_api("GEMINI_API_KEY"):
+    if not clave_api("GEMINI_API_KEY"):
         raise HTTPException(400, "Primero guarda y prueba la clave de Google")
     valores = _leer_env()
     valores["XANDART_PROVEEDOR_IMAGENES"] = p.proveedor

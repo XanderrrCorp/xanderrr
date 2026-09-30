@@ -264,12 +264,13 @@ def paso_guion(c: CarpetaProyecto, t: Trabajo, ejecutar=None) -> None:
 
 
 def precio_imagen_usd(config: ConfigCostos) -> float:
-    """Lo que cuesta una imagen con el proveedor elegido en Ajustes (Together cobra por imagen; Google, por
+    """Lo que cuesta una imagen con el proveedor elegido en Ajustes (Google cobra por
     tokens: se calcula con los de una imagen típica)."""
     from .config import clave_api
+    from .imagenes.proveedores import proveedor_elegido
 
     ajustes = leer_config("proveedores.json")["imagenes"]
-    nombre = clave_api("XANDART_PROVEEDOR_IMAGENES") or ajustes["proveedor"]
+    nombre = proveedor_elegido(ajustes)
     op = ajustes["opciones"].get(nombre) or ajustes["opciones"][ajustes["proveedor"]]
     modelo = (clave_api("XANDART_MODELO_IMAGEN_GOOGLE") if nombre == "vertex" else None) or op.get("modelo")
     t = config.precios["imagenes_por_modelo"].get(modelo) or {}

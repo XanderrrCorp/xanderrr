@@ -17,7 +17,7 @@ async function irInicio() {
   clearInterval(SONDEO); if (typeof MINI_SONDEO !== 'undefined') clearInterval(MINI_SONDEO); ACTUAL = null; location.hash = '';
   ESTADO = await api('/api/estado');
   const faltan = [];
-  if (!ESTADO.claves.together) faltan.push('la clave de Together');
+  if (!ESTADO.claves.gemini) faltan.push('la clave de Google');
   if (!ESTADO.claves.minimax) faltan.push('la clave de MiniMax');
   if (!ESTADO.claude) faltan.push('Claude');
   app.innerHTML = `
