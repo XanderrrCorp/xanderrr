@@ -164,9 +164,38 @@ export function Revision() {
         <section className="rev-tarjeta"><p className="tenue">El guion todavía no está. <button className="boton-borde pequeno" onClick={() => accion('guion')}>Escribir el guion</button></p></section>
       )}
 
+      {guionOk && <GuionCompleto v={v} />}
       {guionOk && <Escenas v={v} conImagenes={imgOk} bloqueado={trabajando} slug={slug} alRegenerar={(id, inst) => accion(`escenas/${id}/regenerar`, { instruccion: inst })} />}
       <p className="tenue pequeno" style={{ marginTop: 24 }}>¿Algo no está aquí? <a href={paginaVieja(slug)}>Ábrelo en la página de siempre</a>.</p>
     </div>
+  );
+}
+
+/** El guion entero, como texto corrido por secciones (con los cambios que hayas hecho), para leerlo o copiarlo. */
+function GuionCompleto({ v }: { v: VideoDetalle }) {
+  const [abierto, setAbierto] = useState(false);
+  const [copiado, setCopiado] = useState(false);
+  const texto = [`# ${v.titulo}`, ...v.escenas.reduce<string[]>((acc, e, k) => {
+    if (k === 0 || v.escenas[k - 1].seccion !== e.seccion) acc.push(`\n## ${e.seccion}\n`);
+    acc.push(e.narracion);
+    return acc;
+  }, [])].join('\n');
+  const palabras = v.escenas.reduce((n, e) => n + e.narracion.split(/\s+/).filter(Boolean).length, 0);
+  const copiar = async () => {
+    try { await navigator.clipboard.writeText(texto); setCopiado(true); window.setTimeout(() => setCopiado(false), 2000); }
+    catch { setAbierto(true); }
+  };
+  return (
+    <section className="rev-tarjeta">
+      <div className="fila-botones">
+        <b>Guion completo</b>
+        <span className="tenue pequeno">{v.escenas.length} escenas · {palabras} palabras</span>
+        <span className="crece" />
+        <button className="boton-borde pequeno" onClick={() => setAbierto(!abierto)}>{abierto ? 'Ocultar' : 'Ver guion completo'}</button>
+        <button className="boton-borde pequeno" onClick={copiar}>{copiado ? '¡Copiado!' : 'Copiar guion'}</button>
+      </div>
+      {abierto && <pre className="rev-guion">{texto}</pre>}
+    </section>
   );
 }
 
