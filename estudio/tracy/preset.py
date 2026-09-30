@@ -7,6 +7,7 @@ que un canal sin nada guardado también funciona. Los canales de siempre no tien
 """
 from __future__ import annotations
 
+import re
 from typing import Any
 
 from ..config import leer_config
@@ -24,11 +25,19 @@ POR_DEFECTO: dict[str, Any] = {
     "clip_max_s": 30.0,
     "clip_objetivo_s": [8.0, 20.0],
     "bloque_tts_max": 2500,         # caracteres por llamada a MiniMax
+    # escena final fija: desde este punto del video (0,35 = desde el 35 %) hasta el final va el fondo de
+    # naturaleza en blanco y negro con partículas, el presentador a un lado, el botón Suscríbete y las
+    # ondas de la voz. 1 = sin escena final.
+    "escena_final_desde": 0.35,
+    "presentador": r"C:\Users\USUARIO\Videos\presentador tracy.png",
+    "suscribete_cada_s": 60.0,
+    "color_subtitulos": "#FFE21F",  # amarillo en todo el video
 }
 
 
 EXT_VIDEO = (".mp4", ".mov", ".mkv", ".avi", ".webm", ".m4v")
 EXT_AUDIO = (".mp3", ".m4a", ".wav", ".aac", ".ogg", ".flac", ".wma")
+EXT_IMAGEN = (".png", ".webp", ".jpg", ".jpeg")
 
 
 def encontrar(ruta: str | None, extensiones: tuple[str, ...]) -> str | None:
@@ -65,6 +74,12 @@ def completar(tracy: dict[str, Any] | None) -> dict[str, Any]:
     p["clip_objetivo_s"] = [lo, hi]
     p["bloque_tts_max"] = int(p["bloque_tts_max"])
     p["volumen_musica_db"] = max(-40.0, min(0.0, float(p["volumen_musica_db"])))
+    p["escena_final_desde"] = float(p["escena_final_desde"])
+    if not 0.05 <= p["escena_final_desde"] <= 1:
+        raise ValueError("escena_final_desde va de 0,05 a 1 (1 = sin escena final)")
+    p["suscribete_cada_s"] = max(20.0, float(p["suscribete_cada_s"]))
+    if not re.fullmatch(r"#[0-9A-Fa-f]{6}", str(p["color_subtitulos"])):
+        p["color_subtitulos"] = POR_DEFECTO["color_subtitulos"]
     return p
 
 

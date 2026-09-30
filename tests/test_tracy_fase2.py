@@ -171,8 +171,17 @@ def test_video_tracy_de_punta_a_punta(tmp_path, monkeypatch):
     musica = tmp_path / "musica.m4a"
     subprocess.run([ff, "-y", "-loglevel", "error", "-f", "lavfi", "-i", "sine=frequency=330:duration=7",
                     "-c:a", "aac", str(musica)], check=True)                  # más corta que el video: va en bucle
+    from PIL import Image, ImageDraw
+    presentador = tmp_path / "presentador.png"
+    im = Image.new("RGBA", (500, 800), (0, 0, 0, 0))
+    ImageDraw.Draw(im).ellipse((120, 60, 380, 360), fill=(220, 180, 150, 255))       # una «cabeza» sin fondo
+    ImageDraw.Draw(im).rectangle((60, 360, 440, 800), fill=(40, 40, 60, 255))
+    im.save(presentador)
     monkeypatch.setattr(mod_preset, "POR_DEFECTO", {**mod_preset.POR_DEFECTO, "clip_base": str(base),
-                                                    "musica": str(musica)})
+                                                    "musica": str(musica), "presentador": str(presentador),
+                                                    "escena_final_desde": 0.5, "suscribete_cada_s": 20})
+    from estudio.tracy import escena_final
+    monkeypatch.setattr(escena_final, "BUCLE_PARTICULAS_S", 4)                # la prueba no arma 20 s de partículas
     guion = ("La disciplina es el puente entre las metas y los logros. " * 4 + "\n\n"
              + "Cada mañana decide qué es lo más importante y hazlo primero. " * 5
              + "El 80% de tus resultados viene del 20% de tus actividades. " * 4 + "Empieza hoy mismo.")
@@ -197,8 +206,12 @@ def test_video_tracy_de_punta_a_punta(tmp_path, monkeypatch):
     assert len(stock) == len(set(stock)) and "999999" not in stock          # sin repetir y nunca el de 720p
     sem = sorted((x["desde"], x["desde"] + x["duracion"]) for x in clips if x["tipo"] == "seminario")
     assert all(sem[k][1] <= sem[k + 1][0] for k in range(len(sem) - 1))
+    finales = [x for x in clips if x["tipo"] == "final"]
+    assert finales and all(x["inicio"] >= voz * 0.5 - 20 for x in finales)          # la escena final va al final
+    assert clips[-1]["tipo"] == "final" and len({x["archivo"] for x in finales}) == 1  # un solo fondo en bucle
+    assert (c.ruta / "render" / "tracy" / "presentador.png").exists()
     lic = json.loads((c.ruta / "stock_licencias.json").read_text(encoding="utf-8"))
-    assert "Pexels" in lic["licencia"] and len(lic["clips"]) == len(stock)
+    assert "Pexels" in lic["licencia"] and len(lic["clips"]) == len(stock) + 1
     from estudio.config import ConfigCostos
     assert any(e["modulo"] == "tracy_planificador" for e in c.libro(ConfigCostos.cargar()).entradas())
 
@@ -224,3 +237,40 @@ def test_encuentra_la_cancion_aunque_windows_esconda_la_extension(tmp_path):
     (tmp_path / "otra.m4a").write_bytes(b"x")
     assert encontrar(str(tmp_path / "otra.mp3"), EXT_AUDIO).endswith("otra.m4a")
     assert encontrar(str(tmp_path / "nada.mp3"), EXT_AUDIO) is None
+
+
+def test_escena_final_ocupa_el_final_y_la_proporcion_se_cuadra_antes():
+    from estudio.tracy.planificador import marcar_final
+
+    plan = _plan(["seminar", "stock"] * 10)                     # 20 segmentos de 10 s = 200 s
+    p = marcar_final(plan, 200.0, 0.35, 0.4)
+    tipos = [x["type"] for x in p]
+    assert tipos[7:] == ["final"] * 13 and "final" not in tipos[:7]
+    assert tipos[:7].count("seminar") == round(7 * 0.4) and _max_racha(tipos[:7]) <= 2
+    assert marcar_final(plan, 200.0, 1.0, 0.4) == plan           # 1 = sin escena final
+
+
+def test_boton_suscribete_nunca_queda_partido_y_respeta_la_pausa():
+    from estudio.tracy.escena_final import DUR_SUSCRIBETE, momentos_suscribete
+
+    segs = [{"id": i, "inicio": i * 12.0, "fin": i * 12.0 + 12} for i in range(20)]
+    m = momentos_suscribete(segs, 60)
+    inicios = sorted(segs[i]["inicio"] for i in m)
+    assert m and all(b - a >= 60 for a, b in zip(inicios, inicios[1:]))
+    assert all(en + DUR_SUSCRIBETE <= segs[i]["fin"] - segs[i]["inicio"] for i, en in m.items())
+
+
+def test_presentador_sale_en_blanco_y_negro_con_fondo_transparente(tmp_path):
+    from PIL import Image
+
+    from estudio.tracy.escena_final import preparar_presentador
+
+    origen = tmp_path / "p.png"
+    im = Image.new("RGBA", (400, 600), (0, 0, 0, 0))
+    im.paste((200, 50, 50, 255), (100, 100, 300, 600))
+    im.save(origen)
+    out = Image.open(preparar_presentador(str(origen), tmp_path / "o.png"))
+    assert out.height == 1000 and out.mode == "RGBA"
+    r, g, b, a = out.getpixel((out.width // 2 - 60, 600))
+    assert r == g == b and a > 0 and out.getpixel((5, 5))[3] == 0
+    assert preparar_presentador(str(tmp_path / "no.png"), tmp_path / "x.png") is None

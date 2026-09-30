@@ -7,15 +7,18 @@ import { api, archivo, type VideoDetalle } from '../api';
 
 interface EstadoTracy {
   canal: string; clip_base: string; clip_existe: boolean; musica: string; musica_existe: boolean;
+  presentador: string; presentador_existe: boolean; escena_final_desde: number;
   proporcion_seminario: number; voz_id: string | null; whisper: boolean;
 }
+
+type Que = 'seminario' | 'musica' | 'presentador';
 
 const PASOS: Record<string, string> = {
   tracy: 'Empezando', voz: 'Grabando la voz y sacando los tiempos', visual: 'Eligiendo clips y armando el video',
   entrega: 'Guardando el video',
 };
 
-async function subir(que: 'seminario' | 'musica', f: File): Promise<EstadoTracy> {
+async function subir(que: Que, f: File): Promise<EstadoTracy> {
   const datos = new FormData();
   datos.append('que', que);
   datos.append('archivo', f);
@@ -26,7 +29,7 @@ async function subir(que: 'seminario' | 'musica', f: File): Promise<EstadoTracy>
 }
 
 function Archivo({ titulo, ruta, existe, que, ayuda, alCambiar }: {
-  titulo: string; ruta: string; existe: boolean; que: 'seminario' | 'musica'; ayuda: string;
+  titulo: string; ruta: string; existe: boolean; que: Que; ayuda: string;
   alCambiar: (e: EstadoTracy) => void;
 }) {
   const entrada = useRef<HTMLInputElement>(null);
@@ -40,7 +43,7 @@ function Archivo({ titulo, ruta, existe, que, ayuda, alCambiar }: {
         {!existe && <div className="tenue pequeno">{ayuda}</div>}
         {msg && <div className="error pequeno">{msg}</div>}
       </div>
-      <input ref={entrada} type="file" hidden accept={que === 'seminario' ? 'video/*' : 'audio/*'}
+      <input ref={entrada} type="file" hidden accept={que === 'seminario' ? 'video/*' : que === 'musica' ? 'audio/*' : 'image/*'}
         onChange={async (ev) => {
           const f = ev.target.files?.[0];
           if (!f) return;
@@ -73,16 +76,17 @@ export function Tracy() {
       ir(`/tracy/${v.slug}`);
     } catch (e) { setError((e as Error).message); } finally { setEnviando(false); }
   };
-  const proporcion = async (x: number) => {
-    try { setEst(await api<EstadoTracy>('/api/tracy/ajustes', { cuerpo: { proporcion_seminario: x } })); }
+  const ajustar = async (cuerpo: Record<string, number>) => {
+    try { setEst(await api<EstadoTracy>('/api/tracy/ajustes', { cuerpo })); }
     catch (e) { setError((e as Error).message); }
   };
+  const proporcion = (x: number) => ajustar({ proporcion_seminario: x });
 
   return (
     <div className="pagina tracy">
       <h1>Canal Tracy</h1>
       <p className="tenue">Pega el guion y Xandart hace el resto: voz, clips de Pexels, tramos del seminario en blanco y
-        negro, subtítulos y música de fondo suave. Cada clip dura 30 segundos o menos.</p>
+        negro, subtítulos amarillos, música de fondo suave y la escena final. Cada clip dura 30 segundos o menos.</p>
 
       {est && (
         <section className="rev-tarjeta">
@@ -91,11 +95,24 @@ export function Tracy() {
             ayuda="Déjalo en esa carpeta con ese nombre, o elígelo aquí." alCambiar={setEst} />
           <Archivo titulo="Música de fondo" que="musica" ruta={est.musica} existe={est.musica_existe}
             ayuda="Opcional: sin música, el video sale solo con la voz." alCambiar={setEst} />
+          <Archivo titulo="Presentador de la escena final" que="presentador" ruta={est.presentador}
+            existe={est.presentador_existe} ayuda="Una imagen (mejor PNG sin fondo). Va a la izquierda, en blanco y negro."
+            alCambiar={setEst} />
           <label className="campo">Parte de seminario: {Math.round(est.proporcion_seminario * 100)} % (el resto, stock)
             <input type="range" min={0} max={0.6} step={0.05} defaultValue={est.proporcion_seminario}
               onMouseUp={(e) => proporcion(+(e.target as HTMLInputElement).value)}
               onTouchEnd={(e) => proporcion(+(e.target as HTMLInputElement).value)}
               onKeyUp={(e) => proporcion(+(e.target as HTMLInputElement).value)} />
+          </label>
+          <label className="campo">
+            {est.escena_final_desde >= 1 ? 'Sin escena final (clips hasta el final)'
+              : `La escena final empieza en el ${Math.round(est.escena_final_desde * 100)} % del video`}
+            <input type="range" min={0.1} max={1} step={0.05} defaultValue={est.escena_final_desde}
+              onMouseUp={(e) => ajustar({ escena_final_desde: +(e.target as HTMLInputElement).value })}
+              onTouchEnd={(e) => ajustar({ escena_final_desde: +(e.target as HTMLInputElement).value })}
+              onKeyUp={(e) => ajustar({ escena_final_desde: +(e.target as HTMLInputElement).value })} />
+            <span className="tenue pequeno">Fondo de naturaleza en blanco y negro con partículas, el presentador a un
+              lado, el botón Suscríbete y las ondas de la voz.</span>
           </label>
           {!est.whisper && <p className="rev-aviso">Falta Whisper (los tiempos de la voz). Vuelve a correr «Instalar Xandart
             Nueva» y queda listo.</p>}

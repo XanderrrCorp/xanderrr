@@ -171,3 +171,17 @@ def _registrar_costo(carpeta: CarpetaProyecto, sobre: dict, config) -> None:
         modulo="tracy_planificador", proveedor="claude", modelo=str((sobre or {}).get("model") or "haiku"),
         unidades=unidades, costo_usd=0.0,
         detalle=f"plan visual por la suscripción (equivale a ~{float((sobre or {}).get('total_cost_usd') or 0):.4f} USD)")
+
+
+def marcar_final(plan: list[dict], duracion: float, desde: float, proporcion: float) -> list[dict]:
+    """Los segmentos que empiezan desde `desde` (fracción del video) pasan a la escena final fija; la
+    proporción seminario/stock se vuelve a cuadrar solo en la parte de antes."""
+    if desde >= 1 or not plan:
+        return plan
+    corte = duracion * desde
+    antes = [p for p in plan if p["inicio"] < corte - 1e-6]
+    if not antes:                    # siempre queda al menos un segmento de clips al comienzo
+        antes = plan[:1]
+    ids_antes = {p["id"] for p in antes}
+    antes = ajustar([{**p, "type": "stock" if p["type"] == "final" else p["type"]} for p in antes], proporcion)
+    return antes + [{**p, "type": "final"} for p in plan if p["id"] not in ids_antes]

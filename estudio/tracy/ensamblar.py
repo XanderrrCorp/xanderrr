@@ -59,8 +59,13 @@ def _limpiar_texto(texto: str) -> str:
     return texto.strip().rstrip(".,;:").strip().upper()     # «¿…?» y «¡…!» se quedan
 
 
-def png_subtitulo(texto: str, destino: Path) -> Path:
-    """Texto blanco con borde negro en Bebas Neue, recortado a su tamaño (se centra al montar)."""
+def _rgb(color: str) -> tuple[int, int, int]:
+    color = color.lstrip("#")
+    return int(color[0:2], 16), int(color[2:4], 16), int(color[4:6], 16)
+
+
+def png_subtitulo(texto: str, destino: Path, color: str = "#FFE21F") -> Path:
+    """Texto (amarillo por defecto) con borde negro en Bebas Neue, recortado a su tamaño (se centra al montar)."""
     fuente = ImageFont.truetype(str(FUENTE), TAM_SUB)
     borde = 7
     caja = ImageDraw.Draw(Image.new("RGBA", (1, 1))).textbbox((0, 0), texto, font=fuente, stroke_width=borde)
@@ -70,7 +75,7 @@ def png_subtitulo(texto: str, destino: Path) -> Path:
     # sombra suave debajo y luego el texto con borde
     d.text((borde - caja[0] + 4, borde - caja[1] + 5), texto, font=fuente, fill=(0, 0, 0, 150),
            stroke_width=borde, stroke_fill=(0, 0, 0, 150))
-    d.text((borde - caja[0], borde - caja[1]), texto, font=fuente, fill=(255, 255, 255, 255),
+    d.text((borde - caja[0], borde - caja[1]), texto, font=fuente, fill=(*_rgb(color), 255),
            stroke_width=borde, stroke_fill=(0, 0, 0, 255))
     destino.parent.mkdir(parents=True, exist_ok=True)
     im.save(destino)
@@ -94,26 +99,67 @@ def _cuadros(t: float) -> int:
     return int(round(t * FPS))
 
 
-def comando_tramo(ffmpeg: str, clip: dict, subs: list[tuple[Path, float, float]], salida: Path) -> list[str]:
+def _codec(ffmpeg: str) -> list[str]:
+    """La tarjeta NVIDIA si hay (mismo criterio que el render de siempre); si no, x264."""
+    from ..render import _argumentos_codificador
+
+    return _argumentos_codificador(ffmpeg, "veryfast", "20", None)
+
+
+def comando_tramo(ffmpeg: str, clip: dict, subs: list[tuple[Path, float, float]], salida: Path,
+                  final: dict | None = None) -> list[str]:
+    """`final` (solo en la escena final): {"particulas", "voz", "presentador"?, "suscribete"?: (carpeta, en_s)}."""
     n = _cuadros(clip["fin"]) - _cuadros(clip["inicio"])
     dur = n / FPS
     cmd = [ffmpeg, "-y", "-loglevel", "error"]
-    if clip["tipo"] == "stock":
-        cmd += ["-stream_loop", "-1"]           # por si el clip se queda corto por décimas
+    if clip["tipo"] in ("stock", "final"):
+        cmd += ["-stream_loop", "-1"]           # por si el clip se queda corto (el fondo final va en bucle)
     cmd += ["-ss", f"{clip['desde']:.3f}", "-t", f"{dur + 1:.3f}", "-i", str(clip["archivo"])]
+    if clip["tipo"] == "final" and final:
+        k = 1
+        from .escena_final import BUCLE_PARTICULAS_S
+
+        cmd += ["-stream_loop", "-1", "-ss", f"{clip['inicio'] % BUCLE_PARTICULAS_S:.3f}", "-t", f"{dur + 1:.3f}",
+                "-i", str(final["particulas"])]
+        cmd += ["-ss", f"{_cuadros(clip['inicio']) / FPS:.3f}", "-t", f"{dur + 0.5:.3f}", "-i", str(final["voz"])]
+        # setpts renumera los cuadros tras la vuelta del bucle; apad alarga la voz con silencio: si las
+        # ondas se acababan un cuadro antes que el tramo, FFmpeg se quedaba guardando cuadros hasta
+        # llenar la memoria
+        filtro = (f"[0:v]{ESCALA},setpts=N/({FPS}*TB),hue=s=0,eq=brightness=-0.05:contrast=1.08,format=gbrp[b];"
+                  f"[1:v]scale={W}:{H},fps={FPS},setpts=N/({FPS}*TB),format=gbrp[p];"
+                  f"[b][p]blend=all_mode=screen,format=yuv420p[f0];"
+                  f"[2:a]asetpts=PTS-STARTPTS,apad,showfreqs=s=520x140:mode=bar:ascale=sqrt:fscale=log:win_size=2048:colors=white,"
+                  f"fps={FPS},format=rgba,colorkey=black:0.3:0.1[ondas];"
+                  f"[f0][ondas]overlay=x=W-w-70:y=H-h-40:eof_action=pass[f1]")
+        actual, k = "f1", 3
+        if final.get("presentador"):
+            cmd += ["-i", str(final["presentador"])]
+            filtro += f";[{actual}][{k}:v]overlay=x=20:y=H-h[f2]"
+            actual, k = "f2", k + 1
+        if final.get("suscribete"):
+            carpeta, en = final["suscribete"]
+            cmd += ["-framerate", str(FPS), "-i", str(Path(carpeta) / "s_%03d.png")]
+            filtro += (f";[{k}:v]setpts=PTS-STARTPTS+{en:.3f}/TB[sus];"
+                       f"[{actual}][sus]overlay=x=W-w-10:y=10:eof_action=pass:"
+                       f"enable='between(t,{en:.3f},{en + 3.5:.3f})'[f3]")
+            actual, k = "f3", k + 1
+        filtro += f";[{actual}]null[v0]"
+        primero = k
+    else:
+        filtro = f"[0:v]{ESCALA}" + (",hue=s=0" if clip["tipo"] == "seminario" else "") + "[v0]"
+        primero = 1
     for png, _, _ in subs:
         cmd += ["-i", str(png)]
-    filtro = f"[0:v]{ESCALA}" + (",hue=s=0" if clip["tipo"] == "seminario" else "") + "[v0]"
-    for k, (_, a, b) in enumerate(subs, 1):
-        filtro += (f";[v{k - 1}][{k}:v]overlay=x=(W-w)/2:y=(H-h)/2:"
-                   f"enable='between(t,{a:.3f},{b:.3f})'[v{k}]")
+    for j, (_, a, b) in enumerate(subs):
+        filtro += (f";[v{j}][{primero + j}:v]overlay=x=(W-w)/2:y=(H-h)/2:"
+                   f"enable='between(t,{a:.3f},{b:.3f})'[v{j + 1}]")
     cmd += ["-filter_complex", filtro, "-map", f"[v{len(subs)}]", "-frames:v", str(n), "-an",
-            "-c:v", "libx264", "-preset", "veryfast", "-crf", "20", "-pix_fmt", "yuv420p", "-r", str(FPS),
-            str(salida)]
+            *_codec(ffmpeg), "-pix_fmt", "yuv420p", "-r", str(FPS), str(salida)]
     return cmd
 
 
-def _subs_del_tramo(clip: dict, trozos: list[dict], carpeta: Path) -> list[tuple[Path, float, float]]:
+def _subs_del_tramo(clip: dict, trozos: list[dict], carpeta: Path, color: str = "#FFE21F"
+                    ) -> list[tuple[Path, float, float]]:
     a0, b0 = _cuadros(clip["inicio"]) / FPS, _cuadros(clip["fin"]) / FPS
     salida = []
     for k, t in enumerate(trozos):
@@ -122,7 +168,7 @@ def _subs_del_tramo(clip: dict, trozos: list[dict], carpeta: Path) -> list[tuple
             continue
         png = carpeta / f"sub_{k:04d}.png"
         if not png.exists():
-            png_subtitulo(_limpiar_texto(t["texto"]), png)
+            png_subtitulo(_limpiar_texto(t["texto"]), png, color)
         salida.append((png, a - a0, b - a0))
     return salida
 
@@ -134,22 +180,41 @@ def _procesos() -> int:
 
 
 def ensamblar(carpeta: CarpetaProyecto, ffmpeg: str, avisar=print, progreso=None, musica: str | None = None,
-              volumen_musica_db: float = -24.0) -> Path:
+              volumen_musica_db: float = -24.0, preset: dict | None = None) -> Path:
+    preset = preset or {}
     clips = leer_json(carpeta.ruta / "clips.json")["clips"]
     ors = leer_json(carpeta.ruta / "audio" / "oraciones.json")
     duracion = float(ors["duracion"])
     trozos = trozos_subtitulo(ors["oraciones"], duracion)
     dir_r = carpeta.ruta / "render"
     dir_t = dir_r / "tracy"
-    dir_s = dir_t / "subs"
+    color = preset.get("color_subtitulos") or "#FFE21F"
+    dir_s = dir_t / f"subs_{color.lstrip('#').lower()}"
     dir_t.mkdir(parents=True, exist_ok=True)
     dir_s.mkdir(parents=True, exist_ok=True)
     hechos = [0]
+    extra: dict = {}
+    finales = [c for c in clips if c["tipo"] == "final"]
+    if finales:
+        from .escena_final import cuadros_suscribete, momentos_suscribete, particulas, preparar_presentador
+
+        avisar("Preparando la escena final (partículas, presentador, botón)…")
+        extra = {"particulas": particulas(ffmpeg), "voz": carpeta.ruta / "audio" / "voz.wav",
+                 "presentador": preparar_presentador(preset.get("presentador"), dir_t / "presentador.png"),
+                 "carpeta_sus": cuadros_suscribete(),
+                 "momentos": momentos_suscribete(finales, float(preset.get("suscribete_cada_s", 60)))}
+        if not extra["presentador"]:
+            avisar(f"  no encontré la imagen del presentador en «{preset.get('presentador')}»: la escena final va sin él")
 
     def hacer(clip: dict) -> Path:
         salida = dir_t / f"tramo_{clip['id']:04d}.mp4"
-        subs = _subs_del_tramo(clip, trozos, dir_s)
-        r = subprocess.run(comando_tramo(ffmpeg, clip, subs, salida), capture_output=True, text=True,
+        subs = _subs_del_tramo(clip, trozos, dir_s, color)
+        final = None
+        if clip["tipo"] == "final":
+            en = extra["momentos"].get(clip["id"])
+            final = {"particulas": extra["particulas"], "voz": extra["voz"], "presentador": extra["presentador"],
+                     "suscribete": (extra["carpeta_sus"], en) if en is not None else None}
+        r = subprocess.run(comando_tramo(ffmpeg, clip, subs, salida, final), capture_output=True, text=True,
                            encoding="utf-8", errors="replace")
         if r.returncode != 0 or not salida.exists():
             raise RuntimeError(f"FFmpeg falló en el segmento {clip['id']}: {(r.stderr or '')[-400:]}")

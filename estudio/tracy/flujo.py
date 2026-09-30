@@ -72,7 +72,7 @@ def paso_visual(c: CarpetaProyecto, avisar=print, ejecutar=None, sesion=None, pr
     from .ensamblar import ensamblar
     from .planificador import planificar
 
-    from .preset import EXT_AUDIO, EXT_VIDEO, encontrar
+    from .preset import EXT_AUDIO, EXT_IMAGEN, EXT_VIDEO, encontrar
 
     p = c.cargar()
     preset = cargar_preset(p.canal)
@@ -80,11 +80,18 @@ def paso_visual(c: CarpetaProyecto, avisar=print, ejecutar=None, sesion=None, pr
     preset["musica"] = encontrar(preset.get("musica"), EXT_AUDIO) or preset.get("musica")
     config = ConfigCostos.cargar()
     plan = planificar(c, preset, ejecutar=ejecutar, avisar=avisar, config=config)
+    from ..config import leer_json
+    from .planificador import marcar_final
+
+    duracion = float(leer_json(c.ruta / "segmentos.json")["duracion"])
+    plan = marcar_final(plan, duracion, preset["escena_final_desde"], preset["proporcion_seminario"])
     avisar("Buscando los clips (Pexels y seminario)…")
     r = elegir_clips(c, plan, preset, ffmpeg(), avisar=avisar, sesion=sesion or requests)
+    preset["presentador"] = encontrar(preset.get("presentador"), EXT_IMAGEN) or preset.get("presentador")
     final = ensamblar(c, ffmpeg(), avisar=avisar, progreso=progreso, musica=preset.get("musica"),
-                      volumen_musica_db=preset.get("volumen_musica_db", -24.0))
-    return {"final": final, "stock": r["stock"], "seminario": r["seminario"], "segmentos": len(plan)}
+                      volumen_musica_db=preset.get("volumen_musica_db", -24.0), preset=preset)
+    return {"final": final, "stock": r["stock"], "seminario": r["seminario"], "escena_final": r.get("final", 0),
+            "segmentos": len(plan)}
 
 
 def producir(c: CarpetaProyecto, t, proveedor: str | None = None, permiso: bool = False, ejecutar=None,

@@ -216,9 +216,19 @@ def elegir_clips(carpeta: CarpetaProyecto, plan: list[dict], preset: dict, ffmpe
         total = duracion_video(clip_base, ffmpeg)
         seminario = elegir_seminario(plan, clip_base, total, canal, slug, avisar=avisar)
     stock = elegir_stock(plan, canal, slug, avisar=avisar, sesion=sesion)
+    fondo = None
+    finales = [p for p in plan if p["type"] == "final"]
+    if finales:
+        fondo = elegir_fondo_final(canal, slug, {s["pexels_id"] for s in stock.values()}, avisar=avisar, sesion=sesion)
     clips = []
     for p in plan:
-        if p["type"] == "seminar":
+        if p["type"] == "final":
+            # el mismo fondo corre en bucle continuo por toda la escena final
+            desde = round((p["inicio"] - finales[0]["inicio"]) % max(1.0, fondo["duracion"] - 0.5), 3)
+            clips.append({"id": p["id"], "tipo": "final", "archivo": fondo["archivo"], "desde": desde,
+                          "duracion": p["duracion"], "inicio": p["inicio"], "fin": p["fin"],
+                          "pexels_id": fondo["pexels_id"]})
+        elif p["type"] == "seminar":
             s = seminario[p["id"]]
             clips.append({"id": p["id"], "tipo": "seminario", "archivo": s["archivo"], "desde": s["inicio"],
                           "duracion": p["duracion"], "inicio": p["inicio"], "fin": p["fin"]})
@@ -231,12 +241,32 @@ def elegir_clips(carpeta: CarpetaProyecto, plan: list[dict], preset: dict, ffmpe
                           "duracion": p["duracion"], "inicio": p["inicio"], "fin": p["fin"],
                           "pexels_id": s["pexels_id"]})
     escribir_json(carpeta.ruta / "clips.json", {"clips": clips})
-    escribir_json(carpeta.ruta / "stock_licencias.json", {
-        "licencia": LICENCIA,
-        "clips": [{"segmento": pid, "pexels_id": s["pexels_id"], "url_origen": s["url_origen"], "autor": s["autor"],
-                   "busqueda": s["consulta"]} for pid, s in stock.items()]})
+    lic = [{"segmento": pid, "pexels_id": s["pexels_id"], "url_origen": s["url_origen"], "autor": s["autor"],
+            "busqueda": s["consulta"]} for pid, s in stock.items()]
+    if fondo:
+        lic.append({"segmento": "escena final", "pexels_id": fondo["pexels_id"], "url_origen": fondo["url_origen"],
+                    "autor": fondo["autor"], "busqueda": fondo["consulta"]})
+    escribir_json(carpeta.ruta / "stock_licencias.json", {"licencia": LICENCIA, "clips": lic})
     historial.registrar(canal, slug,
                         [{"tipo": "stock", "clip": s["pexels_id"]} for s in stock.values()]
+                        + ([{"tipo": "stock", "clip": fondo["pexels_id"]}] if fondo else [])
                         + [{"tipo": "seminario", "clip": clip_base, "inicio": s["inicio"], "fin": s["fin"]}
                            for s in seminario.values()])
-    return {"clips": clips, "stock": len(stock), "seminario": len(seminario)}
+    return {"clips": clips, "stock": len(stock), "seminario": len(seminario), "final": len(finales)}
+
+
+def elegir_fondo_final(canal: str, slug: str, en_video: set[str], avisar=print, sesion=requests) -> dict:
+    """Un video de naturaleza (se pasa a blanco y negro al montar) para la escena final."""
+    from .escena_final import BUSQUEDAS_FONDO
+
+    rng = random.Random(slug + "|fondo")
+    usados = historial.stock_usado(canal, excluir=slug) | en_video
+    orden = BUSQUEDAS_FONDO[:]
+    rng.shuffle(orden)
+    for q in orden:
+        opciones = [c for c in buscar(q, 12, set(), sesion=sesion) if c["pexels_id"] not in usados]
+        if opciones:
+            c = rng.choice(opciones[:6])
+            avisar(f"  escena final: fondo «{q}» (Pexels {c['pexels_id']})")
+            return {**c, "archivo": str(descargar(c, sesion=sesion))}
+    raise RuntimeError("Pexels no devolvió ningún video de naturaleza para la escena final")
