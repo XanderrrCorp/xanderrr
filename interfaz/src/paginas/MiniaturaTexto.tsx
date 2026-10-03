@@ -169,10 +169,10 @@ function ConfigCanal({ canal, alCambiar }: { canal: string; alCambiar: () => voi
       {aviso && <div className="rev-error">{aviso}</div>}
       <div className="mt-config">
         <div className="mt-retrato">
-          <span className="tenue pequeno">Retrato: PNG sin fondo, cabeza y hombros</span>
+          <span className="tenue pequeno">Retrato: cabeza y hombros, PNG sin fondo o foto con fondo blanco liso</span>
           {c.tiene_retrato ? <img src={`/canales/${canal}/miniatura/retrato.png?v=${v}`} alt="Retrato" /> : <div className="sin-img">sin retrato</div>}
           <label className="boton-borde pequeno subir">Subir retrato
-            <input type="file" accept="image/png" hidden onChange={(e) => subir('retrato', e.target.files?.[0])} /></label>
+            <input type="file" accept="image/png,image/jpeg,image/webp" hidden onChange={(e) => subir('retrato', e.target.files?.[0])} /></label>
         </div>
         <div>
           <div className="mini-campos">

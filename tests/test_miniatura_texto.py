@@ -187,3 +187,22 @@ def test_al_arrancar_el_canal_se_crea_en_el_espacio_y_no_en_el_programa(tmp_path
         canales = s.scalars(select(Canal).where(Canal.clave == "mentalidad-imparable")).all()
         assert len(canales) == 1 and canales[0].nombre == "Mentalidad Imparable"
         assert canales[0].plantilla_miniatura_id
+
+
+def test_retrato_con_fondo_blanco_se_recorta_solo(canales):
+    tr.crear_canal()
+    foto = Image.new("RGB", (800, 800), (255, 255, 255))
+    d = ImageDraw.Draw(foto)
+    d.ellipse((300, 150, 500, 400), fill=(200, 160, 130))
+    d.rounded_rectangle((150, 420, 650, 800), radius=120, fill=(25, 25, 30))
+    b = io.BytesIO()
+    foto.save(b, "JPEG")
+    cfg = tr.subir_retrato("mentalidad-imparable", b.getvalue())
+    r = tr.cargar_retrato(cfg)
+    assert r.mode == "RGBA" and r.getpixel((0, 0))[3] == 0                 # el blanco de la esquina se fue
+    assert r.getpixel((r.width // 2, r.height - 5))[3] == 255               # el traje sigue
+    ruido = Image.fromarray((np.random.default_rng(1).random((300, 300, 3)) * 255).astype("uint8"))
+    b = io.BytesIO()
+    ruido.save(b, "PNG")
+    with pytest.raises(ValueError, match="fondo blanco liso"):
+        tr.subir_retrato("mentalidad-imparable", b.getvalue())

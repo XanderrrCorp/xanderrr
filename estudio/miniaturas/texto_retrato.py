@@ -127,13 +127,27 @@ def cambiar_config(canal: str, cambios: dict) -> ConfigTexto:
     return cfg
 
 
+def _fondo_liso_claro(im: Image.Image) -> bool:
+    """¿El borde de la foto es casi todo blanco o gris claro parejo (fondo de estudio)?"""
+    a = np.asarray(im.convert("RGB"), np.float32)
+    borde = np.concatenate([a[0], a[-1], a[:, 0], a[:, -1]])
+    claros = (borde.min(axis=1) > 215) & (borde.max(axis=1) - borde.min(axis=1) < 25)
+    return claros.mean() > 0.6
+
+
 def subir_retrato(canal: str, datos: bytes) -> ConfigTexto:
-    """El retrato tiene que traer transparencia (PNG sin fondo): se guarda recortado a lo visible."""
+    """Lo ideal es un PNG sin fondo. Si la foto trae fondo blanco o claro parejo, se quita aquí
+    (rembg si está instalado, si no inundando el blanco desde los bordes). Se guarda recortado."""
     cfg = cargar_config(canal)
     im = Image.open(io.BytesIO(datos))
     im.load()
-    if im.mode not in ("RGBA", "LA", "P") or im.convert("RGBA").getchannel("A").getextrema()[0] > 250:
-        raise ValueError("el retrato tiene que ser un PNG sin fondo (con transparencia)")
+    transparente = im.mode in ("RGBA", "LA", "P") and im.convert("RGBA").getchannel("A").getextrema()[0] <= 250
+    if not transparente:
+        if not _fondo_liso_claro(im):
+            raise ValueError("el retrato tiene que ser un PNG sin fondo, o una foto con fondo blanco liso")
+        from .recorte import recortar
+
+        im, _ = recortar(im.convert("RGB"))
     im = im.convert("RGBA")
     caja = im.getchannel("A").point(lambda a: 255 if a > 8 else 0).getbbox()
     if caja:
