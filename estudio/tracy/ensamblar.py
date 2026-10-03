@@ -107,8 +107,13 @@ def _codec(ffmpeg: str) -> list[str]:
     return _argumentos_codificador(ffmpeg, "veryfast", "20", None)
 
 
+FUNDIDO_S = 0.4      # transición suave entre escenas (cross-fade)
+
+
 def comando_tramo(ffmpeg: str, clip: dict, subs: list[tuple[Path, float, float]], salida: Path,
-                  final: dict | None = None, barras: int = 0) -> list[str]:
+                  final: dict | None = None, barras: int = 0, previo: dict | None = None) -> list[str]:
+    """`previo`: el clip de antes (stock o seminario). El tramo empieza fundiéndose desde la continuación
+    de ese clip durante FUNDIDO_S: transición suave sin correr ningún tiempo (cada tramo dura lo mismo)."""
     """`final` (solo en la escena final): {"particulas", "voz", "presentador"?, "suscribete"?: (carpeta, en_s)}."""
     n = _cuadros(clip["fin"]) - _cuadros(clip["inicio"])
     dur = n / FPS
@@ -149,6 +154,17 @@ def comando_tramo(ffmpeg: str, clip: dict, subs: list[tuple[Path, float, float]]
     else:
         filtro = f"[0:v]{ESCALA}" + (",hue=s=0" if clip["tipo"] == "seminario" else "") + "[v0]"
         primero = 1
+    if previo and previo["tipo"] in ("stock", "seminario") and dur > FUNDIDO_S + 0.3:
+        sigue = previo["desde"] + (_cuadros(previo["fin"]) - _cuadros(previo["inicio"])) / FPS
+        if previo["tipo"] == "stock":
+            cmd += ["-stream_loop", "-1"]
+        cmd += ["-ss", f"{sigue:.3f}", "-t", f"{FUNDIDO_S + 0.5:.3f}", "-i", str(previo["archivo"])]
+        filtro = filtro.replace("[v0]", "[base0]", 1)
+        filtro += (f";[{primero}:v]{ESCALA}" + (",hue=s=0" if previo["tipo"] == "seminario" else "")
+                   + f",format=yuv420p,setpts=PTS-STARTPTS,settb=AVTB,fps={FPS},trim=duration={FUNDIDO_S + 0.1:.3f}[ant];"
+                   f"[base0]format=yuv420p,setpts=PTS-STARTPTS,settb=AVTB,fps={FPS}[act];"
+                   f"[ant][act]xfade=transition=fade:duration={FUNDIDO_S}:offset=0[v0]")
+        primero += 1
     for png, _, _ in subs:
         cmd += ["-i", str(png)]
     for j, (_, a, b) in enumerate(subs):
@@ -237,6 +253,7 @@ def ensamblar(carpeta: CarpetaProyecto, ffmpeg: str, avisar=print, progreso=None
     dir_t.mkdir(parents=True, exist_ok=True)
     dir_s.mkdir(parents=True, exist_ok=True)
     hechos = [0]
+    posicion = {c["id"]: k for k, c in enumerate(clips)}
     extra: dict = {}
     finales = [c for c in clips if c["tipo"] == "final"]
     if finales:
@@ -259,7 +276,9 @@ def ensamblar(carpeta: CarpetaProyecto, ffmpeg: str, avisar=print, progreso=None
             final = {"particulas": extra["particulas"], "voz": extra["voz"], "presentador": extra["presentador"],
                      "suscribete": (extra["carpeta_sus"], en) if en is not None else None}
         barras = int(preset.get("alto_barras", 130)) if preset.get("barras_cine", True) else 0
-        r = subprocess.run(comando_tramo(ffmpeg, clip, subs, salida, final, barras), capture_output=True, text=True,
+        k = posicion[clip["id"]]
+        previo = clips[k - 1] if k > 0 and not (clip["tipo"] == "final" and clips[k - 1]["tipo"] == "final") else None
+        r = subprocess.run(comando_tramo(ffmpeg, clip, subs, salida, final, barras, previo), capture_output=True, text=True,
                            encoding="utf-8", errors="replace")
         if r.returncode != 0 or not salida.exists():
             raise RuntimeError(f"FFmpeg falló en el segmento {clip['id']}: {(r.stderr or '')[-400:]}")
