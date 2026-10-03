@@ -697,16 +697,24 @@ def _mini_clave(slug: str) -> str:
     return f"{slug}~miniatura"          # trabajo aparte: se puede hacer la miniatura mientras se renderiza
 
 
+def _mini_texto(c) -> bool:
+    """¿El canal del video usa la plantilla «texto_izquierda_retrato_derecha»?"""
+    from .miniaturas import texto_retrato
+
+    return texto_retrato.es_de_texto(c.cargar().canal)
+
+
 def _mini_estado(slug: str) -> dict:
     import time
 
-    from .miniaturas import servicio
+    from .miniaturas import servicio, servicio_texto
 
     t = pipeline.TRABAJOS.get(_mini_clave(slug))     # antes que el archivo (ver api_personajes._detalle)
     trabajo = None if t is None else {
         "paso": t.paso, "mensaje": t.mensaje, "progreso": round(t.progreso, 3), "activo": t.activo,
         "error": t.error, "segundos": int(time.time() - t.inicio)}
-    datos = servicio.estado(_proyecto(slug))
+    c = _proyecto(slug)
+    datos = servicio_texto.estado(c) if _mini_texto(c) else servicio.estado(c)
     datos["trabajo"] = trabajo
     datos["slug"] = slug
     return datos
@@ -732,9 +740,11 @@ class MiniProducir(BaseModel):
 
 @app.post("/api/videos/{slug}/miniatura/producir")
 def mini_producir(slug: str, p: MiniProducir = MiniProducir()):
-    from .miniaturas import servicio
+    from .miniaturas import servicio, servicio_texto
 
     c = _proyecto(slug)
+    if _mini_texto(c):
+        return _mini_lanzar(slug, "miniatura", lambda t: servicio_texto.producir(c, t, permiso=p.permiso))
     return _mini_lanzar(slug, "miniatura", lambda t: servicio.producir(c, t, permiso=p.permiso,
                                                                          rehacer_plan=p.rehacer_plan))
 
@@ -806,11 +816,143 @@ def mini_referencia(slug: str, indice: int):
     return _mini_estado(slug)
 
 
+# --- plantilla «texto_izquierda_retrato_derecha» (por video)
+
+class MiniTexto(BaseModel):
+    texto: str = Field(min_length=1, max_length=200)
+
+
+def _mini_texto_error(f):
+    try:
+        f()
+    except (ValueError, IndexError) as ex:
+        raise HTTPException(400, str(ex)) from ex
+
+
+@app.put("/api/videos/{slug}/miniatura/texto/opciones/{indice}")
+def mini_texto_editar(slug: str, indice: int, p: MiniTexto):
+    from .miniaturas import servicio_texto
+
+    _mini_texto_error(lambda: servicio_texto.editar(_proyecto(slug), indice, p.texto))
+    return _mini_estado(slug)
+
+
+@app.post("/api/videos/{slug}/miniatura/texto/opciones")
+def mini_texto_agregar(slug: str, p: MiniTexto):
+    from .miniaturas import servicio_texto
+
+    _mini_texto_error(lambda: servicio_texto.agregar(_proyecto(slug), p.texto))
+    return _mini_estado(slug)
+
+
+@app.post("/api/videos/{slug}/miniatura/texto/elegir/{indice}")
+def mini_texto_elegir(slug: str, indice: int):
+    from .miniaturas import servicio_texto
+
+    _mini_texto_error(lambda: servicio_texto.elegir(_proyecto(slug), indice))
+    return _mini_estado(slug)
+
+
+class MiniPaleta(BaseModel):
+    paleta: str
+
+
+@app.put("/api/videos/{slug}/miniatura/texto/paleta")
+def mini_texto_paleta(slug: str, p: MiniPaleta):
+    from .miniaturas import servicio_texto
+
+    _mini_texto_error(lambda: servicio_texto.paleta(_proyecto(slug), p.paleta))
+    return _mini_estado(slug)
+
+
+class MiniFondo(BaseModel):
+    generar: bool = False
+    permiso: bool = False
+
+
+@app.post("/api/videos/{slug}/miniatura/texto/fondo")
+def mini_texto_fondo(slug: str, p: MiniFondo = MiniFondo()):
+    from .miniaturas import servicio_texto
+
+    c = _proyecto(slug)
+    return _mini_lanzar(slug, "fondo", lambda t: servicio_texto.otro_fondo(c, t, p.generar, permiso=p.permiso))
+
+
 @app.get("/api/canales/{canal}/miniatura")
 def plantilla_ver(canal: str):
-    from .miniaturas import plantilla
+    from .miniaturas import plantilla, texto_retrato
 
+    if texto_retrato.es_de_texto(canal):
+        cfg = texto_retrato.cargar_config(canal)
+        return {**cfg.model_dump(), "tiene_retrato": texto_retrato.cargar_retrato(cfg) is not None,
+                "fondos": texto_retrato.fondos_disponibles(cfg)}
     return plantilla.cargar(canal).model_dump()
+
+
+# --- configuración del canal para la plantilla de texto + retrato
+
+class CanalTexto(BaseModel):
+    nombre: str = Field(min_length=2, max_length=80)
+    clave: str | None = None
+
+
+@app.post("/api/miniaturas/canales")
+def canal_texto_crear(p: CanalTexto):
+    """Crea un canal nuevo con la plantilla «texto_izquierda_retrato_derecha»."""
+    from .miniaturas import texto_retrato
+    from .pipeline import slugificar
+
+    clave = p.clave or slugificar(p.nombre)[:50]
+    try:
+        return texto_retrato.crear_canal(clave, p.nombre.strip()).model_dump()
+    except ValueError as ex:
+        raise HTTPException(400, str(ex)) from ex
+
+
+@app.put("/api/canales/{canal}/miniatura/texto")
+def canal_texto_config(canal: str, cambios: dict):
+    from .miniaturas import texto_retrato
+
+    try:
+        texto_retrato.cambiar_config(canal, cambios)
+    except ValueError as ex:
+        errores = ex.errors() if hasattr(ex, "errors") else None
+        raise HTTPException(400, errores[0]["msg"].removeprefix("Value error, ") if errores else str(ex)) from ex
+    return plantilla_ver(canal)
+
+
+@app.post("/api/canales/{canal}/miniatura/retrato")
+async def canal_texto_retrato(canal: str, archivo: UploadFile = File(...)):
+    from .miniaturas import texto_retrato
+
+    try:
+        texto_retrato.subir_retrato(canal, await archivo.read())
+    except Exception as ex:  # noqa: BLE001 — imagen rota o sin transparencia: se explica en la página
+        raise HTTPException(400, f"No se pudo usar ese retrato: {ex}") from ex
+    return plantilla_ver(canal)
+
+
+@app.post("/api/canales/{canal}/miniatura/fondos")
+async def canal_texto_fondo(canal: str, archivo: UploadFile = File(...)):
+    from .miniaturas import texto_retrato
+
+    try:
+        texto_retrato.subir_fondo(canal, await archivo.read(), archivo.filename or "fondo.jpg")
+    except Exception as ex:  # noqa: BLE001
+        raise HTTPException(400, f"No se pudo usar ese fondo: {ex}") from ex
+    return plantilla_ver(canal)
+
+
+@app.get("/canales/{canal}/miniatura/{archivo:path}")
+def canal_texto_imagen(canal: str, archivo: str):
+    """El retrato y los fondos del canal (para verlos en la página)."""
+    from .miniaturas.plantilla import ruta_plantilla
+
+    base = ruta_plantilla(canal).resolve()
+    ruta = (base / archivo).resolve()
+    if base not in ruta.parents or not ruta.is_file() or ruta.suffix.lower() not in (".png", ".jpg", ".jpeg", ".webp"):
+        raise HTTPException(404)
+    return FileResponse(ruta)
 
 
 @app.post("/api/canales/{canal}/miniatura/referencias")

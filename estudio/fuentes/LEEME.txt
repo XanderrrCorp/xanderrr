@@ -12,3 +12,9 @@ y ArchivoBlack-Regular.ttf · Archivo Black (Omnibus-Type), de Google Fonts. Par
 
 BebasNeue-Regular.ttf · Bebas Neue (Dharma Type), de Google Fonts. Subtítulos del modo Tracy.
 Licencia: SIL Open Font License 1.1. Fuente: https://fonts.google.com/specimen/Bebas+Neue
+
+Anton-Regular.ttf · Anton (Vernon Adams), de Google Fonts. Texto grande de la plantilla de miniatura
+«texto_izquierda_retrato_derecha». Licencia: SIL Open Font License 1.1. Fuente: https://fonts.google.com/specimen/Anton
+
+Barlow-Light.ttf · Barlow (Jeremy Tribby), de Google Fonts. Rótulo fino de esa misma plantilla.
+Licencia: SIL Open Font License 1.1. Fuente: https://fonts.google.com/specimen/Barlow

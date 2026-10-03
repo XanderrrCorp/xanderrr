@@ -321,7 +321,23 @@ main { max-width: 1320px; margin: 0 auto; padding: 8px 28px 64px; }
 .mini-ref img { width: 100%; aspect-ratio: 1; object-fit: contain; background: #fff; border-radius: 8px; }
 .mini-ref.apagada { opacity: .45; }
 .subir { cursor: pointer; }
+/* miniatura texto + retrato */
+.mt-opciones { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin: 10px 0; }
+.mt-opcion { display: flex; flex-direction: column; gap: 6px; padding: 8px; border-radius: 14px; background: var(--sup-2); border: 2px solid var(--linea); }
+.mt-opcion.sel { border-color: var(--verde); }
+.mt-opcion img { width: 100%; aspect-ratio: 16 / 9; border-radius: 10px; cursor: pointer; }
+.mt-opcion input, .mt-nuevo { padding: 8px 10px; border-radius: 10px; border: 1px solid var(--linea); background: var(--sup); color: var(--texto); font-weight: 600; }
+.mt-nuevo { flex: 1; min-width: 0; }
+.mt-aviso { font-size: 12px; color: var(--dorado); }
+.mt-config { display: grid; grid-template-columns: 180px minmax(0, 1fr); gap: 16px; align-items: start; }
+.mt-config > *, .mt-config .campo { min-width: 0; } .mt-config select, .mt-config input:not([type=color]) { max-width: 100%; }
+.mt-retrato { display: flex; flex-direction: column; gap: 8px; }
+.mt-retrato img, .mt-retrato .sin-img { width: 100%; aspect-ratio: 4 / 5; object-fit: contain; border-radius: 10px;
+  background: repeating-conic-gradient(#2a2a35 0% 25%, #1d1d26 0% 50%) 50% / 20px 20px; display: grid; place-items: center; color: var(--tenue); }
+.mini-ref img.mt-fondo { aspect-ratio: 16 / 9; object-fit: cover; }
 @media (max-width: 700px) {
+  .mt-opciones, .mt-config { grid-template-columns: minmax(0, 1fr); }
+  .mt-retrato { max-width: 220px; }
   .mini-orden { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .mini-campos { grid-template-columns: 1fr; }
 }

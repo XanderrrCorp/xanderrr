@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { api, archivo } from '../api';
 import { Icono } from '../componentes/Icono';
+import { LAYOUT_TEXTO, MiniaturaTexto } from './MiniaturaTexto';
 
 // Miniatura de formato escala (2x3): Claude la planifica, se dibuja cada animal por separado y
 // Xandart la arma con fuentes reales. Textos, orden, tamaño y posición no gastan: solo se rearma.
@@ -65,6 +66,8 @@ export function Miniatura() {
   };
 
   if (!m) return <div className="pagina"><p className="tenue">{aviso || 'Cargando…'}</p></div>;
+  // canal con la plantilla de texto + retrato: otra página (la de escala 2x3 sigue igual)
+  if ((m as unknown as { layout?: string }).layout === LAYOUT_TEXTO) return <MiniaturaTexto slug={slug} />;
   const t = m.trabajo, p = m.plan, trabajando = !!t?.activo;
   const usd = m.estimacion.por_imagen_usd;
 

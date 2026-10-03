@@ -55,6 +55,7 @@ def _preparar() -> None:
 
         r = migrar_instalacion(raiz_origen())
         _arreglar_estilos()
+        _canales_nuevos(r["espacio"])
         _estado.update(espacio=r["espacio"], resumen=r, error=None, fase="listo", detalle="")
     except CopiaFallida as ex:
         _estado.update(espacio=None, error=str(ex), fase="error", detalle=str(ex))
@@ -70,6 +71,21 @@ def _arreglar_estilos() -> None:
     corregir_estilos(db.carpeta_datos())
     with db.sesion() as s:
         corregir_base(s)
+
+
+def _canales_nuevos(espacio: str | None) -> None:
+    """Canales que trae la versión nueva, dentro del espacio del dueño (nunca en la carpeta del
+    programa). Si ya existen, lo configurado no se toca."""
+    if not espacio:
+        return
+    try:
+        from ..miniaturas.texto_retrato import crear_canal
+        from . import contexto
+
+        with contexto.usar_espacio(espacio):
+            crear_canal("mentalidad-imparable", "Mentalidad Imparable")
+    except Exception:  # noqa: BLE001 — no impide abrir Xandart
+        pass
 
 
 def preparar(esperar: bool = True) -> None:
