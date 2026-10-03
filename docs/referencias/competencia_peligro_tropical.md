@@ -104,3 +104,25 @@ Primera lectura de la tanda 5:
 - Ajustar: que la cara del personaje que señala cambie según la emoción (sonríe, se asusta); para acciones
   («si lo tocas», «si lo aplastas») pedir la mano del personaje en primera persona y a veces dos imágenes
   seguidas de la misma acción.
+
+## Tanda 6 (03-10)
+
+26. **Foco de luz**: todo se oscurece (también la cuadrícula) menos un círculo de luz sobre el detalle que
+    nombra la voz (la sustancia que suelta en las patas).
+27. **Palabra clave sola a pantalla completa**: «"cantaridina"» en grande, centrada, sobre fondo azul oscuro
+    con humo/textura, cuando la voz dice un término técnico.
+28. **Pizarra**: la palabra «cantaridina» arriba a la izquierda con **flecha curva** hacia un **pizarrón negro
+    con marco de madera** donde hay un dibujo explicativo (la mano con ampollas) y **rótulos a mano en blanco
+    con flechas** («Burbujas», «Irritación»): una lámina tipo clase para explicar el efecto.
+29. **Mini historia con el personaje**: el stickman tranquilo en una hamaca en su patio (escena completa,
+    ilustrada), con un «?» encima.
+30. Continuación: **«Unas horas después»** (rótulo de salto de tiempo arriba) y el mismo stickman asustado
+    mirando su mano, con la mano **pixelada** (censura de lo desagradable) y un «?» encima.
+
+Primera lectura de la tanda 6:
+- Ya lo hace Xandart: foco (oscurecer + círculo), pixelado/censura, escenas completas con el personaje,
+  «?», título arriba.
+- Construir: **palabra clave a pantalla completa** sobre fondo oscuro; **lámina de pizarra** con dibujo y
+  rótulos a mano con flechas; **mini historias** del personaje (antes/después con rótulo «Unas horas después»).
+- Ojo: la escena de la mano con ampollas es un efecto en la salud; se dibuja sin detalle gráfico y se
+  censura lo desagradable (como ellos), sin dar dosis ni tratamientos.
