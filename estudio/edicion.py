@@ -554,13 +554,16 @@ def _musica_suave(pistas: list[str], escenas: list, clips: list, revelacion: int
 INMERSIVAS = {"gancho", "tension_creciente", "amenaza", "anecdota", "revelacion", "cierre", "giro"}
 
 
-def _a_pantalla_completa(estilo: Estilo, modo: str, e, zonas, revelacion: int | None, rng: random.Random) -> bool:
+def _a_pantalla_completa(estilo: Estilo, modo: str, e, zonas, revelacion: int | None,
+                         rng: random.Random | None) -> bool:
     """Parte de las escenas completas (con fondo propio) van a pantalla completa con zoom lento, como en
     los canales que le gustan al dueño; los recortes siguen sobre el papel. No las del villano oculto."""
     if estilo.comportamiento_montaje.get(modo, "recuadro") != "recuadro" or zonas:
         return False
     if revelacion and e.id < revelacion and getattr(e, "muestra_villano", False):
         return False
+    if rng is None:                       # sin azar: todas las que se puedan
+        return True
     return rng.random() < (0.75 if e.intencion in INMERSIVAS else 0.45)
 
 
@@ -718,6 +721,13 @@ def construir_edl(carpeta: CarpetaProyecto) -> dict:
                                                     revelacion, rng):
                 modo = "pantalla_completa"
                 razon = (razon + "; " if razon else "") + "Escena completa a pantalla completa, sin papel"
+            elif (deslizar and tipo in estilo.ids_tipos and not e.seccion.lower().startswith("gancho")
+                  and _a_pantalla_completa(estilo, modo, e, (direccion.get("pixelar") or {}).get(str(e.id)),
+                                           revelacion, None)):
+                # Peligro Tropical (como la competencia): las escenas ilustradas completas van a pantalla
+                # completa; las tarjetas de foto vieja quedan para las fotos reales y la lista del gancho
+                modo = "pantalla_completa"
+                razon = (razon + "; " if razon else "") + "Escena ilustrada completa a pantalla completa"
             if nueva_seccion:
                 _sfx(sfx, "barrido", ini, idx, f"Barrido de cambio de sección: empieza «{e.seccion}»")
         # --- villano pixelado antes de su revelación (15.4)

@@ -156,18 +156,14 @@ def test_tira_oscurece_lo_visto_y_presenta_cada_especie(estilo):
     assert all(1.2 <= p["dur"] <= 1.9 for p in pres)
 
 
-def test_pila_que_crece_y_cada_foto_entra_de_lado(estilo):
+def test_escenas_ilustradas_completas_van_a_pantalla_completa(estilo):
+    """Como la competencia: las escenas ilustradas completas llenan la pantalla (zoom lento); las
+    tarjetas de foto vieja no se usan para ellas fuera del gancho."""
     _, edl = _proyecto_niveles(estilo)
-    clips = edl["pistas"]["escenas"]
-    tras_tira = clips[1:4]
-    pilas = [_efecto(c, "pila_fotos") for c in tras_tira]
-    assert [len(p["debajo"]) for p in pilas] == [0, 1, 2]
-    assert pilas[2]["debajo"][-1]["archivo"] == tras_tira[1]["archivo"]
-    assert pilas[2]["debajo"][0]["decor"] is True and pilas[2]["debajo"][1]["decor"] is False
-    for c in tras_tira[1:]:
-        assert _efecto(c, "entrada_lado")
-    # la tira corta la pila: después de un nivel empieza una nueva
-    assert len(_efecto(clips[5], "pila_fotos")["debajo"]) == 0
+    clips = [c for c in edl["pistas"]["escenas"] if c["modo"] != "tira"]
+    assert clips and all(c["modo"] == "pantalla_completa" for c in clips)
+    assert not any(_efecto(c, "pila_fotos") for c in clips)
+    assert all((c["movimiento"] or {}).get("tipo") == "zoom_lento" for c in clips)
 
 
 def test_termino_tecnico_a_pantalla_completa(estilo):
