@@ -51,12 +51,30 @@ class TranscriptorWhisper:
             except ImportError as ex:   # pragma: no cover — depende de la instalación
                 raise RuntimeError("Falta Whisper local: instala con  pip install -e \".[tracy]\"") from ex
             tipo = "int8" if self.dispositivo in ("cpu", "auto") else "float16"
-            self._m = WhisperModel(self.modelo, device=self.dispositivo, compute_type=tipo)
+            try:
+                self._m = WhisperModel(self.modelo, device=self.dispositivo, compute_type=tipo)
+            except (RuntimeError, OSError, ValueError):
+                if self.dispositivo == "cpu":
+                    raise
+                self.dispositivo = "cpu"                 # sin CUDA usable: el procesador
+                self._m = WhisperModel(self.modelo, device="cpu", compute_type="int8")
         return self._m
 
     def transcribir(self, audio16k: np.ndarray, texto_esperado: str = "") -> list[dict]:
+        try:
+            return self._transcribir(audio16k)
+        except (RuntimeError, OSError) as ex:
+            # con una tarjeta NVIDIA sin las librerías de CUDA (cublas, cudnn) Whisper falla al empezar:
+            # se sigue con el procesador, que siempre funciona (más lento, mismo resultado)
+            if self.dispositivo == "cpu" or not any(p in str(ex).lower() for p in ("cublas", "cudnn", "cuda", ".dll")):
+                raise
+            self.dispositivo, self._m = "cpu", None
+            return self._transcribir(audio16k)
+
+    def _transcribir(self, audio16k: np.ndarray) -> list[dict]:
         segs, _ = self._cargar().transcribe(audio16k.astype(np.float32), language=self.idioma, word_timestamps=True,
                                             beam_size=5, condition_on_previous_text=False)
+        # la lista se arma aquí adentro: faster-whisper trabaja al recorrer los segmentos (ahí falla CUDA)
         return [{"palabra": w.word.strip(), "inicio": float(w.start), "fin": float(w.end)}
                 for s in segs for w in (s.words or []) if w.word.strip()]
 

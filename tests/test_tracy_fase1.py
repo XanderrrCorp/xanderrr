@@ -223,3 +223,36 @@ def test_proyectos_de_siempre_siguen_siendo_generated():
     p = Proyecto.model_validate({"slug": "x", "titulo": "x", "canal": "c", "estilo": "e",
                                  "duracion_objetivo_seg": 60, "creado": "2026-01-01"})
     assert p.visual_mode == "generated"
+
+
+def test_whisper_sin_cuda_sigue_con_el_procesador(monkeypatch):
+    import numpy as np
+
+    from estudio.tracy.alineacion import TranscriptorWhisper
+
+    usados = []
+
+    class Palabra:
+        word, start, end = " hola", 0.1, 0.4
+
+    class Seg:
+        words = [Palabra()]
+
+    class Modelo:
+        def __init__(self, nombre, device, compute_type):
+            usados.append(device)
+            self.device = device
+
+        def transcribe(self, *a, **k):
+            def gen():
+                if self.device != "cpu":
+                    raise RuntimeError("Library cublas64_12.dll is not found or cannot be loaded")
+                yield Seg()
+            return gen(), None
+
+    import types
+    import sys
+    monkeypatch.setitem(sys.modules, "faster_whisper", types.SimpleNamespace(WhisperModel=Modelo))
+    t = TranscriptorWhisper(dispositivo="auto")
+    assert t.transcribir(np.zeros(16000, np.float32)) == [{"palabra": "hola", "inicio": 0.1, "fin": 0.4}]
+    assert usados == ["auto", "cpu"] and t.dispositivo == "cpu"
