@@ -176,7 +176,7 @@ export function TracyVideo() {
           <b>{PASOS[t.paso] ?? t.paso}</b>
           <div className="barra-progreso"><i style={{ width: `${Math.round(t.progreso * 100)}%` }} /></div>
           <span className="tenue pequeno">{t.mensaje} · {Math.floor(t.segundos / 60)} min {t.segundos % 60} s</span>
-          <p className="tenue pequeno">La primera vez Whisper baja su modelo (unos 480 MB): ese paso tarda un rato más.</p>
+          {t.paso === 'voz' && <p className="tenue pequeno">La primera vez Whisper baja su modelo (unos 480 MB): ese paso tarda un rato más.</p>}
         </section>
       )}
       {!trabajando && t?.error && (
