@@ -200,7 +200,7 @@ def _recortar_sonidos(sfx: list, n_clips: int, total: float, perfil, rng: random
         if not quitables:
             break
         quitar(quitables)
-    for tipo in {x["tipo"] for x in vivos}:
+    for tipo in {x["tipo"] for x in vivos} - libres:          # el swoosh de cada entrada va con su corte
         ts = [x for x in vivos if x["tipo"] == tipo and x["prioridad"] < 5]
         for k in range(len(ts) - 3):
             gaps = [ts[k + j + 1]["inicio"] - ts[k + j]["inicio"] for j in range(3)]
