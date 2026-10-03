@@ -66,7 +66,7 @@
     "pov_personaje": 0.04
   },
   "fondo_montaje": {
-    "tipo": "textura",
+    "tipo": "cuadricula",
     "valor": "assets/papel_arrugado.png"
   },
   "modos_de_montaje_permitidos": [

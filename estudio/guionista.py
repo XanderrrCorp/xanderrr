@@ -227,13 +227,17 @@ Para CADA escena, en orden, decide:
   en la descripción llámalo "the cartoon man".{nota_mascota}
 {nota_real}- "palabra_clave": la palabra MÁS importante de esa escena, copiada tal cual (sustantivo o número en palabras).
 - "texto_pantalla": solo en 1 o 2 escenas fuertes de la sección, un título corto de 2 a 6 palabras escrito
-  normal, como lo diría una persona («Es aterrador»); y "palabra": la palabra de la escena donde aparece.
+  normal, como lo diría una persona («Si lo ves, huye»); y "palabra": la palabra de la escena donde aparece.
   En las demás, null.
+- "dato": en 1 o 2 escenas de la sección donde la voz afirma o niega algo concreto del sujeto (si muerde, si
+  es venenoso, si se come, si es peligroso), {{"texto": "No muerde", "icono": "no"}}: texto de 1 a 3 palabras
+  e icono "no" (✕ roja), "si" (✓ verde) o "alerta" (⚠). Se ve grande al lado del dibujo con una flecha.
+  En las demás, null. Nunca en la misma escena que "texto_pantalla".
 {especiales}
 {bloque_catalogo}
 Responde SOLO un JSON: {{"escenas": [{{"n": 1, "intencion": "...", "intensidad": 3, "accion": "generar",
 "tipo": "{ejemplo}", "descripcion": "...", "con_mascota": false, "palabra_clave": "...", "texto_pantalla": null,
-"palabra": null}}, ...]}} con exactamente {len(lineas)} escenas."""
+"palabra": null, "dato": null}}, ...]}} con exactamente {len(lineas)} escenas."""
 
 
 def _detalles(historia: dict, k: int, estilo: Estilo, carpeta: Path, ejecutar, avisar,
@@ -376,6 +380,12 @@ def a_escenas(datos: dict, estilo: Estilo, canal: str) -> tuple[dict, dict, str]
         if e.get("texto_pantalla"):
             direccion["textos"][str(i)] = {"texto": str(e["texto_pantalla"]).strip()[:48],
                                            "palabra": e.get("palabra") or ""}
+        dato = e.get("dato") if isinstance(e.get("dato"), dict) else None
+        if dato and str(dato.get("texto") or "").strip():
+            icono = str(dato.get("icono") or "no").strip().lower()
+            direccion.setdefault("datos", {})[str(i)] = {
+                "texto": str(dato["texto"]).strip()[:28],
+                "icono": icono if icono in ("si", "no", "alerta") else "no"}
     direccion["pixelar_pendiente"] = [i for i in direccion["pixelar_pendiente"]
                                       if i < direccion.get("villano_revelacion", 10 ** 6)]
     doc = {"version": 2, "video": datos.get("titulo") or "Sin título", "canal": canal, "estilo": estilo.id,

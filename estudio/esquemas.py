@@ -43,6 +43,8 @@ EFECTOS = (
     "entrada_abajo", "entrada_lado", "vaiven",
     # escala de peligro 0–10 a pantalla completa cuando se presenta un nivel (dibujada con código)
     "escala_peligro",
+    # dato clave a un lado (ícono ✕/✓/⚠ y texto grande, «No muerde») con flecha curva desde el objeto
+    "dato",
 )
 # "sfx" no es un efecto visual, pero se sugiere en la misma lista (ver 3.1).
 EFECTOS_SUGERIBLES = EFECTOS + ("sfx",)
@@ -63,7 +65,7 @@ class TipoEscena(Modelo):
 
 
 class FondoMontaje(Modelo):
-    tipo: Literal["color", "textura"]
+    tipo: Literal["color", "textura", "cuadricula"]   # cuadricula: hoja blanca cuadriculada y un poco arrugada
     valor: str
 
 
@@ -469,7 +471,7 @@ class Tramo(Modelo):
 
 class ClipFondo(Tramo):
     id: str
-    tipo: Literal["color", "textura"]
+    tipo: Literal["color", "textura", "cuadricula"]   # cuadricula: hoja blanca cuadriculada y un poco arrugada
     archivo: str | None = None
     valor: str | None = None
 

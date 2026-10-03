@@ -79,7 +79,26 @@ def fondo_de_estilo(estilo, w: int, h: int, semilla: int) -> Image.Image:
     f = getattr(estilo, "fondo_montaje", None)
     if f is not None and f.tipo == "color":
         return fondo_liso(w, h, f.valor, semilla)
+    if f is not None and f.tipo == "cuadricula":
+        return papel_cuadriculado(w, h, semilla)
     return papel_arrugado(w, h, semilla)
+
+
+def papel_cuadriculado(w: int, h: int, semilla: int = 5, paso: int = 72) -> Image.Image:
+    """Hoja blanca de cuaderno cuadriculado, un poco arrugada: los pliegues del papel de siempre pasados
+    a gris muy claro y una cuadrícula gris suave encima."""
+    arrugas = np.asarray(papel_arrugado(w, h, semilla).convert("L"), np.float32)
+    claro = 244 + (arrugas - arrugas.mean()) * 0.55                  # casi blanco, con sus pliegues
+    img = Image.fromarray(np.clip(np.stack([claro, claro, claro + 2], -1), 0, 255).astype("uint8"), "RGB")
+    capa = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+    d = ImageDraw.Draw(capa)
+    for x in range(paso // 2, w, paso):
+        d.line([(x, 0), (x, h)], fill=(150, 156, 168, 70), width=2)
+    for y in range(paso // 2, h, paso):
+        d.line([(0, y), (w, y)], fill=(150, 156, 168, 70), width=2)
+    img = img.convert("RGBA")
+    img.alpha_composite(capa)
+    return img.convert("RGB")
 
 
 def asegurar_fondo(raiz: Path, estilo, semilla: int) -> Path:
@@ -202,10 +221,16 @@ class Escenario:
                 self.cache.pop(next(iter(self.cache)))
             return final
         lienzo = self.papel.copy().convert("RGBA")
+        # con un «dato» (texto + ícono a la izquierda) el objeto se corre a la derecha para dejarle sitio
+        a_un_lado = any(e.get("efecto") == "dato" for e in clip.get("efectos", []))
+
+        def _x(ancho: int) -> int:
+            return int(W * 0.68 - ancho / 2) if a_un_lado else (W - ancho) // 2
+
         if self.comportamiento.get(clip["modo"], "recuadro") == "recorte":
             esquina = np.asarray(img.resize((40, 24)), np.float32)
             blanco = np.mean([esquina[0, 0], esquina[0, -1], esquina[-1, 0], esquina[-1, -1]]) > 232
-            caja_max = (int(W * 0.84), int(H * 0.72))
+            caja_max = (int(W * 0.46), int(H * 0.62)) if a_un_lado else (int(W * 0.84), int(H * 0.72))
             if blanco:
                 # dibujo sobre fondo blanco: se «imprime» en el papel (multiplicar). Se recorta el
                 # margen blanco y el dibujo se agranda hasta llenar el cuadro: un objeto chiquito en
@@ -213,7 +238,7 @@ class Escenario:
                 caja = _caja_contenido(img)
                 d = _encajar(img.crop(caja), caja_max)
                 k = d.width / (caja[2] - caja[0])
-                x, y = (W - d.width) // 2, int(H * 0.50 - d.height / 2)
+                x, y = _x(d.width), int(H * 0.50 - d.height / 2)
                 self.ubicacion[clip["id"]] = (x - caja[0] * k, y - caja[1] * k, img.width * k, img.height * k)
                 zona = np.asarray(lienzo.crop((x, y, x + d.width, y + d.height)).convert("RGB"), np.float32)
                 mult = zona * np.asarray(d, np.float32) / 255
@@ -224,7 +249,7 @@ class Escenario:
                 rec = rec.crop(caja)
                 ancho0 = rec.width
                 rec = _encajar(rec, caja_max)
-                x, y = (W - rec.width) // 2, int(H * 0.50 - rec.height / 2)
+                x, y = _x(rec.width), int(H * 0.50 - rec.height / 2)
                 k = rec.width / ancho0
                 self.ubicacion[clip["id"]] = (x - caja[0] * k, y - caja[1] * k, img.width * k, img.height * k)
                 s, (dx, dy) = _sombra(rec, 18, 110)
@@ -233,13 +258,13 @@ class Escenario:
                 self.capas[clip["id"]] = ((s, (x + dx, y + dy)), (rec, (x, y)))
         else:
             r = random.Random(clip["id"])
-            marco = 14
-            d = img.resize((int(W * 0.74), int(W * 0.74 * img.height / img.width)), Image.Resampling.LANCZOS)
-            conmarco = Image.new("RGBA", (d.width + 2 * marco, d.height + 2 * marco), (250, 248, 242, 255))
-            conmarco.paste(d, (marco, marco))
-            conmarco = conmarco.rotate(r.uniform(-1.2, 1.2), expand=True, resample=Image.Resampling.BICUBIC)
-            x, y = (W - conmarco.width) // 2, int(H * 0.46 - conmarco.height / 2)
-            gx, gy = (conmarco.width - d.width) / 2, (conmarco.height - d.height) / 2
+            ancho = W * (0.42 if a_un_lado else 0.56)
+            d = img.resize((int(ancho), int(ancho * img.height / img.width)), Image.Resampling.LANCZOS)
+            if d.height > H * 0.74:                     # imágenes altas: que la pila quepa
+                k = H * 0.74 / d.height
+                d = d.resize((int(d.width * k), int(d.height * k)), Image.Resampling.LANCZOS)
+            conmarco, (gx, gy) = _foto_vieja(d, r)
+            x, y = _x(conmarco.width), int(H * 0.48 - conmarco.height / 2)
             self.ubicacion[clip["id"]] = (x + gx, y + gy, d.width, d.height)
             s, (dx, dy) = _sombra(conmarco, 20, 130)
             lienzo.alpha_composite(s, (max(0, x + dx), max(0, y + dy)))
@@ -250,6 +275,43 @@ class Escenario:
         if len(self.cache) > 6:
             self.cache.pop(next(iter(self.cache)))
         return final
+
+
+def _tarjeta(w: int, h: int, color: tuple, r: random.Random) -> Image.Image:
+    """Cartulina de foto vieja: color crema con grano y bordes un poco más oscuros y gastados."""
+    base = np.ones((h, w, 3), np.float32) * np.array(color, np.float32)
+    rng = np.random.default_rng(r.randint(0, 10 ** 6))
+    base += rng.normal(0, 3.5, (h, w, 1))
+    yy, xx = np.mgrid[:h, :w]
+    borde = np.minimum(np.minimum(xx, w - 1 - xx), np.minimum(yy, h - 1 - yy)).astype(np.float32)
+    base *= (0.80 + 0.20 * np.clip(borde / 26, 0, 1))[..., None]          # orillas gastadas
+    im = Image.fromarray(np.clip(base, 0, 255).astype("uint8"), "RGB").convert("RGBA")
+    mascara = Image.new("L", (w, h), 0)
+    ImageDraw.Draw(mascara).rounded_rectangle((0, 0, w - 1, h - 1), radius=10, fill=255)
+    im.putalpha(mascara)
+    return im
+
+
+def _foto_vieja(foto: Image.Image, r: random.Random) -> tuple[Image.Image, tuple[float, float]]:
+    """La imagen como foto vieja con borde crema, encima de otras dos tarjetas un poco giradas (como
+    una pila de fotos sobre la mesa). Devuelve la pila y dónde quedó la foto dentro de ella."""
+    marco = 24
+    tw, th = foto.width + 2 * marco, foto.height + 2 * marco
+    pad = 90
+    pila = Image.new("RGBA", (tw + 2 * pad, th + 2 * pad), (0, 0, 0, 0))
+    for k, (dx, dy, giro, tono) in enumerate(((-26, 14, r.uniform(-5, -2.5), (226, 214, 188)),
+                                               (30, -10, r.uniform(2.5, 5), (232, 221, 197)))):
+        atras = _tarjeta(tw, th, tono, r).rotate(giro, expand=True, resample=Image.Resampling.BICUBIC)
+        pila.alpha_composite(atras, (int(pad + dx + (tw - atras.width) / 2), int(pad + dy + (th - atras.height) / 2)))
+    frente = _tarjeta(tw, th, (241, 233, 213), r)
+    frente.paste(foto.convert("RGB"), (marco, marco))
+    ImageDraw.Draw(frente).rectangle((marco - 1, marco - 1, marco + foto.width, marco + foto.height),
+                                     outline=(120, 104, 80, 255), width=2)
+    giro = r.uniform(-1.5, 1.5)
+    frente = frente.rotate(giro, expand=True, resample=Image.Resampling.BICUBIC)
+    fx, fy = pad + (tw - frente.width) / 2, pad + (th - frente.height) / 2
+    pila.alpha_composite(frente, (int(fx), int(fy)))
+    return pila, (fx + (frente.width - foto.width) / 2, fy + (frente.height - foto.height) / 2)
 
 
 AGRANDAR_MAXIMO = 3.0      # más de eso ya se ve borroso
@@ -475,6 +537,81 @@ def _poner_etiqueta(img: Image.Image, ef: dict, tt: float, fin: float) -> Image.
     return img
 
 
+def _icono_si_no(tam: int, si: bool) -> Image.Image:
+    """Círculo rojo con ✕ blanca (no) o verde con ✓ (sí), con borde blanco y sombra suave."""
+    im = Image.new("RGBA", (tam, tam), (0, 0, 0, 0))
+    d = ImageDraw.Draw(im)
+    d.ellipse((6, 10, tam - 2, tam - 2), fill=(0, 0, 0, 70))
+    d.ellipse((2, 2, tam - 6, tam - 6), fill=(255, 255, 255, 255))
+    color = (46, 184, 92, 255) if si else (226, 38, 38, 255)
+    m = tam * 0.09
+    d.ellipse((2 + m, 2 + m, tam - 6 - m, tam - 6 - m), fill=color)
+    c, g = (tam - 4) / 2, max(4, int(tam * 0.11))
+    if si:
+        d.line([(c - tam * 0.2, c + tam * 0.01), (c - tam * 0.05, c + tam * 0.16), (c + tam * 0.22, c - tam * 0.15)],
+               fill=(255, 255, 255, 255), width=g, joint="curve")
+    else:
+        k = tam * 0.16
+        d.line([(c - k, c - k), (c + k, c + k)], fill=(255, 255, 255, 255), width=g)
+        d.line([(c - k, c + k), (c + k, c - k)], fill=(255, 255, 255, 255), width=g)
+    return im
+
+
+def _texto_dato(texto: str) -> Image.Image:
+    """El dato escrito grande en negro redondeado (como a mano en el cuaderno), sin caja."""
+    f = _fuente(118)
+    d0 = ImageDraw.Draw(Image.new("RGBA", (1, 1)))
+    caja = d0.textbbox((0, 0), texto, font=f)
+    im = Image.new("RGBA", (caja[2] - caja[0] + 20, caja[3] - caja[1] + 20), (0, 0, 0, 0))
+    ImageDraw.Draw(im).text((10 - caja[0], 10 - caja[1]), texto, font=f, fill=(20, 16, 12, 255))
+    if im.width > W * 0.42:
+        k = W * 0.42 / im.width
+        im = im.resize((int(im.width * k), int(im.height * k)), Image.Resampling.LANCZOS)
+    return im
+
+
+def _poner_dato(img: Image.Image, ef: dict, tt: float, fin: float) -> Image.Image:
+    """Un dato clave a la izquierda (ícono ✕/✓/⚠ arriba y el texto grande debajo) y una flecha curva
+    negra que sale del objeto (a la derecha) y apunta al texto. Todo entra con rebote."""
+    loc = tt - ef["en"]
+    if loc < 0:
+        return img
+    salida = max(0.0, min(1.0, (fin - tt) / 0.2)) if tt > fin - 0.2 else 1.0
+    img = img.convert("RGBA")
+    cx = W * 0.27
+    # la flecha se dibuja primero (queda debajo del texto)
+    avance = _sale(max(0.0, loc - 0.15) / 0.35)
+    if avance > 0.02:
+        p0, p1, p2 = np.array([W * 0.53, H * 0.34]), np.array([W * 0.47, H * 0.17]), np.array([W * 0.41, H * 0.31])
+        ts = np.linspace(0, avance, 40)
+        pts = [tuple((1 - t) ** 2 * p0 + 2 * (1 - t) * t * p1 + t ** 2 * p2) for t in ts]
+        capa = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+        d = ImageDraw.Draw(capa)
+        d.line(pts, fill=(20, 16, 12, int(255 * salida)), width=9, joint="curve")
+        if avance > 0.9:
+            a, b = np.array(pts[-2]), np.array(pts[-1])
+            u = (b - a) / (np.linalg.norm(b - a) + 1e-6)
+            n = np.array([-u[1], u[0]])
+            d.polygon([tuple(b + u * 22), tuple(b - u * 18 + n * 20), tuple(b - u * 18 - n * 20)],
+                      fill=(20, 16, 12, int(255 * salida)))
+        img.alpha_composite(capa)
+    clave = ("dato", ef["texto"], ef.get("icono", "no"))
+    if clave not in _ICONO:
+        icono = _icono_advertencia(170) if ef.get("icono") == "alerta" else _icono_si_no(150, ef.get("icono") == "si")
+        _ICONO[clave] = (icono, _texto_dato(ef["texto"]))
+    icono, texto = _ICONO[clave]
+    for k, (pieza, y, retraso) in enumerate(((icono, H * 0.33, 0.0), (texto, H * 0.53, 0.08))):
+        l = loc - retraso
+        if l < 0:
+            continue
+        esc = _sale(l / 0.12) * (1.0 + 0.25 * math.exp(-l * 9) * math.cos(l * 16)) * salida
+        if esc < 0.05:
+            continue
+        im = pieza.resize((max(1, int(pieza.width * esc)), max(1, int(pieza.height * esc))), Image.Resampling.BICUBIC)
+        img.alpha_composite(im, (int(cx - im.width / 2), int(y - im.height / 2)))
+    return img.convert("RGB")
+
+
 def _signo(tam: int, color) -> Image.Image:
     f = _fuente(tam)
     d0 = ImageDraw.Draw(Image.new("RGBA", (1, 1)))
@@ -491,12 +628,14 @@ def _signos_pregunta(img: Image.Image, ef: dict, tt: float, fin: float) -> Image
     colores = [(255, 214, 51), (255, 255, 255), (255, 94, 94)]
     lugares = [(0.31, 0.27), (0.69, 0.23), (0.34, 0.56), (0.66, 0.53)]
     r.shuffle(lugares)
+    if ef.get("centro"):                      # un solo «?» blanco grande encima de la foto
+        colores, lugares = [(255, 255, 255)], [(0.5, 0.47)]
     img = img.copy()
     for k in range(ef.get("cantidad", 2)):
         loc = tt - ef["en"] - 0.14 * k
         if loc < 0:
             continue
-        tam = r.randint(210, 290)
+        tam = 300 if ef.get("centro") else r.randint(210, 290)
         clave = ("?", tam, k % 3)
         if clave not in _ICONO:
             _ICONO[clave] = _signo(tam, colores[k % 3])
@@ -505,7 +644,7 @@ def _signos_pregunta(img: Image.Image, ef: dict, tt: float, fin: float) -> Image
         esc *= 1 - _suave((tt - (fin - 0.25)) / 0.25) if tt > fin - 0.25 else 1
         if esc < 0.05:
             continue
-        giro = r.uniform(-16, 16) + 7 * math.sin(loc * 3.2 + k)
+        giro = (2 * math.sin(loc * 2.2)) if ef.get("centro") else r.uniform(-16, 16) + 7 * math.sin(loc * 3.2 + k)
         im = base.resize((max(1, int(base.width * esc)), max(1, int(base.height * esc))), Image.Resampling.BICUBIC)
         im = im.rotate(giro, expand=True, resample=Image.Resampling.BICUBIC)
         x, y = lugares[k]
@@ -1386,6 +1525,8 @@ def _renderizar(carpeta: CarpetaProyecto, ffmpeg: str, destino: Path | None, des
             img = _poner_etiqueta(img, ef["etiqueta"], tt, c["fin"])
         if "signos_pregunta" in ef and not en_reaccion:
             img = _signos_pregunta(img, ef["signos_pregunta"], tt, c["fin"])
+        if "dato" in ef and not en_reaccion:
+            img = _poner_dato(img, ef["dato"], tt, c["fin"])
         if vertical:
             if en_reaccion or c["modo"] == "tira" or camara is None:
                 objetivo = 0.5

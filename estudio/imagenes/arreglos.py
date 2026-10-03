@@ -26,8 +26,11 @@ CAMBIOS_DE_ESTILO: list[tuple[str, str]] = [
      "Light cream paper background with a few faint sketchy pencil lines"),
 ]
 # Ajustes de campos por estilo (se aplican a la copia de cada espacio y a la de la base)
+# (01-10) los dos canales stickman pasan a la hoja blanca cuadriculada, como los ejemplos del dueño
+CUADRICULA = {"tipo": "cuadricula", "valor": "assets/papel_arrugado.png"}
 CAMPOS: dict[str, dict] = {
-    "paradoja_sapiens": {"fondo_montaje": {"tipo": "textura", "valor": "assets/papel_arrugado.png"},
+    "enciclopedia_mascota": {"fondo_montaje": CUADRICULA},
+    "paradoja_sapiens": {"fondo_montaje": CUADRICULA,
                          "movimiento_maximo": 0.05, "perfil_edicion": "perfiles/paradoja_documental.json"},
 }
 

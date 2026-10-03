@@ -52,7 +52,7 @@ def test_paradoja_sapiens_papel_claro_y_movimiento_suave():
     from estudio.estilos import cargar_estilo, cargar_perfil_edicion
 
     e = cargar_estilo("paradoja_sapiens")
-    assert e.fondo_montaje.tipo == "textura"
+    assert e.fondo_montaje.tipo == "cuadricula"
     p = cargar_perfil_edicion(e)
     assert p.estilo_edicion == "clasica" and p.movimiento == "sin_vaiven"   # dopamina de la clásica, sin mecerse
     assert "teal" not in e.model_dump_json().lower()
@@ -70,6 +70,24 @@ def test_arreglo_lleva_el_papel_claro_a_la_copia_del_espacio(tmp_path):
                              "sketchy pencil lines, no text"}), encoding="utf-8")
     assert corregir_estilos(tmp_path) == [f]
     d = json.loads(f.read_text(encoding="utf-8"))
-    assert d["fondo_montaje"]["tipo"] == "textura" and d["movimiento_maximo"] == 0.05
+    assert d["fondo_montaje"]["tipo"] == "cuadricula" and d["movimiento_maximo"] == 0.05
     assert "Light cream paper" in d["x"] and d["perfil_edicion"] == "perfiles/paradoja_documental.json"
     assert corregir_estilos(tmp_path) == []                            # la segunda vez no toca nada
+
+
+def test_dato_con_icono_y_flecha_y_foto_vieja_sobre_cuadricula(tmp_path):
+    from PIL import Image
+
+    from estudio.render import Escenario, _poner_dato, papel_cuadriculado
+
+    Image.new("RGB", (800, 600), (128, 128, 128)).save(tmp_path / "a.png")
+    e = Escenario(tmp_path, papel_cuadriculado(1920, 1080, 1), {"recorte_sobre_papel": "recorte",
+                                                                "recuadro_sobre_papel": "recuadro"})
+    c = {"id": "x", "archivo": "a.png", "modo": "recuadro_sobre_papel",
+         "efectos": [{"efecto": "dato", "en": 0, "texto": "No muerde", "icono": "no"}]}
+    base = e.cuadro(c)
+    x, y, w, h = e.ubicacion["x"]
+    assert x > 1920 * 0.4                                   # con el dato, la foto se corre a la derecha
+    con = _poner_dato(base, c["efectos"][0], 1.0, 4.0)
+    assert con.getpixel((518, 312))[0] > 180 and con.getpixel((518, 312))[1] < 90   # el círculo rojo de la ✕
+    assert _poner_dato(base, c["efectos"][0], -1, 4.0) is base                      # antes de su momento, nada

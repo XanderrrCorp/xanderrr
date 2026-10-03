@@ -799,10 +799,22 @@ def construir_edl(carpeta: CarpetaProyecto) -> dict:
             # signos de pregunta cuando la voz le pregunta algo al espectador (no seguidos)
             pregunta = e.intencion == "pregunta_al_espectador" or "?" in e.narracion
             if pregunta and ini - ultima_pregunta >= 10 and dur >= 1.2:
+                # sobre una foto, un solo «?» grande encima (misterio); si no, 2 o 3 alrededor
+                sobre_foto = estilo.comportamiento_montaje.get(modo, "recuadro") == "recuadro"
                 efectos.append({"efecto": "signos_pregunta", "en": round(ini + rng.uniform(0.1, 0.3), 3),
-                                "cantidad": rng.choice([2, 3]), "semilla": rng.randint(0, 10 ** 6)})
+                                "cantidad": 1 if sobre_foto else rng.choice([2, 3]), "centro": sobre_foto,
+                                "semilla": rng.randint(0, 10 ** 6)})
                 ultima_pregunta = ini
                 razon = (razon + "; " if razon else "") + "Signos de pregunta: la voz le pregunta al espectador"
+            # dato clave al lado del dibujo («No muerde» con ✕ y flecha): el objeto se corre a la derecha
+            dato = (direccion.get("datos") or {}).get(str(e.id))
+            if dato and dur >= 1.6 and modo not in ("tira", "pantalla_completa") and not zonas:
+                efectos = [x for x in efectos if x["efecto"] not in ("etiqueta", "icono_advertencia", "flecha",
+                                                                     "lupa", "circulo_rojo", "reencuadre")]
+                t_dato = round(min(ini + rng.uniform(0.25, 0.45), fin - 1.0), 3)
+                efectos.append({"efecto": "dato", "en": t_dato, "texto": dato["texto"], "icono": dato["icono"]})
+                _sfx(sfx, "pop", t_dato, idx, f"Pop con el dato «{dato['texto']}»")
+                razon = (razon + "; " if razon else "") + f"Dato clave al lado: «{dato['texto']}»"
             sonido = regla.get("sonido")
             if sonido == "alerta":
                 _sfx(sfx, "alerta", ini + 0.1, idx, "Alerta corta: advertencia")
@@ -908,7 +920,7 @@ def validar(edl: dict, perfil=None) -> list[str]:
         dur = c["fin"] - c["inicio"]
         cambia = any(x["efecto"] in ("reencuadre", "zoom_golpe", "tira_deslizar_a_nivel", "revelar_pixelado",
                                      "rafaga", "circulo_rojo", "flecha", "icono_advertencia", "signos_pregunta",
-                                     "reaccion_presentador", "etiqueta", "lupa", "foto_real", "video_real")
+                                     "reaccion_presentador", "etiqueta", "lupa", "foto_real", "video_real", "dato")
                      for x in c["efectos"])
         if dur > MAX_SIN_CAMBIO and not cambia and not c.get("respiro"):
             avisos.append(f"{c['id']}: {dur:.1f} s sin cambio visual")
