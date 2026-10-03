@@ -47,8 +47,13 @@ export function CajaIdea({ creado }: { creado: (slug: string) => void }) {
       <div className="caja-fila">
         <label className="selector">
           <span>Formato</span>
-          <select value={formato} onChange={(e) => setFormato(e.target.value)}>
+          <select value={formato} onChange={(e) => {
+            // Tracy no escribe el guion: tú lo pegas en su propia página
+            if (e.target.value === '__tracy') { ir('/tracy'); return; }
+            setFormato(e.target.value);
+          }}>
             {formatos.map((x) => <option key={x.id} value={x.id}>{x.nombre}</option>)}
+            <option value="__tracy">Estilo Brian Tracy (pegas tu guion)</option>
             <optgroup label="En camino">{EN_CAMINO.map((n) => <option key={n} disabled>{n} · pronto</option>)}</optgroup>
           </select>
         </label>
