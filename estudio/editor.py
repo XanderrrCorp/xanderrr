@@ -10,6 +10,10 @@ ediciones.json:
   subtitulos  {escena: [{texto, ini, fin}]}   los subtítulos de esa escena, con tiempos relativos al
                                    inicio de su voz (siguen en su sitio si la voz se regenera)
   animaciones {escena: archivo}    la escena se ve como clip animado en vez de imagen fija
+  musica      [{id, archivo, inicio, fin, desde, volumen}] | null   la pista de música tal como la dejó el
+                                   usuario (null = la automática). archivo es la ruta dentro de la biblioteca
+  sfx         [{id, inicio, tipo, volumen}] | null   los efectos de sonido (null = los automáticos)
+  recortes    [[ini, fin], …]      tramos que se quitan del video al exportar (imagen, voz y todo)
 """
 from __future__ import annotations
 
@@ -27,7 +31,8 @@ def cargar(raiz: Path) -> dict:
     ruta = raiz / ARCHIVO
     d = leer_json(ruta) if ruta.exists() else {}
     return {"cortes": d.get("cortes", {}), "subtitulos": d.get("subtitulos", {}),
-            "animaciones": d.get("animaciones", {}), "version": d.get("version", 0),
+            "animaciones": d.get("animaciones", {}), "musica": d.get("musica"), "sfx": d.get("sfx"),
+            "recortes": d.get("recortes", []), "version": d.get("version", 0),
             "actualizado": d.get("actualizado")}
 
 
@@ -92,6 +97,25 @@ def aplicar(edl: dict, ed: dict, voz: dict[int, tuple[float, float]], raiz: Path
             if s.get("texto", "").strip():
                 subs.append({"inicio": ini, "fin": fin, "texto": s["texto"].strip(), "escena": sid})
     edl["pistas"]["subtitulos"] = sorted(subs, key=lambda s: s["inicio"])
+    # --- música y efectos tal como los dejó el usuario
+    total = float(edl["duracion_total"])
+    if ed.get("musica") is not None:
+        edl["pistas"]["musica"] = [
+            {"id": str(m.get("id") or f"u{k:02d}"), "archivo": m["archivo"],
+             "inicio": round(max(0.0, float(m["inicio"])), 3),
+             "fin": round(min(total, max(float(m["inicio"]) + 0.5, float(m["fin"]))), 3),
+             "desde": round(max(0.0, float(m.get("desde", 0))), 3),
+             "volumen": round(min(1.0, max(0.0, float(m.get("volumen", 0.18)))), 3), "ducking": True,
+             "animo": m.get("animo")}
+            for k, m in enumerate(ed["musica"]) if m.get("archivo") and float(m["inicio"]) < total]
+    if ed.get("sfx") is not None:
+        edl["pistas"]["sfx"] = [
+            {"id": str(x.get("id") or f"u{k:03d}"), "inicio": round(min(max(0.0, float(x["inicio"])), total), 3),
+             "tipo": x["tipo"], "archivo": f"biblioteca/sfx/{x['tipo']}",
+             "variante": x.get("variante") or f"{x['tipo']}_1",
+             "volumen": round(min(1.0, max(0.0, float(x.get("volumen", 0.7)))), 3),
+             **({"duracion_max": x["duracion_max"]} if x.get("duracion_max") else {})}
+            for k, x in enumerate(ed["sfx"]) if x.get("tipo")]
     if ed.get("version"):
         edl.setdefault("historial", []).append({"version": len(edl.get("historial", [])) + 1, "autor": "editor",
                                                 "cambio": f"cambios del editor (v{ed['version']})",
@@ -102,7 +126,8 @@ def aplicar(edl: dict, ed: dict, voz: dict[int, tuple[float, float]], raiz: Path
 def edl_con_ediciones(raiz: Path) -> dict:
     edl = leer_json(raiz / "edl.json")
     ed = cargar(raiz)
-    if not (ed["cortes"] or ed["subtitulos"] or ed["animaciones"]):
+    if not (ed["cortes"] or ed["subtitulos"] or ed["animaciones"] or ed["musica"] is not None
+            or ed["sfx"] is not None):
         return edl
     return aplicar(edl, ed, _voz_de_escenas(raiz), raiz)
 
@@ -131,15 +156,25 @@ def linea_de_tiempo(raiz: Path) -> dict:
     def _nombre(archivo: str) -> str:
         return Path(archivo).stem.replace("_", " ")
 
-    musica = [{"inicio": m["inicio"], "fin": m["fin"], "nombre": _nombre(m["archivo"]), "animo": m.get("animo")}
-              for m in edl["pistas"].get("musica", [])]
-    sfx = [{"inicio": s["inicio"], "tipo": s.get("tipo") or _nombre(s["archivo"]),
-            "dur": float(s.get("duracion_max") or 0.8)} for s in edl["pistas"].get("sfx", [])]
+    musica = [{"id": m.get("id"), "inicio": m["inicio"], "fin": m["fin"], "nombre": _nombre(m["archivo"]),
+               "animo": m.get("animo"), "archivo": m["archivo"], "desde": m.get("desde", 0),
+               "volumen": m.get("volumen", 0.18)} for m in edl["pistas"].get("musica", [])]
+    sfx = []
+    for k, x in enumerate(edl["pistas"].get("sfx", [])):
+        dur = float(x.get("duracion_max") or 0.8)
+        # los que «terminan en» un corte se muestran (y se guardan) por su comienzo real
+        ini = float(x["termina_en"]) - dur if x.get("termina_en") is not None else float(x["inicio"])
+        sfx.append({"id": x.get("id") or f"s{k:03d}", "inicio": round(max(0.0, ini), 3),
+                    "tipo": x.get("tipo") or (x.get("variante") or "pop").rsplit("_", 1)[0], "dur": dur,
+                    "variante": x.get("variante"), "volumen": x.get("volumen", 0.7),
+                    "duracion_max": x.get("duracion_max")})
     final = raiz / "render" / "final.mp4"
     return {"duracion": edl["duracion_total"], "escenas": escenas, "voz": voces, "musica": musica, "sfx": sfx,
             "subtitulos": [{**s, "editado": str(s.get("escena")) in ed["subtitulos"]} for s in edl["pistas"]["subtitulos"]],
             "video": "render/final.mp4" if final.exists() else None,
             "video_version": int(final.stat().st_mtime) if final.exists() else 0,
+            "recortes": ed["recortes"], "musica_editada": ed["musica"] is not None,
+            "sfx_editados": ed["sfx"] is not None,
             "ediciones": {"version": ed["version"], "actualizado": ed["actualizado"],
                           "pendientes": bool(ed["actualizado"]) and (not final.exists() or
                                                                    (raiz / ARCHIVO).stat().st_mtime > final.stat().st_mtime)}}
@@ -175,3 +210,143 @@ def deshacer_escena(raiz: Path, escena: int, que: str) -> dict:
     ed = cargar(raiz)
     ed.get({"corte": "cortes", "subtitulos": "subtitulos", "animacion": "animaciones"}[que], {}).pop(str(escena), None)
     return guardar(raiz, ed)
+
+
+# ------------------------------------------------------------------ música, efectos y recortes
+
+def cambiar_musica(raiz: Path, lista: list[dict] | None) -> dict:
+    """La pista de música completa como la dejó el usuario (None = volver a la automática)."""
+    from . import biblioteca
+
+    ed = cargar(raiz)
+    if lista is None:
+        ed["musica"] = None
+        return guardar(raiz, ed)
+    validos = {a["archivo"] for a in biblioteca.indice() if a["clase"] == "musica" and not a.get("revisar_licencia")}
+    limpia = []
+    for k, m in enumerate(lista):
+        if m["archivo"] not in validos:
+            raise ValueError("esa canción no está en la biblioteca (o su licencia falta por revisar)")
+        limpia.append({"id": str(m.get("id") or f"u{k:02d}"), "archivo": m["archivo"],
+                       "inicio": round(float(m["inicio"]), 3), "fin": round(float(m["fin"]), 3),
+                       "desde": round(float(m.get("desde", 0)), 3), "volumen": round(float(m.get("volumen", 0.18)), 3)})
+    ed["musica"] = limpia
+    return guardar(raiz, ed)
+
+
+def cambiar_sfx(raiz: Path, lista: list[dict] | None) -> dict:
+    from .biblioteca import TIPOS_SFX
+
+    ed = cargar(raiz)
+    if lista is None:
+        ed["sfx"] = None
+        return guardar(raiz, ed)
+    limpia = []
+    for k, x in enumerate(lista):
+        if x["tipo"] not in TIPOS_SFX:
+            raise ValueError(f"efecto desconocido: {x['tipo']}")
+        limpia.append({"id": str(x.get("id") or f"u{k:03d}"), "inicio": round(float(x["inicio"]), 3), "tipo": x["tipo"],
+                       "variante": x.get("variante"), "volumen": round(float(x.get("volumen", 0.7)), 3),
+                       **({"duracion_max": float(x["duracion_max"])} if x.get("duracion_max") else {})})
+    ed["sfx"] = sorted(limpia, key=lambda x: x["inicio"])
+    return guardar(raiz, ed)
+
+
+def unir_recortes(recortes: list) -> list[list[float]]:
+    """Ordena, descarta los de menos de 0,1 s y une los que se tocan."""
+    salida: list[list[float]] = []
+    for a, b in sorted((min(float(a), float(b)), max(float(a), float(b))) for a, b in recortes):
+        if b - a < 0.1:
+            continue
+        if salida and a <= salida[-1][1] + 0.05:
+            salida[-1][1] = max(salida[-1][1], round(b, 3))
+        else:
+            salida.append([round(a, 3), round(b, 3)])
+    return salida
+
+
+def cambiar_recortes(raiz: Path, recortes: list) -> dict:
+    ed = cargar(raiz)
+    ed["recortes"] = unir_recortes(recortes)
+    return guardar(raiz, ed)
+
+
+def _quedan(recortes: list[list[float]], total: float) -> list[tuple[float, float]]:
+    tramos, cursor = [], 0.0
+    for a, b in recortes:
+        if a > cursor:
+            tramos.append((cursor, min(a, total)))
+        cursor = max(cursor, b)
+    if cursor < total:
+        tramos.append((cursor, total))
+    return [(a, b) for a, b in tramos if b - a > 0.02]
+
+
+def nuevo_tiempo(t: float, recortes: list[list[float]]) -> float | None:
+    """Dónde cae el segundo `t` del video original después de quitar los recortes (None si se quitó)."""
+    quitado = 0.0
+    for a, b in recortes:
+        if t >= b:
+            quitado += b - a
+        elif t > a:
+            return None
+    return t - quitado
+
+
+def aplicar_recortes(raiz: Path, video: Path, ffmpeg: str) -> Path:
+    """Quita del video exportado los tramos marcados (imagen y sonido juntos) y corre los subtítulos."""
+    import re
+    import subprocess
+
+    recortes = unir_recortes(cargar(raiz)["recortes"])
+    if not recortes:
+        return video
+    r = subprocess.run([ffmpeg, "-hide_banner", "-i", str(video)], capture_output=True, text=True,
+                       encoding="utf-8", errors="replace")
+    m = re.search(r"Duration:\s*(\d+):(\d+):(\d+(?:\.\d+)?)", r.stderr or "")
+    total = int(m.group(1)) * 3600 + int(m.group(2)) * 60 + float(m.group(3)) if m else 1e9
+    quedan = _quedan(recortes, total)
+    filtro, partes = "", []
+    for k, (a, b) in enumerate(quedan):
+        filtro += (f"[0:v]trim={a:.3f}:{b:.3f},setpts=PTS-STARTPTS[v{k}];"
+                   f"[0:a]atrim={a:.3f}:{b:.3f},asetpts=PTS-STARTPTS[a{k}];")
+        partes.append(f"[v{k}][a{k}]")
+    filtro += "".join(partes) + f"concat=n={len(quedan)}:v=1:a=1[v][a]"
+    from .render import _argumentos_codificador
+
+    tmp = video.with_name(video.stem + ".recortado.mp4")
+    subprocess.run([ffmpeg, "-y", "-loglevel", "error", "-i", str(video), "-filter_complex", filtro,
+                    "-map", "[v]", "-map", "[a]", *_argumentos_codificador(ffmpeg, "medium", "18", None),
+                    "-pix_fmt", "yuv420p", "-c:a", "aac", "-b:a", "320k", "-movflags", "+faststart", str(tmp)],
+                   check=True, capture_output=True)
+    tmp.replace(video)
+    srt = video.with_suffix(".srt")
+    if srt.exists():
+        srt.write_text(_srt_recortado(srt.read_text(encoding="utf-8"), recortes), encoding="utf-8")
+    return video
+
+
+def _srt_recortado(texto: str, recortes: list[list[float]]) -> str:
+    import re
+
+    def seg(h, m, s, ms):
+        return int(h) * 3600 + int(m) * 60 + int(s) + int(ms) / 1000
+
+    def reloj(t):
+        ms = int(round(t * 1000))
+        return f"{ms // 3600000:02d}:{ms // 60000 % 60:02d}:{ms // 1000 % 60:02d},{ms % 1000:03d}"
+
+    bloques, n = [], 0
+    for b in re.split(r"\n\s*\n", texto.strip()):
+        lineas = b.strip().splitlines()
+        if len(lineas) < 2:
+            continue
+        m = re.match(r"(\d+):(\d+):(\d+),(\d+)\s*-->\s*(\d+):(\d+):(\d+),(\d+)", lineas[1])
+        if not m:
+            continue
+        a, z = nuevo_tiempo(seg(*m.groups()[:4]), recortes), nuevo_tiempo(seg(*m.groups()[4:]), recortes)
+        if a is None or z is None or z <= a:
+            continue
+        n += 1
+        bloques.append("\n".join([str(n), f"{reloj(a)} --> {reloj(z)}", *lineas[2:]]))
+    return "\n\n".join(bloques) + "\n"

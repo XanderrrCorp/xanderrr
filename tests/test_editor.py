@@ -89,3 +89,55 @@ def test_api_del_editor_guarda_solo():
     assert any(s["texto"] == "Hola" for s in t["subtitulos"]) and t["ediciones"]["version"] == 2
     assert cli.delete("/api/videos/peces/editor/escenas/3/corte").json()["escenas"][2]["inicio"] == 6.0
     assert cli.get("/api/videos/no-existe/editor").status_code == 404
+
+
+def test_musica_y_efectos_editados_reemplazan_a_los_automaticos(tmp_path, monkeypatch):
+    import pytest
+
+    from estudio import biblioteca
+
+    monkeypatch.setenv("XANDART_BIBLIOTECA", str(tmp_path / "bib"))
+    reg = biblioteca.registrar(b"ID3 cancion", "mi cancion.mp3", "musica", "suave", "propia", "propia")
+    raiz = _video()
+    t = editor.linea_de_tiempo(raiz)
+    assert t["musica"][0]["archivo"] == "musica/tension/pista_1.mp3" and not t["musica_editada"]
+    editor.cambiar_musica(raiz, [{"archivo": reg["archivo"], "inicio": 2.0, "fin": 7.5, "volumen": 0.3}])
+    edl = editor.edl_con_ediciones(raiz)
+    assert [(m["archivo"], m["inicio"], m["fin"], m["volumen"]) for m in edl["pistas"]["musica"]] == \
+        [(reg["archivo"], 2.0, 7.5, 0.3)]
+    with pytest.raises(ValueError):                            # sin licencia registrada no entra
+        editor.cambiar_musica(raiz, [{"archivo": "musica/otra.mp3", "inicio": 0, "fin": 3}])
+    editor.cambiar_sfx(raiz, [{"inicio": 1.2, "tipo": "barrido"}, {"inicio": 0.5, "tipo": "pop"}])
+    sfx = editor.edl_con_ediciones(raiz)["pistas"]["sfx"]
+    assert [(s["inicio"], s["tipo"]) for s in sfx] == [(0.5, "pop"), (1.2, "barrido")]
+    editor.cambiar_musica(raiz, None)
+    editor.cambiar_sfx(raiz, None)                               # volver a lo automático
+    edl = editor.edl_con_ediciones(raiz)
+    assert edl["pistas"]["musica"][0]["id"] == "m1" and edl["pistas"]["sfx"][0]["id"] == "s1"
+
+
+def test_recortes_se_unen_y_corren_los_tiempos():
+    assert editor.unir_recortes([[5, 6], [1, 2], [1.5, 3], [7, 7.05]]) == [[1.0, 3.0], [5.0, 6.0]]
+    r = [[1.0, 3.0], [5.0, 6.0]]
+    assert editor.nuevo_tiempo(0.5, r) == 0.5 and editor.nuevo_tiempo(2.0, r) is None
+    assert editor.nuevo_tiempo(4.0, r) == 2.0 and editor.nuevo_tiempo(8.0, r) == 5.0
+    srt = "1\n00:00:00,000 --> 00:00:00,900\nHola\n\n2\n00:00:01,500 --> 00:00:02,500\nQuitado\n\n" \
+          "3\n00:00:03,500 --> 00:00:04,500\nSigue\n"
+    out = editor._srt_recortado(srt, r)
+    assert "Quitado" not in out and "00:00:01,500 --> 00:00:02,500\nSigue" in out
+
+
+def test_quitar_tramos_del_video_exportado(tmp_path):
+    import subprocess
+
+    from estudio.pipeline import ffmpeg
+    from estudio.tracy.clips import duracion_video
+
+    raiz = _video()
+    final = raiz / "render" / "final.mp4"
+    subprocess.run([ffmpeg(), "-y", "-loglevel", "error", "-f", "lavfi", "-i", "testsrc=s=320x180:r=30:d=9",
+                    "-f", "lavfi", "-i", "sine=d=9", "-c:v", "libx264", "-pix_fmt", "yuv420p", "-shortest",
+                    str(final)], check=True)
+    editor.cambiar_recortes(raiz, [[2.0, 4.0], [6.0, 7.0]])
+    editor.aplicar_recortes(raiz, final, ffmpeg())
+    assert abs(duracion_video(final, ffmpeg()) - 6.0) < 0.15

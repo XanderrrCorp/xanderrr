@@ -824,6 +824,11 @@ def paso_video(c: CarpetaProyecto, t: Trabajo, permiso: bool = False, fps: int |
     salida = (ancho, alto, fps if fps in (30, 60) else fps_config)
     final = renderizar(c, ffmpeg(), c.ruta / "render" / "final.mp4", avisar=avisar, calidad="maxima",
                        vertical=vertical, salida=salida)
+    from . import editor
+
+    if editor.cargar(c.ruta)["recortes"]:
+        t.avisar("Quitando los tramos que cortaste en el editor…")
+        editor.aplicar_recortes(c.ruta, final, ffmpeg())
     destino = carpeta_videos() / f"{slugificar(c.cargar().titulo)[:60]}.mp4"
     shutil.copy(final, destino)
     shutil.copy(final.with_suffix(".srt"), destino.with_suffix(".srt"))

@@ -549,6 +549,92 @@ def editor_deshacer(slug: str, escena_id: int, que: str):
     return editor_ver(slug)
 
 
+class MusicaEditada(BaseModel):
+    archivo: str
+    inicio: float = Field(ge=0)
+    fin: float = Field(ge=0)
+    desde: float = Field(0, ge=0)
+    volumen: float = Field(0.18, ge=0, le=1)
+    id: str | None = None
+
+
+class PistaMusica(BaseModel):
+    musica: list[MusicaEditada] | None = None      # None = volver a la automática
+
+
+@app.put("/api/videos/{slug}/editor/musica")
+def editor_musica(slug: str, p: PistaMusica):
+    from . import editor
+
+    try:
+        editor.cambiar_musica(_editor(slug).ruta, [m.model_dump() for m in p.musica] if p.musica is not None else None)
+    except ValueError as ex:
+        raise HTTPException(400, str(ex)) from ex
+    return editor_ver(slug)
+
+
+@app.post("/api/videos/{slug}/editor/musica/subir")
+def editor_subir_musica(slug: str, archivo: UploadFile = File(...), licencia: str = Form(...),
+                        fuente: str = Form("subida en el editor"), detalle_licencia: str = Form(""),
+                        atribucion: str = Form("")):
+    """Una canción propia a la biblioteca (con su licencia) para usarla en el video."""
+    from . import biblioteca
+
+    _editor(slug)
+    datos = archivo.file.read()
+    if len(datos) > 60 * 1024 * 1024:
+        raise HTTPException(400, "El archivo pesa más de 60 MB")
+    try:
+        reg = biblioteca.registrar(datos, archivo.filename or "musica.mp3", "musica", "suave", fuente, licencia,
+                                   detalle_licencia, atribucion)
+    except ValueError as ex:
+        if "ya está en la biblioteca" in str(ex):
+            from hashlib import sha256
+
+            h = sha256(datos).hexdigest()[:16]
+            reg = next((a for a in biblioteca.indice() if a["huella"] == h), None)
+            if reg:
+                return {"archivo": reg["archivo"], "nombre": reg["nombre_original"]}
+        raise HTTPException(400, str(ex)) from ex
+    return {"archivo": reg["archivo"], "nombre": reg["nombre_original"]}
+
+
+class SfxEditado(BaseModel):
+    inicio: float = Field(ge=0)
+    tipo: str
+    volumen: float = Field(0.7, ge=0, le=1)
+    variante: str | None = None
+    duracion_max: float | None = None
+    id: str | None = None
+
+
+class PistaSfx(BaseModel):
+    sfx: list[SfxEditado] | None = None
+
+
+@app.put("/api/videos/{slug}/editor/sfx")
+def editor_sfx(slug: str, p: PistaSfx):
+    from . import editor
+
+    try:
+        editor.cambiar_sfx(_editor(slug).ruta, [x.model_dump() for x in p.sfx] if p.sfx is not None else None)
+    except ValueError as ex:
+        raise HTTPException(400, str(ex)) from ex
+    return editor_ver(slug)
+
+
+class Recortes(BaseModel):
+    recortes: list[tuple[float, float]]
+
+
+@app.put("/api/videos/{slug}/editor/recortes")
+def editor_recortes(slug: str, p: Recortes):
+    from . import editor
+
+    editor.cambiar_recortes(_editor(slug).ruta, [list(x) for x in p.recortes])
+    return editor_ver(slug)
+
+
 class Animar(BaseModel):
     instruccion: str = Field("", max_length=400)
     permiso: bool = False
