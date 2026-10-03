@@ -247,7 +247,7 @@ def _mov(tipo: str | None, rng: random.Random, maximo: float) -> tuple[dict | No
 
 # lo que aparece encima de la imagen y se escalona (no todo a la vez)
 ESCALONABLES = ("circulo_rojo", "oscurecer_fondo", "flecha", "lupa", "etiqueta", "icono_advertencia",
-                "signos_pregunta", "dato")
+                "signos_pregunta", "dato", "rotulos", "rotulo_tiempo")
 SEPARACION_ELEMENTOS_S = 0.45
 
 
@@ -618,6 +618,12 @@ def construir_edl(carpeta: CarpetaProyecto) -> dict:
     ultima_entrada = None
     escala_pendiente = None
     presentar_pendiente = None
+    ultimo_al_lado = -99.0
+    poses_mascota = {p.stem: p.relative_to(carpeta.ruta).as_posix()
+                     for p in sorted((carpeta.ruta / "assets" / "poses").glob("*.png"))}
+    # tipos que muestran solo al animal (no al personaje): con ellos el personaje puede salir al lado
+    ids_animal = {t.id for t in estilo.tipos_de_escena if t.quitar_fondo and "{personaje}" not in t.plantilla_prompt
+                  and "chalk" not in t.plantilla_prompt.lower()}
     for idx, e in enumerate(escenas):
         ini, fin = round(inicios[idx], 3), round(finales[idx], 3)
         dur = fin - ini
@@ -899,6 +905,41 @@ def construir_edl(carpeta: CarpetaProyecto) -> dict:
                 _sfx(sfx, "comico", ini + 0.15, idx, "Efecto cómico corto: momento de humor")
             elif sonido == "zumbido" and rng.random() < 0.5:
                 _sfx(sfx, "zumbido", ini + 0.3, idx, "Zumbido grave: amenaza")
+        comp = estilo.comportamiento_montaje.get(modo, "recuadro") if modo not in ("tira", "pantalla_completa") else None
+        # --- pizarra: rótulos a mano con flechitas y, arriba a la izquierda, la palabra con flecha curva
+        if comp == "pizarra":
+            efectos = [x for x in efectos if x["efecto"] not in ("etiqueta", "icono_advertencia", "flecha", "lupa",
+                                                                 "circulo_rojo", "oscurecer_fondo", "reencuadre",
+                                                                 "dato", "signos_pregunta")]
+            rotulos = (direccion.get("rotulos") or {}).get(str(e.id)) or []
+            con_titulo = str(e.id) in (direccion.get("textos") or {})
+            palabra = None if con_titulo else (e.palabra_clave or None)
+            if rotulos or palabra:
+                efectos.append({"efecto": "rotulos", "en": round(ini + 0.5, 3), "textos": rotulos, "palabra": palabra})
+                _sfx(sfx, "pop", ini + 0.5, idx, "Pop: se escriben los rótulos en la pizarra")
+                razon = (razon + "; " if razon else "") + "Pizarra con rótulos a mano: " + ", ".join(rotulos or [palabra])
+        # --- mini historia: salto de tiempo («Unas horas después»)
+        salto = (direccion.get("saltos") or {}).get(str(e.id))
+        if salto and modo != "tira" and dur >= 1.5:
+            efectos.append({"efecto": "rotulo_tiempo", "en": round(ini + 0.1, 3), "texto": salto})
+            _sfx(sfx, "piano_miedo", ini + 0.1, idx, f"Nota de piano: «{salto}»")
+            razon = (razon + "; " if razon else "") + f"Salto de tiempo: «{salto}»"
+        # --- detrás del recorte, la foto real desenfocada del lugar del que habla la voz
+        lugar = (direccion.get("fondos_lugar") or {}).get(str(e.id))
+        if lugar and comp == "recorte" and (carpeta.ruta / lugar["archivo"]).exists():
+            efectos.append({"efecto": "fondo_lugar", "archivo": lugar["archivo"], "origen": lugar.get("origen", "")})
+            razon = (razon + "; " if razon else "") + f"De fondo, foto desenfocada de «{lugar['busqueda']}» (Pexels)"
+        # --- el personaje en el mismo plano que el animal, señalándolo desde el otro lado (Peligro Tropical)
+        if (deslizar and comp == "recorte" and poses_mascota and not zonas and dur >= 2.0
+                and tipo in ids_animal and ini - ultimo_al_lado >= 20
+                and e.intencion in ("amenaza", "advertencia", "dato_impactante", "explicacion", "revelacion")
+                and not any(x["efecto"] == "dato" for x in efectos) and rng.random() < 0.5):
+            clave = "senalando_asco" if any(w in e.narracion.lower() for w in ASCO) else \
+                "senalando_susto" if e.intencion in ("amenaza", "advertencia", "revelacion") else "senalando_sorpresa"
+            pose = poses_mascota.get(clave) or next(iter(poses_mascota.values()))
+            efectos.append({"efecto": "personaje_al_lado", "pose": pose})
+            ultimo_al_lado = ini
+            razon = (razon + "; " if razon else "") + "El personaje al lado del animal, señalándolo"
         # --- término técnico solo, grande, a pantalla completa cuando la voz lo dice
         termino = (direccion.get("terminos") or {}).get(str(e.id)) if deslizar else None
         if termino and modo != "tira":

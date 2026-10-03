@@ -45,7 +45,34 @@ def texto_corregido(texto: str) -> str:
 
 
 def _con_campos(clave: str, datos: dict) -> dict:
-    return {**datos, **CAMPOS.get(clave, {})}
+    return _con_tipos_nuevos(clave, {**datos, **CAMPOS.get(clave, {})})
+
+
+def _con_tipos_nuevos(clave: str, datos: dict) -> dict:
+    """Los tipos de escena que el estilo del código ganó después (p. ej. la pizarra y los rayos X de
+    Peligro Tropical, 03-10) se agregan a la copia del espacio, con su modo de montaje. Nunca se
+    cambia ni se borra un tipo que ya estaba."""
+    from ..config import RAIZ
+
+    ruta = RAIZ / "estilos" / clave / "estilo.json"
+    if not clave or not ruta.exists() or "tipos_de_escena" not in datos:
+        return datos
+    codigo = json.loads(ruta.read_text(encoding="utf-8"))
+    ids = {t.get("id") for t in datos["tipos_de_escena"]}
+    nuevos = [t for t in codigo.get("tipos_de_escena", []) if t.get("id") not in ids]
+    if not nuevos:
+        return datos
+    salida = {**datos, "tipos_de_escena": datos["tipos_de_escena"] + nuevos}
+    modos = list(datos.get("modos_de_montaje_permitidos") or [])
+    comp = dict(datos.get("comportamiento_montaje") or {})
+    for t in nuevos:
+        m = t.get("modo_montaje")
+        if m and m not in modos:
+            modos.append(m)
+        if m and m not in comp and m in (codigo.get("comportamiento_montaje") or {}):
+            comp[m] = codigo["comportamiento_montaje"][m]
+    salida["modos_de_montaje_permitidos"], salida["comportamiento_montaje"] = modos, comp
+    return salida
 
 
 def prompt_anterior(prompt: str) -> str | None:

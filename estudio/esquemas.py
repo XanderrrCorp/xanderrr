@@ -51,6 +51,14 @@ EFECTOS = (
     "presentacion_especie",
     # término técnico solo, grande, a pantalla completa sobre fondo oscuro («"cantaridina"»)
     "palabra_completa",
+    # rótulos a mano (tiza) sobre la pizarra, con su flechita, y la palabra arriba con flecha curva
+    "rotulos",
+    # salto de tiempo en una mini historia del personaje («Unas horas después»)
+    "rotulo_tiempo",
+    # detrás del recorte, una foto REAL desenfocada del lugar del que habla la voz (en vez del papel)
+    "fondo_lugar",
+    # el personaje recortado en el mismo plano que el animal, señalándolo desde el otro lado
+    "personaje_al_lado",
 )
 # "sfx" no es un efecto visual, pero se sugiere en la misma lista (ver 3.1).
 EFECTOS_SUGERIBLES = EFECTOS + ("sfx",)
@@ -169,7 +177,8 @@ class Estilo(Modelo):
     plantillas_assets: dict[str, str] = {}
     tira_niveles: TiraNiveles | None = None
     # Cómo dibuja el motor cada modo de montaje del estilo (sección 6).
-    comportamiento_montaje: dict[str, Literal["recorte", "recuadro", "pantalla_completa"]] = {}
+    # «pizarra»: el dibujo de tiza va sobre una pizarra con marco de madera dibujada con código
+    comportamiento_montaje: dict[str, Literal["recorte", "recuadro", "pantalla_completa", "pizarra"]] = {}
     # Poses del personaje del canal: se generan UNA vez y todos los videos las reutilizan
     # True: el villano va pixelado en pantalla hasta su revelación. Es solo visual: la voz nunca
     # dice que está pixelado (al dueño no le gustó oírlo en el guion)

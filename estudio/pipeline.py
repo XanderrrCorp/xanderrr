@@ -638,6 +638,19 @@ def _stock(c: CarpetaProyecto, t: Trabajo, ejecutar_claude=None) -> None:
         t.avisar(f"Sin fotos reales esta vez: {str(ex)[:160]}")
 
 
+def _fondos_de_lugar(c: CarpetaProyecto, t: Trabajo) -> None:
+    """Fotos desenfocadas del lugar del que habla la voz (Pexels, gratis). Si falla, esas escenas
+    quedan sobre el papel y el video sale igual."""
+    from .stock import SinClavePexels, fondos_de_lugar
+
+    try:
+        fondos_de_lugar(c.ruta, avisar=t.avisar)
+    except SinClavePexels as ex:
+        t.avisar(f"⚠ Sin fotos de lugares: {ex}")
+    except Exception as ex:  # noqa: BLE001 — no es imprescindible
+        t.avisar(f"Sin fotos de lugares esta vez: {str(ex)[:160]}")
+
+
 def _ubicar_focos(c: CarpetaProyecto, t: Trabajo, ejecutar_claude=None) -> None:
     """Claude mira las imágenes donde la voz nombra un animal o un detalle (círculo y
     flechas). Si falla, el video sale igual, solo sin esos focos."""
@@ -782,6 +795,7 @@ def paso_video(c: CarpetaProyecto, t: Trabajo, permiso: bool = False, fps: int |
     if not direccion.exists() or "focos_revisados" not in leer_json(direccion):
         _ubicar_focos(c, t)
     _stock(c, t)                               # reanudable: solo busca los niveles que falten
+    _fondos_de_lugar(c, t)
     from .poses import copiar_presentador
 
     if copiar_presentador(c.cargar().estilo, c.ruta):

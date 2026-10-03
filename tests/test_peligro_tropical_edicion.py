@@ -184,3 +184,92 @@ def test_render_con_tira_tarjeta_pila_y_termino(estilo):
     c, _ = _proyecto_niveles(estilo, n_niveles=2)
     f = renderizar(c, ffmpeg(), c.ruta / "render" / "n.mp4", avisar=lambda _: None, salida=(320, 180, 3), procesos=1)
     assert f.exists() and f.stat().st_size > 0
+
+
+def _proyecto_extras(estilo, n_animales=10):
+    """Pizarra con rótulos, salto de tiempo, foto del lugar de fondo y animales (personaje al lado)."""
+    from estudio.edicion import construir_edl
+    from estudio.esquemas import EscenasV2
+    from estudio.proyecto import CarpetaProyecto
+
+    c = CarpetaProyecto.crear("Extras", "animales-peligrosos", estilo.id, 60, slug="extras")
+    for carpeta in ("imagenes", "assets/poses", "assets/lugares", "audio"):
+        (c.ruta / carpeta).mkdir(parents=True, exist_ok=True)
+    for pose in ("senalando_susto", "senalando_sorpresa", "senalando_asco"):
+        im = Image.new("RGB", (400, 600), (128, 128, 128))
+        im.paste((250, 250, 250), (140, 80, 260, 200))
+        im.paste((200, 40, 40), (120, 200, 280, 460))
+        im.save(c.ruta / "assets" / "poses" / f"{pose}.png")
+    Image.new("RGB", (1280, 720), (90, 140, 70)).save(c.ruta / "assets" / "lugares" / "coliseo.jpg")
+    # dibujo de tiza: líneas blancas sobre negro
+    tiza = Image.new("RGB", (800, 450), (0, 0, 0))
+    from PIL import ImageDraw
+    ImageDraw.Draw(tiza).ellipse((250, 100, 550, 350), outline=(255, 255, 255), width=6)
+    tiza.save(c.ruta / "imagenes" / "tiza.png")
+    escenas, t = [], 0.0
+
+    def agregar(eid, narr, intencion, tipo, archivo, largo=5.0):
+        nonlocal t
+        escenas.append({"id": eid, "seccion": "Uno", "narracion": narr, "intencion": intencion, "intensidad": 3,
+                        "palabra_clave": None,
+                        "visual": {"accion": "generar", "tipo": tipo, "prompt": "x", "archivo": archivo},
+                        "tiempo": {"real_inicio": t, "real_fin": t + largo - 0.3}})
+        t += largo
+
+    agregar(1, "La cantaridina hace ampollas en la piel.", "explicacion", "pizarra_tiza", "imagenes/tiza.png")
+    escenas[-1]["palabra_clave"] = "cantaridina"
+    for i in range(2, 2 + n_animales):
+        im = Image.new("RGB", (640, 360), (128, 128, 128))
+        im.paste((60, 120 + 8 * i, 40), (200, 80, 440, 280))
+        im.save(c.ruta / "imagenes" / f"a{i}.png")
+        agregar(i, f"Este bicho {i} es peligroso.", "amenaza", "animal_fondo_gris", f"imagenes/a{i}.png")
+    c.guardar_escenas(EscenasV2.model_validate({"video": "Extras", "canal": "animales-peligrosos",
+                                                "estilo": estilo.id, "escenas": escenas}))
+    (c.ruta / "direccion.json").write_text(json.dumps({
+        "rotulos": {"1": ["Burbujas", "Irritación"]},
+        "saltos": {"3": "Unas horas después"},
+        "fondos_lugar": {"2": {"archivo": "assets/lugares/coliseo.jpg", "busqueda": "roman colosseum",
+                               "origen": "https://www.pexels.com/photo/1/"}}}), "utf-8")
+    with wave.open(str(c.ruta / "audio" / "voz.wav"), "wb") as w:
+        w.setnchannels(1); w.setsampwidth(2); w.setframerate(48000)
+        w.writeframes(np.zeros(int(48000 * (t + 2)), "<i2").tobytes())
+    return c, construir_edl(c)
+
+
+def test_pizarra_rotulos_salto_lugar_y_personaje_al_lado(estilo):
+    _, edl = _proyecto_extras(estilo)
+    clips = {c["escena"]: c for c in edl["pistas"]["escenas"]}
+    r = _efecto(clips[1], "rotulos")
+    assert r["textos"] == ["Burbujas", "Irritación"] and r["palabra"] == "cantaridina"
+    assert not _efecto(clips[1], "signos_pregunta") and not _efecto(clips[1], "flecha")
+    assert _efecto(clips[3], "rotulo_tiempo")["texto"] == "Unas horas después"
+    assert _efecto(clips[2], "fondo_lugar")["archivo"] == "assets/lugares/coliseo.jpg"
+    al_lado = [c for c in clips.values() if _efecto(c, "personaje_al_lado")]
+    assert al_lado and all(_efecto(c, "personaje_al_lado")["pose"].endswith("senalando_susto.png") for c in al_lado)
+    inicios = sorted(c["inicio"] for c in al_lado)
+    assert all(b - a >= 20 for a, b in zip(inicios, inicios[1:]))
+
+
+def test_tipos_nuevos_llegan_a_la_copia_vieja_del_estilo():
+    from estudio.config import RAIZ
+    from estudio.esquemas import Estilo
+    from estudio.imagenes.arreglos import _con_campos
+
+    datos = json.loads((RAIZ / "estilos" / "enciclopedia_mascota" / "estilo.json").read_text("utf-8"))
+    viejo = {**datos, "tipos_de_escena": [t for t in datos["tipos_de_escena"] if t["id"] not in ("pizarra_tiza", "rayos_x")],
+             "modos_de_montaje_permitidos": ["recorte_sobre_papel", "recuadro_sobre_papel"],
+             "comportamiento_montaje": {"recorte_sobre_papel": "recorte", "recuadro_sobre_papel": "recuadro"}}
+    nuevo = _con_campos("enciclopedia_mascota", viejo)
+    assert {"pizarra_tiza", "rayos_x"} <= {t["id"] for t in nuevo["tipos_de_escena"]}
+    assert nuevo["comportamiento_montaje"]["pizarra_sobre_papel"] == "pizarra"
+    assert _con_campos("enciclopedia_mascota", nuevo) == nuevo                        # no se duplica
+    Estilo.model_validate(nuevo)
+
+
+def test_render_con_pizarra_lugar_y_personaje(estilo):
+    from estudio.pipeline import ffmpeg
+    from estudio.render import renderizar
+
+    c, _ = _proyecto_extras(estilo, n_animales=5)
+    f = renderizar(c, ffmpeg(), c.ruta / "render" / "x.mp4", avisar=lambda _: None, salida=(320, 180, 3), procesos=1)
+    assert f.exists() and f.stat().st_size > 0

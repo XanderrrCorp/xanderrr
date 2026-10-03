@@ -275,11 +275,57 @@ def _stock_por_temas(carpeta: Path, indice: dict, ruta: Path, ejecutar, avisar, 
 def creditos(carpeta: Path) -> str:
     """Créditos opcionales para la descripción (Pexels no los exige, pero se agradecen)."""
     ruta = carpeta / "assets" / "stock" / "stock.json"
-    if not ruta.exists():
-        return ""
-    usados = [a for a in leer_json(ruta)["archivos"] if not a.get("sintetica")]
-    return "\n".join(sorted({f"{a['tipo'].capitalize()} de {a['autor']} en Pexels: {a['url_origen']}" for a in usados}))
+    lineas = set()
+    if ruta.exists():
+        usados = [a for a in leer_json(ruta)["archivos"] if not a.get("sintetica")]
+        lineas |= {f"{a['tipo'].capitalize()} de {a['autor']} en Pexels: {a['url_origen']}" for a in usados}
+    direccion = carpeta / "direccion.json"
+    if direccion.exists():
+        lineas |= {f"Foto de {f['autor']} en Pexels: {f['origen']}"
+                   for f in (leer_json(direccion).get("fondos_lugar") or {}).values()}
+    return "\n".join(sorted(lineas))
 
 
 def _json(x) -> str:  # para depurar
     return json.dumps(x, ensure_ascii=False, indent=1)
+
+
+def fondos_de_lugar(carpeta: Path, sesion=requests, avisar=print) -> int:
+    """Fotos del LUGAR del que habla la voz (direccion.json → «lugares»: búsqueda en inglés), que salen
+    desenfocadas de fondo detrás del dibujo, como en la competencia (el Coliseo detrás del animal).
+    Pexels es gratis; una foto por escena, se baja una sola vez (reanudable). Es solo ambiente: no
+    afirma nada sobre un animal, así que no necesita la verificación de Claude."""
+    import re
+
+    ruta = carpeta / "direccion.json"
+    if not ruta.exists():
+        return 0
+    direccion = leer_json(ruta)
+    lugares = direccion.get("lugares") or {}
+    hechos = direccion.setdefault("fondos_lugar", {})
+    nuevos = 0
+    for eid, busqueda in lugares.items():
+        if eid in hechos and (carpeta / hechos[eid]["archivo"]).exists():
+            continue
+        r = sesion.get(API_FOTOS, params={"query": busqueda, "per_page": 3, "orientation": "landscape"},
+                       headers=_cabeceras(), timeout=30)
+        _revisar(r)
+        fotos = r.json().get("photos") or []
+        if not fotos:
+            avisar(f"  sin foto de «{busqueda}» en Pexels: esa escena queda sobre el papel")
+            continue
+        f = fotos[0]
+        nombre = re.sub(r"[^a-z0-9]+", "_", busqueda.lower()).strip("_")[:40] or "lugar"
+        destino = carpeta / "assets" / "lugares" / f"{nombre}_{f['id']}.jpg"
+        if not destino.exists():
+            destino.parent.mkdir(parents=True, exist_ok=True)
+            datos = sesion.get(f["src"].get("large") or f["src"]["original"], timeout=60)
+            datos.raise_for_status()
+            destino.write_bytes(datos.content)
+        hechos[eid] = {"archivo": destino.relative_to(carpeta).as_posix(), "busqueda": busqueda,
+                       "origen": f["url"], "autor": f.get("photographer", ""), "licencia": LICENCIA}
+        nuevos += 1
+    if nuevos:
+        escribir_json(ruta, direccion)
+        avisar(f"{nuevos} fotos de lugares para el fondo (Pexels, gratis)")
+    return nuevos

@@ -58,7 +58,7 @@ def test_reusar_de_inexistente():
 
 def test_estilo_enciclopedia_carga():
     e = Estilo.model_validate(leer_json(RAIZ / "estilos/enciclopedia_mascota/estilo.json"))
-    assert e.con_personaje is True and "pov_personaje" in e.ids_tipos and len(e.tipos_de_escena) == 7
+    assert e.con_personaje is True and "pov_personaje" in e.ids_tipos and len(e.tipos_de_escena) == 9   # + pizarra y rayos X (03-10)
 
 
 def test_estilo_rechaza_plantilla_con_texto():

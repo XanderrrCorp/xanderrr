@@ -180,6 +180,72 @@ class Escenario:
         self.capas: dict[str, tuple] = {}
         # clip -> lo que queda quieto debajo del objeto cuando entra (el papel, o la pila de fotos de antes)
         self.fondos: dict[str, Image.Image] = {}
+        # clip -> zona de escribir de la pizarra (x0, y0, x1, y1), para los rótulos a mano
+        self.tablero: dict[str, tuple] = {}
+        self._lugares: dict[str, Image.Image] = {}
+
+    def _foto_lugar(self, archivo: str) -> Image.Image:
+        """La foto real del lugar, llenando el cuadro, desenfocada y un poco oscura (el dibujo resalta)."""
+        if archivo not in self._lugares:
+            try:
+                im = Image.open(self.raiz / archivo).convert("RGB")
+            except OSError:
+                return self.papel.copy().convert("RGBA")
+            k = max(W / im.width, H / im.height)
+            im = im.resize((max(W, round(im.width * k)), max(H, round(im.height * k))), Image.Resampling.LANCZOS)
+            x0, y0 = (im.width - W) // 2, (im.height - H) // 2
+            im = im.crop((x0, y0, x0 + W, y0 + H)).filter(ImageFilter.GaussianBlur(14))
+            im = ImageEnhance.Brightness(im).enhance(0.82)
+            self._lugares.clear()
+            self._lugares[archivo] = im.convert("RGBA")
+        return self._lugares[archivo].copy()
+
+    def _poner_personaje(self, lienzo: Image.Image, pose: str) -> None:
+        """El personaje recortado a la izquierda, de pie, señalando hacia el animal (a la derecha)."""
+        try:
+            im = quitar_fondo_liso(Image.open(self.raiz / pose).convert("RGB"))
+        except OSError:
+            return
+        caja = im.getbbox()
+        if caja:
+            im = im.crop(caja)
+        im.thumbnail((int(W * 0.32), int(H * 0.72)), Image.Resampling.LANCZOS)
+        x, y = int(W * 0.20 - im.width / 2), int(H * 0.53 - im.height / 2)
+        s, (dx, dy) = _sombra(im, 16, 100)
+        lienzo.alpha_composite(s, (max(0, x + dx), max(0, y + dy)))
+        lienzo.alpha_composite(im, (max(0, x), max(0, y)))
+
+    def _pizarra(self, dibujo: Image.Image, semilla: int):
+        """Pizarra verde oscura con marco de madera y polvo de tiza; el dibujo de tiza (blanco sobre negro)
+        se pasa encima aclarando. Devuelve la pizarra, su posición, la zona de escribir y dónde quedó el
+        dibujo (para los rótulos y focos)."""
+        bw, bh, marco = int(W * 0.60), int(H * 0.64), 30
+        rng = np.random.default_rng(semilla)
+        # marco de madera con vetas
+        vetas = rng.normal(0, 1, (bh, 1)).repeat(bw, axis=1) * 9 + rng.normal(0, 4, (bh, bw))
+        madera = np.clip(np.array([132, 86, 46], np.float32) + vetas[..., None] * np.array([1, 0.75, 0.5]), 0, 255)
+        tablero = Image.fromarray(madera.astype("uint8"), "RGB").convert("RGBA")
+        iw, ih = bw - 2 * marco, bh - 2 * marco
+        base = np.ones((ih, iw, 3), np.float32) * np.array([34, 46, 40], np.float32)
+        polvo = Image.fromarray((rng.random((ih // 24 + 1, iw // 24 + 1)) * 255).astype("uint8")) \
+            .resize((iw, ih), Image.Resampling.BICUBIC).filter(ImageFilter.GaussianBlur(18))
+        base += (np.asarray(polvo, np.float32)[..., None] / 255 - 0.5) * 26 + rng.normal(0, 2.5, (ih, iw, 1))
+        # el dibujo de tiza: se encaja dejando aire para los rótulos y se suma «aclarando»
+        k = min(iw * 0.70 / dibujo.width, ih * 0.84 / dibujo.height)
+        d = dibujo.resize((max(1, int(dibujo.width * k)), max(1, int(dibujo.height * k))), Image.Resampling.LANCZOS)
+        dx, dy = (iw - d.width) // 2, (ih - d.height) // 2
+        trozo = base[dy:dy + d.height, dx:dx + d.width]
+        base[dy:dy + d.height, dx:dx + d.width] = np.maximum(trozo, np.asarray(d.convert("RGB"), np.float32) * 0.94)
+        interior = Image.fromarray(np.clip(base, 0, 255).astype("uint8"), "RGB")
+        tablero.paste(interior, (marco, marco))
+        ImageDraw.Draw(tablero).rectangle((marco - 3, marco - 3, bw - marco + 2, bh - marco + 2),
+                                          outline=(84, 52, 26, 255), width=3)
+        mascara = Image.new("L", (bw, bh), 0)
+        ImageDraw.Draw(mascara).rounded_rectangle((0, 0, bw - 1, bh - 1), radius=10, fill=255)
+        tablero.putalpha(mascara)
+        bx, by = int(W * 0.58 - bw / 2), int(H * 0.47 - bh / 2)
+        dentro = (bx + marco, by + marco, bx + marco + iw, by + marco + ih)
+        return tablero, (bx, by), dentro, (bx + marco + dx, by + marco + dy, d.width, d.height)
 
     def animado(self, clip: dict, dx: float = 0.0, dy: float = 0.0, escala: float = 1.0) -> Image.Image | None:
         """El papel con el objeto (recorte o recuadro) movido o escalado; None si no tiene capas."""
@@ -238,9 +304,15 @@ class Escenario:
             if len(self.cache) > 6:
                 self.cache.pop(next(iter(self.cache)))
             return final
-        lienzo = self.papel.copy().convert("RGBA")
-        # con un «dato» (texto + ícono a la izquierda) el objeto se corre a la derecha para dejarle sitio
-        a_un_lado = any(e.get("efecto") == "dato" for e in clip.get("efectos", []))
+        efs = {e.get("efecto"): e for e in clip.get("efectos", [])}
+        lugar, al_lado = efs.get("fondo_lugar"), efs.get("personaje_al_lado")
+        # el lugar del que habla la voz, desenfocado, en vez del papel
+        lienzo = self._foto_lugar(lugar["archivo"]) if lugar else self.papel.copy().convert("RGBA")
+        # con un «dato» (texto + ícono a la izquierda) o el personaje al lado, el objeto se corre a la derecha
+        a_un_lado = "dato" in efs or al_lado is not None
+        if al_lado is not None:
+            self._poner_personaje(lienzo, al_lado["pose"])
+        fondo_fijo = lienzo.copy() if (lugar or al_lado) else None
 
         def _x(ancho: int) -> int:
             return int(W * 0.68 - ancho / 2) if a_un_lado else (W - ancho) // 2
@@ -249,7 +321,21 @@ class Escenario:
             esquina = np.asarray(img.resize((40, 24)), np.float32)
             blanco = np.mean([esquina[0, 0], esquina[0, -1], esquina[-1, 0], esquina[-1, -1]]) > 232
             caja_max = (int(W * 0.46), int(H * 0.62)) if a_un_lado else (int(W * 0.84), int(H * 0.72))
-            if blanco:
+            if blanco and lugar:
+                # sobre una foto no se puede «imprimir»: lo blanco se vuelve transparente
+                caja = _caja_contenido(img)
+                d = _encajar(img.crop(caja), caja_max)
+                k = d.width / (caja[2] - caja[0])
+                x, y = _x(d.width), int(H * 0.50 - d.height / 2)
+                self.ubicacion[clip["id"]] = (x - caja[0] * k, y - caja[1] * k, img.width * k, img.height * k)
+                dibujo = np.asarray(d, np.float32)
+                tinta = np.clip((255 - dibujo.min(axis=2)) / 255 * 4, 0, 1)
+                capa = Image.fromarray(np.dstack([dibujo, tinta * 255]).astype("uint8"), "RGBA")
+                s, (dx, dy) = _sombra(capa, 18, 110)
+                lienzo.alpha_composite(s, (max(0, x + dx), max(0, y + dy)))
+                lienzo.alpha_composite(capa, (x, y))
+                self.capas[clip["id"]] = ((s, (x + dx, y + dy)), (capa, (x, y)))
+            elif blanco:
                 # dibujo sobre fondo blanco: se «imprime» en el papel (multiplicar). Se recorta el
                 # margen blanco y el dibujo se agranda hasta llenar el cuadro: un objeto chiquito en
                 # medio de una hoja en blanco no le dice nada al espectador
@@ -279,6 +365,14 @@ class Escenario:
                 lienzo.alpha_composite(s, (max(0, x + dx), max(0, y + dy)))
                 lienzo.alpha_composite(rec, (x, y))
                 self.capas[clip["id"]] = ((s, (x + dx, y + dy)), (rec, (x, y)))
+        elif self.comportamiento.get(clip["modo"]) == "pizarra":
+            tablero, (bx, by), dentro, dibujo_px = self._pizarra(img, sum(map(ord, clip["id"])))
+            self.tablero[clip["id"]] = dentro
+            self.ubicacion[clip["id"]] = dibujo_px
+            s, (dx, dy) = _sombra(tablero, 22, 130)
+            lienzo.alpha_composite(s, (max(0, bx + dx), max(0, by + dy)))
+            lienzo.alpha_composite(tablero, (bx, by))
+            self.capas[clip["id"]] = ((s, (bx + dx, by + dy)), (tablero, (bx, by)))
         else:
             pila = next((e for e in clip["efectos"] if e["efecto"] == "pila_fotos"), None)
             if pila is not None:
@@ -295,14 +389,16 @@ class Escenario:
             conmarco, (gx, gy), (x, y), d = self._carta(img, clip["id"], a_un_lado,
                                                         pila is None or not pila["debajo"], pila is not None)
             if pila is not None and pila["debajo"]:
-                self.fondos[clip["id"]] = lienzo.copy()      # lo que queda quieto mientras la foto entra
-                if len(self.fondos) > 8:                 # más que la caché de cuadros (6)
-                    self.fondos.pop(next(iter(self.fondos)))
+                fondo_fijo = lienzo.copy()               # lo que queda quieto mientras la foto entra
             self.ubicacion[clip["id"]] = (x + gx, y + gy, d.width, d.height)
             s, (dx, dy) = _sombra(conmarco, 20, 130)
             lienzo.alpha_composite(s, (max(0, x + dx), max(0, y + dy)))
             lienzo.alpha_composite(conmarco, (x, y))
             self.capas[clip["id"]] = ((s, (x + dx, y + dy)), (conmarco, (x, y)))
+        if fondo_fijo is not None:
+            self.fondos[clip["id"]] = fondo_fijo
+            if len(self.fondos) > 8:                     # más que la caché de cuadros (6)
+                self.fondos.pop(next(iter(self.fondos)))
         final = lienzo.convert("RGB")
         self.cache[clave] = final
         if len(self.cache) > 6:
@@ -818,6 +914,110 @@ def _poner_dato(img: Image.Image, ef: dict, tt: float, fin: float) -> Image.Imag
             continue
         im = pieza.resize((max(1, int(pieza.width * esc)), max(1, int(pieza.height * esc))), Image.Resampling.BICUBIC)
         img.alpha_composite(im, (int(cx - im.width / 2), int(y - im.height / 2)))
+    return img.convert("RGB")
+
+
+def _tiza(texto: str, tam: int = 54) -> Image.Image:
+    """Texto blanco «de tiza»: un poco irregular (el trazo no es parejo)."""
+    t = _texto_img(texto, tam, 0, color=(245, 245, 238))
+    a = np.asarray(t.getchannel("A"), np.float32)
+    rng = np.random.default_rng(len(texto) * 31 + tam)
+    a *= np.clip(0.72 + rng.random(a.shape) * 0.35, 0, 1)
+    t.putalpha(Image.fromarray(a.astype("uint8")))
+    return t
+
+
+def _escribir(im: Image.Image, avance: float) -> Image.Image:
+    """Se ve escribiéndose de izquierda a derecha."""
+    if avance >= 1:
+        return im
+    corte = im.copy()
+    a = np.asarray(corte.getchannel("A")).copy()
+    a[:, int(im.width * max(0.0, avance)):] = 0
+    corte.putalpha(Image.fromarray(a))
+    return corte
+
+
+def _rotulos(img: Image.Image, ef: dict, dentro: tuple | None, tt: float) -> Image.Image:
+    """En la pizarra (como la competencia): arriba a la izquierda la palabra en negro con una flecha
+    curva hacia la pizarra; dentro, 2 o 3 rótulos de tiza con su flechita hacia el dibujo, uno tras otro."""
+    loc = tt - ef["en"]
+    if loc < 0 or dentro is None:
+        return img
+    img = img.convert("RGBA")
+    x0, y0, x1, y1 = dentro
+    capa = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    d = ImageDraw.Draw(capa)
+    paso = 0
+    if ef.get("palabra"):
+        clave = ("palabra_piz", ef["palabra"])
+        if clave not in _ICONO:
+            p = _texto_img(ef["palabra"], 74, 0, color=(20, 16, 12))
+            if p.width > x0 - 60:
+                k = (x0 - 60) / p.width
+                p = p.resize((max(1, int(p.width * k)), max(1, int(p.height * k))), Image.Resampling.LANCZOS)
+            _ICONO[clave] = p
+        p = _ICONO[clave]
+        img.alpha_composite(_escribir(p, loc / 0.35), (30, 70))
+        avance = _sale(max(0.0, loc - 0.3) / 0.35)
+        if avance > 0.02:
+            a = np.array([30 + p.width * 0.5, 70 + p.height + 14])
+            b = np.array([x0 - 16, y0 + (y1 - y0) * 0.30])
+            ctrl = np.array([a[0] - 20, b[1] + 10])
+            pts = [tuple((1 - t) ** 2 * a + 2 * (1 - t) * t * ctrl + t ** 2 * b) for t in np.linspace(0, avance, 30)]
+            d.line(pts, fill=(20, 16, 12, 255), width=8, joint="curve")
+            if avance > 0.9:
+                u = np.array(pts[-1]) - np.array(pts[-2])
+                u /= np.linalg.norm(u) + 1e-6
+                n = np.array([-u[1], u[0]])
+                q = np.array(pts[-1])
+                d.polygon([tuple(q + u * 20), tuple(q - u * 16 + n * 18), tuple(q - u * 16 - n * 18)],
+                          fill=(20, 16, 12, 255))
+        paso = 1
+    # rótulos de tiza: arriba a la izquierda, abajo a la derecha, arriba a la derecha (dentro de la pizarra)
+    sitios = [((x0 + 26, y0 + 22), (1, 1)), ((x1 - 26, y1 - 22), (-1, -1)), ((x1 - 26, y0 + 22), (-1, 1))]
+    for k, texto in enumerate(ef.get("textos") or []):
+        l = loc - 0.45 * (k + paso)
+        if l < 0 or k >= len(sitios):
+            continue
+        clave = ("tiza", texto)
+        if clave not in _ICONO:
+            _ICONO[clave] = _tiza(texto)
+        t = _ICONO[clave]
+        (ax, ay), (sx, sy) = sitios[k]
+        tx = ax if sx > 0 else ax - t.width
+        ty = ay if sy > 0 else ay - t.height
+        img.alpha_composite(_escribir(t, l / 0.35), (int(tx), int(ty)))
+        if l > 0.35:
+            # flechita de tiza hacia el centro de la pizarra
+            ini = np.array([tx + t.width / 2, ty + (t.height + 8 if sy > 0 else -8)])
+            cen = np.array([(x0 + x1) / 2, (y0 + y1) / 2])
+            u = cen - ini
+            u /= np.linalg.norm(u) + 1e-6
+            fin = ini + u * 70 * _sale((l - 0.35) / 0.2)
+            d.line([tuple(ini), tuple(fin)], fill=(245, 245, 238, 230), width=5)
+            n = np.array([-u[1], u[0]])
+            d.line([tuple(fin), tuple(fin - u * 16 + n * 12)], fill=(245, 245, 238, 230), width=5)
+            d.line([tuple(fin), tuple(fin - u * 16 - n * 12)], fill=(245, 245, 238, 230), width=5)
+    img.alpha_composite(capa)
+    return img.convert("RGB")
+
+
+def _rotulo_tiempo(img: Image.Image, ef: dict, tt: float) -> Image.Image:
+    """Salto de tiempo de una mini historia («Unas horas después»): etiqueta arriba a la izquierda que
+    entra deslizándose y se queda hasta el final de la escena."""
+    loc = tt - ef["en"]
+    if loc < 0:
+        return img
+    clave = ("tiempo", ef["texto"])
+    if clave not in _ICONO:
+        _ICONO[clave] = _etiqueta_img(ef["texto"]).rotate(-3, expand=True, resample=Image.Resampling.BICUBIC)
+    et = _ICONO[clave]
+    x = int(36 - (1 - _sale(loc / 0.35)) * (et.width + 60))
+    img = img.convert("RGBA")
+    if x + et.width > 0:
+        recorte = et.crop((max(0, -x), 0, et.width, et.height))
+        img.alpha_composite(recorte, (max(0, x), 34))
     return img.convert("RGB")
 
 
@@ -1719,6 +1919,8 @@ def _renderizar(carpeta: CarpetaProyecto, ffmpeg: str, destino: Path | None, des
                     base = _flecha(base, ef["flecha"], ubic, tt)
                 if "lupa" in ef:
                     base = _lupa(base, ef["lupa"], ubic, tt)
+            if "rotulos" in ef:
+                base = _rotulos(base, ef["rotulos"], escenario.tablero.get(c["id"]), tt)
             dx = dy = 0.0
             if "temblor_leve" in ef:
                 a = ef["temblor_leve"].get("amplitud", 3)
@@ -1766,6 +1968,8 @@ def _renderizar(carpeta: CarpetaProyecto, ffmpeg: str, destino: Path | None, des
             img = _signos_pregunta(img, ef["signos_pregunta"], tt, c["fin"])
         if "dato" in ef and not en_reaccion:
             img = _poner_dato(img, ef["dato"], tt, c["fin"])
+        if "rotulo_tiempo" in ef and not en_reaccion:
+            img = _rotulo_tiempo(img, ef["rotulo_tiempo"], tt)
         if vertical:
             if en_reaccion or c["modo"] == "tira" or camara is None:
                 objetivo = 0.5

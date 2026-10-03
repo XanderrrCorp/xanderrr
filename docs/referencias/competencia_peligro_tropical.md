@@ -153,3 +153,21 @@ Primera lectura de la tanda 7:
     plataforma, en el **fondo azul oscuro con textura** de los momentos graves; título **«Daño grave»** arriba a
     la izquierda y **flecha roja** señalando. Muestra el daño por dentro sin sangre ni nada gráfico.
     - Construir/ajustar: tipo de imagen «rayos X / corte por dentro» para explicar daños sin mostrar heridas.
+
+## Estado (03-10): lo que ya está en Xandart
+
+- Logo del canal abajo a la derecha todo el video.
+- Sin vaivén ni temblor; entradas deslizándose de lado con swoosh (alternando) y zoom lento; flecha roja
+  curva que «pica»; flecha del dato que se mueve; elementos escalonados; títulos negros sin borde con
+  triángulo rojo en peligro.
+- Cara del personaje según la emoción; acciones con la mano en primera persona (dos momentos seguidos).
+- Tira: niveles vistos oscurecidos y flecha roja que pasa de una tarjeta a otra.
+- Tarjeta de presentación de cada especie («1- Nombre», imagen en marco blanco, fondo azul oscuro).
+- Pila de fotos que crece: cada foto nueva se desliza encima de la anterior con swoosh.
+- Término técnico solo, grande, a pantalla completa.
+- Pizarra con marco de madera: dibujo de tiza, rótulos a mano con flechitas y la palabra arriba a la
+  izquierda con flecha curva.
+- Mini historias del personaje con rótulo de salto de tiempo («Unas horas después») y nota de piano.
+- Fondo de foto real desenfocada del lugar (Pexels) detrás del recorte.
+- Personaje y animal en el mismo plano (el personaje señalándolo desde la izquierda).
+- Vista de rayos X para daños por dentro, sin heridas.

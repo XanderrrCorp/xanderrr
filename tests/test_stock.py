@@ -205,3 +205,15 @@ def test_documental_usa_pexels_por_tema(monkeypatch):
     indice = json.loads((c.ruta / "assets" / "stock" / "stock.json").read_text(encoding="utf-8"))
     assert set(indice["temas_revisados"]) == {"congo river rapids", "nile crocodile", "hippo in river"}
     assert all(a["tema"] for a in indice["archivos"]) and not any(a.get("sintetica") for a in indice["archivos"])
+
+
+def test_fondo_del_lugar_se_baja_una_vez_y_va_en_los_creditos(tmp_path, monkeypatch):
+    monkeypatch.setenv("PEXELS_API_KEY", "clave-prueba")
+    (tmp_path / "direccion.json").write_text(json.dumps({"lugares": {"4": "roman colosseum"}}), "utf-8")
+    s = SesionFalsa()
+    assert stock.fondos_de_lugar(tmp_path, sesion=s, avisar=lambda _: None) == 1
+    d = json.loads((tmp_path / "direccion.json").read_text("utf-8"))
+    f = d["fondos_lugar"]["4"]
+    assert (tmp_path / f["archivo"]).exists() and f["origen"].startswith("https://www.pexels.com/")
+    assert stock.fondos_de_lugar(tmp_path, sesion=s, avisar=lambda _: None) == 0      # ya estaba
+    assert "Foto de Ana en Pexels" in stock.creditos(tmp_path)

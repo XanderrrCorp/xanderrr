@@ -197,6 +197,24 @@ def instruccion_detalles(historia: dict, k: int, estilo: Estilo, catalogo: list[
                           'solo se ven las manos del personaje haciendo esa acción. Si la misma acción sigue en la '
                           'escena siguiente, la primera muestra la mano acercándose y la segunda la mano ya encima '
                           '(mismo lugar y encuadre), como dos momentos seguidos. Sin heridas ni nada gráfico.')
+    # tipos especiales que el estilo pueda tener (se reconocen por su plantilla, no por su nombre)
+    pizarra = next((t.id for t in estilo.tipos_de_escena if "chalk" in t.plantilla_prompt.lower()), None)
+    rayos = next((t.id for t in estilo.tipos_de_escena if "x-ray" in t.plantilla_prompt.lower()), None)
+    if pizarra:
+        especiales.append(f'- Cuando la voz explica CÓMO funciona algo o qué efecto causa (lo que pasa en la piel, cómo '
+                          f'actúa un veneno, las partes de algo), usa {pizarra} (como mucho 1 por sección): la '
+                          f'descripción es un dibujo simple de tiza. Ponle "rotulos": 2 o 3 palabras cortas en español '
+                          f'que nombran partes del dibujo («Burbujas», «Irritación»); salen escritas a mano con '
+                          f'flechitas. En las demás escenas "rotulos" es null.')
+    if rayos:
+        especiales.append(f'- Si la voz habla de un daño DENTRO del cuerpo (un órgano, los huesos, la sangre, un veneno '
+                          f'que ataca por dentro), usa {rayos}: se ve por dentro como radiografía, sin heridas ni sangre.')
+    if estilo.con_personaje:
+        especiales.append('- Mini historias: cuando la voz cuenta lo que le pasa a alguien en el tiempo («estás tranquilo '
+                          'en tu patio… y horas después…»), muéstralo con "the cartoon man" viviendo esa historia en '
+                          'escenas completas seguidas (antes tranquilo, después asustado). En la escena donde el tiempo '
+                          'salta, pon "salto_tiempo": un rótulo corto («Unas horas después», «Al día siguiente»); en las '
+                          'demás, null.')
     especiales = "\n".join(especiales)
     bloque_catalogo = ""
     if catalogo:
@@ -252,11 +270,15 @@ Para CADA escena, en orden, decide:
 - "termino": si la voz dice un término técnico o raro que el espectador no conoce (el nombre de una toxina,
   de una sustancia o un nombre científico), cópialo tal cual como lo dice la voz; sale solo, grande, a
   pantalla completa. Como mucho en 1 escena de la sección; en las demás, null.
+- "lugar": si la voz habla de un lugar o una época REAL concreta (el Coliseo romano, el desierto del Sahara,
+  un hospital, la selva del Amazonas), una búsqueda corta en inglés para una foto de ese lugar («roman
+  colosseum», «amazon rainforest»): sale desenfocada de fondo detrás del dibujo. Como mucho en 1 escena de la
+  sección; en las demás, null.
 {especiales}
 {bloque_catalogo}
 Responde SOLO un JSON: {{"escenas": [{{"n": 1, "intencion": "...", "intensidad": 3, "accion": "generar",
 "tipo": "{ejemplo}", "descripcion": "...", "con_mascota": false, "palabra_clave": "...", "texto_pantalla": null,
-"palabra": null, "dato": null, "termino": null}}, ...]}} con exactamente {len(lineas)} escenas."""
+"palabra": null, "dato": null, "termino": null, "lugar": null, "rotulos": null, "salto_tiempo": null}}, ...]}} con exactamente {len(lineas)} escenas."""
 
 
 def _detalles(historia: dict, k: int, estilo: Estilo, carpeta: Path, ejecutar, avisar,
@@ -413,6 +435,16 @@ def a_escenas(datos: dict, estilo: Estilo, canal: str) -> tuple[dict, dict, str]
             termino = _clave_en(crudo, e["narracion"]) if crudo else None
         if termino:
             direccion.setdefault("terminos", {})[str(i)] = termino[:32]
+        lugar = str(e.get("lugar") or "").strip()
+        if lugar and accion == "generar":
+            direccion.setdefault("lugares", {})[str(i)] = lugar[:50]
+        rotulos = e.get("rotulos") if isinstance(e.get("rotulos"), list) else []
+        rotulos = [str(r).strip()[:18] for r in rotulos if str(r).strip()][:3]
+        if rotulos:
+            direccion.setdefault("rotulos", {})[str(i)] = rotulos
+        salto = str(e.get("salto_tiempo") or "").strip()
+        if salto:
+            direccion.setdefault("saltos", {})[str(i)] = salto[:30]
     direccion["pixelar_pendiente"] = [i for i in direccion["pixelar_pendiente"]
                                       if i < direccion.get("villano_revelacion", 10 ** 6)]
     doc = {"version": 2, "video": datos.get("titulo") or "Sin título", "canal": canal, "estilo": estilo.id,

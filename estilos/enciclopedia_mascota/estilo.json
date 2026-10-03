@@ -54,6 +54,20 @@
       "plantilla_prompt": "Semi-realistic digital illustration, highly detailed, fine black ink outlines, rich painterly shading, the real natural texture of this exact animal (fur, feathers, skin, scales or shell only where the real species has them), anatomically faithful to the real species, never armor plates or armored segments unless the real animal has them, natural anatomical proportions, crisp and sharp. {descripcion}. Dark moody background of deep blue fog with twisted dark silhouettes of branches, cinematic lighting with a cold rim light on the subject, shallow depth of field, aspect ratio 16:9, no text, no letters.",
       "quitar_fondo": false,
       "modo_montaje": "recuadro_sobre_papel"
+    },
+    {
+      "id": "pizarra_tiza",
+      "descripcion": "Lámina de clase: dibujo de tiza blanca que explica un efecto o un proceso (se pone en una pizarra con marco de madera y rótulos a mano)",
+      "plantilla_prompt": "Simple hand-drawn white chalk sketch on a pure flat black background, like a teacher's drawing on a school blackboard, thin chalky white lines with a slightly rough chalk texture and a few light chalk shading strokes, clear and educational, centered with empty space around it. {descripcion}. No text, no letters, no numbers, no labels, no frame, no board edges. Aspect ratio 16:9.",
+      "quitar_fondo": false,
+      "modo_montaje": "pizarra_sobre_papel"
+    },
+    {
+      "id": "rayos_x",
+      "descripcion": "Vista de rayos X: el cuerpo por dentro (huesos y órganos) para explicar un daño sin mostrar heridas",
+      "plantilla_prompt": "Medical X-ray style illustration: {descripcion}. The body is semi-transparent and glows cyan-white over a dark navy blue background, the skeleton and the internal organs are clearly visible like an x-ray scan, the affected organ glows soft red, standing on a simple dark platform, clean and educational, no blood, no gore, no wounds, no text, no letters, no labels. Aspect ratio 16:9.",
+      "quitar_fondo": false,
+      "modo_montaje": "recuadro_sobre_papel"
     }
   ],
   "mezcla_recomendada": {
@@ -71,7 +85,8 @@
   },
   "modos_de_montaje_permitidos": [
     "recorte_sobre_papel",
-    "recuadro_sobre_papel"
+    "recuadro_sobre_papel",
+    "pizarra_sobre_papel"
   ],
   "gramatica_edicion": "gramaticas/estandar.json",
   "perfil_edicion": "perfiles/peligro_tropical.json",
@@ -136,7 +151,8 @@
   },
   "comportamiento_montaje": {
     "recorte_sobre_papel": "recorte",
-    "recuadro_sobre_papel": "recuadro"
+    "recuadro_sobre_papel": "recuadro",
+    "pizarra_sobre_papel": "pizarra"
   },
   "poses_canal": [
     {

@@ -54,6 +54,10 @@ def test_instruccion_usa_tipos_del_estilo_y_duracion(estilo):
     assert '"reusar": "nivel:1"' in detalles
     # como la competencia: la cara cambia con la emoción y las acciones se ven con la mano (primera persona)
     assert "sweat drops" in detalles and "pov_personaje" in detalles and "mano acercándose" in detalles
+    # pizarra con rótulos, rayos X, mini historias y foto del lugar
+    assert "pizarra_tiza" in detalles and "rayos_x" in detalles and '"salto_tiempo"' in detalles
+    assert '"lugar"' in detalles and '"rotulos"' in detalles
+
     from estudio.guionista import PALABRAS_POR_SEGUNDO
 
     palabras = int(9 * 60 * PALABRAS_POR_SEGUNDO)                          # ritmo real de la voz configurada
@@ -209,3 +213,14 @@ def test_accion_pegada_a_la_referencia():
     assert _accion({"accion": "GENERAR", "tipo": "x"}) == "generar"
     assert _accion({"accion": "algo raro", "tipo": "x"}) == "generar"
     assert _accion({"accion": "", "reusar": "escena:Hola"}) == "reusar"
+
+
+def test_a_escenas_guarda_lugar_rotulos_y_salto(estilo):
+    d = _datos()
+    d["escenas"][3].update({"lugar": "roman colosseum", "rotulos": ["Burbujas", "Irritación", "x", "y"],
+                            "salto_tiempo": "Unas horas después", "termino": "cerca"})
+    _, direccion, _ = a_escenas(d, estilo, "c")
+    k = "4"
+    assert direccion["lugares"][k] == "roman colosseum"
+    assert direccion["rotulos"][k] == ["Burbujas", "Irritación", "x"]
+    assert direccion["saltos"][k] == "Unas horas después" and direccion["terminos"][k] == "cerca"
