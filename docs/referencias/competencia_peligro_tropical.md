@@ -67,3 +67,21 @@ Primera lectura de la tanda 3:
   escenas completas de amenaza (tipo «amenaza_cinematografica»).
 - Construir: la pila que **crece**: al presentar varias especies seguidas, cada foto nueva entra desde abajo
   y queda encima de las anteriores (hoy cada escena muestra su propia pila fija).
+
+## Tanda 4 (03-10)
+
+16. Animal recortado sobre la cuadrícula, solo, con una **flecha roja delgada** que entra en diagonal y apunta
+    a la cabeza (presentación del animal, sin texto).
+17. El mismo plano y, un momento después, aparece arriba el título **«Poco tierno»**: los elementos se van
+    **sumando uno a uno** sobre la misma imagen (primero la flecha, luego el título).
+18. **Presentación de cada especie de la lista**: fondo oscuro azul con textura, **«1- Blister Beetle»**
+    (número + nombre) arriba en blanco, **foto real** grande en **marco blanco**.
+19. El stickman **sonriendo y señalando al espectador** (hablarle directo a quien mira).
+20. Foto real en **marco rojo** sobre la cuadrícula, título **«Te sorprenderá»** arriba montado sobre el borde
+    del marco, **flecha roja gruesa** señalando el detalle (las manchas rojas).
+
+Primera lectura de la tanda 4:
+- Ya lo hace Xandart: flecha roja al detalle, título arriba, foto real en marco rojo, poses del personaje.
+- Ajustar: que flecha y título entren **en momentos distintos** sobre la misma imagen (escalonados).
+- Construir: **tarjeta de presentación de cada especie** («1- Nombre» + foto real en marco blanco sobre fondo
+  oscuro) al empezar cada nivel/especie.
