@@ -33,6 +33,46 @@ def normalizar(palabra: str) -> str:
 
 # ------------------------------------------------------------------ transcriptores
 
+def cuda_completo() -> bool:
+    """¿Están las librerías que Whisper necesita para usar la tarjeta NVIDIA? (CUDA 12: cublas64_12.dll y
+    cuDNN 9: cudnn*64_9.dll). Se buscan en el PATH y en las carpetas de instalación de NVIDIA. Si falta
+    alguna, Whisper usa el procesador: con CUDA a medias se quedaba pegado sin avisar."""
+    import glob
+    import os
+
+    if os.name != "nt":
+        return False
+    carpetas = [c for c in os.environ.get("PATH", "").split(os.pathsep) if c]
+    for var in ("CUDA_PATH", "CUDNN_PATH"):
+        if os.environ.get(var):
+            carpetas += [os.path.join(os.environ[var], "bin")]
+    carpetas += glob.glob(r"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12*\bin")
+    carpetas += glob.glob(r"C:\Program Files\NVIDIA\CUDNN\v9*\bin\12*")
+    carpetas += glob.glob(r"C:\Program Files\NVIDIA\CUDNN\v9*\bin")
+
+    def hay(patron: str) -> bool:
+        return any(glob.glob(os.path.join(c, patron)) for c in carpetas)
+
+    return hay("cublas64_12.dll") and hay("cudnn*64_9.dll")
+
+
+def _carpetas_cuda_al_path() -> None:
+    """Las carpetas de cuDNN no siempre quedan en el PATH al instalarlo: se agregan para este proceso."""
+    import glob
+    import os
+
+    extra = glob.glob(r"C:\Program Files\NVIDIA\CUDNN\v9*\bin\12*") + \
+        glob.glob(r"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12*\bin")
+    for c in extra:
+        if c not in os.environ.get("PATH", ""):
+            os.environ["PATH"] = c + os.pathsep + os.environ.get("PATH", "")
+            if hasattr(os, "add_dll_directory"):
+                try:
+                    os.add_dll_directory(c)
+                except OSError:
+                    pass
+
+
 class TranscriptorWhisper:
     """faster-whisper local. La primera vez baja el modelo (small ≈ 480 MB) y queda guardado."""
 
@@ -40,6 +80,13 @@ class TranscriptorWhisper:
         ajustes = leer_config("proveedores.json").get("whisper", {})
         self.modelo = modelo or ajustes.get("modelo", "small")
         self.dispositivo = dispositivo or ajustes.get("dispositivo", "auto")
+        if self.dispositivo == "auto":
+            # la tarjeta solo si CUDA 12 y cuDNN 9 están completos; si no, el procesador (nunca se traba)
+            if cuda_completo():
+                _carpetas_cuda_al_path()
+                self.dispositivo = "cuda"
+            else:
+                self.dispositivo = "cpu"
         self.idioma = ajustes.get("idioma", "es")
         self._m = None
         self.nombre = f"whisper-{self.modelo}"
@@ -50,7 +97,7 @@ class TranscriptorWhisper:
                 from faster_whisper import WhisperModel
             except ImportError as ex:   # pragma: no cover — depende de la instalación
                 raise RuntimeError("Falta Whisper local: instala con  pip install -e \".[tracy]\"") from ex
-            tipo = "int8" if self.dispositivo in ("cpu", "auto") else "float16"
+            tipo = "int8" if self.dispositivo in ("cpu", "auto") else "int8_float16"
             try:
                 self._m = WhisperModel(self.modelo, device=self.dispositivo, compute_type=tipo)
             except (RuntimeError, OSError, ValueError):

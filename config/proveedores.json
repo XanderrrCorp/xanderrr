@@ -41,9 +41,9 @@
   },
   "whisper": {
     "modelo": "small",
-    "dispositivo": "cpu",
+    "dispositivo": "auto",
     "idioma": "es",
-    "_nota": "Whisper local (faster-whisper) para los tiempos reales por oración del modo Tracy. Se instala con pip install -e \".[tracy]\"; la primera vez baja el modelo (small ≈ 480 MB). medium es más preciso pero bastante más lento en CPU. dispositivo «cpu» (01-10): con «auto» se quedó pegado en un PC con NVIDIA sin CUDA completo; en el procesador siempre funciona."
+    "_nota": "Whisper local (faster-whisper) para los tiempos reales por oración del modo Tracy. Se instala con pip install -e \".[tracy]\"; la primera vez baja el modelo (small ≈ 480 MB). medium es más preciso pero bastante más lento en CPU. dispositivo «auto»: la tarjeta NVIDIA solo si están CUDA 12 (cublas64_12.dll) y cuDNN 9 completos; si falta algo, el procesador (con CUDA a medias se quedaba pegado)."
   },
   "claude": {
     "_nota": "Velocidad del guion: la historia la escribe el modelo por defecto de tu suscripción con el razonamiento limitado; los detalles de cada sección (intención, imagen, textos) los hace un modelo más rápido, todas las secciones a la vez.",

@@ -253,6 +253,16 @@ def test_whisper_sin_cuda_sigue_con_el_procesador(monkeypatch):
     import types
     import sys
     monkeypatch.setitem(sys.modules, "faster_whisper", types.SimpleNamespace(WhisperModel=Modelo))
-    t = TranscriptorWhisper(dispositivo="auto")
+    t = TranscriptorWhisper(dispositivo="cuda")
     assert t.transcribir(np.zeros(16000, np.float32)) == [{"palabra": "hola", "inicio": 0.1, "fin": 0.4}]
-    assert usados == ["auto", "cpu"] and t.dispositivo == "cpu"
+    assert usados == ["cuda", "cpu"] and t.dispositivo == "cpu"
+
+
+def test_auto_usa_el_procesador_si_cuda_no_esta_completo(monkeypatch):
+    from estudio.tracy import alineacion
+
+    monkeypatch.setattr(alineacion, "cuda_completo", lambda: False)
+    assert alineacion.TranscriptorWhisper(dispositivo="auto").dispositivo == "cpu"
+    monkeypatch.setattr(alineacion, "cuda_completo", lambda: True)
+    monkeypatch.setattr(alineacion, "_carpetas_cuda_al_path", lambda: None)
+    assert alineacion.TranscriptorWhisper(dispositivo="auto").dispositivo == "cuda"
