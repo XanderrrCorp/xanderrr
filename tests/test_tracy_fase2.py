@@ -295,3 +295,13 @@ def test_swoosh_solo_en_los_cambios_de_escena(tmp_path):
     fuerte = lambda a, b: np.abs(x[int(a * sr):int(b * sr)]).max()  # noqa: E731
     assert fuerte(9.5, 10.5) > 1000 and fuerte(19.5, 20.5) > 1000
     assert fuerte(25, 29) == 0 and fuerte(35, 39) == 0
+
+
+def test_canal_viejo_recibe_voz_normal_y_musica_mas_alta():
+    from estudio.tracy.preset import ajustes_voz, completar
+
+    viejo = completar({"velocidad": None, "volumen_musica_db": -24.0})     # lo que quedó guardado antes
+    assert viejo["velocidad"] == 1.0 and viejo["volumen_musica_db"] == -16.0
+    elegido = completar({"velocidad": 1.1, "volumen_musica_db": -20})       # lo que el dueño elige se respeta
+    assert elegido["velocidad"] == 1.1 and elegido["volumen_musica_db"] == -20
+    assert ajustes_voz(viejo)["velocidad"] == 1.0                            # no la de los stickman (1,3)

@@ -9,6 +9,7 @@ interface EstadoTracy {
   canal: string; clip_base: string; clip_existe: boolean; musica: string; musica_existe: boolean;
   presentador: string; presentador_existe: boolean; escena_final_desde: number;
   proporcion_seminario: number; voz_id: string | null; whisper: boolean;
+  velocidad: number; volumen_musica_db: number;
 }
 
 type Que = 'seminario' | 'musica' | 'presentador';
@@ -114,6 +115,19 @@ export function Tracy() {
             <span className="tenue pequeno">Fondo de naturaleza en blanco y negro con partículas, el presentador a un
               lado, el botón Suscríbete y las ondas de la voz.</span>
           </label>
+          <label className="campo">Velocidad de la voz: {est.velocidad.toFixed(2).replace('.', ',')}× (1 = normal)
+            <input type="range" min={0.8} max={1.3} step={0.05} defaultValue={est.velocidad}
+              onMouseUp={(e) => ajustar({ velocidad: +(e.target as HTMLInputElement).value })}
+              onTouchEnd={(e) => ajustar({ velocidad: +(e.target as HTMLInputElement).value })}
+              onKeyUp={(e) => ajustar({ velocidad: +(e.target as HTMLInputElement).value })} />
+          </label>
+          <label className="campo">Volumen de la música: {Math.round((est.volumen_musica_db + 30) / 24 * 100)} %
+            <input type="range" min={-30} max={-6} step={1} defaultValue={est.volumen_musica_db}
+              onMouseUp={(e) => ajustar({ volumen_musica_db: +(e.target as HTMLInputElement).value })}
+              onTouchEnd={(e) => ajustar({ volumen_musica_db: +(e.target as HTMLInputElement).value })}
+              onKeyUp={(e) => ajustar({ volumen_musica_db: +(e.target as HTMLInputElement).value })} />
+            <span className="tenue pequeno">Siempre por debajo de la voz; baja un poco sola cuando hablas.</span>
+          </label>
           {!est.whisper && <p className="rev-aviso">Falta Whisper (los tiempos de la voz). Vuelve a correr «Instalar Xandart
             Nueva» y queda listo.</p>}
         </section>
@@ -208,6 +222,13 @@ export function TracyVideo() {
             <a className="boton-borde" href={`${archivo(slug, 'render/final.srt')}?descargar=true`}>Subtítulos (SRT)</a>
           </div>
           <p className="tenue pequeno">También quedó una copia en tu carpeta de Videos → Xandart.</p>
+          <div className="fila-botones">
+            <button className="boton-borde pequeno" onClick={() => {
+              if (window.confirm('Se vuelve a armar con los ajustes de ahora (velocidad de la voz, música, escena final).\n\n'
+                + 'Si cambiaste la velocidad de la voz, la voz se graba otra vez y se paga (unos pocos cientos de pesos). '
+                + 'Los clips ya bajados no se vuelven a bajar.\n\n¿Seguir?')) seguir(false);
+            }}>Volver a armar con los ajustes de ahora</button>
+          </div>
         </section>
       )}
     </div>

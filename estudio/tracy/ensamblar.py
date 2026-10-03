@@ -290,9 +290,9 @@ def ensamblar(carpeta: CarpetaProyecto, ffmpeg: str, avisar=print, progreso=None
         entradas += ["-stream_loop", "-1", "-i", str(musica)]
         sale = max(0.0, duracion - 3)
         filtro += (f";[1:a]aresample=48000[guia];"
-                   f"[{k}:a]aresample=48000,lowpass=f=5500,volume={volumen_musica_db}dB,"
+                   f"[{k}:a]aresample=48000,lowpass=f=7500,volume={volumen_musica_db}dB,"
                    f"afade=t=in:d=3,afade=t=out:st={sale:.3f}:d=3,atrim=0:{duracion:.3f}[m];"
-                   f"[m][guia]sidechaincompress=threshold=0.02:ratio=4:attack=30:release=600[mb];"
+                   f"[m][guia]sidechaincompress=threshold=0.04:ratio=2.5:attack=40:release=700[mb];"
                    f"[vz][mb]amix=inputs=2:duration=first:normalize=0[a]")
     else:
         if musica:

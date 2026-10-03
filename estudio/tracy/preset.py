@@ -17,11 +17,11 @@ NOMBRE_CANAL = "Canal Tracy"
 
 POR_DEFECTO: dict[str, Any] = {
     "voz_id": "moss_audio_5f02d02b-2e0e-11f1-803b-3af0d76118b0",   # voz del canal Tracy (None = la de proveedores.json)
-    "velocidad": None,              # None = la de config/proveedores.json
+    "velocidad": 1.0,               # ritmo natural de seminario (los stickman van a 1,3; aquí sonaba muy rápido)
     "clip_base": r"C:\Users\USUARIO\Videos\el mero mero.mp4",
     "proporcion_seminario": 0.4,    # 40 % seminario / 60 % stock
     "musica": r"C:\Users\USUARIO\Videos\musica tracy.mp3",   # de fondo, bajita; si no existe, sin música
-    "volumen_musica_db": -24.0,     # respecto a la voz: se oye pero no tapa
+    "volumen_musica_db": -16.0,     # respecto a la voz: se oye bien y no tapa (a -24 se oía muy bajo)
     "clip_max_s": 30.0,
     "clip_objetivo_s": [8.0, 20.0],
     "bloque_tts_max": 2500,         # caracteres por llamada a MiniMax
@@ -60,10 +60,16 @@ def preset_por_defecto() -> dict[str, Any]:
     return {k: (list(v) if isinstance(v, list) else v) for k, v in POR_DEFECTO.items()}
 
 
+# valores por defecto de antes que quedaron guardados en el canal sin que el dueño los eligiera: se toman
+# como «sin elegir» para que le lleguen los nuevos (voz más pausada y música más audible, 01-10)
+VIEJOS_POR_DEFECTO = {"volumen_musica_db": (-22.0, -24.0)}
+
+
 def completar(tracy: dict[str, Any] | None) -> dict[str, Any]:
     """Mezcla lo guardado con los valores por defecto y valida los rangos."""
     p = preset_por_defecto()
-    p.update({k: v for k, v in (tracy or {}).items() if v is not None or k == "velocidad"})   # sin voz guardada = la del canal Tracy
+    p.update({k: v for k, v in (tracy or {}).items()
+              if v is not None and v not in VIEJOS_POR_DEFECTO.get(k, ())})   # sin elegir = lo de por defecto
     p["proporcion_seminario"] = float(p["proporcion_seminario"])
     if not 0 <= p["proporcion_seminario"] <= 1:
         raise ValueError("proporcion_seminario va de 0 a 1 (0,4 = 40 % seminario)")
@@ -74,6 +80,7 @@ def completar(tracy: dict[str, Any] | None) -> dict[str, Any]:
     p["clip_objetivo_s"] = [lo, hi]
     p["bloque_tts_max"] = int(p["bloque_tts_max"])
     p["volumen_musica_db"] = max(-40.0, min(0.0, float(p["volumen_musica_db"])))
+    p["velocidad"] = max(0.7, min(1.5, float(p["velocidad"])))
     p["escena_final_desde"] = float(p["escena_final_desde"])
     if not 0.05 <= p["escena_final_desde"] <= 1:
         raise ValueError("escena_final_desde va de 0,05 a 1 (1 = sin escena final)")

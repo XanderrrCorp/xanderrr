@@ -31,7 +31,7 @@ def _estado(clave: str = CLAVE_CANAL) -> dict:
             "presentador": presentador or p.get("presentador") or "", "presentador_existe": bool(presentador),
             "escena_final_desde": p["escena_final_desde"],
             "proporcion_seminario": p["proporcion_seminario"], "voz_id": p.get("voz_id"),
-            "volumen_musica_db": p.get("volumen_musica_db"), "whisper": _whisper_instalado()}
+            "volumen_musica_db": p.get("volumen_musica_db"), "velocidad": p.get("velocidad"), "whisper": _whisper_instalado()}
 
 
 def _whisper_instalado() -> bool:
@@ -53,6 +53,8 @@ class Ajustes(BaseModel):
     musica: str | None = None
     proporcion_seminario: float | None = Field(None, ge=0, le=1)
     escena_final_desde: float | None = Field(None, ge=0.05, le=1)
+    velocidad: float | None = Field(None, ge=0.7, le=1.5)
+    volumen_musica_db: float | None = Field(None, ge=-40, le=0)
 
 
 def _limpiar_ruta(r: str | None) -> str | None:
@@ -65,7 +67,8 @@ def _limpiar_ruta(r: str | None) -> str | None:
 def ajustar(a: Ajustes):
     try:
         crear_canal_tracy(clip_base=_limpiar_ruta(a.clip_base), musica=_limpiar_ruta(a.musica),
-                          proporcion_seminario=a.proporcion_seminario, escena_final_desde=a.escena_final_desde)
+                          proporcion_seminario=a.proporcion_seminario, escena_final_desde=a.escena_final_desde,
+                          velocidad=a.velocidad, volumen_musica_db=a.volumen_musica_db)
     except (RuntimeError, ValueError) as ex:
         raise HTTPException(400, str(ex)) from ex
     return _estado()

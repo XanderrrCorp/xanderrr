@@ -89,7 +89,7 @@ def paso_visual(c: CarpetaProyecto, avisar=print, ejecutar=None, sesion=None, pr
     r = elegir_clips(c, plan, preset, ffmpeg(), avisar=avisar, sesion=sesion or requests)
     preset["presentador"] = encontrar(preset.get("presentador"), EXT_IMAGEN) or preset.get("presentador")
     final = ensamblar(c, ffmpeg(), avisar=avisar, progreso=progreso, musica=preset.get("musica"),
-                      volumen_musica_db=preset.get("volumen_musica_db", -24.0), preset=preset)
+                      volumen_musica_db=preset.get("volumen_musica_db", -16.0), preset=preset)
     return {"final": final, "stock": r["stock"], "seminario": r["seminario"], "escena_final": r.get("final", 0),
             "segmentos": len(plan)}
 
