@@ -52,6 +52,8 @@ def test_instruccion_usa_tipos_del_estilo_y_duracion(estilo):
     for t in estilo.ids_tipos:
         assert t in detalles
     assert '"reusar": "nivel:1"' in detalles
+    # como la competencia: la cara cambia con la emoción y las acciones se ven con la mano (primera persona)
+    assert "sweat drops" in detalles and "pov_personaje" in detalles and "mano acercándose" in detalles
     from estudio.guionista import PALABRAS_POR_SEGUNDO
 
     palabras = int(9 * 60 * PALABRAS_POR_SEGUNDO)                          # ritmo real de la voz configurada

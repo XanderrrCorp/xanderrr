@@ -181,6 +181,22 @@ def instruccion_detalles(historia: dict, k: int, estilo: Estilo, catalogo: list[
         if nivel["villano"]:
             especiales.append('- Es el VILLANO: marca "revelacion_villano": true en la escena donde se ve por primera vez '
                               'su aspecto (normalmente justo después de la escena que lo presenta).')
+    # el tipo «en primera persona» del estilo (el que pide ver por los ojos del personaje), si tiene
+    pov = next((t.id for t in estilo.tipos_de_escena if "first-person" in t.plantilla_prompt.lower()), None)
+    if estilo.con_personaje:
+        # (03-10) como la competencia: la cara del personaje cambia con lo que dice la voz
+        especiales.append('- Cuando aparece "the cartoon man", la descripción dice SIEMPRE su expresión según la emoción de '
+                          'esa frase, nunca una cara neutra: susto (eyes wide open, sweat drops, hand on his head), '
+                          'sorpresa (raised eyebrows, mouth wide open), asco (tongue out, squinting), alegría o alivio '
+                          '(big smile), duda (hand on his chin, one eyebrow raised), alerta (pointing at the animal, '
+                          'worried face). Si señala algo, que señale hacia el animal o el dato.')
+    if pov:
+        especiales.append('- Si la voz describe una ACCIÓN con el animal o el objeto («si lo tocas», «si lo aplastas», '
+                          '«si lo agarras», «al quitarlo de la piel»), '
+                          f'muéstrala en primera persona con {pov}: '
+                          'solo se ven las manos del personaje haciendo esa acción. Si la misma acción sigue en la '
+                          'escena siguiente, la primera muestra la mano acercándose y la segunda la mano ya encima '
+                          '(mismo lugar y encuadre), como dos momentos seguidos. Sin heridas ni nada gráfico.')
     especiales = "\n".join(especiales)
     bloque_catalogo = ""
     if catalogo:
