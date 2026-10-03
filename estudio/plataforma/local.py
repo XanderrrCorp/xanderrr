@@ -82,8 +82,12 @@ def _canales_nuevos(espacio: str | None) -> None:
         from ..miniaturas.texto_retrato import crear_canal
         from . import contexto
 
+        from ..tracy.preset import CLAVE_CANAL, NOMBRE_CANAL
+
         with contexto.usar_espacio(espacio):
             crear_canal("mentalidad-imparable", "Mentalidad Imparable")
+            # el canal Tracy usa la misma plantilla, con «BRIAN TRACY» debajo del texto (pedido del dueño)
+            crear_canal(CLAVE_CANAL, NOMBRE_CANAL, rotulo="BRIAN TRACY")
     except Exception:  # noqa: BLE001 — no impide abrir Xandart
         pass
 

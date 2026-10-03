@@ -186,6 +186,7 @@ export function TracyVideo() {
       <div className="rev-cab">
         <Link to="/tracy" className="tenue pequeno">← Canal Tracy</Link>
         <span className="crece" />
+        <Link className="boton-borde pequeno" to={`/videos/${slug}/miniatura`}>Miniatura</Link>
         <span className="chip-gasto">Gastado: {v.costo}</span>
       </div>
       <h1 className="rev-titulo">{v.titulo}</h1>
@@ -224,6 +225,7 @@ export function TracyVideo() {
           <div className="fila-botones">
             <a className="boton-primario" href={`${archivo(slug, v.video)}?descargar=true`}>Descargar MP4</a>
             <a className="boton-borde" href={`${archivo(slug, 'render/final.srt')}?descargar=true`}>Subtítulos (SRT)</a>
+            <Link className="boton-borde" to={`/videos/${slug}/miniatura`}>Hacer la miniatura</Link>
           </div>
           <p className="tenue pequeno">También quedó una copia en tu carpeta de Videos → Xandart.</p>
           <div className="fila-botones">

@@ -186,7 +186,8 @@ def fondos_disponibles(cfg: ConfigTexto) -> list[str]:
     return sorted(p.name for p in c.glob("*") if p.suffix.lower() in EXT_FONDO) if c.exists() else []
 
 
-def crear_canal(clave: str = "mentalidad-imparable", nombre: str = "Mentalidad Imparable") -> ConfigTexto:
+def crear_canal(clave: str = "mentalidad-imparable", nombre: str = "Mentalidad Imparable",
+                rotulo: str = "") -> ConfigTexto:
     """Crea el canal (si no existe) con esta plantilla y deja 3 fondos dibujados con código. Lo que el
     canal ya tenga configurado no se toca."""
     from .plantilla import _validar
@@ -198,7 +199,7 @@ def crear_canal(clave: str = "mentalidad-imparable", nombre: str = "Mentalidad I
             raise ValueError(f"el canal «{clave}» ya tiene otra plantilla de miniatura")
         cfg = cargar_config(clave)
     else:
-        cfg = ConfigTexto(canal=clave, nombre=nombre)
+        cfg = ConfigTexto(canal=clave, nombre=nombre, rotulo=rotulo)
         guardar_config(cfg)
     asegurar_fondos(cfg)
     _registrar_canal(clave, nombre, cfg)
@@ -571,10 +572,36 @@ def guardar_jpg(img: Image.Image, destino: Path) -> Path:
 
 
 def cargar_retrato(cfg: ConfigTexto) -> Image.Image | None:
-    if not cfg.retrato:
+    if cfg.retrato:
+        ruta = carpeta_canal(cfg.canal) / cfg.retrato
+        if ruta.exists():
+            return Image.open(ruta).convert("RGBA")
+    return _retrato_de_tracy(cfg.canal)
+
+
+def _retrato_de_tracy(canal: str) -> Image.Image | None:
+    """El canal Tracy sin retrato propio usa el presentador que ya subió para la escena final."""
+    try:
+        from ..tracy.preset import CLAVE_CANAL, EXT_IMAGEN, cargar_preset, encontrar
+    except ImportError:
         return None
-    ruta = carpeta_canal(cfg.canal) / cfg.retrato
-    return Image.open(ruta).convert("RGBA") if ruta.exists() else None
+    if canal != CLAVE_CANAL:
+        return None
+    try:
+        ruta = encontrar(cargar_preset(canal).get("presentador"), EXT_IMAGEN)
+    except Exception:  # noqa: BLE001 — sin canal Tracy en la base: sin retrato
+        return None
+    if not ruta or not Path(ruta).is_file():
+        return None
+    im = Image.open(ruta)
+    im.load()
+    if im.mode in ("RGBA", "LA", "P") and im.convert("RGBA").getchannel("A").getextrema()[0] <= 250:
+        return im.convert("RGBA")
+    if _fondo_liso_claro(im):
+        from .recorte import recortar
+
+        return recortar(im.convert("RGB"))[0]
+    return None
 
 
 # ------------------------------------------------------------------ planificador (Claude)

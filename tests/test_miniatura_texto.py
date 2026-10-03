@@ -206,3 +206,31 @@ def test_retrato_con_fondo_blanco_se_recorta_solo(canales):
     ruido.save(b, "PNG")
     with pytest.raises(ValueError, match="fondo blanco liso"):
         tr.subir_retrato("mentalidad-imparable", b.getvalue())
+
+
+def test_canal_tracy_con_la_plantilla_brian_tracy_y_su_presentador(tmp_path):
+    import shutil
+
+    from estudio.config import RAIZ
+    from estudio.plataforma import contexto, local
+    from estudio.plataforma.migrar import migrar_instalacion
+    from estudio.tracy.preset import CLAVE_CANAL, crear_canal_tracy
+
+    raiz = tmp_path / "instalacion"
+    for d in ("estilos", "canales", "perfiles"):
+        shutil.copytree(RAIZ / d, raiz / d)
+    (tmp_path / "proyectos").mkdir()
+    r = migrar_instalacion(raiz, tmp_path / "proyectos")
+    foto = Image.new("RGB", (600, 600), (255, 255, 255))
+    ImageDraw.Draw(foto).rounded_rectangle((100, 150, 500, 600), radius=90, fill=(20, 20, 25))
+    foto.save(tmp_path / "presentador tracy.png")
+    local._canales_nuevos(r["espacio"])
+    with contexto.usar_espacio(r["espacio"]):
+        crear_canal_tracy(presentador=str(tmp_path / "presentador tracy.png"))
+        cfg = tr.cargar_config(CLAVE_CANAL)
+        assert cfg.rotulo == "BRIAN TRACY" and cfg.layout == tr.LAYOUT
+        retrato = tr.cargar_retrato(cfg)                     # sin retrato propio: el presentador, recortado
+        assert retrato is not None and retrato.getpixel((0, 0))[3] == 0
+        tr.cambiar_config(CLAVE_CANAL, {"rotulo": "OTRO"})
+        local._canales_nuevos(r["espacio"])                  # al volver a arrancar no se pisa
+        assert tr.cargar_config(CLAVE_CANAL).rotulo == "OTRO"
