@@ -72,8 +72,10 @@ class TranscriptorWhisper:
             return self._transcribir(audio16k)
 
     def _transcribir(self, audio16k: np.ndarray) -> list[dict]:
+        # beam_size=1: 2-3 veces más rápido en el procesador; el texto que manda es el del guion, Whisper
+        # solo aporta los tiempos, así que buscar la mejor frase entre 5 no mejora nada
         segs, _ = self._cargar().transcribe(audio16k.astype(np.float32), language=self.idioma, word_timestamps=True,
-                                            beam_size=5, condition_on_previous_text=False)
+                                            beam_size=1, condition_on_previous_text=False)
         # la lista se arma aquí adentro: faster-whisper trabaja al recorrer los segmentos (ahí falla CUDA)
         return [{"palabra": w.word.strip(), "inicio": float(w.start), "fin": float(w.end)}
                 for s in segs for w in (s.words or []) if w.word.strip()]
@@ -193,6 +195,14 @@ def alinear(carpeta: CarpetaProyecto, transcriptor, avisar=print) -> dict:
     dir_w = carpeta.ruta / "audio" / "whisper"
     dir_w.mkdir(parents=True, exist_ok=True)
     salida, coincidencias = [], []
+    pendientes = [b for b in info["bloques"]
+                  if (leer_json(dir_w / f"{b['clave']}.json") if (dir_w / f"{b['clave']}.json").exists() else {})
+                  .get("huella") != f"{transcriptor.nombre}|{man[b['clave']]['huella']}"]
+    if pendientes and hasattr(transcriptor, "_cargar"):
+        avisar("Preparando Whisper (la primera vez baja su modelo de unos 480 MB; puede tardar según tu internet)…")
+        transcriptor._cargar()
+        avisar(f"Whisper listo ({getattr(transcriptor, 'dispositivo', '')}): {len(pendientes)} bloque(s) por transcribir")
+    hechos = 0
     for b in info["bloques"]:
         x = audio[int(b["inicio"] * SR): int(b["fin"] * SR)]
         dur = len(x) / SR
@@ -202,7 +212,8 @@ def alinear(carpeta: CarpetaProyecto, transcriptor, avisar=print) -> dict:
         if guardado.get("huella") == huella:
             oido = guardado["palabras"]
         else:
-            avisar(f"  transcribiendo {b['clave']} ({dur:.0f} s)…")
+            hechos += 1
+            avisar(f"  transcribiendo bloque {hechos} de {len(pendientes)} ({dur:.0f} s de voz)…")
             oido = transcriptor.transcribir(_a_16k(x), b["texto"])
             escribir_json(cache, {"huella": huella, "palabras": oido})
         ors = oraciones(b["texto"])
