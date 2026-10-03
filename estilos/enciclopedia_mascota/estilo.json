@@ -247,5 +247,6 @@
     "animal_fondo_gris",
     "amenaza_cinematografica",
     "diagrama_fondo_blanco"
-  ]
+  ],
+  "marca_agua": "assets/canal/marca_agua.png"
 }

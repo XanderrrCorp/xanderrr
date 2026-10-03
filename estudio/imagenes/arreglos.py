@@ -29,7 +29,8 @@ CAMBIOS_DE_ESTILO: list[tuple[str, str]] = [
 # (01-10) los dos canales stickman pasan a la hoja blanca cuadriculada, como los ejemplos del dueño
 CUADRICULA = {"tipo": "cuadricula", "valor": "assets/papel_arrugado.png"}
 CAMPOS: dict[str, dict] = {
-    "enciclopedia_mascota": {"fondo_montaje": CUADRICULA},
+    # (03-10) logo de Peligro Tropical abajo a la derecha en todo el video, como la competencia
+    "enciclopedia_mascota": {"fondo_montaje": CUADRICULA, "marca_agua": "assets/canal/marca_agua.png"},
     "paradoja_sapiens": {"fondo_montaje": CUADRICULA,
                          "movimiento_maximo": 0.05, "perfil_edicion": "perfiles/paradoja_documental.json"},
 }

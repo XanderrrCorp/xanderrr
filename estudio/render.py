@@ -1107,6 +1107,21 @@ def _centro_x(c: dict, ef: dict, focos: dict, escenario: "Escenario", camara: tu
     return min(max(x / W, 0.0), 1.0)
 
 
+def marca_agua(estilo, ancho: int = 210) -> Image.Image | None:
+    """El logo del canal (si el estilo lo tiene) listo para pegar abajo a la derecha. Se busca en la
+    carpeta del estilo del espacio y, si esa copia es de antes del logo, en la del código."""
+    if not getattr(estilo, "marca_agua", None):
+        return None
+    from .estilos import carpeta_estilo
+
+    for base in (carpeta_estilo(estilo.id), RAIZ / "estilos" / estilo.id):
+        ruta = base / estilo.marca_agua
+        if ruta.is_file():
+            im = Image.open(ruta).convert("RGBA")
+            return im.resize((ancho, max(1, round(im.height * ancho / im.width))), Image.Resampling.LANCZOS)
+    return None
+
+
 def _salida() -> tuple[int, int, int]:
     """Resolución y cuadros por segundo del archivo final (config/render.json); se dibuja
     siempre en 1920×1080 y FFmpeg escala al tamaño pedido."""
@@ -1336,6 +1351,7 @@ def _renderizar(carpeta: CarpetaProyecto, ffmpeg: str, destino: Path | None, des
     papel_ruta = asegurar_fondo(raiz, estilo, proyecto.semilla % 1000)
     papel = Image.open(papel_ruta).convert("RGB").resize((W, H))
     escenario = Escenario(raiz, papel, estilo.comportamiento_montaje)
+    logo = None if vertical else marca_agua(estilo)
     hilos_x264 = os.environ.get("XANDART_HILOS_X264")
 
     # tira (15): bases a 1080 de alto, con niebla a los lados para centrar cualquier nivel
@@ -1577,6 +1593,9 @@ def _renderizar(carpeta: CarpetaProyecto, ffmpeg: str, destino: Path | None, des
                 else:
                     img.paste(si, ((W - si.width) // 2, H - 150 - si.height // 2), si)
                 break
+        # --- logo del canal fijo abajo a la derecha
+        if logo is not None:
+            img.paste(logo, (W - logo.width - 26, H - logo.height - 22), logo)
         try:
             proc.stdin.write(img.tobytes())
         except OSError as ex:            # en Windows un tubo roto llega como «Invalid argument»

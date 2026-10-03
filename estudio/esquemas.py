@@ -168,6 +168,8 @@ class Estilo(Modelo):
     # True: el villano va pixelado en pantalla hasta su revelación. Es solo visual: la voz nunca
     # dice que está pixelado (al dueño no le gustó oírlo en el guion)
     ocultar_villano: bool = True
+    # Logo del canal fijo abajo a la derecha en todo el video (ruta dentro de la carpeta del estilo)
+    marca_agua: str | None = None
     # tipos de escena que solo muestran al animal: se pueden cambiar por una foto o video real de Pexels
     tipos_reemplazables_por_foto_real: list[str] = []
     poses_canal: list["PoseCanal"] = []
