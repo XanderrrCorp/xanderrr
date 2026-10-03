@@ -49,3 +49,21 @@ Primera lectura de la tanda 2:
   curva negra (efecto «dato»), poses del personaje (susto, pensativo).
 - Ajustar: el título puede ir en negro sin borde sobre la cuadrícula (además del blanco con borde);
   triángulo de advertencia también en rojo; la flecha curva del «dato» también puede bajar desde un título.
+
+## Tanda 3 (03-10)
+
+11. Animal recortado sobre la cuadrícula con título-pregunta arriba **«¿Por qué es tan peligroso?»** (blanco
+    con borde negro), **triángulo amarillo** a un lado y un **«?» blanco grande encima del animal** (misterio).
+12. **Pila de fotos viejas** (borde crema gastado, varias tarjetas debajo) y una **foto nueva que sube desde
+    abajo** y se pone encima: así presentan las especies del video una tras otra.
+13. Sigue la misma pila: cada especie nueva **entra desde abajo y tapa a la anterior** (abeja → escarabajo).
+14. Otra más (escarabajo → insecto blanco peludo). Efecto de **«repartir cartas»** al presentar la lista.
+15. Escena de **peligro** con **fondo dibujado propio** (cueva azul oscura con cinta de precaución, calavera y
+    señales de advertencia), el animal sobre una roca, título **«No lo toques»** y triángulo rojo de
+    advertencia: el fondo cambia del papel a un escenario cuando el momento es amenazante.
+
+Primera lectura de la tanda 3:
+- Ya lo hace Xandart: título arriba, «?» grande encima, triángulo de advertencia, fotos viejas apiladas,
+  escenas completas de amenaza (tipo «amenaza_cinematografica»).
+- Construir: la pila que **crece**: al presentar varias especies seguidas, cada foto nueva entra desde abajo
+  y queda encima de las anteriores (hoy cada escena muestra su propia pila fija).
