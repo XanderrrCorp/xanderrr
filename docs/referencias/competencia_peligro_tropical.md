@@ -67,6 +67,8 @@ Primera lectura de la tanda 3:
   escenas completas de amenaza (tipo «amenaza_cinematografica»).
 - Construir: la pila que **crece**: al presentar varias especies seguidas, cada foto nueva entra desde abajo
   y queda encima de las anteriores (hoy cada escena muestra su propia pila fija).
+  Aclaración del dueño: cada tarjeta nueva **se desliza encima de la anterior con un swoosh** (las de abajo
+  siguen visibles, un poco giradas).
 
 ## Tanda 4 (03-10)
 
