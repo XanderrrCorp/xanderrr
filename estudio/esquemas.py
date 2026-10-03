@@ -45,6 +45,12 @@ EFECTOS = (
     "escala_peligro",
     # dato clave a un lado (ícono ✕/✓/⚠ y texto grande, «No muerde») con flecha curva desde el objeto
     "dato",
+    # (03-10, como la competencia) pila de fotos que crece: cada foto nueva se desliza encima de la anterior
+    "pila_fotos",
+    # tarjeta de presentación de cada especie de la lista («1- Nombre» + la imagen en marco blanco)
+    "presentacion_especie",
+    # término técnico solo, grande, a pantalla completa sobre fondo oscuro («"cantaridina"»)
+    "palabra_completa",
 )
 # "sfx" no es un efecto visual, pero se sugiere en la misma lista (ver 3.1).
 EFECTOS_SUGERIBLES = EFECTOS + ("sfx",)

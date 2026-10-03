@@ -258,7 +258,16 @@ def _escalonar(clips: list, textos: list, sfx: list) -> None:
     por_escena = {int(t["id"][1:]): t for t in textos}
     for c in clips:
         entrada = next((x for x in c["efectos"] if x["efecto"] in ("entrada_abajo", "entrada_lado", "entrada_rebote")), None)
-        libre = c["inicio"] + (entrada.get("dur", 0.42) + 0.1 if entrada else 0.15)
+        libre = c["inicio"] + (entrada.get("dur", 0.42) + entrada.get("retraso", 0.0) + 0.1 if entrada else 0.15)
+        # lo que tapa toda la pantalla (tarjeta de especie, término técnico): nada aparece debajo
+        tapas = [(x["en"], x["en"] + x["dur"]) for x in c["efectos"]
+                 if x["efecto"] in ("presentacion_especie", "palabra_completa")]
+
+        def fuera_de_tapas(t: float) -> float:
+            for a, b in sorted(tapas):
+                if a - 0.05 <= t < b + 0.1:
+                    t = b + 0.1
+            return t
         grupos: dict[float, list] = {}
         for x in c["efectos"]:
             if x["efecto"] in ESCALONABLES and "en" in x:
@@ -269,7 +278,7 @@ def _escalonar(clips: list, textos: list, sfx: list) -> None:
         eventos = sorted([(en, "e", g) for en, g in grupos.items()]
                          + ([(titulo["inicio"], "t", titulo)] if titulo else []), key=lambda z: (z[0], z[1] != "t"))
         for en, tipo, cosa in eventos:
-            nuevo = round(max(en, libre), 3)
+            nuevo = round(fuera_de_tapas(max(en, libre)), 3)
             if nuevo > c["fin"] - 0.7:
                 nuevo = en                      # no cabe más tarde: se queda
             if nuevo != en:
@@ -608,6 +617,7 @@ def construir_edl(carpeta: CarpetaProyecto) -> dict:
     usos_entrada = {"entrada_abajo": 0, "entrada_lado": 0, "entrada_rebote": 0}
     ultima_entrada = None
     escala_pendiente = None
+    presentar_pendiente = None
     for idx, e in enumerate(escenas):
         ini, fin = round(inicios[idx], 3), round(finales[idx], 3)
         dur = fin - ini
@@ -625,7 +635,12 @@ def construir_edl(carpeta: CarpetaProyecto) -> dict:
                 modo, archivo = "tira", "assets/tira/tira_niveles.png"
                 efectos.append({"efecto": "tira_deslizar_a_nivel", "desde": max(1, nivel_actual or 1),
                                 "hasta": n.numero, "villano_pixelado": estilo.ocultar_villano,
-                                "temblor": bool(n.villano)})
+                                "temblor": bool(n.villano),
+                                # como la competencia: los niveles ya vistos se oscurecen y una flecha roja
+                                # pasa de la tarjeta anterior a la nueva
+                                **({"atenuar_vistos": True, "flecha_nivel": True} if deslizar else {})})
+                if deslizar and not n.villano:
+                    presentar_pendiente = n          # la escena siguiente abre con su tarjeta de presentación
                 nivel_actual = n.numero
                 razon = f"Transición al nivel {n.numero}: la tira se desliza y se detiene en su tarjeta"
                 frena = ini + min(0.8, dur * 0.5)          # la tira se detiene en la tarjeta (ver render)
@@ -674,6 +689,17 @@ def construir_edl(carpeta: CarpetaProyecto) -> dict:
             escala_pendiente = None
         elif escala_pendiente and modo != "tira":
             escala_pendiente = None
+        if presentar_pendiente and modo != "tira":
+            n = presentar_pendiente
+            presentar_pendiente = None
+            escala = next((x for x in efectos if x["efecto"] == "escala_peligro"), None)
+            t_p = round(escala["en"] + escala["dur"] + 0.05 if escala else ini, 3)
+            dur_p = round(min(1.9, fin - t_p - 0.2), 3)
+            if dur_p >= 1.2 and n.asset in assets:
+                efectos.append({"efecto": "presentacion_especie", "en": t_p, "dur": dur_p, "numero": n.numero,
+                                "nombre": n.nombre, "archivo": assets[n.asset].archivo})
+                _sfx(sfx, "barrido", t_p, idx, f"Swoosh: entra la tarjeta de «{n.nombre}»")
+                razon = (razon + "; " if razon else "") + f"Tarjeta de presentación: «{n.numero}- {n.nombre}»"
         if modo is None:
             t_estilo = estilo.tipo(tipo) if tipo in estilo.ids_tipos else None
             if t_estilo is None:
@@ -873,16 +899,38 @@ def construir_edl(carpeta: CarpetaProyecto) -> dict:
                 _sfx(sfx, "comico", ini + 0.15, idx, "Efecto cómico corto: momento de humor")
             elif sonido == "zumbido" and rng.random() < 0.5:
                 _sfx(sfx, "zumbido", ini + 0.3, idx, "Zumbido grave: amenaza")
+        # --- término técnico solo, grande, a pantalla completa cuando la voz lo dice
+        termino = (direccion.get("terminos") or {}).get(str(e.id)) if deslizar else None
+        if termino and modo != "tira":
+            t_t = round(_en_texto(e.narracion, termino.split(" ")[0], e.tiempo.real_inicio, e.tiempo.real_fin), 3)
+            dur_t = round(min(1.5, fin - t_t - 0.1), 3)
+            if dur_t >= 0.8:
+                efectos.append({"efecto": "palabra_completa", "en": t_t, "dur": dur_t, "texto": termino})
+                _sfx(sfx, "pop", t_t, idx, f"Pop: «{termino}» a pantalla completa")
+                razon = (razon + "; " if razon else "") + f"El término «{termino}» solo, a pantalla completa"
+        # --- pila de fotos que crece (Peligro Tropical): fotos seguidas se apilan y cada una nueva se
+        # desliza encima de la anterior con swoosh (las de abajo siguen asomando, un poco giradas)
+        debajo: list = []
+        if (deslizar and modo not in ("tira", "pantalla_completa") and not zonas
+                and estilo.comportamiento_montaje.get(modo, "recuadro") == "recuadro"
+                and not any(x["efecto"] == "dato" for x in efectos)):
+            previo = clips[-1] if clips else None
+            pila_previa = next((x for x in previo["efectos"] if x["efecto"] == "pila_fotos"), None) if previo else None
+            if pila_previa is not None and previo["archivo"] != archivo:
+                debajo = (pila_previa["debajo"] + [{"archivo": previo["archivo"], "id": previo["id"],
+                                                    "decor": not pila_previa["debajo"]}])[-2:]
+            efectos.append({"efecto": "pila_fotos", "debajo": debajo})
         # --- entrada del objeto al cortar (sale de abajo, de un lado o con rebote) y vaivén suave
         if modo not in ("tira", "pantalla_completa") and idx > 0 and archivo != clips[-1]["archivo"] and not zonas \
                 and not any(x["efecto"] == "revelar_pixelado" for x in efectos):
             opciones = ["entrada_abajo", "entrada_lado", "entrada_rebote"]
             con_cupo = [o for o in opciones if usos_entrada[o] / (idx + 1) < tope_recurso and o != ultima_entrada]
             if deslizar:
-                # la mayoría de lado (alternando derecha e izquierda); a ratos sube desde abajo
-                con_cupo = ["entrada_abajo"] if ultima_entrada != "entrada_abajo" and rng.random() < 0.25 \
-                    else ["entrada_lado"]
-            if con_cupo and rng.random() < (0.92 if deslizar else 0.85 if movido else 0.35):   # la calmada: pocas
+                # la mayoría de lado (alternando derecha e izquierda); a ratos sube desde abajo. En la pila,
+                # siempre de lado: la foto nueva se desliza encima de la anterior
+                con_cupo = ["entrada_abajo"] if not debajo and ultima_entrada != "entrada_abajo" \
+                    and rng.random() < 0.25 else ["entrada_lado"]
+            if con_cupo and (debajo or rng.random() < (0.92 if deslizar else 0.85 if movido else 0.35)):
                 o = min(con_cupo, key=lambda r: (usos_entrada[r], rng.random()))
                 usos_entrada[o] += 1
                 ultima_entrada = o
@@ -890,6 +938,9 @@ def construir_edl(carpeta: CarpetaProyecto) -> dict:
                 if deslizar:
                     # se desliza suave (sin pasarse) y un poco más lento
                     datos.update({"dur": round(rng.uniform(0.5, 0.62), 2), "curva": "suave"})
+                    pres = next((x for x in efectos if x["efecto"] == "presentacion_especie"), None)
+                    if pres and pres["en"] <= ini + 0.05:
+                        datos["retraso"] = round(pres["dur"], 3)     # entra cuando se va la tarjeta
                 if o == "entrada_lado":
                     if deslizar:
                         lado_entrada = "izquierda" if lado_entrada == "derecha" else "derecha"
@@ -904,7 +955,10 @@ def construir_edl(carpeta: CarpetaProyecto) -> dict:
                     sonido_entrada = "barrido"               # whoosh: la imagen cruza de lado
                 elif clasica and "pexels" in str(archivo):
                     sonido_entrada = "camara"                # foto real: como si la tomaras
-                _sfx(sfx, sonido_entrada, ini + datos["dur"] * (0.2 if sonido_entrada == "barrido" else 0.7), idx,
+                if datos.get("retraso"):
+                    sonido_entrada = "pop"           # el swoosh ya sonó con la tarjeta (uno por escena)
+                _sfx(sfx, sonido_entrada, ini + datos.get("retraso", 0.0)
+                     + datos["dur"] * (0.2 if sonido_entrada == "barrido" else 0.7), idx,
                      f"{sonido_entrada.capitalize()} cuando la imagen entra y se asienta")
                 razon = (razon + "; " if razon else "") + {"entrada_abajo": "la imagen sale desde abajo",
                                                            "entrada_lado": "la imagen entra de lado",

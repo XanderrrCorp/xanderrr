@@ -249,11 +249,14 @@ Para CADA escena, en orden, decide:
   es venenoso, si se come, si es peligroso), {{"texto": "No muerde", "icono": "no"}}: texto de 1 a 3 palabras
   e icono "no" (✕ roja), "si" (✓ verde) o "alerta" (⚠). Se ve grande al lado del dibujo con una flecha.
   En las demás, null. Nunca en la misma escena que "texto_pantalla".
+- "termino": si la voz dice un término técnico o raro que el espectador no conoce (el nombre de una toxina,
+  de una sustancia o un nombre científico), cópialo tal cual como lo dice la voz; sale solo, grande, a
+  pantalla completa. Como mucho en 1 escena de la sección; en las demás, null.
 {especiales}
 {bloque_catalogo}
 Responde SOLO un JSON: {{"escenas": [{{"n": 1, "intencion": "...", "intensidad": 3, "accion": "generar",
 "tipo": "{ejemplo}", "descripcion": "...", "con_mascota": false, "palabra_clave": "...", "texto_pantalla": null,
-"palabra": null, "dato": null}}, ...]}} con exactamente {len(lineas)} escenas."""
+"palabra": null, "dato": null, "termino": null}}, ...]}} con exactamente {len(lineas)} escenas."""
 
 
 def _detalles(historia: dict, k: int, estilo: Estilo, carpeta: Path, ejecutar, avisar,
@@ -402,6 +405,14 @@ def a_escenas(datos: dict, estilo: Estilo, canal: str) -> tuple[dict, dict, str]
             direccion.setdefault("datos", {})[str(i)] = {
                 "texto": str(dato["texto"]).strip()[:28],
                 "icono": icono if icono in ("si", "no", "alerta") else "no"}
+        # el término técnico solo vale si la voz lo dice tal cual (una palabra o varias seguidas)
+        crudo = str(e.get("termino") or "").strip().strip('"«»“”\'')
+        if " " in crudo:
+            termino = crudo if crudo.lower() in e["narracion"].lower() else None
+        else:
+            termino = _clave_en(crudo, e["narracion"]) if crudo else None
+        if termino:
+            direccion.setdefault("terminos", {})[str(i)] = termino[:32]
     direccion["pixelar_pendiente"] = [i for i in direccion["pixelar_pendiente"]
                                       if i < direccion.get("villano_revelacion", 10 ** 6)]
     doc = {"version": 2, "video": datos.get("titulo") or "Sin título", "canal": canal, "estilo": estilo.id,

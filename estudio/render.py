@@ -178,6 +178,8 @@ class Escenario:
         self.ubicacion: dict[str, tuple[float, float, float, float]] = {}
         # clip -> capas sueltas (sombra y objeto con su posición) para animar entradas y vaivén
         self.capas: dict[str, tuple] = {}
+        # clip -> lo que queda quieto debajo del objeto cuando entra (el papel, o la pila de fotos de antes)
+        self.fondos: dict[str, Image.Image] = {}
 
     def animado(self, clip: dict, dx: float = 0.0, dy: float = 0.0, escala: float = 1.0) -> Image.Image | None:
         """El papel con el objeto (recorte o recuadro) movido o escalado; None si no tiene capas."""
@@ -187,7 +189,7 @@ class Escenario:
         (sombra, (sx, sy)), (obj, (x, y)) = capas
         if getattr(self, "_papel_rgba", None) is None:
             self._papel_rgba = self.papel.convert("RGBA")      # una vez, no en cada cuadro
-        lienzo = self._papel_rgba.copy()
+        lienzo = self.fondos.get(clip["id"], self._papel_rgba).copy()
         if abs(escala - 1) > 0.002:
             cx, cy = x + obj.width / 2, y + obj.height / 2
             obj = _escalar(obj, (max(1, int(obj.width * escala)), max(1, int(obj.height * escala))))
@@ -200,6 +202,22 @@ class Escenario:
             recorte = (max(0, -ox), max(0, -oy), min(obj.width, W - ox), min(obj.height, H - oy))
             lienzo.alpha_composite(obj.crop(recorte), (max(0, ox), max(0, oy)))
         return lienzo.convert("RGB")
+
+    def _carta(self, img: Image.Image, cid: str, a_un_lado: bool, decor: bool, en_pila: bool):
+        """La foto vieja de un clip y dónde va. Siempre igual para el mismo clip (azar con su id), así
+        la foto de una escena se ve idéntica cuando queda debajo en la pila de la siguiente."""
+        r = random.Random(cid)
+        ancho = W * (0.42 if a_un_lado else 0.56)
+        d = img.resize((int(ancho), int(ancho * img.height / img.width)), Image.Resampling.LANCZOS)
+        if d.height > H * 0.74:                     # imágenes altas: que la pila quepa
+            k = H * 0.74 / d.height
+            d = d.resize((int(d.width * k), int(d.height * k)), Image.Resampling.LANCZOS)
+        conmarco, (gx, gy) = _foto_vieja(d, r, decor=decor, giro_max=4.5 if en_pila else 1.5)
+        x = int(W * 0.68 - conmarco.width / 2) if a_un_lado else (W - conmarco.width) // 2
+        y = int(H * 0.48 - conmarco.height / 2)
+        if en_pila:                                 # cada foto cae un poco corrida: las de abajo asoman
+            x, y = x + int(r.uniform(-60, 60)), y + int(r.uniform(-22, 22))
+        return conmarco, (gx, gy), (max(0, x), max(0, y)), d
 
     def cuadro(self, clip: dict) -> Image.Image:
         zonas = next((e["zonas"] for e in clip["efectos"] if e["efecto"] == "pixelar"), None)
@@ -262,14 +280,24 @@ class Escenario:
                 lienzo.alpha_composite(rec, (x, y))
                 self.capas[clip["id"]] = ((s, (x + dx, y + dy)), (rec, (x, y)))
         else:
-            r = random.Random(clip["id"])
-            ancho = W * (0.42 if a_un_lado else 0.56)
-            d = img.resize((int(ancho), int(ancho * img.height / img.width)), Image.Resampling.LANCZOS)
-            if d.height > H * 0.74:                     # imágenes altas: que la pila quepa
-                k = H * 0.74 / d.height
-                d = d.resize((int(d.width * k), int(d.height * k)), Image.Resampling.LANCZOS)
-            conmarco, (gx, gy) = _foto_vieja(d, r)
-            x, y = _x(conmarco.width), int(H * 0.48 - conmarco.height / 2)
+            pila = next((e for e in clip["efectos"] if e["efecto"] == "pila_fotos"), None)
+            if pila is not None:
+                # la pila que crece: primero las fotos de antes, cada una donde quedó en su escena
+                for prev in pila["debajo"]:
+                    try:
+                        foto_prev = Image.open(self.raiz / prev["archivo"]).convert("RGB")
+                    except OSError:
+                        continue
+                    carta, _, (px, py), _ = self._carta(foto_prev, prev["id"], False, prev.get("decor", False), True)
+                    s, (dx, dy) = _sombra(carta, 20, 110)
+                    lienzo.alpha_composite(s, (max(0, px + dx), max(0, py + dy)))
+                    lienzo.alpha_composite(carta, (max(0, px), max(0, py)))
+            conmarco, (gx, gy), (x, y), d = self._carta(img, clip["id"], a_un_lado,
+                                                        pila is None or not pila["debajo"], pila is not None)
+            if pila is not None and pila["debajo"]:
+                self.fondos[clip["id"]] = lienzo.copy()      # lo que queda quieto mientras la foto entra
+                if len(self.fondos) > 8:                 # más que la caché de cuadros (6)
+                    self.fondos.pop(next(iter(self.fondos)))
             self.ubicacion[clip["id"]] = (x + gx, y + gy, d.width, d.height)
             s, (dx, dy) = _sombra(conmarco, 20, 130)
             lienzo.alpha_composite(s, (max(0, x + dx), max(0, y + dy)))
@@ -297,22 +325,24 @@ def _tarjeta(w: int, h: int, color: tuple, r: random.Random) -> Image.Image:
     return im
 
 
-def _foto_vieja(foto: Image.Image, r: random.Random) -> tuple[Image.Image, tuple[float, float]]:
+def _foto_vieja(foto: Image.Image, r: random.Random, decor: bool = True,
+                giro_max: float = 1.5) -> tuple[Image.Image, tuple[float, float]]:
     """La imagen como foto vieja con borde crema, encima de otras dos tarjetas un poco giradas (como
-    una pila de fotos sobre la mesa). Devuelve la pila y dónde quedó la foto dentro de ella."""
+    una pila de fotos sobre la mesa). Devuelve la pila y dónde quedó la foto dentro de ella.
+    decor=False: sin las dos tarjetas de adorno (en la pila que crece, debajo van las fotos de antes)."""
     marco = 24
     tw, th = foto.width + 2 * marco, foto.height + 2 * marco
     pad = 90
     pila = Image.new("RGBA", (tw + 2 * pad, th + 2 * pad), (0, 0, 0, 0))
-    for k, (dx, dy, giro, tono) in enumerate(((-26, 14, r.uniform(-5, -2.5), (226, 214, 188)),
-                                               (30, -10, r.uniform(2.5, 5), (232, 221, 197)))):
+    adornos = ((-26, 14, r.uniform(-5, -2.5), (226, 214, 188)), (30, -10, r.uniform(2.5, 5), (232, 221, 197)))
+    for k, (dx, dy, giro, tono) in enumerate(adornos if decor else ()):
         atras = _tarjeta(tw, th, tono, r).rotate(giro, expand=True, resample=Image.Resampling.BICUBIC)
         pila.alpha_composite(atras, (int(pad + dx + (tw - atras.width) / 2), int(pad + dy + (th - atras.height) / 2)))
     frente = _tarjeta(tw, th, (241, 233, 213), r)
     frente.paste(foto.convert("RGB"), (marco, marco))
     ImageDraw.Draw(frente).rectangle((marco - 1, marco - 1, marco + foto.width, marco + foto.height),
                                      outline=(120, 104, 80, 255), width=2)
-    giro = r.uniform(-1.5, 1.5)
+    giro = r.uniform(-giro_max, giro_max)
     frente = frente.rotate(giro, expand=True, resample=Image.Resampling.BICUBIC)
     fx, fy = pad + (tw - frente.width) / 2, pad + (th - frente.height) / 2
     pila.alpha_composite(frente, (int(fx), int(fy)))
@@ -504,6 +534,105 @@ def _flecha(img: Image.Image, ef: dict, ubic: tuple, tt: float) -> Image.Image:
         extra = 7 if grosor > 25 else 0
         tri = [tuple(punta + direc * extra), tuple(base + normal * (40 + extra)), tuple(base - normal * (40 + extra))]
         d.polygon(tri, fill=color)
+    img = img.convert("RGBA")
+    img.alpha_composite(capa)
+    return img.convert("RGB")
+
+
+def _fondo_oscuro() -> Image.Image:
+    """El fondo azul oscuro con textura de los momentos especiales (el mismo de la tira)."""
+    if "fondo_oscuro" not in _ICONO:
+        from .esquemas import TiraNiveles
+
+        _ICONO["fondo_oscuro"] = niebla(W, H, TiraNiveles())
+    return _ICONO["fondo_oscuro"]
+
+
+def _presentacion(raiz: Path, ef: dict, loc: float) -> Image.Image:
+    """Tarjeta de presentación de la especie (como la competencia): fondo azul oscuro, «1- Nombre» arriba
+    en blanco y la imagen grande en marco blanco, que entra deslizándose desde la derecha."""
+    clave = ("pres", ef["archivo"], ef["numero"], ef["nombre"])
+    if clave not in _ICONO:
+        foto = Image.open(raiz / ef["archivo"]).convert("RGB")
+        k = min(1000 / foto.width, 540 / foto.height)          # cabe entre el título y los subtítulos
+        foto = foto.resize((max(1, int(foto.width * k)), max(1, int(foto.height * k))), Image.Resampling.LANCZOS)
+        borde = 16
+        marco = Image.new("RGBA", (foto.width + 2 * borde, foto.height + 2 * borde), (0, 0, 0, 0))
+        ImageDraw.Draw(marco).rounded_rectangle((0, 0, marco.width - 1, marco.height - 1), radius=26,
+                                                fill=(255, 255, 255, 255))
+        mascara = Image.new("L", foto.size, 0)
+        ImageDraw.Draw(mascara).rounded_rectangle((0, 0, foto.width - 1, foto.height - 1), radius=14, fill=255)
+        marco.paste(foto, (borde, borde), mascara)
+        sombra, desplaz = _sombra(marco, 24, 150)
+        titulo = _texto_img(f"{ef['numero']}- {ef['nombre']}", 100, 10)
+        if titulo.width > W - 120:
+            f = (W - 120) / titulo.width
+            titulo = titulo.resize((int(titulo.width * f), int(titulo.height * f)), Image.Resampling.LANCZOS)
+        _ICONO[clave] = (marco, sombra, desplaz, titulo)
+    marco, sombra, (sdx, sdy), titulo = _ICONO[clave]
+    img = _fondo_oscuro().convert("RGBA")
+    x = (W - marco.width) / 2 + (1 - _sale(loc / 0.45)) * W * 0.75
+    y = 555 - marco.height / 2
+    for capa, (cx, cy) in ((sombra, (x + sdx, y + sdy)), (marco, (x, y))):
+        cx, cy = int(max(0, cx)), int(max(0, cy))
+        if cx < W:
+            img.alpha_composite(capa.crop((0, 0, min(capa.width, W - cx), min(capa.height, H - cy))), (cx, cy))
+    l = loc - 0.2
+    if l > 0:
+        esc = _sale(l / 0.12) * (1.0 + 0.2 * math.exp(-l * 9) * math.cos(l * 16))
+        if esc > 0.05:
+            ti = titulo.resize((max(1, int(titulo.width * esc)), max(1, int(titulo.height * esc))),
+                               Image.Resampling.BICUBIC)
+            img.alpha_composite(ti, (int((W - ti.width) / 2), int(max(0, 150 - ti.height / 2))))
+    return img.convert("RGB")
+
+
+def _palabra_completa(ef: dict, loc: float) -> Image.Image:
+    """El término técnico solo, entre comillas, grande y centrado sobre el fondo azul oscuro: entra con un
+    pop y después se acerca muy despacio."""
+    clave = ("palabra", ef["texto"])
+    if clave not in _ICONO:
+        t = _texto_img(f"“{ef['texto']}”", 170, 0)
+        if t.width > W - 160:
+            f = (W - 160) / t.width
+            t = t.resize((int(t.width * f), int(t.height * f)), Image.Resampling.LANCZOS)
+        _ICONO[clave] = t
+    t = _ICONO[clave]
+    esc = _sale(loc / 0.14) * (1.0 + 0.16 * math.exp(-loc * 9) * math.cos(loc * 15)) * (1 + 0.04 * loc / 1.5)
+    img = _fondo_oscuro().convert("RGBA")
+    if esc > 0.05:
+        ti = t.resize((max(1, int(t.width * esc)), max(1, int(t.height * esc))), Image.Resampling.BICUBIC)
+        img.alpha_composite(ti, (int((W - ti.width) / 2), int(H * 0.46 - ti.height / 2)))
+    return img.convert("RGB")
+
+
+def _tira_guia(img: Image.Image, tira: dict, cen: float, e: dict, loc: float, frena: float) -> Image.Image:
+    """En la tira (Peligro Tropical, como la competencia): los niveles ya vistos se oscurecen y una
+    flecha roja pasa de la tarjeta anterior a la nueva y se queda encima señalándola."""
+    base_w = tira["bases"]["n"].width
+    x0 = int(min(max(cen - W / 2, 0), base_w - W))
+    d0, d1 = e["desde"] - 1, e["hasta"] - 1
+    capa = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    d = ImageDraw.Draw(capa)
+    if e.get("atenuar_vistos"):
+        for k in range(min(d1, len(tira["cx"]))):
+            nivel = 0.62 if k < d0 or d0 == d1 else 0.62 * _suave((loc - 0.15) / 0.5)
+            if nivel <= 0.01:
+                continue
+            a = tira["cx"][k] - x0 - tira["tw"] / 2
+            if a > W or a + tira["tw"] < 0:
+                continue
+            d.rounded_rectangle((a - 6, tira["ty"] - 150, a + tira["tw"] + 6, tira["ty"] + tira["th"] + 6),
+                                radius=tira["radio"] + 6, fill=(4, 8, 16, int(255 * nivel)))
+    if e.get("flecha_nivel"):
+        p = _suave((loc - 0.1) / max(0.3, frena * 1.15))
+        x = tira["cx"][d0] + (tira["cx"][d1] - tira["cx"][d0]) * p - x0
+        punta = tira["ty"] - 150 + 4 * math.sin(loc * 6.5) * (p >= 1) + 10 * abs(math.sin(loc * 6.5)) * (p >= 1)
+        largo, cab, ancho = 92, 46, 40
+        for grosor, color, extra in ((34, (255, 255, 255, 240), 7), (20, ROJO + (255,), 0)):
+            d.line([(x, punta - largo - extra), (x, punta - cab)], fill=color, width=grosor)
+            d.polygon([(x, punta + extra), (x - ancho - extra, punta - cab - extra * 0.5),
+                       (x + ancho + extra, punta - cab - extra * 0.5)], fill=color)
     img = img.convert("RGBA")
     img.alpha_composite(capa)
     return img.convert("RGB")
@@ -1450,7 +1579,9 @@ def _renderizar(carpeta: CarpetaProyecto, ffmpeg: str, destino: Path | None, des
         cx = [int(c * esc_f) + pad for c in armada.centros_x]
         vx0, vy0, vx1, vy1 = (int(v * esc_f) for v in armada.caja_villano)
         tira = {"bases": bases, "cx": cx, "caja": (vx0 + pad, vy0, vx1 + pad, vy1),
-                "g": int(t.borde_grosor * esc_f), "bloque": int(t.pixel_bloque * esc_f), "color": t.brillo_villano}
+                "g": int(t.borde_grosor * esc_f), "bloque": int(t.pixel_bloque * esc_f), "color": t.brillo_villano,
+                "tw": t.tarjeta_ancho * esc_f, "th": t.tarjeta_alto * esc_f, "ty": t.y_tarjeta * esc_f,
+                "radio": int(t.radio * esc_f)}
 
     def cuadro_tira(centro: float, pixelado: bool, bloque_revelar: int | None = None) -> Image.Image:
         base = tira["bases"]["p" if pixelado else "n"]
@@ -1516,6 +1647,8 @@ def _renderizar(carpeta: CarpetaProyecto, ffmpeg: str, destino: Path | None, des
                 d0, d1 = e["desde"] - 1, e["hasta"] - 1
                 cen = tira["cx"][d0] + (tira["cx"][d1] - tira["cx"][d0]) * _suave(loc / min(0.8, dur * 0.5))
             img = cuadro_tira(cen, e.get("villano_pixelado", True))
+            if not e.get("pasar") and (e.get("atenuar_vistos") or e.get("flecha_nivel")):
+                img = _tira_guia(img, tira, cen, e, loc, min(0.8, dur * 0.5))
             if e.get("temblor") and loc > 0.8:
                 amp = 5 * min(1, (loc - 0.8) / 1.5)
                 img = _camara(img, 1.02, (0.5, 0.5), temblor.uniform(-amp, amp), temblor.uniform(-amp, amp))
@@ -1533,8 +1666,10 @@ def _renderizar(carpeta: CarpetaProyecto, ffmpeg: str, destino: Path | None, des
             if entrada or vaiven:
                 ddx = ddy = 0.0
                 esc_obj = 1.0
-                if entrada and loc < entrada.get("dur", 0.42):
-                    p = loc / entrada.get("dur", 0.42)
+                # «retraso»: la imagen espera tapada (tarjeta de la especie) y entra cuando esta se va
+                loc_e = loc - entrada.get("retraso", 0.0) if entrada else loc
+                if entrada and loc_e < entrada.get("dur", 0.42):
+                    p = max(0.0, loc_e) / entrada.get("dur", 0.42)
                     # «suave»: se desliza y frena sin pasarse (Peligro Tropical); si no, con rebote
                     curva = _sale(p) if entrada.get("curva") == "suave" else _atras(p)
                     if "entrada_abajo" in ef:
@@ -1617,6 +1752,12 @@ def _renderizar(carpeta: CarpetaProyecto, ffmpeg: str, destino: Path | None, des
         esc_p = ef.get("escala_peligro")
         if not en_reaccion and esc_p and esc_p["en"] <= tt < esc_p["en"] + esc_p["dur"]:
             img, en_reaccion = _cuadro_escala(papel, esc_p["valor"], tt - esc_p["en"]), True
+        pres = ef.get("presentacion_especie")
+        if not en_reaccion and pres and pres["en"] <= tt < pres["en"] + pres["dur"]:
+            img, en_reaccion = _presentacion(raiz, pres, tt - pres["en"]), True
+        pal = ef.get("palabra_completa")
+        if not en_reaccion and pal and pal["en"] <= tt < pal["en"] + pal["dur"]:
+            img, en_reaccion = _palabra_completa(pal, tt - pal["en"]), True
         if "icono_advertencia" in ef and not en_reaccion:
             img = _poner_icono(img, ef["icono_advertencia"], tt)
         if "etiqueta" in ef and not en_reaccion:

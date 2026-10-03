@@ -95,3 +95,92 @@ def test_render_de_un_tramo_con_todo(estilo):
     c, _ = _proyecto(estilo, n=3)
     f = renderizar(c, ffmpeg(), c.ruta / "render" / "t.mp4", avisar=lambda _: None, salida=(320, 180, 3), procesos=1)
     assert f.exists() and f.stat().st_size > 0
+
+
+def _proyecto_niveles(estilo, n_niveles=4):
+    """Tira de niveles + una escena después de cada nivel + fotos seguidas (pila) + un término técnico."""
+    from estudio.edicion import construir_edl
+    from estudio.esquemas import EscenasV2
+    from estudio.proyecto import CarpetaProyecto
+
+    c = CarpetaProyecto.crear("Niveles", "animales-peligrosos", estilo.id, 60, slug="niveles")
+    for carpeta in ("imagenes", "assets", "audio"):
+        (c.ruta / carpeta).mkdir(exist_ok=True)
+    escenas, t, eid = [], 0.0, 1
+    for i in range(1, 5):                          # la tira siempre tiene 4 niveles (mínimo)
+        im = Image.new("RGB", (640, 480), (128, 128, 128))
+        im.paste((180, 60 + 40 * i, 40), (180, 120, 460, 380))
+        im.save(c.ruta / "assets" / f"tira_{i}.png")
+    for i in range(1, n_niveles + 1):
+        escenas.append({"id": eid, "seccion": f"Nivel {i}", "narracion": f"Nivel {i}: el bicho {i}.",
+                        "intencion": "transicion_de_seccion", "intensidad": 3,
+                        "visual": {"accion": "reusar", "reusar_de": f"tira_{i}"},
+                        "tiempo": {"real_inicio": t, "real_fin": t + 3.7}})
+        t, eid = t + 4.0, eid + 1
+        # tres fotos seguidas (escena completa = foto vieja en recuadro): la pila crece
+        for k in range(3):
+            Image.new("RGB", (640, 360), (40 + 60 * k, 90 + 30 * i, 160)).save(c.ruta / "imagenes" / f"e{eid}.png")
+            narr = "Suelta cantaridina por las patas." if k == 1 else f"Mira cómo se mueve el bicho {i}."
+            escenas.append({"id": eid, "seccion": f"Nivel {i}", "narracion": narr, "intencion": "explicacion",
+                            "intensidad": 2, "visual": {"accion": "generar", "tipo": "escena_cartoon_completa",
+                                                        "prompt": "x", "archivo": f"imagenes/e{eid}.png"},
+                            "tiempo": {"real_inicio": t, "real_fin": t + 2.7}})
+            t, eid = t + 3.0, eid + 1
+    doc = {"video": "Niveles", "canal": "animales-peligrosos", "estilo": estilo.id,
+           "assets": [{"id": f"tira_{i}", "tipo": "animal", "archivo": f"assets/tira_{i}.png"}
+                      for i in range(1, 5)],
+           "niveles": [{"numero": i, "nombre": f"Bicho {i}", "asset": f"tira_{i}", "villano": i == 4}
+                       for i in range(1, 5)],
+           "escenas": escenas}
+    c.guardar_escenas(EscenasV2.model_validate(doc))
+    (c.ruta / "direccion.json").write_text(json.dumps({"terminos": {"3": "cantaridina"}}), "utf-8")
+    with wave.open(str(c.ruta / "audio" / "voz.wav"), "wb") as w:
+        w.setnchannels(1); w.setsampwidth(2); w.setframerate(48000)
+        w.writeframes(np.zeros(int(48000 * (t + 2)), "<i2").tobytes())
+    return c, construir_edl(c)
+
+
+def _efecto(clip, nombre):
+    return next((x for x in clip["efectos"] if x["efecto"] == nombre), None)
+
+
+def test_tira_oscurece_lo_visto_y_presenta_cada_especie(estilo):
+    _, edl = _proyecto_niveles(estilo)
+    clips = edl["pistas"]["escenas"]
+    tiras = [c for c in clips if c["modo"] == "tira"]
+    assert all(_efecto(c, "tira_deslizar_a_nivel").get("flecha_nivel") for c in tiras)
+    assert all(_efecto(c, "tira_deslizar_a_nivel").get("atenuar_vistos") for c in tiras)
+    pres = [_efecto(c, "presentacion_especie") for c in clips if _efecto(c, "presentacion_especie")]
+    # una por especie, menos el villano (su momento es la revelación)
+    assert [p["numero"] for p in pres] == [1, 2, 3] and pres[0]["nombre"] == "Bicho 1"
+    assert all(1.2 <= p["dur"] <= 1.9 for p in pres)
+
+
+def test_pila_que_crece_y_cada_foto_entra_de_lado(estilo):
+    _, edl = _proyecto_niveles(estilo)
+    clips = edl["pistas"]["escenas"]
+    tras_tira = clips[1:4]
+    pilas = [_efecto(c, "pila_fotos") for c in tras_tira]
+    assert [len(p["debajo"]) for p in pilas] == [0, 1, 2]
+    assert pilas[2]["debajo"][-1]["archivo"] == tras_tira[1]["archivo"]
+    assert pilas[2]["debajo"][0]["decor"] is True and pilas[2]["debajo"][1]["decor"] is False
+    for c in tras_tira[1:]:
+        assert _efecto(c, "entrada_lado")
+    # la tira corta la pila: después de un nivel empieza una nueva
+    assert len(_efecto(clips[5], "pila_fotos")["debajo"]) == 0
+
+
+def test_termino_tecnico_a_pantalla_completa(estilo):
+    _, edl = _proyecto_niveles(estilo)
+    c = next(c for c in edl["pistas"]["escenas"] if c["escena"] == 3)
+    p = _efecto(c, "palabra_completa")
+    assert p and p["texto"] == "cantaridina" and p["dur"] >= 0.8
+
+
+def test_render_con_tira_tarjeta_pila_y_termino(estilo):
+    from estudio.pipeline import ffmpeg
+    from estudio.render import renderizar
+
+    c, _ = _proyecto_niveles(estilo, n_niveles=2)
+    f = renderizar(c, ffmpeg(), c.ruta / "render" / "n.mp4", avisar=lambda _: None, salida=(320, 180, 3), procesos=1)
+    assert f.exists() and f.stat().st_size > 0
