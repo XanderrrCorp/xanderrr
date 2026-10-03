@@ -30,3 +30,22 @@ Primera lectura (antes de ver todas las tandas):
   deslizándose + zoom lento; animales en foto realista en la tira.
 - Construir: logo del canal fijo en una esquina; en la tira, oscurecer los niveles anteriores y flecha roja
   animada entre tarjetas.
+
+## Tanda 2 (03-10)
+
+6. Animal **recortado** (ilustración detallada, casi realista, contorno negro) sobre la cuadrícula; título
+   **«Muy aterrador»** arriba en letra negra redondeada **sin borde**, con una **flecha curva negra** que baja
+   hasta el animal; **triángulo amarillo de advertencia** a la izquierda.
+7. El presentador realista otra vez, ahora con **cara preocupada** (cambia de expresión según lo que dice).
+8. El stickman **asustado** (sudor, ojos rojos, mano en la cabeza) y arriba a la derecha **«Ten cuidado»**
+   (blanco con borde negro) con un **triángulo rojo de advertencia** debajo.
+9. Ilustración del animal en un **recuadro grande** (casi todo el ancho, sin marco rojo), título **«Muy
+   peligroso»** arriba, **triángulo de advertencia rojo/blanco** sobre el animal y una **flecha roja recta**
+   señalando el detalle peligroso.
+10. El stickman **pensativo** (mano en la barbilla), solo, en el centro de la cuadrícula.
+
+Primera lectura de la tanda 2:
+- Ya lo hace Xandart: título arriba (texto_pantalla), ícono de advertencia, flecha roja al detalle, flecha
+  curva negra (efecto «dato»), poses del personaje (susto, pensativo).
+- Ajustar: el título puede ir en negro sin borde sobre la cuadrícula (además del blanco con borde);
+  triángulo de advertencia también en rojo; la flecha curva del «dato» también puede bajar desde un título.
