@@ -126,3 +126,23 @@ Primera lectura de la tanda 6:
   rótulos a mano con flechas; **mini historias** del personaje (antes/después con rótulo «Unas horas después»).
 - Ojo: la escena de la mano con ampollas es un efecto en la salud; se dibuja sin detalle gráfico y se
   censura lo desagradable (como ellos), sin dar dosis ni tratamientos.
+
+## Tanda 7 (03-10)
+
+31. **Video real a pantalla completa** del insecto (clip de naturaleza, sin marco), solo con subtítulo.
+32. **Dato histórico**: título **«Los romanos:»** arriba, el animal recortado en el centro y **de fondo una
+    foto real borrosa del lugar** (el Coliseo): el fondo cambia a una foto desenfocada del sitio del que habla
+    la voz, en vez de la cuadrícula.
+33. El stickman **asustado señalando** al animal recortado (al otro lado de la pantalla), **flecha roja** hacia
+    el animal y un **«?»** encima del animal: personaje y animal **en el mismo plano**, uno frente al otro.
+34. **Otro animal** que nombra la voz (una gallina) recortado sobre la cuadrícula, título **«En los animales»**
+    arriba a la izquierda con **flecha curva negra** hacia él.
+35. Escena **ilustrada completa** de la acción (la gallina a punto de picar al insecto sobre una flor) con una
+    **flecha roja curva** que marca el movimiento.
+
+Primera lectura de la tanda 7:
+- Ya lo hace Xandart: video real a pantalla completa (Pexels verificado), animal recortado con título y
+  flecha curva, escenas completas, flecha roja, «?».
+- Construir: **fondo de foto real borrosa del lugar** (Pexels, desenfocada) detrás del animal recortado
+  cuando la voz habla de un sitio o una época; **personaje y animal en el mismo plano** (dos recortes, el
+  personaje señalando al animal); **flecha roja curva** (además de la recta) para marcar un movimiento.
