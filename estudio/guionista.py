@@ -77,7 +77,8 @@ Responde SOLO con esto, sin nada antes ni después:
 TITULO: <título del video, gancho de YouTube>
 NIVEL: 1 | <nombre del animal> | <english description of the animal for a card: species, colors, pose, magnified, whole body visible and centered> | no
 NIVEL: 2 | ... | ... | no
-(uno por nivel, en orden; en el último, el villano, pon «si» al final)
+(uno por nivel, en orden; en el último, el villano, pon «si» al final. MÁXIMO 8 niveles y mínimo 4: si el
+tema pide más animales, elige los más fuertes; el video no puede mostrar más de 8 en la tira)
 SECCION: Gancho
 <una escena por línea: solo lo que dice la voz>
 <otra escena>
@@ -132,8 +133,12 @@ def leer_historia(texto: str, usa_niveles: bool = True) -> dict:
     secciones = [(n, ls) for n, ls in secciones if ls]
     if not usa_niveles and titulo and len(secciones) >= 3:
         return {"titulo": titulo, "niveles": [], "secciones": secciones}
-    if not titulo or len(niveles) < 4 or len(niveles) > 8 or len(secciones) < 3:
-        raise ValueError(f"historia incompleta: título={bool(titulo)}, niveles={len(niveles)}, secciones={len(secciones)}")
+    if len(niveles) > 8:
+        raise ValueError(f"escribiste {len(niveles)} niveles y el máximo es 8: quédate con los 5 a 7 más fuertes "
+                         "(de menos a más peligroso, el villano al final) y quita las secciones de los demás")
+    if not titulo or len(niveles) < 4 or len(secciones) < 3:
+        raise ValueError(f"historia incompleta: título={bool(titulo)}, niveles={len(niveles)} (van de 4 a 8), "
+                         f"secciones={len(secciones)}")
     return {"titulo": titulo, "niveles": niveles, "secciones": secciones}
 
 
@@ -511,7 +516,7 @@ def escribir_guion(encargo: Encargo, estilo: Estilo, carpeta: Path, canal: str,
         avisar("Retomando la historia ya escrita…")
     else:
         avisar("Claude está escribiendo la historia…")
-    for intento in range(0 if historia else 2):
+    for intento in range(0 if historia else 3):
         texto, sobre = ejecutar(prompt if not error else
                                 prompt + f"\n\n== CORRIGE ==\nTu respuesta anterior falló: {error}. "
                                          "Devuelve la historia completa en el formato pedido.", cwd=carpeta)
@@ -525,7 +530,7 @@ def escribir_guion(encargo: Encargo, estilo: Estilo, carpeta: Path, canal: str,
             avisar(f"  historia: intento {intento + 1} no válido ({error[:120]})")
     else:
         if historia is None:
-            raise claude_cli.ErrorClaude(f"La historia no quedó válida tras dos intentos: {error}")
+            raise claude_cli.ErrorClaude(f"La historia no quedó válida tras tres intentos: {error}")
     sobre = locals().get("sobre") or {}
     if niveles_fijos:
         # mismo tema que un video anterior: los niveles (y sus tarjetas ya hechas) se conservan

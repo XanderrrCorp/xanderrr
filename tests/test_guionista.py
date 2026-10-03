@@ -224,3 +224,10 @@ def test_a_escenas_guarda_lugar_rotulos_y_salto(estilo):
     assert direccion["lugares"][k] == "roman colosseum"
     assert direccion["rotulos"][k] == ["Burbujas", "Irritación", "x"]
     assert direccion["saltos"][k] == "Unas horas después" and direccion["terminos"][k] == "cerca"
+
+
+def test_demasiados_niveles_explica_el_maximo():
+    lineas = ["TITULO: Bichos"] + [f"NIVEL: {i} | Bicho {i} | bug {i} | {'si' if i == 16 else 'no'}" for i in range(1, 17)]
+    lineas += ["SECCION: Gancho", "Hola.", "SECCION: Nivel 1 · Bicho 1", "Uno.", "SECCION: Cierre", "Chao."]
+    with pytest.raises(ValueError, match="16 niveles y el máximo es 8"):
+        leer_historia("\n".join(lineas))
