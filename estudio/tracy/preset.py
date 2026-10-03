@@ -19,7 +19,10 @@ POR_DEFECTO: dict[str, Any] = {
     "voz_id": "moss_audio_5f02d02b-2e0e-11f1-803b-3af0d76118b0",   # voz del canal Tracy (None = la de proveedores.json)
     "velocidad": 1.0,               # ritmo natural de seminario (los stickman van a 1,3; aquí sonaba muy rápido)
     "clip_base": r"C:\Users\USUARIO\Videos\el mero mero.mp4",
-    "proporcion_seminario": 0.4,    # 40 % seminario / 60 % stock
+    "proporcion_seminario": 0.4,    # (ya no se usa: el seminario va en cortes cortos intercalados)
+    "seminario_s": 6.0,             # cada corte del seminario dura esto; luego 1, 2 o los stock que hagan falta
+    "barras_cine": True,            # franjas negras arriba y abajo en todo el video
+    "alto_barras": 130,             # px de cada franja (en 1080: formato de cine ~2,35:1)
     "musica": r"C:\Users\USUARIO\Videos\musica tracy.mp3",   # de fondo, bajita; si no existe, sin música
     "volumen_musica_db": -16.0,     # respecto a la voz: se oye bien y no tapa (a -24 se oía muy bajo)
     "clip_max_s": 30.0,
@@ -81,6 +84,9 @@ def completar(tracy: dict[str, Any] | None) -> dict[str, Any]:
     p["bloque_tts_max"] = int(p["bloque_tts_max"])
     p["volumen_musica_db"] = max(-40.0, min(0.0, float(p["volumen_musica_db"])))
     p["velocidad"] = max(0.7, min(1.5, float(p["velocidad"])))
+    p["seminario_s"] = max(3.0, min(12.0, float(p["seminario_s"])))
+    p["alto_barras"] = max(0, min(200, int(p["alto_barras"])))
+    p["barras_cine"] = bool(p["barras_cine"])
     p["escena_final_desde"] = float(p["escena_final_desde"])
     if not 0.05 <= p["escena_final_desde"] <= 1:
         raise ValueError("escena_final_desde va de 0,05 a 1 (1 = sin escena final)")

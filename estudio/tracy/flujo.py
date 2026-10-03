@@ -85,6 +85,9 @@ def paso_visual(c: CarpetaProyecto, avisar=print, ejecutar=None, sesion=None, pr
 
     duracion = float(leer_json(c.ruta / "segmentos.json")["duracion"])
     plan = marcar_final(plan, duracion, preset["escena_final_desde"], preset["proporcion_seminario"])
+    from .planificador import tomas
+
+    plan = tomas(plan, preset["seminario_s"])
     avisar("Buscando los clips (Pexels y seminario)…")
     r = elegir_clips(c, plan, preset, ffmpeg(), avisar=avisar, sesion=sesion or requests)
     preset["presentador"] = encontrar(preset.get("presentador"), EXT_IMAGEN) or preset.get("presentador")

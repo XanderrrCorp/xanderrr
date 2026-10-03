@@ -305,3 +305,29 @@ def test_canal_viejo_recibe_voz_normal_y_musica_mas_alta():
     elegido = completar({"velocidad": 1.1, "volumen_musica_db": -20})       # lo que el dueño elige se respeta
     assert elegido["velocidad"] == 1.1 and elegido["volumen_musica_db"] == -20
     assert ajustes_voz(viejo)["velocidad"] == 1.0                            # no la de los stickman (1,3)
+
+
+def test_seminario_corto_intercalado_con_stock_hasta_la_escena_final():
+    from estudio.tracy.planificador import tomas
+
+    plan = [{"id": 0, "type": "stock", "inicio": 0.0, "fin": 15.0, "duracion": 15.0, "keywords": ["a"], "mood": "calm"},
+            {"id": 1, "type": "seminar", "inicio": 15.0, "fin": 24.0, "duracion": 9.0, "keywords": ["b"], "mood": "calm"},
+            {"id": 2, "type": "stock", "inicio": 24.0, "fin": 30.0, "duracion": 6.0, "keywords": ["c"], "mood": "calm"},
+            {"id": 3, "type": "final", "inicio": 30.0, "fin": 45.0, "duracion": 15.0, "keywords": ["d"], "mood": "calm"}]
+    t = tomas(plan, 6.0)
+    assert [x["type"] for x in t] == ["seminar", "stock", "seminar", "stock", "seminar", "final"]
+    assert [x["duracion"] for x in t][:2] == [6.0, 9.0]
+    assert all(a["fin"] == b["inicio"] for a, b in zip(t, t[1:]))          # sin huecos
+    assert [x["id"] for x in t] == list(range(len(t)))
+
+
+def test_barras_de_cine_y_boton_debajo_de_ellas(tmp_path):
+    from estudio.tracy.ensamblar import comando_tramo
+
+    clip = {"id": 0, "tipo": "final", "archivo": "f.mp4", "desde": 0, "inicio": 40.0, "fin": 50.0}
+    cmd = comando_tramo("ffmpeg", clip, [], tmp_path / "o.mp4",
+                        {"particulas": "p.mp4", "voz": "v.wav", "presentador": None, "suscribete": ("s", 2.0)}, 130)
+    filtro = cmd[cmd.index("-filter_complex") + 1]
+    assert "drawbox=x=0:y=0:w=iw:h=130" in filtro and "y=ih-130" in filtro
+    assert "y=140:eof_action=pass" in filtro and "y=H-h-170" in filtro       # botón y ondas fuera de las barras
+    assert cmd[cmd.index("-map") + 1] == "[cine]"

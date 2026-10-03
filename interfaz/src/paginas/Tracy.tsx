@@ -9,7 +9,7 @@ interface EstadoTracy {
   canal: string; clip_base: string; clip_existe: boolean; musica: string; musica_existe: boolean;
   presentador: string; presentador_existe: boolean; escena_final_desde: number;
   proporcion_seminario: number; voz_id: string | null; whisper: boolean;
-  velocidad: number; volumen_musica_db: number;
+  velocidad: number; volumen_musica_db: number; seminario_s: number; barras_cine: boolean;
 }
 
 type Que = 'seminario' | 'musica' | 'presentador';
@@ -77,11 +77,10 @@ export function Tracy() {
       ir(`/tracy/${v.slug}`);
     } catch (e) { setError((e as Error).message); } finally { setEnviando(false); }
   };
-  const ajustar = async (cuerpo: Record<string, number>) => {
+  const ajustar = async (cuerpo: Record<string, number | boolean>) => {
     try { setEst(await api<EstadoTracy>('/api/tracy/ajustes', { cuerpo })); }
     catch (e) { setError((e as Error).message); }
   };
-  const proporcion = (x: number) => ajustar({ proporcion_seminario: x });
 
   return (
     <div className="pagina tracy">
@@ -99,11 +98,16 @@ export function Tracy() {
           <Archivo titulo="Presentador de la escena final" que="presentador" ruta={est.presentador}
             existe={est.presentador_existe} ayuda="Una imagen (mejor PNG sin fondo). Va a la izquierda, en blanco y negro."
             alCambiar={setEst} />
-          <label className="campo">Parte de seminario: {Math.round(est.proporcion_seminario * 100)} % (el resto, stock)
-            <input type="range" min={0} max={0.6} step={0.05} defaultValue={est.proporcion_seminario}
-              onMouseUp={(e) => proporcion(+(e.target as HTMLInputElement).value)}
-              onTouchEnd={(e) => proporcion(+(e.target as HTMLInputElement).value)}
-              onKeyUp={(e) => proporcion(+(e.target as HTMLInputElement).value)} />
+          <label className="campo">Cada corte del seminario dura {Math.round(est.seminario_s)} s; después van 1, 2 o los
+            clips de stock que hagan falta, y así se intercala hasta la escena final
+            <input type="range" min={3} max={12} step={1} defaultValue={est.seminario_s}
+              onMouseUp={(e) => ajustar({ seminario_s: +(e.target as HTMLInputElement).value })}
+              onTouchEnd={(e) => ajustar({ seminario_s: +(e.target as HTMLInputElement).value })}
+              onKeyUp={(e) => ajustar({ seminario_s: +(e.target as HTMLInputElement).value })} />
+          </label>
+          <label className="campo tr-check">
+            <span><input type="checkbox" checked={est.barras_cine}
+              onChange={(e) => ajustar({ barras_cine: e.target.checked })} /> Barras negras de cine arriba y abajo</span>
           </label>
           <label className="campo">
             {est.escena_final_desde >= 1 ? 'Sin escena final (clips hasta el final)'

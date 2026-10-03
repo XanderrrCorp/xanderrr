@@ -108,7 +108,7 @@ def _codec(ffmpeg: str) -> list[str]:
 
 
 def comando_tramo(ffmpeg: str, clip: dict, subs: list[tuple[Path, float, float]], salida: Path,
-                  final: dict | None = None) -> list[str]:
+                  final: dict | None = None, barras: int = 0) -> list[str]:
     """`final` (solo en la escena final): {"particulas", "voz", "presentador"?, "suscribete"?: (carpeta, en_s)}."""
     n = _cuadros(clip["fin"]) - _cuadros(clip["inicio"])
     dur = n / FPS
@@ -131,7 +131,7 @@ def comando_tramo(ffmpeg: str, clip: dict, subs: list[tuple[Path, float, float]]
                   f"[b][p]blend=all_mode=screen,format=yuv420p[f0];"
                   f"[2:a]asetpts=PTS-STARTPTS,apad,showfreqs=s=520x140:mode=bar:ascale=sqrt:fscale=log:win_size=2048:colors=white,"
                   f"fps={FPS},format=rgba,colorkey=black:0.3:0.1[ondas];"
-                  f"[f0][ondas]overlay=x=W-w-70:y=H-h-40:eof_action=pass[f1]")
+                  f"[f0][ondas]overlay=x=W-w-70:y=H-h-{40 + barras}:eof_action=pass[f1]")
         actual, k = "f1", 3
         if final.get("presentador"):
             cmd += ["-i", str(final["presentador"])]
@@ -141,7 +141,7 @@ def comando_tramo(ffmpeg: str, clip: dict, subs: list[tuple[Path, float, float]]
             carpeta, en = final["suscribete"]
             cmd += ["-framerate", str(FPS), "-i", str(Path(carpeta) / "s_%03d.png")]
             filtro += (f";[{k}:v]setpts=PTS-STARTPTS+{en:.3f}/TB[sus];"
-                       f"[{actual}][sus]overlay=x=W-w-10:y=10:eof_action=pass:"
+                       f"[{actual}][sus]overlay=x=W-w-10:y={10 + barras}:eof_action=pass:"
                        f"enable='between(t,{en:.3f},{en + 3.5:.3f})'[f3]")
             actual, k = "f3", k + 1
         filtro += f";[{actual}]null[v0]"
@@ -154,7 +154,13 @@ def comando_tramo(ffmpeg: str, clip: dict, subs: list[tuple[Path, float, float]]
     for j, (_, a, b) in enumerate(subs):
         filtro += (f";[v{j}][{primero + j}:v]overlay=x=(W-w)/2:y=(H-h)/2:"
                    f"enable='between(t,{a:.3f},{b:.3f})'[v{j + 1}]")
-    cmd += ["-filter_complex", filtro, "-map", f"[v{len(subs)}]", "-frames:v", str(n), "-an",
+    salida_v = f"v{len(subs)}"
+    if barras:
+        # franjas negras de cine arriba y abajo (encima de todo, menos los subtítulos que van al centro)
+        filtro += (f";[{salida_v}]drawbox=x=0:y=0:w=iw:h={barras}:color=black:t=fill,"
+                   f"drawbox=x=0:y=ih-{barras}:w=iw:h={barras}:color=black:t=fill[cine]")
+        salida_v = "cine"
+    cmd += ["-filter_complex", filtro, "-map", f"[{salida_v}]", "-frames:v", str(n), "-an",
             *_codec(ffmpeg), "-pix_fmt", "yuv420p", "-r", str(FPS), str(salida)]
     return cmd
 
@@ -252,7 +258,8 @@ def ensamblar(carpeta: CarpetaProyecto, ffmpeg: str, avisar=print, progreso=None
             en = extra["momentos"].get(clip["id"])
             final = {"particulas": extra["particulas"], "voz": extra["voz"], "presentador": extra["presentador"],
                      "suscribete": (extra["carpeta_sus"], en) if en is not None else None}
-        r = subprocess.run(comando_tramo(ffmpeg, clip, subs, salida, final), capture_output=True, text=True,
+        barras = int(preset.get("alto_barras", 130)) if preset.get("barras_cine", True) else 0
+        r = subprocess.run(comando_tramo(ffmpeg, clip, subs, salida, final, barras), capture_output=True, text=True,
                            encoding="utf-8", errors="replace")
         if r.returncode != 0 or not salida.exists():
             raise RuntimeError(f"FFmpeg falló en el segmento {clip['id']}: {(r.stderr or '')[-400:]}")

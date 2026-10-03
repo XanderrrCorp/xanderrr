@@ -185,3 +185,35 @@ def marcar_final(plan: list[dict], duracion: float, desde: float, proporcion: fl
     ids_antes = {p["id"] for p in antes}
     antes = ajustar([{**p, "type": "stock" if p["type"] == "final" else p["type"]} for p in antes], proporcion)
     return antes + [{**p, "type": "final"} for p in plan if p["id"] not in ids_antes]
+
+
+def tomas(plan: list[dict], seminario_s: float = 6.0, stock_objetivo_s: float = 7.0) -> list[dict]:
+    """Lo que se ve, toma por toma (lo que pidió el dueño): en cada segmento antes de la escena final va
+    primero un corte corto del seminario (~6 s) y después 1, 2 o los clips de stock que hagan falta para
+    llenar el resto. Así se intercala seminario → stock → seminario → stock… hasta la escena final, que
+    queda igual (una toma por segmento, el mismo fondo en bucle).
+    Un segmento muy corto lleva una sola toma, alternando con la anterior para no repetir seminario."""
+    salida: list[dict] = []
+    ultimo = None
+
+    def agregar(base: dict, tipo: str, a: float, b: float) -> None:
+        nonlocal ultimo
+        salida.append({**base, "id": len(salida), "segmento": base["id"], "type": tipo,
+                       "inicio": round(a, 3), "fin": round(b, 3), "duracion": round(b - a, 3)})
+        ultimo = tipo
+
+    for p in plan:
+        a, b = float(p["inicio"]), float(p["fin"])
+        dur = b - a
+        if p["type"] == "final":
+            agregar(p, "final", a, b)
+            continue
+        if dur < seminario_s + 2.5:                              # muy corto: una sola toma
+            agregar(p, "stock" if ultimo == "seminar" else "seminar", a, b)
+            continue
+        agregar(p, "seminar", a, a + seminario_s)
+        resto = b - (a + seminario_s)
+        n = max(1, round(resto / stock_objetivo_s))
+        for k in range(n):
+            agregar(p, "stock", a + seminario_s + resto * k / n, a + seminario_s + resto * (k + 1) / n)
+    return salida
