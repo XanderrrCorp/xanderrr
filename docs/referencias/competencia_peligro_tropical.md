@@ -85,3 +85,22 @@ Primera lectura de la tanda 4:
 - Ajustar: que flecha y título entren **en momentos distintos** sobre la misma imagen (escalonados).
 - Construir: **tarjeta de presentación de cada especie** («1- Nombre» + foto real en marco blanco sobre fondo
   oscuro) al empezar cada nivel/especie.
+
+## Tanda 5 (03-10)
+
+21. Foto real en **marco rojo** con título **«En general, inocente»** arriba y el stickman **sonriente**
+    asomado por el borde izquierdo **señalando la foto** (la expresión cambia con lo que dice la voz).
+22. El **«No muerde»** con ✕ roja, animal a la derecha y **flecha curva negra** (igual a lo que ya hicimos).
+23. Presentador realista con **cara de sorpresa señalando a cámara** («a explicar por qué»).
+24. Escena **ilustrada completa** (el animal sobre una hoja) con **la mano del personaje** (guante blanco y
+    reloj, el mismo del stickman) acercándose a tocarlo y una **flecha roja corta** en el punto de contacto:
+    acciones del texto («si lo aplastas») mostradas con la mano del personaje en primera persona.
+25. La misma acción en otro encuadre (la mano ya encima del animal): **dos imágenes seguidas** de la misma
+    acción para que se sienta movimiento.
+
+Primera lectura de la tanda 5:
+- Ya lo hace Xandart: foto real en marco rojo con el personaje señalando, «dato» con ✕ y flecha curva, flecha
+  roja, escenas completas, punto de vista del personaje (pov_personaje).
+- Ajustar: que la cara del personaje que señala cambie según la emoción (sonríe, se asusta); para acciones
+  («si lo tocas», «si lo aplastas») pedir la mano del personaje en primera persona y a veces dos imágenes
+  seguidas de la misma acción.
