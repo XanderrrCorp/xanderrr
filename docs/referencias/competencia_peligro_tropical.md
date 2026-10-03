@@ -146,3 +146,8 @@ Primera lectura de la tanda 7:
 - Construir: **fondo de foto real borrosa del lugar** (Pexels, desenfocada) detrás del animal recortado
   cuando la voz habla de un sitio o una época; **personaje y animal en el mismo plano** (dos recortes, el
   personaje señalando al animal); **flecha roja curva** (además de la recta) para marcar un movimiento.
+
+36. **Vista de rayos X** del animal afectado (la gallina con el esqueleto y los órganos a la vista) sobre una
+    plataforma, en el **fondo azul oscuro con textura** de los momentos graves; título **«Daño grave»** arriba a
+    la izquierda y **flecha roja** señalando. Muestra el daño por dentro sin sangre ni nada gráfico.
+    - Construir/ajustar: tipo de imagen «rayos X / corte por dentro» para explicar daños sin mostrar heridas.
