@@ -164,6 +164,8 @@ def _recortar_sonidos(sfx: list, n_clips: int, total: float, perfil, rng: random
         vistos.add(clave)
         unicos.append(x)
     vivos = sorted(unicos, key=lambda x: x["inicio"])
+    # sonidos que el perfil deja repetir (p. ej. el swoosh de cada entrada de lado en Peligro Tropical)
+    libres = {r.split(":", 1)[1] for r in getattr(perfil, "recursos_exentos_de_uso_maximo", []) if r.startswith("sfx:")}
 
     def quitar(cand):
         cand.sort(key=lambda x: (x["prioridad"], -x["inicio"]))
@@ -177,12 +179,12 @@ def _recortar_sonidos(sfx: list, n_clips: int, total: float, perfil, rng: random
         for x in vivos:
             por_tipo.setdefault(x["tipo"], set()).add(x["clip"])
         for x in list(vivos):
-            if x["clip"] - 1 in por_tipo.get(x["tipo"], ()) and x["prioridad"] < 5:
+            if x["clip"] - 1 in por_tipo.get(x["tipo"], ()) and x["prioridad"] < 5 and x["tipo"] not in libres:
                 vivos.remove(x)
                 cambio = True
                 break
     tope = max(1, int(perfil.uso_maximo_por_recurso * n_clips))
-    for tipo in {x["tipo"] for x in vivos}:
+    for tipo in {x["tipo"] for x in vivos} - libres:
         while len({x["clip"] for x in vivos if x["tipo"] == tipo}) > tope:
             clips = {}
             for x in vivos:
@@ -241,6 +243,45 @@ def _mov(tipo: str | None, rng: random.Random, maximo: float) -> tuple[dict | No
     if tipo == "entrada_rebote":
         return {"tipo": "entrada_rebote", "de": 1.045, "a": 1.0, "curva": "ease_out", "punto_foco": foco}, []
     return None, []
+
+
+# lo que aparece encima de la imagen y se escalona (no todo a la vez)
+ESCALONABLES = ("circulo_rojo", "oscurecer_fondo", "flecha", "lupa", "etiqueta", "icono_advertencia",
+                "signos_pregunta", "dato")
+SEPARACION_ELEMENTOS_S = 0.45
+
+
+def _escalonar(clips: list, textos: list, sfx: list) -> None:
+    """Como en la competencia: primero entra la imagen, luego el título y después cada elemento (flecha,
+    «?», dato…) uno tras otro, nunca todos juntos ni encima de la entrada. Se corre lo que haga falta
+    (con su sonido); si ya no cabe antes del final de la escena, se deja donde estaba."""
+    por_escena = {int(t["id"][1:]): t for t in textos}
+    for c in clips:
+        entrada = next((x for x in c["efectos"] if x["efecto"] in ("entrada_abajo", "entrada_lado", "entrada_rebote")), None)
+        libre = c["inicio"] + (entrada.get("dur", 0.42) + 0.1 if entrada else 0.15)
+        grupos: dict[float, list] = {}
+        for x in c["efectos"]:
+            if x["efecto"] in ESCALONABLES and "en" in x:
+                grupos.setdefault(x["en"], []).append(x)
+        titulo = por_escena.get(c["escena"])
+        if titulo is not None and not (c["inicio"] - 0.01 <= titulo["inicio"] < c["fin"]):
+            titulo = None
+        eventos = sorted([(en, "e", g) for en, g in grupos.items()]
+                         + ([(titulo["inicio"], "t", titulo)] if titulo else []), key=lambda z: (z[0], z[1] != "t"))
+        for en, tipo, cosa in eventos:
+            nuevo = round(max(en, libre), 3)
+            if nuevo > c["fin"] - 0.7:
+                nuevo = en                      # no cabe más tarde: se queda
+            if nuevo != en:
+                for s in sfx:
+                    if s["tipo"] == "pop" and abs(s["inicio"] - en) < 0.02:
+                        s["inicio"] = nuevo
+                if tipo == "t":
+                    cosa["inicio"] = nuevo
+                else:
+                    for x in cosa:
+                        x["en"] = nuevo
+            libre = max(libre, nuevo + SEPARACION_ELEMENTOS_S)
 
 
 def _equilibrar_movimientos(clips: list, perfil, rng: random.Random, maximo: float) -> None:
@@ -533,7 +574,11 @@ def construir_edl(carpeta: CarpetaProyecto) -> dict:
     # todo lo que da dopamina (zooms de golpe, entradas con rebote, ráfagas, pops y swoosh) pero la imagen
     # ya no se mece sola todo el tiempo: el dueño lo sintió como «demasiado movimiento en las fotos»
     movido = clasica
-    vaiven_siempre = clasica and perfil.movimiento != "sin_vaiven"
+    vaiven_siempre = clasica and perfil.movimiento == "normal"
+    # «deslizar» (Peligro Tropical, como la competencia): nada se mece ni tiembla; casi cada imagen entra
+    # deslizándose de lado con swoosh y después se acerca despacio
+    deslizar = perfil.movimiento == "deslizar"
+    lado_entrada = "derecha"
     direccion = leer_json(carpeta.ruta / "direccion.json") if (carpeta.ruta / "direccion.json").exists() else {}
     focos = direccion.get("focos") or {}
     rng = random.Random(proyecto.semilla)
@@ -672,9 +717,11 @@ def construir_edl(carpeta: CarpetaProyecto) -> dict:
             if mov_nombre == "zoom_golpe" and previo_golpe:
                 mov_nombre = "zoom_lento"
             sutil = False
+            if deslizar and mov_nombre in (None, "alejamiento_lento", "paneo_lento", "entrada_rebote"):
+                mov_nombre = "zoom_lento"                  # todo se acerca despacio después de entrar
             if mov_nombre is None and rng.random() < 0.8:
                 mov_nombre, sutil = "zoom_lento", True    # la gramática no pide nada: un respiro muy leve
-            elif mov_nombre and rng.random() < 0.07 and mov_nombre not in ("zoom_golpe", "entrada_rebote"):
+            elif mov_nombre and not deslizar and rng.random() < 0.07 and mov_nombre not in ("zoom_golpe", "entrada_rebote"):
                 mov_nombre = None      # algunas quietas para que se noten las demás
             if mov_nombre == "zoom_golpe":
                 foco = [round(rng.uniform(0.42, 0.58), 3), round(rng.uniform(0.40, 0.54), 3)]
@@ -685,7 +732,9 @@ def construir_edl(carpeta: CarpetaProyecto) -> dict:
             else:
                 movimiento, extra = _mov(mov_nombre, rng, estilo.movimiento_maximo)
                 efectos += extra
-                if sutil and movimiento:
+                if deslizar and movimiento and movimiento["tipo"] == "zoom_lento":
+                    movimiento["a"] = round(1 + rng.uniform(0.04, 0.06), 3)
+                elif sutil and movimiento:
                     movimiento["a"] = round(1 + rng.uniform(0.012, 0.022), 3)
             # ráfaga: 2 o 3 acercamientos cortos al ritmo de un latido, solo en tension_creciente
             if (e.intencion == "tension_creciente" and dur >= 1.8 and not previo_rafaga
@@ -707,7 +756,7 @@ def construir_edl(carpeta: CarpetaProyecto) -> dict:
                         _sfx(sfx, "latido", tt - 0.03, idx, f"Latido {k + 1} de la ráfaga de tensión")
                     razon = (razon + "; " if razon else "") + "Ráfaga de acercamientos con latidos: la tensión sube"
             # 14.4: temblor leve solo en amenaza o tensión creciente, y no siempre
-            if e.intencion in ("amenaza", "tension_creciente") and rng.random() < 0.5 \
+            if e.intencion in ("amenaza", "tension_creciente") and not deslizar and rng.random() < 0.5 \
                     and not any(x["efecto"] == "rafaga" for x in efectos):
                 efectos.append({"efecto": "temblor_leve", "amplitud": 3})
             if regla.get("transicion") in ("fundido_corto", "fundido") and idx > 0:
@@ -739,7 +788,8 @@ def construir_edl(carpeta: CarpetaProyecto) -> dict:
                         usos_cambio["lupa"] += 1
                         razon = (razon + "; " if razon else "") + f"Lupa con el detalle «{f.get('palabra') or ''}»"
                     else:
-                        efectos.append({"efecto": "flecha", "en": t0, "caja": f["caja"], "desde": lado})
+                        efectos.append({"efecto": "flecha", "en": t0, "caja": f["caja"], "desde": lado,
+                                        **({"curva": True} if deslizar else {})})
                         usos_cambio["flecha"] += 1
                         razon = (razon + "; " if razon else "") + f"Flecha que señala «{f.get('palabra') or 'el detalle'}»"
                     ultima_flecha = t0
@@ -812,7 +862,8 @@ def construir_edl(carpeta: CarpetaProyecto) -> dict:
                 efectos = [x for x in efectos if x["efecto"] not in ("etiqueta", "icono_advertencia", "flecha",
                                                                      "lupa", "circulo_rojo", "reencuadre")]
                 t_dato = round(min(ini + rng.uniform(0.25, 0.45), fin - 1.0), 3)
-                efectos.append({"efecto": "dato", "en": t_dato, "texto": dato["texto"], "icono": dato["icono"]})
+                efectos.append({"efecto": "dato", "en": t_dato, "texto": dato["texto"], "icono": dato["icono"],
+                                **({"vivo": True} if deslizar else {})})
                 _sfx(sfx, "pop", t_dato, idx, f"Pop con el dato «{dato['texto']}»")
                 razon = (razon + "; " if razon else "") + f"Dato clave al lado: «{dato['texto']}»"
             sonido = regla.get("sonido")
@@ -827,13 +878,26 @@ def construir_edl(carpeta: CarpetaProyecto) -> dict:
                 and not any(x["efecto"] == "revelar_pixelado" for x in efectos):
             opciones = ["entrada_abajo", "entrada_lado", "entrada_rebote"]
             con_cupo = [o for o in opciones if usos_entrada[o] / (idx + 1) < tope_recurso and o != ultima_entrada]
-            if con_cupo and rng.random() < (0.85 if movido else 0.35):   # la calmada: pocas entradas
+            if deslizar:
+                # la mayoría de lado (alternando derecha e izquierda); a ratos sube desde abajo
+                con_cupo = ["entrada_abajo"] if ultima_entrada != "entrada_abajo" and rng.random() < 0.25 \
+                    else ["entrada_lado"]
+            if con_cupo and rng.random() < (0.92 if deslizar else 0.85 if movido else 0.35):   # la calmada: pocas
                 o = min(con_cupo, key=lambda r: (usos_entrada[r], rng.random()))
                 usos_entrada[o] += 1
                 ultima_entrada = o
                 datos = {"efecto": o, "dur": round(rng.uniform(0.36, 0.48), 2)}
+                if deslizar:
+                    # se desliza suave (sin pasarse) y un poco más lento
+                    datos.update({"dur": round(rng.uniform(0.5, 0.62), 2), "curva": "suave"})
                 if o == "entrada_lado":
-                    datos["desde"] = rng.choice(["izquierda", "derecha"])
+                    if deslizar:
+                        lado_entrada = "izquierda" if lado_entrada == "derecha" else "derecha"
+                        if rng.random() < 0.2:
+                            lado_entrada = rng.choice(["izquierda", "derecha"])
+                        datos["desde"] = lado_entrada
+                    else:
+                        datos["desde"] = rng.choice(["izquierda", "derecha"])
                 efectos.append(datos)
                 sonido_entrada = "pop"
                 if clasica and o == "entrada_lado":
@@ -845,7 +909,7 @@ def construir_edl(carpeta: CarpetaProyecto) -> dict:
                 razon = (razon + "; " if razon else "") + {"entrada_abajo": "la imagen sale desde abajo",
                                                            "entrada_lado": "la imagen entra de lado",
                                                            "entrada_rebote": "la imagen aparece con rebote"}[o]
-        if modo not in ("tira", "pantalla_completa") and (vaiven_siempre or rng.random() < 0.25):
+        if modo not in ("tira", "pantalla_completa") and not deslizar and (vaiven_siempre or rng.random() < 0.25):
             # clásica: vaivén en todas (como los peces del Amazonas); calmada o sin vaivén: leve y solo a ratos
             efectos.append({"efecto": "vaiven", "hz": round(rng.uniform(0.55, 0.85) if vaiven_siempre else rng.uniform(0.4, 0.6), 2),
                             "px": round(rng.uniform(4, 7) if vaiven_siempre else rng.uniform(2, 3.5), 1),
@@ -865,8 +929,12 @@ def construir_edl(carpeta: CarpetaProyecto) -> dict:
         t = (direccion.get("textos") or {}).get(str(e.id))
         if t:
             ti = _en_texto(e.narracion, t.get("palabra", ""), e.tiempo.real_inicio, e.tiempo.real_fin)
+            estilo_t = "titulo_contorno"
+            if estilo.titulo == "negro":
+                # negro sin borde sobre la hoja; con triángulo rojo cuando la escena advierte de un peligro
+                estilo_t = "titulo_negro_alerta" if e.intencion in ("amenaza", "advertencia") else "titulo_negro"
             textos.append({"id": f"t{e.id:03d}", "inicio": round(ti, 3), "fin": fin, "texto": t["texto"],
-                           "estilo": "titulo_contorno", "posicion": "arriba_centro",
+                           "estilo": estilo_t, "posicion": "arriba_centro",
                            "razon": "Refuerza la idea clave cuando la voz la dice"})
             _sfx(sfx, "pop", ti, idx, f"Pop con el texto «{t['texto']}»: entra un dato clave")
         # --- subtítulos por trozos
@@ -879,6 +947,8 @@ def construir_edl(carpeta: CarpetaProyecto) -> dict:
             acum += len(tr)
             t1 = a + (b - a) * acum / largo
             subtitulos.append({"inicio": round(t0, 3), "fin": round(max(t1, t0 + 0.2), 3), "texto": tr, "escena": e.id})
+    if deslizar:
+        _escalonar(clips, textos, sfx)
     for e, c in zip(escenas, clips):
         v = (direccion.get("video_escena") or {}).get(str(e.id))
         if v and (carpeta.ruta / v["archivo"]).exists():

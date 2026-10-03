@@ -170,6 +170,9 @@ class Estilo(Modelo):
     ocultar_villano: bool = True
     # Logo del canal fijo abajo a la derecha en todo el video (ruta dentro de la carpeta del estilo)
     marca_agua: str | None = None
+    # «negro»: títulos de arriba en negro sin borde (con triángulo rojo en amenazas), como en la hoja
+    # cuadriculada de la competencia; «contorno»: blancos con borde negro
+    titulo: Literal["contorno", "negro"] = "contorno"
     # tipos de escena que solo muestran al animal: se pueden cambiar por una foto o video real de Pexels
     tipos_reemplazables_por_foto_real: list[str] = []
     poses_canal: list["PoseCanal"] = []
@@ -247,7 +250,9 @@ class PerfilEdicion(Modelo):
     # pops, whoosh y cámara. «calmada»: menos movimiento, escenas a pantalla completa y música suave.
     estilo_edicion: Literal["clasica", "calmada"] = "clasica"
     # «sin_vaiven»: la imagen no se mece sola en cada escena (zooms, entradas y ráfagas siguen igual)
-    movimiento: Literal["normal", "sin_vaiven"] = "normal"
+    # «deslizar» (Peligro Tropical): nada se mece ni tiembla; casi todo entra deslizándose de lado con
+    # swoosh y se acerca despacio; flechas curvas que se mueven y elementos que aparecen uno tras otro
+    movimiento: Literal["normal", "sin_vaiven", "deslizar"] = "normal"
 
 
 # ---------------------------------------------------------- perfil_canal.json

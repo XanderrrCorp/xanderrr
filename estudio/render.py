@@ -241,8 +241,13 @@ class Escenario:
                 x, y = _x(d.width), int(H * 0.50 - d.height / 2)
                 self.ubicacion[clip["id"]] = (x - caja[0] * k, y - caja[1] * k, img.width * k, img.height * k)
                 zona = np.asarray(lienzo.crop((x, y, x + d.width, y + d.height)).convert("RGB"), np.float32)
-                mult = zona * np.asarray(d, np.float32) / 255
+                dibujo = np.asarray(d, np.float32)
+                mult = zona * dibujo / 255
                 lienzo.paste(Image.fromarray(mult.astype("uint8")), (x, y))
+                # capa suelta para que también pueda entrar deslizándose: lo blanco queda transparente
+                tinta = np.clip((255 - dibujo.min(axis=2)) / 255 * 4, 0, 1)
+                capa = Image.fromarray(np.dstack([dibujo, tinta * 255]).astype("uint8"), "RGBA")
+                self.capas[clip["id"]] = ((Image.new("RGBA", (1, 1), (0, 0, 0, 0)), (x, y)), (capa, (x, y)))
             else:
                 rec = quitar_fondo_liso(img)
                 caja = rec.getbbox() or (0, 0, img.width, img.height)
@@ -434,9 +439,49 @@ class Foco:
         return img
 
 
+def _flecha_curva(img: Image.Image, ef: dict, ubic: tuple, tt: float) -> Image.Image:
+    """Flecha roja curva con borde blanco (Peligro Tropical): se dibuja desde la cola hasta la punta y
+    después no se queda quieta: «pica» hacia el detalle una y otra vez, como señalándolo."""
+    x0, y0, x1, y1 = _caja_px(ubic, ef["caja"])
+    cy = (y0 + y1) / 2
+    izq = ef.get("desde", "izquierda") == "izquierda"
+    punta = np.array([x0 - 12 if izq else x1 + 12, cy])
+    s = 1 if izq else -1
+    arriba = -1 if cy > H * 0.45 else 1                 # la cola va hacia donde haya más espacio
+    cola = punta + np.array([-s * 330, arriba * 230])
+    ctrl = punta + np.array([-s * 340, arriba * 10])      # la curva se abre hacia afuera
+    loc = tt - ef["en"]
+    avance = _sale(loc / 0.32)
+    if avance < 0.05:
+        return img
+    # pica: va y viene sobre su eje con un pequeño giro
+    pica = 14 * abs(math.sin(loc * 5.2)) * min(1.0, max(0.0, (loc - 0.32) / 0.2))
+    ts = np.linspace(0, avance, 36)
+    pts = np.array([(1 - t) ** 2 * cola + 2 * (1 - t) * t * ctrl + t ** 2 * punta for t in ts])
+    u = pts[-1] - pts[-2]
+    u = u / (np.linalg.norm(u) + 1e-6)
+    pts = pts + u * pica
+    capa = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    d = ImageDraw.Draw(capa)
+    fin = pts[-1]
+    n = np.array([-u[1], u[0]])
+    for grosor, color, extra in ((30, (255, 255, 255, 235), 8), (18, ROJO + (255,), 0)):
+        base = fin - u * 44
+        cuerpo = [tuple(p) for p in pts if np.dot(p - base, u) < 0] + [tuple(base)]
+        if len(cuerpo) > 1:
+            d.line(cuerpo, fill=color, width=grosor, joint="curve")
+        d.polygon([tuple(fin + u * (12 + extra)), tuple(base + n * (34 + extra) - u * extra),
+                   tuple(base - n * (34 + extra) - u * extra)], fill=color)
+    img = img.convert("RGBA")
+    img.alpha_composite(capa)
+    return img.convert("RGB")
+
+
 def _flecha(img: Image.Image, ef: dict, ubic: tuple, tt: float) -> Image.Image:
     if not ubic or tt < ef["en"]:
         return img
+    if ef.get("curva"):
+        return _flecha_curva(img, ef, ubic, tt)
     x0, y0, x1, y1 = _caja_px(ubic, ef["caja"])
     cy = (y0 + y1) / 2
     izq = ef.get("desde", "izquierda") == "izquierda"
@@ -481,6 +526,38 @@ def _icono_advertencia(tam: int) -> Image.Image:
 
 
 _ICONO = {}
+
+
+def _triangulo_rojo(tam: int) -> Image.Image:
+    """Triángulo de advertencia rojo con «!» blanco y borde blanco (al lado de los títulos de peligro)."""
+    im = Image.new("RGBA", (tam, tam), (0, 0, 0, 0))
+    d = ImageDraw.Draw(im)
+    m = tam * 0.04
+    d.polygon([(tam / 2, m), (tam - m, tam - m * 1.6), (m, tam - m * 1.6)], fill=(255, 255, 255, 255))
+    k = tam * 0.09
+    d.polygon([(tam / 2, m + k * 1.7), (tam - m - k * 1.6, tam - m * 1.6 - k), (m + k * 1.6, tam - m * 1.6 - k)],
+              fill=ROJO + (255,))
+    f = _fuente(int(tam * 0.5))
+    caja = d.textbbox((0, 0), "!", font=f)
+    d.text(((tam - (caja[2] - caja[0])) / 2 - caja[0], tam * 0.60 - (caja[3] - caja[1]) / 2 - caja[1]), "!",
+           font=f, fill=(255, 255, 255, 255))
+    return im
+
+
+def _titulo_negro(texto: str, alerta: bool = False) -> Image.Image:
+    """Título de arriba en negro redondeado SIN borde (sobre la hoja cuadriculada); con alerta lleva el
+    triángulo rojo de advertencia a la izquierda."""
+    letras = _texto_img(texto, 96, 0, color=(20, 16, 12))
+    if letras.width > W - 260:
+        k = (W - 260) / letras.width
+        letras = letras.resize((int(letras.width * k), int(letras.height * k)), Image.Resampling.LANCZOS)
+    if not alerta:
+        return letras
+    tri = _triangulo_rojo(int(letras.height * 1.15))
+    im = Image.new("RGBA", (tri.width + 22 + letras.width, max(tri.height, letras.height)), (0, 0, 0, 0))
+    im.alpha_composite(tri, (0, (im.height - tri.height) // 2))
+    im.alpha_composite(letras, (tri.width + 22, (im.height - letras.height) // 2))
+    return im
 
 
 def _poner_icono(img: Image.Image, ef: dict, tt: float) -> Image.Image:
@@ -584,7 +661,10 @@ def _poner_dato(img: Image.Image, ef: dict, tt: float, fin: float) -> Image.Imag
     if avance > 0.02:
         p0, p1, p2 = np.array([W * 0.53, H * 0.34]), np.array([W * 0.47, H * 0.17]), np.array([W * 0.41, H * 0.31])
         ts = np.linspace(0, avance, 40)
-        pts = [tuple((1 - t) ** 2 * p0 + 2 * (1 - t) * t * p1 + t ** 2 * p2) for t in ts]
+        # «vivo» (Peligro Tropical): la punta no se queda quieta, va y viene señalando el texto
+        mueve = 12 * math.sin(loc * 5.2) * min(1.0, max(0.0, (loc - 0.5) / 0.2)) if ef.get("vivo") else 0.0
+        pts = [tuple((1 - t) ** 2 * p0 + 2 * (1 - t) * t * p1 + t ** 2 * p2 + np.array([-mueve, mueve * 0.4]) * t)
+               for t in ts]
         capa = Image.new("RGBA", (W, H), (0, 0, 0, 0))
         d = ImageDraw.Draw(capa)
         d.line(pts, fill=(20, 16, 12, int(255 * salida)), width=9, joint="curve")
@@ -1455,10 +1535,12 @@ def _renderizar(carpeta: CarpetaProyecto, ffmpeg: str, destino: Path | None, des
                 esc_obj = 1.0
                 if entrada and loc < entrada.get("dur", 0.42):
                     p = loc / entrada.get("dur", 0.42)
+                    # «suave»: se desliza y frena sin pasarse (Peligro Tropical); si no, con rebote
+                    curva = _sale(p) if entrada.get("curva") == "suave" else _atras(p)
                     if "entrada_abajo" in ef:
-                        ddy = (1 - _atras(p)) * H * 0.75
+                        ddy = (1 - curva) * H * 0.75
                     elif "entrada_lado" in ef:
-                        ddx = (1 - _atras(p)) * W * 0.7 * (-1 if entrada.get("desde") == "izquierda" else 1)
+                        ddx = (1 - curva) * W * 0.7 * (-1 if entrada.get("desde") == "izquierda" else 1)
                     else:
                         esc_obj = 0.5 + 0.5 * _atras(p)
                 if vaiven:
@@ -1558,11 +1640,29 @@ def _renderizar(carpeta: CarpetaProyecto, ffmpeg: str, destino: Path | None, des
         # --- textos en pantalla
         for t in textos if not vertical else ():
             if t["inicio"] <= tt < t["fin"]:
-                k = ("T", t["texto"])
+                negro = str(t.get("estilo", "")).startswith("titulo_negro")
+                if negro:
+                    # negro sin borde solo si debajo hay papel claro (sobre una foto oscura no se leería)
+                    franja = np.asarray(img.crop((W // 4, 20, W * 3 // 4, 150)).resize((48, 8)), np.float32)
+                    negro = float(franja.mean()) > 150
+                k = ("T", t["texto"], negro, t.get("estilo"))
                 if k not in cache_txt:
                     titulo = t["texto"].capitalize() if t["texto"].isupper() else t["texto"]
-                    cache_txt[k] = _texto_img(titulo, 92, 11)          # título arriba: blanco con borde negro
+                    if negro:
+                        cache_txt[k] = _titulo_negro(titulo, t.get("estilo") == "titulo_negro_alerta")
+                    else:
+                        cache_txt[k] = _texto_img(titulo, 92, 11)          # título arriba: blanco con borde negro
                 ti = cache_txt[k]
+                if negro:
+                    # entra con un pop que rebota, como los demás elementos
+                    l = tt - t["inicio"]
+                    esc = _sale(l / 0.12) * (1.0 + 0.18 * math.exp(-l * 9) * math.cos(l * 16))
+                    if esc < 0.05:
+                        continue
+                    ti2 = ti if abs(esc - 1) < 0.004 else ti.resize(
+                        (max(1, int(ti.width * esc)), max(1, int(ti.height * esc))), Image.Resampling.BICUBIC)
+                    img.paste(ti2, ((W - ti2.width) // 2, 30 + (ti.height - ti2.height) // 2), ti2)
+                    continue
                 a = _suave((tt - t["inicio"]) / 0.12)
                 if a < 1:
                     ti2 = ti.copy()

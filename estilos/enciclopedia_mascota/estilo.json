@@ -74,7 +74,7 @@
     "recuadro_sobre_papel"
   ],
   "gramatica_edicion": "gramaticas/estandar.json",
-  "perfil_edicion": "perfiles/enciclopedia_ritmo_alto.json",
+  "perfil_edicion": "perfiles/peligro_tropical.json",
   "movimiento_maximo": 0.05,
   "subtitulos": {
     "estilo": "blanco_contorno_negro",
@@ -248,5 +248,6 @@
     "amenaza_cinematografica",
     "diagrama_fondo_blanco"
   ],
-  "marca_agua": "assets/canal/marca_agua.png"
+  "marca_agua": "assets/canal/marca_agua.png",
+  "titulo": "negro"
 }

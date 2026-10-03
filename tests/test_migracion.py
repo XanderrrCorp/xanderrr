@@ -14,8 +14,7 @@ def _instalacion_vieja(tmp_path):
     raiz = tmp_path / "instalacion"
     shutil.copytree(RAIZ / "estilos", raiz / "estilos")
     shutil.copytree(RAIZ / "canales", raiz / "canales")
-    (raiz / "perfiles").mkdir(parents=True)
-    shutil.copy(RAIZ / "perfiles" / "enciclopedia_ritmo_alto.json", raiz / "perfiles")
+    shutil.copytree(RAIZ / "perfiles", raiz / "perfiles")
     proyectos = tmp_path / "proyectos"
     (proyectos / "peces").mkdir(parents=True)
     (proyectos / "peces" / "proyecto.json").write_text(json.dumps({

@@ -30,7 +30,9 @@ CAMBIOS_DE_ESTILO: list[tuple[str, str]] = [
 CUADRICULA = {"tipo": "cuadricula", "valor": "assets/papel_arrugado.png"}
 CAMPOS: dict[str, dict] = {
     # (03-10) logo de Peligro Tropical abajo a la derecha en todo el video, como la competencia
-    "enciclopedia_mascota": {"fondo_montaje": CUADRICULA, "marca_agua": "assets/canal/marca_agua.png"},
+    # y la edición de la competencia: entradas deslizándose, sin vaivén, títulos negros (perfil propio)
+    "enciclopedia_mascota": {"fondo_montaje": CUADRICULA, "marca_agua": "assets/canal/marca_agua.png",
+                             "perfil_edicion": "perfiles/peligro_tropical.json", "titulo": "negro"},
     "paradoja_sapiens": {"fondo_montaje": CUADRICULA,
                          "movimiento_maximo": 0.05, "perfil_edicion": "perfiles/paradoja_documental.json"},
 }
