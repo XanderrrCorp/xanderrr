@@ -10,6 +10,17 @@ from typing import Any
 CLAVE_CANAL = "el-calvo-explica"
 NOMBRE_CANAL = "El Calvo Explica"          # provisional: el nombre público lo da el dueño después
 
+# Cara por defecto de cada pose en este canal (pedido del dueño): amable; preocupada solo en confundido,
+# encogido de hombros y acostado. Ojos y cara siguen siendo piezas aparte (parpadeo y cambios de gesto).
+GESTO_POR_POSE = {
+    "de_pie": "amable", "senalando": "amable", "sentado": "amable", "corriendo": "concentrado",
+    "agachado": "concentrado", "asustado": "susto",
+    "tablero": "seguro", "pensando": "pensativo", "confundido": "duda", "hombros": "neutral",
+    "sorprendido": "sorpresa", "aliviado": "aliviado", "idea": "contento", "acostado": "neutral",
+    "rechazo": "disgusto", "senalando_contento": "contento",
+}
+OJOS_POR_POSE = {"acostado": "cerrados", "rechazo": "otro_lado"}
+
 POR_DEFECTO: dict[str, Any] = {
     "voz_id": None,                 # None = la de proveedores.json (la misma de Peligro Tropical)
     "velocidad": 1.0,               # tono calmado (Peligro Tropical va a 1,3)

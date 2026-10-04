@@ -92,12 +92,25 @@ POSES: dict[str, dict] = {
         "pierna_atras": [(-16, -96), (-24, -8)], "pierna_frente": [(16, -96), (24, -8)],
         "dedo": True, "bombillo": True,
     },
+    "rechazo": {                       # cara girada, mano abierta levantada hacia lo que le disgusta (a la derecha)
+        "cadera": (0, -190), "cuello": (-10, -322), "hombro": (-8, -300),
+        "brazo_atras": [(-46, -244), (-56, -172)], "brazo_frente": [(72, -296), (126, -340)],
+        "pierna_atras": [(-20, -96), (-30, -8)], "pierna_frente": [(14, -96), (20, -8)],
+        "mano_abierta": True, "cara_girada": -1,
+    },
+    "senalando_contento": {            # sonríe y señala hacia un lado con el índice
+        "cadera": (0, -190), "cuello": (0, -322), "hombro": (0, -300),
+        "brazo_atras": [(-40, -240), (-50, -168)], "brazo_frente": [(76, -296), (156, -300)],
+        "pierna_atras": [(-16, -96), (-24, -8)], "pierna_frente": [(16, -96), (24, -8)],
+        "dedo": True,
+    },
 }
 POSES["acostado"] = {**POSES["de_pie"], "acostado": True}    # en la cama: solo la cabeza en la almohada
 
 OJOS = ("abiertos", "cerrados", "lado")
 CARAS = ("neutral", "susto", "alivio", "concentrado")
-CARAS_NUEVAS = ("sorpresa", "duda", "pensativo")
+CARAS_NUEVAS = ("sorpresa", "duda", "pensativo", "amable", "seguro", "aliviado", "contento", "disgusto")
+OJOS_NUEVOS = ("otro_lado",)           # mira hacia la izquierda (cara girada)
 
 
 def _menos(a, b):
@@ -219,7 +232,7 @@ def ojos(estado: str) -> str:
             salida.append(raya(arco(x, OJO_Y + 2, 18, 10, 20, 160), s))
             continue
         salida.append(figura(elipse(x, OJO_Y, 19, 25, n=30), s, BLANCO, amplitud=0.8))
-        dx = 9 if estado == "lado" else 3
+        dx = 9 if estado == "lado" else -7 if estado == "otro_lado" else 3
         salida.append(f'<circle cx="{x + dx}" cy="{OJO_Y + 4}" r="10" fill="{NEGRO}"/>'
                       f'<circle cx="{x + dx + 3}" cy="{OJO_Y}" r="3.2" fill="{BLANCO}"/>')
     return "".join(salida)
@@ -240,12 +253,30 @@ def cara(gesto: str) -> str:
         return (raya(arco(-22, -44, 18, 10, 200, 340, 8), "ceja/sorpresa/0")
                 + raya(arco(30, -44, 18, 10, 200, 340, 8), "ceja/sorpresa/1")
                 + figura(elipse(8, 50, 9, 12, n=18), "boca/sorpresa", NEGRO, amplitud=0.6))
-    elif gesto == "duda":              # una ceja arriba y otra abajo, boca torcida
-        cejas = [[(-38, -50), (-6, -46)], [(14, -62), (46, -52)]]
+    elif gesto == "duda":              # cejas preocupadas, una más alta, boca torcida
+        cejas = [[(-38, -46), (-6, -54)], [(14, -64), (46, -52)]]
         boca = raya([(-4, 50), (6, 44), (16, 50), (26, 44)], "boca/duda")
     elif gesto == "pensativo":         # cejas rectas, la boca chiquita a un lado
         cejas = [[(-38, -48), (-6, -48)], [(14, -50), (46, -46)]]
         boca = raya([(14, 46), (30, 44)], "boca/pensativo")
+    elif gesto == "amable":            # cejas neutras un poco curvas, sonrisa leve
+        return (raya(arco(-22, -42, 18, 7, 200, 340, 8), "ceja/amable/0")
+                + raya(arco(30, -42, 18, 7, 200, 340, 8), "ceja/amable/1")
+                + raya(arco(10, 34, 18, 12, 35, 145, 10), "boca/amable"))
+    elif gesto == "seguro":            # cejas rectas y firmes, media sonrisa
+        cejas = [[(-38, -46), (-6, -48)], [(14, -48), (46, -46)]]
+        boca = raya(arco(14, 32, 20, 13, 25, 140, 10), "boca/seguro")
+    elif gesto == "aliviado":          # cejas relajadas, sonrisa
+        return (raya(arco(-22, -42, 18, 8, 200, 340, 8), "ceja/aliviado/0")
+                + raya(arco(30, -42, 18, 8, 200, 340, 8), "ceja/aliviado/1")
+                + raya(arco(10, 30, 24, 18, 25, 155, 12), "boca/aliviado"))
+    elif gesto == "contento":          # cejas altas y curvas, sonrisa abierta
+        return (raya(arco(-22, -46, 18, 10, 200, 340, 8), "ceja/contento/0")
+                + raya(arco(30, -46, 18, 10, 200, 340, 8), "ceja/contento/1")
+                + figura(arco(10, 34, 26, 20, 0, 180, 14), "boca/contento", ROJO, amplitud=0.6))
+    elif gesto == "disgusto":          # cejas bajas hacia el centro, boca ondulada hacia abajo
+        cejas = [[(-38, -52), (-6, -42)], [(14, -42), (46, -52)]]
+        boca = raya([(-6, 52), (4, 44), (14, 50), (24, 44), (32, 52)], "boca/disgusto")
     else:  # concentrado
         cejas = [[(-38, -50), (-6, -40)], [(14, -40), (46, -50)]]
         boca = raya([(0, 48), (10, 45), (22, 47)], "boca/concentrado")
@@ -267,8 +298,31 @@ def personaje(pose: str = "de_pie", ojo: str = "abiertos", gesto: str = "neutral
     encima = p.get("mano_encima", False)
     if encima:
         extra = _brazo(p["hombro"], p["brazo_frente"], f"cuerpo/{pose}/bf", p.get("dedo", False), color) + extra
+    if p.get("mano_abierta"):
+        extra += _mano_abierta(p["brazo_frente"], color)
+    # cara girada: los rasgos se corren hacia un lado de la cabeza (la cabeza sigue siendo el mismo círculo)
+    giro = float(p.get("cara_girada", 0)) * 34
+    rasgos = f'<g transform="translate({giro:.1f},0)">' + ojos(ojo) + cara(gesto) + "</g>" if giro else ojos(ojo) + cara(gesto)
     return (cuerpo(pose, color, mochila, not encima) + f'<g transform="translate({cx:.1f},{cy:.1f})">'
-            + cabeza() + ojos(ojo) + cara(gesto) + "</g>" + extra)
+            + cabeza() + rasgos + "</g>" + extra)
+
+
+def _mano_abierta(brazo, color: str) -> str:
+    """Palma abierta al final del brazo, con cuatro dedos y el pulgar (gesto de «alto» o rechazo)."""
+    codo, mano = brazo
+    u = _unit(_menos(mano, codo))
+    n = (-u[1], u[0])
+    c = (mano[0] + u[0] * 16, mano[1] + u[1] * 16)
+    salida = []
+    for i, k in enumerate((-1.5, -0.5, 0.5, 1.5)):
+        base = (c[0] + u[0] * 10 + n[0] * k * 13, c[1] + u[1] * 10 + n[1] * k * 13)
+        largo = 40 - abs(k) * 7
+        punta = (base[0] + (u[0] + n[0] * k * 0.18) * largo, base[1] + (u[1] + n[1] * k * 0.18) * largo)
+        salida.append(tubo([base, punta], f"mano/d{i}", color, 10))
+    pulgar = (c[0] + n[0] * 40 - u[0] * 4, c[1] + n[1] * 40 - u[1] * 4)
+    salida.append(tubo([c, pulgar], "mano/p", color, 10))
+    salida.append(figura(elipse(c[0], c[1], 25, 25, n=22), "mano/palma", color))
+    return "".join(salida)
 
 
 def _signos(cx: float, cy: float) -> str:

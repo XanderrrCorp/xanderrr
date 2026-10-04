@@ -73,6 +73,9 @@ app.include_router(api_tracy)
 from .calma.api import rutas as api_calma  # noqa: E402 — Hazlo con Calma (animación por código)
 
 app.include_router(api_calma)
+from .explica.api import rutas as api_explica  # noqa: E402 — El Calvo Explica
+
+app.include_router(api_explica)
 
 
 def _proyecto(slug: str) -> CarpetaProyecto:

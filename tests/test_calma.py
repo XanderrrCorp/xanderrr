@@ -158,7 +158,7 @@ def test_poses_y_caras_nuevas_de_el_calvo_explica():
     from estudio.calma.personaje import CARAS_NUEVAS
 
     nuevas = ("tablero", "pensando", "confundido", "hombros", "sorprendido", "aliviado", "idea", "acostado")
-    assert set(nuevas) <= set(POSES) and len(CARAS_NUEVAS) == 3
+    assert set(nuevas) <= set(POSES) and len(CARAS_NUEVAS) == 8
     for pose in nuevas:
         img, _ = sprite("personaje", {"pose": pose, "gesto": "sorpresa"}, 0.4)
         assert (img[:, :, 3] > 0).mean() > 0.05, pose
@@ -175,3 +175,34 @@ def test_canal_el_calvo_explica_por_defecto():
     assert p["max_ilustraciones"] == 60 and p["fondo"] == "blanco" and p["efectos_sonido"] is False
     assert ajustes_voz(completar(None))["voz_id"] == leer_config("proveedores.json")["voz"]["voz_id"]   # la de PT
     assert "Sin texto" in p["estilo_ilustracion"]
+
+
+def test_caras_por_defecto_de_el_calvo_explica():
+    from estudio.explica.canal import GESTO_POR_POSE, OJOS_POR_POSE
+
+    preocupadas = {"neutral", "duda"}
+    assert {p for p, g in GESTO_POR_POSE.items() if g in preocupadas} == {"confundido", "hombros", "acostado"}
+    assert GESTO_POR_POSE["tablero"] == "seguro" and OJOS_POR_POSE["acostado"] == "cerrados"
+    assert {"rechazo", "senalando_contento"} <= set(POSES)
+    from estudio.calma.piezas import dibujar
+
+    # ojos y cara siguen siendo piezas aparte: cambiar los ojos no cambia el cuerpo
+    a = dibujar("personaje", {"pose": "rechazo", "ojos": "abiertos"}).svg
+    b = dibujar("personaje", {"pose": "rechazo", "ojos": "cerrados"}).svg
+    assert a != b and a.split("<g")[0] == b.split("<g")[0]
+    assert "tab/linea" not in dibujar("tablero", {}).svg                    # tablero vacío
+
+
+def test_muestras_con_proveedor_simulado():
+    from estudio.config import ConfigCostos
+    from estudio.explica import ilustraciones as I
+    from estudio.imagenes.proveedores import ProveedorSimulado
+    from estudio.pipeline import Trabajo
+
+    p = ProveedorSimulado(ConfigCostos.cargar())
+    assert I.costo_muestras(p)["usd"] > 0
+    hechas = I.generar_muestras(Trabajo("muestras"), proveedor=p)
+    assert hechas == ["cama.png", "escalon.png", "brinco.png"]
+    assert all((I.carpeta() / h).exists() for h in hechas)
+    assert I.estado_muestras()["archivos"] == hechas
+    assert "Sin texto" in I.prompt("algo") and (I.carpeta() / "referencia_personaje.png").exists()
