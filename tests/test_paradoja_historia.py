@@ -148,3 +148,19 @@ def test_escenas_grandes_llevan_profundidad():
     _, edl = _proyecto()
     completas = [c for c in edl["pistas"]["escenas"] if c["modo"] == "pantalla_completa"]
     assert completas and all(_ef(c, "profundidad") for c in completas)
+
+
+def test_componer_sin_niveles_usa_la_imagen_vecina():
+    """Un documental (sin niveles) donde el guionista marcó «componer»: no hay tira que mostrar."""
+    from estudio.edicion import construir_edl
+    from estudio.esquemas import EscenasV2
+
+    c, _ = _proyecto()
+    datos = c.cargar_escenas().model_dump()
+    datos["escenas"][1]["visual"] = {"accion": "componer"}
+    datos["escenas"][0]["visual"] = {"accion": "componer"}          # también la primera
+    c.guardar_escenas(EscenasV2.model_validate(datos))
+    edl = construir_edl(c)
+    clips = edl["pistas"]["escenas"]
+    assert all(cl["modo"] != "tira" and "tira" not in cl["archivo"] for cl in clips)
+    assert clips[1]["archivo"] == clips[0]["archivo"]

@@ -688,6 +688,18 @@ def construir_edl(carpeta: CarpetaProyecto) -> dict:
                 else:
                     archivo, tipo = fuente.visual.archivo, fuente.visual.tipo
                 razon = f"Reuso de la imagen de la escena {fuente.id} (referencia a lo ya visto, 14.8)"
+        elif v.accion == "componer" and not esc.niveles:
+            # «mostrar la tira» en un video SIN niveles (documental): no hay tira; se usa la imagen de la
+            # escena anterior (o la próxima que tenga imagen, si es la primera)
+            previo = clips[-1] if clips else None
+            if previo is not None:
+                modo, archivo = previo["modo"], previo["archivo"]
+            else:
+                otra = next((x for x in escenas if x.visual.archivo and (carpeta.ruta / x.visual.archivo).exists()), None)
+                if otra is None:
+                    raise ValueError("la primera escena no tiene imagen y no hay ninguna otra para usar")
+                archivo, tipo = otra.visual.archivo, otra.visual.tipo
+            razon = "Este video no tiene niveles: se mantiene la imagen de la escena vecina"
         elif v.accion == "componer":
             oculto = estilo.ocultar_villano
             modo, archivo = "tira", f"assets/tira/tira_niveles{'_pixelada' if oculto else ''}.png"
