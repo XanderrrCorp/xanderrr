@@ -51,6 +51,14 @@ Estado al 04-10-2026. El repositorio es PÚBLICO: nunca escribir claves, tokens 
   (rembg separa sujeto y fondo; cacheado en assets/capas).
 - Miniatura texto+retrato: 4 opciones por fórmula, Claude lee el guion, paleta automática, fondos que rotan.
 - Arreglos: máximo 8 niveles en el guion, «componer» en video sin niveles usa la imagen vecina.
+- Animación por código (04-10): `estudio/calma/` = personaje en piezas SVG (trazo de marcador, resvg-py), movimientos
+  con rebote, escenas.json atado a palabras de Whisper, render OpenCV+ffmpeg (60 s en ~30 s). Canal «Hazlo con Calma»
+  (supervivencia, página /calma, prueba de la garrapata): guardado TAL CUAL, no tocar; le falta el código de voz.
+- «El Calvo Explica» (nombre interno provisional, `estudio/explica/`, página /explica): cuerpo y mente, molde de 5
+  partes, fondo blanco, voz de Peligro Tropical a 1.0, imágenes por GOOGLE (Together descartado: no volver a
+  proponerlo), cara amable por defecto (GESTO_POR_POSE). Hojas de poses aprobadas. Primer video: «Partes de tu
+  cuerpo que YA NO SIRVEN para nada», 12 temas (lista del dueño, solo sus datos). Muestras: muñeca, piel de gallina,
+  dentista (botón en /explica, ~632 COP); si la muñeca no se entiende, la anatomía va como diagrama por código.
 
 ## Pendiente
 - Preguntas sin responder del dueño: ¿en qué canal notó la voz lenta? (Peligro Tropical está en 1.3 en
@@ -61,3 +69,7 @@ Estado al 04-10-2026. El repositorio es PÚBLICO: nunca escribir claves, tokens 
 - Canal nuevo «Hazlo con Calma»: el dueño mandará capturas y guiones de la competencia; analizar escena por escena
   y sacar la estructura del guion (sin copiar textos) antes de construir.
 - Editor (música, mover, cortar): en pausa por pedido del dueño; backend hecho, sin interfaz.
+- Prueba inestable: 1 de 3 corridas completas falló una prueba (no identificada) el 04-10; el dueño dijo no perseguirla aún.
+- El Calvo Explica, siguiente: el dueño genera las 3 muestras → paso 3 (un tema completo: guion + lista de dudas,
+  cuadrícula, escenas, voz) → video completo. Revisor del guion: aceptar variantes de hipótesis («se cree que»,
+  «lo más probable», «la hipótesis principal») y máximo 2 temas con la misma fórmula.
