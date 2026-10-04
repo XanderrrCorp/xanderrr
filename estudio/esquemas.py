@@ -63,6 +63,8 @@ EFECTOS = (
     "capitulo",
     # bordes oscurecidos de cine sobre las escenas a pantalla completa
     "vineta",
+    # 2.5D: la escena completa separada en fondo y frente que se mueven a distinta velocidad
+    "profundidad",
 )
 # "sfx" no es un efecto visual, pero se sugiere en la misma lista (ver 3.1).
 EFECTOS_SUGERIBLES = EFECTOS + ("sfx",)

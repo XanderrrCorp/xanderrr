@@ -182,6 +182,8 @@ class Escenario:
         self.fondos: dict[str, Image.Image] = {}
         # clip -> zona de escribir de la pizarra (x0, y0, x1, y1), para los rótulos a mano
         self.tablero: dict[str, tuple] = {}
+        # clip -> (fondo, frente) de una escena a pantalla completa separada en capas (o None)
+        self.profundidad: dict[str, tuple | None] = {}
         self._lugares: dict[str, Image.Image] = {}
 
     def _foto_lugar(self, archivo: str) -> Image.Image:
@@ -304,6 +306,11 @@ class Escenario:
             x0, y0 = (d.width - W) // 2, (d.height - H) // 2
             self.ubicacion[clip["id"]] = (-x0, -y0, d.width, d.height)
             final = d.crop((x0, y0, x0 + W, y0 + H))
+            if any(e.get("efecto") == "profundidad" for e in clip.get("efectos", [])) \
+                    and clip["id"] not in self.profundidad:
+                self.profundidad[clip["id"]] = capas_de_profundidad(final, self.raiz, clip["archivo"])
+                if len(self.profundidad) > 8:
+                    self.profundidad.pop(next(iter(self.profundidad)))
             self.cache[clave] = final
             if len(self.cache) > 6:
                 self.cache.pop(next(iter(self.cache)))
@@ -541,6 +548,80 @@ def zoom_con_estela(base: Image.Image, s0: float, s1: float, foco0, foco1, dx: f
         cuadro = np.asarray(_camara(base, s, f, dx, dy).convert("RGB"), np.float32)
         acum = cuadro if acum is None else acum + cuadro
     return Image.fromarray((acum / pasos).astype("uint8"))
+
+
+def mascara_sujeto(img: Image.Image) -> np.ndarray | None:
+    """Alfa (0-255) del sujeto principal de una escena completa, con rembg (gratis, en el PC). None si
+    rembg no está o falla: la escena se queda con el zoom normal."""
+    from .miniaturas.recorte import _rembg
+
+    rgba = _rembg(img.convert("RGB"))
+    if rgba is None:
+        return None
+    return np.asarray(rgba.convert("RGBA").resize(img.size))[:, :, 3]
+
+
+def capas_de_profundidad(img: Image.Image, raiz: Path, archivo: str) -> tuple | None:
+    """Separa la escena en fondo (con el hueco del sujeto rellenado y un poco desenfocado, como la
+    profundidad de campo de una cámara) y frente (el sujeto recortado). Se guarda en assets/capas para
+    no repetirlo. None si el sujeto es muy chico, muy grande o no se pudo separar."""
+    import hashlib
+
+    clave = hashlib.sha1(f"{archivo}|{img.size}".encode()).hexdigest()[:12]
+    carpeta = raiz / "assets" / "capas"
+    f_fondo, f_frente, f_no = carpeta / f"{clave}_fondo.jpg", carpeta / f"{clave}_frente.png", carpeta / f"{clave}.no"
+    if f_no.exists():
+        return None
+    if f_fondo.exists() and f_frente.exists():
+        return Image.open(f_fondo).convert("RGB"), Image.open(f_frente).convert("RGBA")
+    alfa = mascara_sujeto(img)
+    if alfa is None:
+        return None                                    # sin rembg: no se marca, se intenta otra vez después
+    carpeta.mkdir(parents=True, exist_ok=True)
+    fraccion = float((alfa > 128).mean())
+    if not 0.04 <= fraccion <= 0.6 or _cv2 is None:
+        f_no.write_text(f"{fraccion:.3f}")
+        return None
+    rgb = np.asarray(img.convert("RGB"))
+    hueco = _cv2.dilate((alfa > 40).astype("uint8") * 255, np.ones((25, 25), np.uint8))
+    # rellenar el hueco a media resolución (rápido) y llevarlo al tamaño real
+    peq = _cv2.inpaint(_cv2.resize(rgb, (rgb.shape[1] // 2, rgb.shape[0] // 2)),
+                       _cv2.resize(hueco, (rgb.shape[1] // 2, rgb.shape[0] // 2)), 9, _cv2.INPAINT_TELEA)
+    relleno = _cv2.resize(peq, (rgb.shape[1], rgb.shape[0]))
+    fondo = np.where(hueco[..., None] > 0, relleno, rgb)
+    fondo = _cv2.GaussianBlur(fondo, (0, 0), 2.2)
+    a_suave = _cv2.GaussianBlur(alfa, (0, 0), 1.2)
+    frente = np.dstack([rgb, a_suave])
+    Image.fromarray(fondo).save(f_fondo, quality=93)
+    Image.fromarray(frente, "RGBA").save(f_frente)
+    return Image.fromarray(fondo), Image.fromarray(frente, "RGBA")
+
+
+def _capa_camara(rgba: Image.Image, s: float, foco: tuple[float, float], dx: float = 0.0) -> np.ndarray:
+    """Como _camara pero para una capa con transparencia (lo de afuera queda transparente)."""
+    w, h = W / s, H / s
+    cx = min(max(foco[0] * W + dx, w / 2), W - w / 2)
+    cy = min(max(foco[1] * H, h / 2), H - h / 2)
+    x0, y0 = cx - w / 2, cy - h / 2
+    kx, ky = w / W, h / H
+    m = np.float32([[kx, 0, x0 + 0.5 * kx - 0.5], [0, ky, y0 + 0.5 * ky - 0.5]])
+    return _cv2.warpAffine(np.asarray(rgba), m, (W, H), flags=_cv2.INTER_LINEAR | _cv2.WARP_INVERSE_MAP,
+                           borderMode=_cv2.BORDER_CONSTANT, borderValue=(0, 0, 0, 0))
+
+
+def con_profundidad(capas: tuple, s: float, foco: tuple[float, float], p: float) -> Image.Image:
+    """2.5D: el fondo se mueve la mitad y el frente más que la cámara, y se separan un poco de lado: la
+    imagen fija parece filmada con una cámara que se desplaza."""
+    fondo, frente = capas
+    s_fondo = 1.0 + (s - 1.0) * 0.5 + 0.01
+    s_frente = 1.0 + (s - 1.0) * 1.6 + 0.02
+    deriva = 14 * (p - 0.5)
+    f_frente = (0.5 + (foco[0] - 0.5) * 1.7, foco[1])
+    img = _capa_camara(fondo.convert("RGBA"), s_fondo, foco, deriva)
+    capa = _capa_camara(frente, s_frente, f_frente, -deriva)
+    alfa = capa[:, :, 3:4].astype(np.float32) / 255
+    mezcla = img[:, :, :3] * (1 - alfa) + capa[:, :, :3] * alfa
+    return Image.fromarray(mezcla.astype("uint8"))
 
 
 DUR_BARRIDO = 0.2
@@ -2034,7 +2115,10 @@ def _renderizar(carpeta: CarpetaProyecto, ffmpeg: str, destino: Path | None, des
                 a = ef["temblor_leve"].get("amplitud", 3)
                 dx, dy = temblor.uniform(-a, a), temblor.uniform(-a, a)
             previo = zoom_previo.get(c["id"])
-            if previo is not None and abs(s - previo[0]) > 0.006 and _cv2 is not None:
+            capas_p = escenario.profundidad.get(c["id"]) if c["modo"] == "pantalla_completa" else None
+            if capas_p is not None and _cv2 is not None:
+                img = con_profundidad(capas_p, s, foco, max(0.0, min(1.0, p)))
+            elif previo is not None and abs(s - previo[0]) > 0.006 and _cv2 is not None:
                 img = zoom_con_estela(base, previo[0], s, previo[1], foco, dx, dy)   # zoom rápido: con estela
             else:
                 img = _camara(base, s, foco, dx, dy)

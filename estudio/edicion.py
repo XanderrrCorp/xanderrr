@@ -793,6 +793,9 @@ def construir_edl(carpeta: CarpetaProyecto) -> dict:
             foco = [round(rng.uniform(0.45, 0.55), 3), round(rng.uniform(0.42, 0.52), 3)]
             movimiento = {"tipo": "zoom_lento", "de": 1.0, "a": round(1 + rng.uniform(0.05, 0.08), 3),
                           "punto_foco": foco}
+        if deslizar and modo == "pantalla_completa" and not zonas:
+            # aspecto de editor: el sujeto se separa del fondo y se mueven a distinta velocidad (2.5D)
+            efectos.append({"efecto": "profundidad"})
         elif modo != "tira":
             if mov_nombre == "zoom_golpe" and previo_golpe:
                 mov_nombre = "zoom_lento"

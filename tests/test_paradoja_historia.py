@@ -108,3 +108,43 @@ def test_barridos_entre_escenas_grandes_con_swoosh():
     assert con_barrido and all(c["modo"] == "pantalla_completa" for c in con_barrido)
     swoosh = {round(s["inicio"], 2) for s in edl["pistas"]["sfx"] if s["tipo"] == "barrido"}
     assert all(round(c["inicio"], 2) in swoosh for c in con_barrido)
+
+
+def _escena_con_sujeto(ruta):
+    from PIL import ImageDraw
+
+    im = Image.new("RGB", (1280, 720), (60, 110, 160))
+    d = ImageDraw.Draw(im)
+    for x in range(0, 1280, 80):                                    # fondo con rayas (para ver el movimiento)
+        d.rectangle((x, 0, x + 40, 720), fill=(70, 125, 175))
+    d.ellipse((520, 180, 760, 600), fill=(230, 160, 40))           # el sujeto
+    im.save(ruta)
+
+
+def test_profundidad_separa_y_mueve_fondo_y_frente(tmp_path, monkeypatch):
+    import estudio.render as r
+
+    _escena_con_sujeto(tmp_path / "e.png")
+    img = Image.open(tmp_path / "e.png").resize((r.W, r.H))
+    a = np.asarray(img)
+    monkeypatch.setattr(r, "mascara_sujeto",
+                        lambda im: (((np.asarray(im)[:, :, 0] > 200) & (np.asarray(im)[:, :, 2] < 90)) * 255).astype("uint8"))
+    capas = r.capas_de_profundidad(img, tmp_path, "imagenes/e.png")
+    assert capas is not None and (tmp_path / "assets" / "capas").exists()
+    fondo, frente = capas
+    centro = np.asarray(fondo)[r.H // 2, r.W // 2]
+    assert centro[0] < 150                                          # el hueco del sujeto quedó rellenado con fondo
+    assert np.asarray(frente)[r.H // 2, r.W // 2, 3] > 200 and np.asarray(frente)[10, 10, 3] == 0
+    ini, fin = r.con_profundidad(capas, 1.0, (0.5, 0.5), 0.0), r.con_profundidad(capas, 1.08, (0.5, 0.5), 1.0)
+    assert ini.size == (r.W, r.H) and np.asarray(ini).tobytes() != np.asarray(fin).tobytes()
+    assert r.capas_de_profundidad(img, tmp_path, "imagenes/e.png") is not None      # segunda vez: del disco
+    # sujeto que llena casi todo: no se separa (queda el zoom normal) y no se vuelve a intentar
+    monkeypatch.setattr(r, "mascara_sujeto", lambda im: np.full((r.H, r.W), 255, np.uint8))
+    assert r.capas_de_profundidad(img, tmp_path, "imagenes/otra.png") is None
+    assert list((tmp_path / "assets" / "capas").glob("*.no"))
+
+
+def test_escenas_grandes_llevan_profundidad():
+    _, edl = _proyecto()
+    completas = [c for c in edl["pistas"]["escenas"] if c["modo"] == "pantalla_completa"]
+    assert completas and all(_ef(c, "profundidad") for c in completas)
