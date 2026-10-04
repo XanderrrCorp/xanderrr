@@ -261,7 +261,7 @@ def _escalonar(clips: list, textos: list, sfx: list) -> None:
         libre = c["inicio"] + (entrada.get("dur", 0.42) + entrada.get("retraso", 0.0) + 0.1 if entrada else 0.15)
         # lo que tapa toda la pantalla (tarjeta de especie, término técnico): nada aparece debajo
         tapas = [(x["en"], x["en"] + x["dur"]) for x in c["efectos"]
-                 if x["efecto"] in ("presentacion_especie", "palabra_completa")]
+                 if x["efecto"] in ("presentacion_especie", "palabra_completa", "capitulo")]
 
         def fuera_de_tapas(t: float) -> float:
             for a, b in sorted(tapas):
@@ -589,7 +589,12 @@ def construir_edl(carpeta: CarpetaProyecto) -> dict:
     vaiven_siempre = clasica and perfil.movimiento == "normal"
     # «deslizar» (Peligro Tropical, como la competencia): nada se mece ni tiembla; casi cada imagen entra
     # deslizándose de lado con swoosh y después se acerca despacio
-    deslizar = perfil.movimiento == "deslizar"
+    deslizar = perfil.movimiento in ("deslizar", "historia")
+    # «historia» (Paradoja Sapiens): lo mismo, pero casi todo a pantalla completa con zoom de documental,
+    # fundidos suaves, tarjetas de capítulo, viñeta y su propia paleta (identidad distinta)
+    historia = perfil.movimiento == "historia"
+    capitulo_n = 0
+    ultimo_mov_completo = None
     lado_entrada = "derecha"
     direccion = leer_json(carpeta.ruta / "direccion.json") if (carpeta.ruta / "direccion.json").exists() else {}
     focos = direccion.get("focos") or {}
@@ -721,7 +726,7 @@ def construir_edl(carpeta: CarpetaProyecto) -> dict:
                                                     revelacion, rng):
                 modo = "pantalla_completa"
                 razon = (razon + "; " if razon else "") + "Escena completa a pantalla completa, sin papel"
-            elif (deslizar and tipo in estilo.ids_tipos and not e.seccion.lower().startswith("gancho")
+            elif (deslizar and tipo in estilo.ids_tipos and (historia or not e.seccion.lower().startswith("gancho"))
                   and _a_pantalla_completa(estilo, modo, e, (direccion.get("pixelar") or {}).get(str(e.id)),
                                            revelacion, None)):
                 # Peligro Tropical (como la competencia): las escenas ilustradas completas van a pantalla
@@ -750,7 +755,34 @@ def construir_edl(carpeta: CarpetaProyecto) -> dict:
         movimiento = None
         transicion = "corte"
         respiro = False
-        if modo == "pantalla_completa":
+        if modo == "pantalla_completa" and historia:
+            # documental: acercar, alejar o recorrer la imagen, sin repetir el de la escena anterior; en los
+            # momentos fuertes, un zoom de golpe
+            foco = [round(rng.uniform(0.44, 0.56), 3), round(rng.uniform(0.40, 0.52), 3)]
+            if e.intencion in ("gancho", "revelacion", "giro", "dato_impactante") and not previo_golpe and dur >= 1.6:
+                golpe = round(min(ini + 0.35 * dur, fin - 0.4), 3)
+                movimiento = {"tipo": "zoom_golpe", "de": 1.0, "a": 1.09, "punto_foco": foco}
+                efectos.append({"efecto": "zoom_golpe", "en": golpe})
+                _sfx(sfx, "golpe_grave", golpe, idx, f"Golpe con el zoom de {e.intencion.replace('_', ' ')}")
+            else:
+                opciones_mov = [m for m in ("zoom_lento", "alejamiento_lento", "paneo_lento") if m != ultimo_mov_completo]
+                elegido = rng.choice(opciones_mov)
+                amp = round(rng.uniform(0.06, 0.10), 3)
+                if elegido == "zoom_lento":
+                    movimiento = {"tipo": "zoom_lento", "de": 1.0, "a": round(1 + amp, 3), "punto_foco": foco}
+                elif elegido == "alejamiento_lento":
+                    movimiento = {"tipo": "alejamiento_lento", "de": round(1 + amp, 3), "a": 1.0, "punto_foco": foco}
+                else:
+                    d = rng.choice([-1, 1])
+                    movimiento = {"tipo": "paneo_lento", "de": 1.08, "a": 1.08,
+                                  "punto_foco": [round(0.5 - 0.035 * d, 3), foco[1]]}
+                    efectos.append({"efecto": "paneo_lento", "hasta": [round(0.5 + 0.035 * d, 3), foco[1]]})
+                ultimo_mov_completo = elegido
+            efectos.append({"efecto": "vineta"})
+            # dentro de una misma parte, a veces se funde con la escena anterior (más de historia)
+            if idx > 0 and not nueva_seccion and clips and clips[-1]["modo"] == "pantalla_completa" and rng.random() < 0.5:
+                transicion = "fundido_corto"
+        elif modo == "pantalla_completa":
             # la imagen llena la pantalla y se acerca muy despacio durante toda la escena
             foco = [round(rng.uniform(0.45, 0.55), 3), round(rng.uniform(0.42, 0.52), 3)]
             movimiento = {"tipo": "zoom_lento", "de": 1.0, "a": round(1 + rng.uniform(0.05, 0.08), 3),
@@ -831,7 +863,8 @@ def construir_edl(carpeta: CarpetaProyecto) -> dict:
                         razon = (razon + "; " if razon else "") + f"Lupa con el detalle «{f.get('palabra') or ''}»"
                     else:
                         efectos.append({"efecto": "flecha", "en": t0, "caja": f["caja"], "desde": lado,
-                                        **({"curva": True} if deslizar else {})})
+                                        **({"curva": True} if deslizar else {}),
+                                        **({"color": "negro"} if historia else {})})
                         usos_cambio["flecha"] += 1
                         razon = (razon + "; " if razon else "") + f"Flecha que señala «{f.get('palabra') or 'el detalle'}»"
                     ultima_flecha = t0
@@ -950,13 +983,21 @@ def construir_edl(carpeta: CarpetaProyecto) -> dict:
             efectos.append({"efecto": "personaje_al_lado", "pose": pose})
             ultimo_al_lado = ini
             razon = (razon + "; " if razon else "") + "El personaje al lado del animal, señalándolo"
+        # --- historia: tarjeta de capítulo al empezar cada parte (no en el gancho ni en el cierre)
+        if (historia and nueva_seccion and modo != "tira" and dur >= 2.2
+                and not e.seccion.lower().startswith(("gancho", "cierre"))):
+            capitulo_n += 1
+            efectos.append({"efecto": "capitulo", "en": ini, "dur": round(min(1.7, dur - 0.6), 3),
+                            "numero": capitulo_n, "titulo": e.seccion})
+            razon = (razon + "; " if razon else "") + f"Tarjeta de capítulo {capitulo_n}: «{e.seccion}»"
         # --- término técnico solo, grande, a pantalla completa cuando la voz lo dice
         termino = (direccion.get("terminos") or {}).get(str(e.id)) if deslizar else None
         if termino and modo != "tira":
             t_t = round(_en_texto(e.narracion, termino.split(" ")[0], e.tiempo.real_inicio, e.tiempo.real_fin), 3)
             dur_t = round(min(1.5, fin - t_t - 0.1), 3)
             if dur_t >= 0.8:
-                efectos.append({"efecto": "palabra_completa", "en": t_t, "dur": dur_t, "texto": termino})
+                efectos.append({"efecto": "palabra_completa", "en": t_t, "dur": dur_t, "texto": termino,
+                                **({"fondo": "papel"} if historia else {})})
                 _sfx(sfx, "pop", t_t, idx, f"Pop: «{termino}» a pantalla completa")
                 razon = (razon + "; " if razon else "") + f"El término «{termino}» solo, a pantalla completa"
         # --- pila de fotos que crece (Peligro Tropical): fotos seguidas se apilan y cada una nueva se
@@ -989,7 +1030,7 @@ def construir_edl(carpeta: CarpetaProyecto) -> dict:
                 if deslizar:
                     # se desliza suave (sin pasarse) y un poco más lento
                     datos.update({"dur": round(rng.uniform(0.5, 0.62), 2), "curva": "suave"})
-                    pres = next((x for x in efectos if x["efecto"] == "presentacion_especie"), None)
+                    pres = next((x for x in efectos if x["efecto"] in ("presentacion_especie", "capitulo")), None)
                     if pres and pres["en"] <= ini + 0.05:
                         datos["retraso"] = round(pres["dur"], 3)     # entra cuando se va la tarjeta
                 if o == "entrada_lado":

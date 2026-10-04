@@ -54,7 +54,7 @@ def test_paradoja_sapiens_papel_claro_y_movimiento_suave():
     e = cargar_estilo("paradoja_sapiens")
     assert e.fondo_montaje.tipo == "cuadricula"
     p = cargar_perfil_edicion(e)
-    assert p.estilo_edicion == "clasica" and p.movimiento == "sin_vaiven"   # dopamina de la clásica, sin mecerse
+    assert p.estilo_edicion == "clasica" and p.movimiento == "historia"     # (04-10) historia: sin mecerse
     assert "teal" not in e.model_dump_json().lower()
 
 
@@ -71,7 +71,7 @@ def test_arreglo_lleva_el_papel_claro_a_la_copia_del_espacio(tmp_path):
     assert corregir_estilos(tmp_path) == [f]
     d = json.loads(f.read_text(encoding="utf-8"))
     assert d["fondo_montaje"]["tipo"] == "cuadricula" and d["movimiento_maximo"] == 0.05
-    assert "Light cream paper" in d["x"] and d["perfil_edicion"] == "perfiles/paradoja_documental.json"
+    assert "Light cream paper" in d["x"] and d["perfil_edicion"] == "perfiles/paradoja_historia.json"
     assert corregir_estilos(tmp_path) == []                            # la segunda vez no toca nada
 
 

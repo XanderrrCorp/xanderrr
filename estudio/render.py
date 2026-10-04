@@ -591,7 +591,8 @@ def _flecha_curva(img: Image.Image, ef: dict, ubic: tuple, tt: float) -> Image.I
     d = ImageDraw.Draw(capa)
     fin = pts[-1]
     n = np.array([-u[1], u[0]])
-    for grosor, color, extra in ((30, (255, 255, 255, 235), 8), (18, ROJO + (255,), 0)):
+    tinta = (20, 16, 12) if ef.get("color") == "negro" else ROJO          # marcador negro en Paradoja
+    for grosor, color, extra in ((30, (255, 255, 255, 235), 8), (18, tinta + (255,), 0)):
         base = fin - u * 44
         cuerpo = [tuple(p) for p in pts if np.dot(p - base, u) < 0] + [tuple(base)]
         if len(cuerpo) > 1:
@@ -683,22 +684,60 @@ def _presentacion(raiz: Path, ef: dict, loc: float) -> Image.Image:
     return img.convert("RGB")
 
 
-def _palabra_completa(ef: dict, loc: float) -> Image.Image:
-    """El término técnico solo, entre comillas, grande y centrado sobre el fondo azul oscuro: entra con un
-    pop y después se acerca muy despacio."""
-    clave = ("palabra", ef["texto"])
+def _palabra_completa(ef: dict, loc: float, papel: Image.Image | None = None) -> Image.Image:
+    """El término técnico solo, entre comillas, grande y centrado sobre el fondo azul oscuro (o, en
+    Paradoja Sapiens, en negro sobre el papel crema): entra con un pop y se acerca muy despacio."""
+    en_papel = ef.get("fondo") == "papel" and papel is not None
+    clave = ("palabra", ef["texto"], en_papel)
     if clave not in _ICONO:
-        t = _texto_img(f"“{ef['texto']}”", 170, 0)
+        t = _texto_img(f"“{ef['texto']}”", 170, 0, color=(20, 16, 12) if en_papel else (255, 255, 255))
         if t.width > W - 160:
             f = (W - 160) / t.width
             t = t.resize((int(t.width * f), int(t.height * f)), Image.Resampling.LANCZOS)
         _ICONO[clave] = t
     t = _ICONO[clave]
     esc = _sale(loc / 0.14) * (1.0 + 0.16 * math.exp(-loc * 9) * math.cos(loc * 15)) * (1 + 0.04 * loc / 1.5)
-    img = _fondo_oscuro().convert("RGBA")
+    img = (papel.resize((W, H)) if en_papel else _fondo_oscuro()).convert("RGBA")
     if esc > 0.05:
         ti = t.resize((max(1, int(t.width * esc)), max(1, int(t.height * esc))), Image.Resampling.BICUBIC)
         img.alpha_composite(ti, (int((W - ti.width) / 2), int(H * 0.46 - ti.height / 2)))
+    return img.convert("RGB")
+
+
+def _vineta(img: Image.Image) -> Image.Image:
+    """Bordes oscurecidos de cine (Paradoja Sapiens): centra la mirada en la escena."""
+    if "vineta" not in _ICONO:
+        yy, xx = np.mgrid[0:H, 0:W].astype(np.float32)
+        d = np.sqrt(((xx - W / 2) / (W / 2)) ** 2 + ((yy - H / 2) / (H / 2)) ** 2)
+        _ICONO["vineta"] = np.clip(1 - 0.42 * np.clip(d - 0.55, 0, 1) ** 1.6, 0, 1)[..., None]
+    return Image.fromarray((np.asarray(img.convert("RGB"), np.float32) * _ICONO["vineta"]).astype("uint8"))
+
+
+def _capitulo(papel: Image.Image, ef: dict, loc: float) -> Image.Image:
+    """Tarjeta de capítulo (Paradoja Sapiens): sobre el papel, «CAPÍTULO N» pequeño en rojo ladrillo y el
+    nombre de la parte grande en negro con un subrayado de marcador que se dibuja; entra deslizándose."""
+    clave = ("capitulo", ef["numero"], ef["titulo"])
+    if clave not in _ICONO:
+        num = _texto_img(f"CAPÍTULO {ef['numero']}", 58, 0, color=(178, 58, 38))
+        tit = _texto_img(ef["titulo"], 118, 0, color=(20, 16, 12))
+        if tit.width > W - 200:
+            k = (W - 200) / tit.width
+            tit = tit.resize((int(tit.width * k), int(tit.height * k)), Image.Resampling.LANCZOS)
+        _ICONO[clave] = (num, tit)
+    num, tit = _ICONO[clave]
+    img = papel.resize((W, H)).convert("RGBA")
+    entra = _sale(loc / 0.4)
+    dx = int((1 - entra) * -W * 0.5)
+    yt = H // 2 - tit.height // 2 + 30
+    img.alpha_composite(num, (max(0, (W - num.width) // 2 + dx), yt - num.height - 24))
+    if (W - tit.width) // 2 + dx >= 0:
+        img.alpha_composite(tit, ((W - tit.width) // 2 + dx, yt))
+    trazo = _sale(max(0.0, loc - 0.35) / 0.4)
+    if trazo > 0.02:
+        x0 = (W - tit.width) // 2
+        y = yt + tit.height + 14
+        pts = [(x0 + tit.width * t, y + 6 * math.sin(t * 9)) for t in np.linspace(0, trazo, 40)]
+        ImageDraw.Draw(img).line(pts, fill=(178, 58, 38, 255), width=10, joint="curve")
     return img.convert("RGB")
 
 
@@ -1959,7 +1998,12 @@ def _renderizar(carpeta: CarpetaProyecto, ffmpeg: str, destino: Path | None, des
             img, en_reaccion = _presentacion(raiz, pres, tt - pres["en"]), True
         pal = ef.get("palabra_completa")
         if not en_reaccion and pal and pal["en"] <= tt < pal["en"] + pal["dur"]:
-            img, en_reaccion = _palabra_completa(pal, tt - pal["en"]), True
+            img, en_reaccion = _palabra_completa(pal, tt - pal["en"], papel), True
+        cap = ef.get("capitulo")
+        if not en_reaccion and cap and cap["en"] <= tt < cap["en"] + cap["dur"]:
+            img, en_reaccion = _capitulo(papel, cap, tt - cap["en"]), True
+        if "vineta" in ef and not en_reaccion and c["modo"] == "pantalla_completa":
+            img = _vineta(img)
         if "icono_advertencia" in ef and not en_reaccion:
             img = _poner_icono(img, ef["icono_advertencia"], tt)
         if "etiqueta" in ef and not en_reaccion:

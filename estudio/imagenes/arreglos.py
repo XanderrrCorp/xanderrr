@@ -34,7 +34,8 @@ CAMPOS: dict[str, dict] = {
     "enciclopedia_mascota": {"fondo_montaje": CUADRICULA, "marca_agua": "assets/canal/marca_agua.png",
                              "perfil_edicion": "perfiles/peligro_tropical.json", "titulo": "negro"},
     "paradoja_sapiens": {"fondo_montaje": CUADRICULA,
-                         "movimiento_maximo": 0.05, "perfil_edicion": "perfiles/paradoja_documental.json"},
+                         # (04-10) edición de historia: pantalla completa con zoom, capítulos y viñeta
+                         "movimiento_maximo": 0.05, "perfil_edicion": "perfiles/paradoja_historia.json"},
 }
 
 

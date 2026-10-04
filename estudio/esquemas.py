@@ -59,6 +59,10 @@ EFECTOS = (
     "fondo_lugar",
     # el personaje recortado en el mismo plano que el animal, señalándolo desde el otro lado
     "personaje_al_lado",
+    # tarjeta de capítulo al empezar cada parte de la historia («CAPÍTULO 2 · El río que no se cruza»)
+    "capitulo",
+    # bordes oscurecidos de cine sobre las escenas a pantalla completa
+    "vineta",
 )
 # "sfx" no es un efecto visual, pero se sugiere en la misma lista (ver 3.1).
 EFECTOS_SUGERIBLES = EFECTOS + ("sfx",)
@@ -267,7 +271,9 @@ class PerfilEdicion(Modelo):
     # «sin_vaiven»: la imagen no se mece sola en cada escena (zooms, entradas y ráfagas siguen igual)
     # «deslizar» (Peligro Tropical): nada se mece ni tiembla; casi todo entra deslizándose de lado con
     # swoosh y se acerca despacio; flechas curvas que se mueven y elementos que aparecen uno tras otro
-    movimiento: Literal["normal", "sin_vaiven", "deslizar"] = "normal"
+    # «historia» (Paradoja Sapiens): como «deslizar», pero casi todo a pantalla completa con zoom tipo
+    # documental (acercar, alejar, paneo), fundidos suaves, tarjetas de capítulo y viñeta de cine
+    movimiento: Literal["normal", "sin_vaiven", "deslizar", "historia"] = "normal"
 
 
 # ---------------------------------------------------------- perfil_canal.json

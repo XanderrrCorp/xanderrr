@@ -74,7 +74,7 @@
     "recuadro_sobre_papel"
   ],
   "gramatica_edicion": "gramaticas/estandar.json",
-  "perfil_edicion": "perfiles/paradoja_documental.json",
+  "perfil_edicion": "perfiles/paradoja_historia.json",
   "movimiento_maximo": 0.05,
   "subtitulos": {
     "estilo": "blanco_contorno_negro",
