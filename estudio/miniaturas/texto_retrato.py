@@ -614,11 +614,32 @@ FORMULAS = [
 ]
 
 
-def instruccion(titulo: str, duracion: str) -> str:
-    formulas = "\n".join(f'  {n}. "{f.format(duracion=duracion)}" ({d})' for n, f, d in FORMULAS)
-    return f"""Eres el editor de miniaturas de un canal de YouTube de mentalidad y disciplina en español.
-Título del video: «{titulo}». Duración real del video: {duracion}.
+MAX_GUION = 7000            # caracteres del guion que se le pasan a Claude (principio y final)
 
+
+def _resumen_guion(guion: str) -> str:
+    guion = " ".join((guion or "").split())
+    if len(guion) <= MAX_GUION:
+        return guion
+    return guion[:MAX_GUION - 1500] + " […] " + guion[-1500:]
+
+
+def instruccion(titulo: str, duracion: str, guion: str = "") -> str:
+    formulas = "\n".join(f'  {n}. "{f.format(duracion=duracion)}" ({d})' for n, f, d in FORMULAS)
+    bloque_guion = (f"""
+GUION DEL VIDEO (lo que dice la voz; la miniatura tiene que prometer ESTO):
+<<<
+{_resumen_guion(guion)}
+>>>
+Antes de escribir, identifica la idea central del video (la lección o el cambio que el espectador se lleva)
+y úsala en las 4 opciones, con las palabras del tema del guion. Nada de ideas que el video no trata.
+""" if guion.strip() else "")
+    regla_titulo = ("- No repitas las palabras principales del título: el texto es una segunda idea que lo complementa.\n"
+                    if titulo.strip() else "")
+    titulo_txt = f"«{titulo}»" if titulo.strip() else "(todavía sin título: guíate por el guion)"
+    return f"""Eres el editor de miniaturas de un canal de YouTube de mentalidad y disciplina en español.
+Título del video: {titulo_txt}. Duración real del video: {duracion}.
+{bloque_guion}
 Escribe el texto grande de la miniatura: UNA opción por cada fórmula, en este orden:
 {formulas}
 
@@ -627,8 +648,7 @@ Reglas (todas):
 - De {MIN_PALABRAS} a {MAX_PALABRAS} palabras en total; de {MIN_LINEAS} a {MAX_LINEAS} líneas; máximo {MAX_PALABRAS_LINEA} palabras y {MAX_CARACTERES_LINEA} letras por línea. TODO EN MAYÚSCULAS.
 - Las líneas se separan con " / ". El color va por LÍNEA completa: 1 o 2 líneas (las de mayor carga) van
   entre asteriscos, p. ej. "ENFÓCATE EN / *EMPEZAR* / NO EN TENER GANAS". Nunca todas.
-- No repitas las palabras principales del título: el texto es una segunda idea que lo complementa.
-- Prefiere el contraste «esto, no aquello» cuando encaje.
+{regla_titulo}- Prefiere el contraste «esto, no aquello» cuando encaje.
 - No inventes citas ni atribuyas frases a personas reales.
 - Antes de responder, revisa tildes y ortografía de cada palabra (ENFÓCATE, VUÉLVETE, OBLÍGATE, MÁS, DÍAS…).
 
@@ -636,13 +656,13 @@ Responde SOLO un JSON: {{"opciones": [{{"formula": 1, "texto": "..."}}, {{"formu
 {{"formula": 3, "texto": "..."}}, {{"formula": 4, "texto": "..."}}]}}"""
 
 
-def planificar(titulo: str, duracion: str, ejecutar=None, cwd=None, avisar=print) -> list[dict]:
+def planificar(titulo: str, duracion: str, ejecutar=None, cwd=None, avisar=print, guion: str = "") -> list[dict]:
     """Una opción por fórmula, en orden. Se corrigen las tildes que se escapan y, si alguna no cumple
     las reglas, se le pide a Claude una vez más con los problemas. Devuelve [{formula, texto, avisos}]."""
     from .. import claude_cli
 
     ejecutar = ejecutar or claude_cli.ejecutar
-    pedido = instruccion(titulo, duracion)
+    pedido = instruccion(titulo, duracion, guion)
     opciones: dict[int, dict] = {}
     for intento in range(2):
         extra = ""

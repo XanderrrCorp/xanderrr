@@ -53,6 +53,25 @@ def duracion_video(c: CarpetaProyecto) -> float:
     return float(c.cargar().duracion_objetivo_seg or 600)
 
 
+def guion_del_video(c: CarpetaProyecto) -> str:
+    """Lo que dice la voz: el guion pegado (Tracy) o el escrito por Xandart."""
+    for nombre in ("guion.txt", "guion.md"):
+        ruta = c.ruta / nombre
+        if ruta.exists():
+            return ruta.read_text(encoding="utf-8")
+    if c.archivo_escenas.exists():
+        return " ".join(e.narracion for e in c.cargar_escenas().escenas)
+    return ""
+
+
+def titulo_real(c: CarpetaProyecto) -> str:
+    """El título del video; vacío si salió solo de la primera frase del guion (Tracy sin título):
+    así no se prohíben las palabras del tema."""
+    titulo = c.cargar().titulo
+    guion = " ".join(guion_del_video(c).split())
+    return "" if guion and guion.startswith(" ".join(titulo.split())[:60]) else titulo
+
+
 def _nuevo_fondo(c: CarpetaProyecto, cfg: tr.ConfigTexto, e: dict, t=None, permiso: bool = False,
                  generar: bool | None = None, proveedor=None) -> None:
     """Un fondo para este video, distinto del anterior: rotado de la carpeta o generado."""
@@ -104,7 +123,8 @@ def _producir(c: CarpetaProyecto, t, permiso: bool = False, ejecutar=None, prove
     t.avisar("Claude está escribiendo las opciones de texto…")
     t.progreso = 0.1
     duracion = tr.duracion_texto(duracion_video(c))
-    e["opciones"] = tr.planificar(c.cargar().titulo, duracion, ejecutar=ejecutar, cwd=c.ruta, avisar=t.avisar)
+    e["opciones"] = tr.planificar(titulo_real(c), duracion, ejecutar=ejecutar, cwd=c.ruta, avisar=t.avisar,
+                                  guion=guion_del_video(c))
     e["duracion"] = duracion
     e["elegida"] = None
     t.progreso = 0.5
@@ -125,7 +145,7 @@ def editar(c: CarpetaProyecto, indice: int, texto: str) -> dict:
         raise IndexError("esa opción no existe")
     lineas = tr.parsear(texto)                     # error de formato → se avisa y no se arma
     limpio = tr.formatear(lineas)
-    e["opciones"][indice].update(texto=limpio, avisos=tr.revisar(limpio, c.cargar().titulo), editada=True)
+    e["opciones"][indice].update(texto=limpio, avisos=tr.revisar(limpio, titulo_real(c)), editada=True)
     _render(c, _config(c), e, [indice])
     _guardar(c, e)
     return e
@@ -137,7 +157,7 @@ def agregar(c: CarpetaProyecto, texto: str) -> dict:
     if not (carpeta(c) / "fondo.jpg").exists():
         raise ValueError("primero produce la miniatura (así queda el fondo de este video)")
     limpio = tr.formatear(tr.parsear(texto))
-    e["opciones"].append({"formula": None, "texto": limpio, "avisos": tr.revisar(limpio, c.cargar().titulo),
+    e["opciones"].append({"formula": None, "texto": limpio, "avisos": tr.revisar(limpio, titulo_real(c)),
                           "editada": True})
     _render(c, _config(c), e, [len(e["opciones"]) - 1])
     _guardar(c, e)

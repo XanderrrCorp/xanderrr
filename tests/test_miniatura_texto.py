@@ -234,3 +234,24 @@ def test_canal_tracy_con_la_plantilla_brian_tracy_y_su_presentador(tmp_path):
         tr.cambiar_config(CLAVE_CANAL, {"rotulo": "OTRO"})
         local._canales_nuevos(r["espacio"])                  # al volver a arrancar no se pisa
         assert tr.cargar_config(CLAVE_CANAL).rotulo == "OTRO"
+
+
+def test_el_planificador_lee_el_guion_y_el_titulo_automatico_no_bloquea_el_tema(canales):
+    from estudio.miniaturas import servicio_texto as st
+    from estudio.pipeline import Trabajo
+    from estudio.tracy.flujo import crear_proyecto
+
+    tr.crear_canal()
+    guion = ("La disciplina es el puente entre tus metas y tus logros. " * 3
+             + "Hoy vas a aprender a levantarte temprano y a cumplir tu palabra contigo mismo.")
+    c = crear_proyecto(guion, canal="mentalidad-imparable")                 # sin título: sale de la 1.ª frase
+    assert st.titulo_real(c) == ""
+    claude = ClaudeFalso([{"opciones": [
+        {"formula": 1, "texto": "ENFÓCATE EN / *DISCIPLINA* / NO EN GANAS"},
+        {"formula": 2, "texto": "VUÉLVETE / *DISCIPLINADO* / EN 1 MINUTO"},
+        {"formula": 3, "texto": "DE LA PEREZA / *A LA DISCIPLINA*"},
+        {"formula": 4, "texto": "OBLÍGATE A / *CUMPLIR* / TU PALABRA"}]}] * 2)
+    st._producir(c, Trabajo(c.ruta.name, "miniatura"), ejecutar=claude)
+    assert "levantarte temprano" in claude.pedidos[0] and "GUION DEL VIDEO" in claude.pedidos[0]
+    assert "No repitas las palabras principales del título" not in claude.pedidos[0]
+    assert not any("repite palabras del título" in a for o in st._estado(c)["opciones"] for a in o["avisos"])
