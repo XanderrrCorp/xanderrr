@@ -21,7 +21,8 @@ def _ejemplo():
 
 
 def test_personaje_completo_por_piezas():
-    assert len(POSES) == 6 and len(OJOS) == 3 and len(CARAS) == 4
+    assert {"de_pie", "senalando", "asustado", "corriendo", "agachado", "sentado"} <= set(POSES)
+    assert len(OJOS) == 3 and len(CARAS) == 4
     for pose in POSES:
         img, ancla = sprite("personaje", {"pose": pose, "ojos": "cerrados", "gesto": "susto"}, 0.5)
         assert img.shape[2] == 4 and img[:, :, 3].max() == 255
@@ -151,3 +152,26 @@ def test_elige_la_musica_de_ritmo_bajo_y_sin_melodia(tmp_path, monkeypatch):
     biblioteca.registrar(wav(colchon), "colchon_tenso.wav", "musica", "tension", "propia", "propia")
     elegida = elegir(ffmpeg(), avisar=lambda *_: None)
     assert elegida["nombre_original"] == "colchon_tenso.wav" and elegida["de"] == 2
+
+
+def test_poses_y_caras_nuevas_de_el_calvo_explica():
+    from estudio.calma.personaje import CARAS_NUEVAS
+
+    nuevas = ("tablero", "pensando", "confundido", "hombros", "sorprendido", "aliviado", "idea", "acostado")
+    assert set(nuevas) <= set(POSES) and len(CARAS_NUEVAS) == 3
+    for pose in nuevas:
+        img, _ = sprite("personaje", {"pose": pose, "gesto": "sorpresa"}, 0.4)
+        assert (img[:, :, 3] > 0).mean() > 0.05, pose
+    img, _ = sprite("tablero", {}, 0.4)
+    assert img[:, :, 3].max() == 255
+
+
+def test_canal_el_calvo_explica_por_defecto():
+    from estudio.config import leer_config
+    from estudio.explica.canal import ajustes_voz, completar
+
+    p = completar({"velocidad": 1.1, "cosa_rara": 1})
+    assert p["velocidad"] == 1.1 and "cosa_rara" not in p
+    assert p["max_ilustraciones"] == 60 and p["fondo"] == "blanco" and p["efectos_sonido"] is False
+    assert ajustes_voz(completar(None))["voz_id"] == leer_config("proveedores.json")["voz"]["voz_id"]   # la de PT
+    assert "Sin texto" in p["estilo_ilustracion"]

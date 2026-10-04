@@ -52,10 +52,52 @@ POSES: dict[str, dict] = {
         "brazo_atras": [(-46, -90), (-62, -22)], "brazo_frente": [(50, -112), (88, -98)],
         "pierna_atras": [(58, -96), (118, -8)], "pierna_frente": [(74, -100), (140, -8)],
     },
+    # ---- poses nuevas (El Calvo Explica) ----
+    "tablero": {                       # frente a un tablero (a su derecha), señalándolo hacia arriba
+        "cadera": (0, -190), "cuello": (-4, -322), "hombro": (-3, -300),
+        "brazo_atras": [(-44, -244), (-52, -172)], "brazo_frente": [(62, -350), (118, -410)],
+        "pierna_atras": [(-16, -96), (-24, -8)], "pierna_frente": [(16, -96), (24, -8)],
+        "dedo": True,
+    },
+    "pensando": {                      # la mano en el mentón, el otro brazo cruzado
+        "cadera": (0, -190), "cuello": (0, -322), "hombro": (0, -300),
+        "brazo_atras": [(-36, -236), (40, -238)], "brazo_frente": [(66, -262), (40, -334)],
+        "pierna_atras": [(-16, -96), (-24, -8)], "pierna_frente": [(16, -96), (24, -8)],
+        "mano_encima": True,           # la mano va por delante de la cabeza
+    },
+    "confundido": {                    # se rasca la cabeza, con signos de pregunta
+        "cadera": (0, -190), "cuello": (0, -322), "hombro": (0, -300),
+        "brazo_atras": [(-44, -240), (-58, -170)], "brazo_frente": [(108, -336), (84, -438)],
+        "pierna_atras": [(-16, -96), (-24, -8)], "pierna_frente": [(16, -96), (24, -8)],
+        "signos": True, "mano_encima": True,
+    },
+    "hombros": {                       # encogido de hombros, palmas arriba
+        "cadera": (0, -190), "cuello": (0, -312), "hombro": (0, -306),
+        "brazo_atras": [(-72, -252), (-112, -300)], "brazo_frente": [(72, -252), (112, -300)],
+        "pierna_atras": [(-16, -96), (-24, -8)], "pierna_frente": [(16, -96), (24, -8)],
+    },
+    "sorprendido": {                   # se echa un poco atrás, manos abiertas a los lados
+        "cadera": (0, -190), "cuello": (-14, -320), "hombro": (-12, -298),
+        "brazo_atras": [(-70, -270), (-110, -318)], "brazo_frente": [(50, -268), (96, -312)],
+        "pierna_atras": [(-22, -96), (-34, -8)], "pierna_frente": [(20, -96), (30, -8)],
+    },
+    "aliviado": {                      # la mano en el pecho
+        "cadera": (0, -190), "cuello": (0, -322), "hombro": (0, -300),
+        "brazo_atras": [(-40, -240), (-50, -168)], "brazo_frente": [(58, -240), (12, -268)],
+        "pierna_atras": [(-16, -96), (-24, -8)], "pierna_frente": [(16, -96), (24, -8)],
+    },
+    "idea": {                          # dedo arriba junto a la cabeza y un bombillo
+        "cadera": (0, -190), "cuello": (0, -322), "hombro": (0, -300),
+        "brazo_atras": [(-40, -240), (-50, -168)], "brazo_frente": [(84, -318), (110, -400)],
+        "pierna_atras": [(-16, -96), (-24, -8)], "pierna_frente": [(16, -96), (24, -8)],
+        "dedo": True, "bombillo": True,
+    },
 }
+POSES["acostado"] = {**POSES["de_pie"], "acostado": True}    # en la cama: solo la cabeza en la almohada
 
 OJOS = ("abiertos", "cerrados", "lado")
 CARAS = ("neutral", "susto", "alivio", "concentrado")
+CARAS_NUEVAS = ("sorpresa", "duda", "pensativo")
 
 
 def _menos(a, b):
@@ -140,7 +182,7 @@ def _correa(pose, semilla) -> str:
     return tubo([a, b], semilla, ROJO, 8)
 
 
-def cuerpo(nombre: str, color: str = AMARILLO, mochila: bool = True) -> str:
+def cuerpo(nombre: str, color: str = AMARILLO, mochila: bool = True, brazo_frente: bool = True) -> str:
     """El cuerpo SIN cabeza en una pose (la cabeza va aparte para cambiar cara y ojos).
     Con otro color y sin mochila sirve para «otra persona» (un vecino, la gente)."""
     p = POSES[nombre]
@@ -153,7 +195,7 @@ def cuerpo(nombre: str, color: str = AMARILLO, mochila: bool = True) -> str:
         _pierna(cad, p["pierna_frente"], s + "/pf", p, color),
         tubo([cad, cue], s + "/to", color, GROSOR_TORSO),
         _correa(p, s + "/co") if mochila else "",
-        _brazo(hom, p["brazo_frente"], s + "/bf", p.get("dedo", False), color),
+        _brazo(hom, p["brazo_frente"], s + "/bf", p.get("dedo", False), color) if brazo_frente else "",
     ]
     return "".join(partes)
 
@@ -194,6 +236,16 @@ def cara(gesto: str) -> str:
     elif gesto == "alivio":
         cejas = [[(-38, -48), (-6, -56)], [(14, -56), (46, -48)]]
         boca = raya(arco(10, 30, 24, 18, 25, 155), "boca/alivio")
+    elif gesto == "sorpresa":          # cejas muy altas y redondas, boca en «o» chiquita
+        return (raya(arco(-22, -44, 18, 10, 200, 340, 8), "ceja/sorpresa/0")
+                + raya(arco(30, -44, 18, 10, 200, 340, 8), "ceja/sorpresa/1")
+                + figura(elipse(8, 50, 9, 12, n=18), "boca/sorpresa", NEGRO, amplitud=0.6))
+    elif gesto == "duda":              # una ceja arriba y otra abajo, boca torcida
+        cejas = [[(-38, -50), (-6, -46)], [(14, -62), (46, -52)]]
+        boca = raya([(-4, 50), (6, 44), (16, 50), (26, 44)], "boca/duda")
+    elif gesto == "pensativo":         # cejas rectas, la boca chiquita a un lado
+        cejas = [[(-38, -48), (-6, -48)], [(14, -50), (46, -46)]]
+        boca = raya([(14, 46), (30, 44)], "boca/pensativo")
     else:  # concentrado
         cejas = [[(-38, -50), (-6, -40)], [(14, -40), (46, -50)]]
         boca = raya([(0, 48), (10, 45), (22, 47)], "boca/concentrado")
@@ -203,6 +255,55 @@ def cara(gesto: str) -> str:
 def personaje(pose: str = "de_pie", ojo: str = "abiertos", gesto: str = "neutral", color: str = AMARILLO,
               mochila: bool = True) -> str:
     """El personaje completo: cuerpo + cabeza + ojos + cara."""
-    cx, cy = centro_cabeza(POSES[pose])
-    return (cuerpo(pose, color, mochila) + f'<g transform="translate({cx:.1f},{cy:.1f})">'
-            + cabeza() + ojos(ojo) + cara(gesto) + "</g>")
+    p = POSES[pose]
+    if p.get("acostado"):
+        return _en_la_cama(ojo, gesto)
+    cx, cy = centro_cabeza(p)
+    extra = ""
+    if p.get("signos"):
+        extra += _signos(cx, cy)
+    if p.get("bombillo"):
+        extra += _bombillo(cx + 120, cy - 120)
+    encima = p.get("mano_encima", False)
+    if encima:
+        extra = _brazo(p["hombro"], p["brazo_frente"], f"cuerpo/{pose}/bf", p.get("dedo", False), color) + extra
+    return (cuerpo(pose, color, mochila, not encima) + f'<g transform="translate({cx:.1f},{cy:.1f})">'
+            + cabeza() + ojos(ojo) + cara(gesto) + "</g>" + extra)
+
+
+def _signos(cx: float, cy: float) -> str:
+    """Dos signos de pregunta junto a la cabeza (dibujados, no letras)."""
+    salida = []
+    for i, (dx, dy, k) in enumerate(((-150, -70, 1.0), (-120, -160, 0.75))):
+        x, y = cx + dx, cy + dy
+        gancho = arco(x, y - 18 * k, 22 * k, 22 * k, 200, 400, 10) + [(x + 2 * k, y + 22 * k)]
+        salida.append(raya(gancho, f"signo/{i}", NEGRO, 10))
+        salida.append(f'<circle cx="{x + 2 * k:.1f}" cy="{y + 44 * k:.1f}" r="{7 * k:.1f}" fill="{NEGRO}"/>')
+    return "".join(salida)
+
+
+def _bombillo(x: float, y: float) -> str:
+    rayos = "".join(raya([(x + math.cos(a) * 64, y + math.sin(a) * 64), (x + math.cos(a) * 86, y + math.sin(a) * 86)],
+                         f"bombillo/r{i}", NEGRO, 6) for i, a in enumerate(math.radians(d) for d in (-150, -110, -70, -30, 10, 170)))
+    return (figura(elipse(x, y, 42, 44, n=30), "bombillo", AMARILLO)
+            + figura([(x - 18, y + 38), (x + 18, y + 38), (x + 16, y + 68), (x - 16, y + 68)], "bombillo/base", "#9A9A9A")
+            + rayos)
+
+
+def _en_la_cama(ojo: str, gesto: str) -> str:
+    """Acostado: cama vista de lado, la cabeza en la almohada y el cuerpo bajo la cobija (pies a la derecha)."""
+    gris = "#9A9A9A"
+    partes = [
+        figura([(-300, -60), (-300, -230), (-262, -230), (-262, -60)], "cama/cabecera", gris),
+        figura([(-290, -60), (330, -60), (330, 0), (-290, 0)], "cama/base", gris),
+        tubo([(-270, 0), (-270, 30)], "cama/pata1", gris, 16),
+        tubo([(300, 0), (300, 30)], "cama/pata2", gris, 16),
+        figura([(-250, -120), (-110, -126), (-100, -70), (-250, -64)], "cama/almohada", BLANCO),
+        figura([(-130, -70), (-90, -150), (60, -168), (230, -150), (322, -104), (330, -60), (-130, -60)],
+               "cama/cobija", ROJO),
+        raya([(-60, -150), (-20, -90)], "cama/pliegue1", NEGRO, 5, 0.5),
+        raya([(140, -160), (170, -96)], "cama/pliegue2", NEGRO, 5, 0.5),
+    ]
+    cabeza_g = (f'<g transform="translate(-175,-180) rotate(-12) scale(0.9)">' + cabeza() + ojos(ojo) + cara(gesto)
+                + "</g>")
+    return "".join(partes[:5]) + cabeza_g + "".join(partes[5:])

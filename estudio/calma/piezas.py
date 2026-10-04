@@ -61,6 +61,10 @@ def personaje(e: dict) -> Dibujo:
     pose = e.get("pose", "de_pie")
     svg = P.personaje(pose, e.get("ojos", "abiertos"), e.get("gesto", "neutral"),
                       e.get("color", AMARILLO), e.get("mochila", True))
+    if P.POSES[pose].get("acostado"):
+        return Dibujo(svg, (-320, -300, 670, 350))
+    if P.POSES[pose].get("bombillo") or P.POSES[pose].get("signos"):
+        return Dibujo(svg, (-240, -600, 480, 630))
     return Dibujo(svg, (-190, -560, 380, 590))
 
 
@@ -347,7 +351,21 @@ def vaselina(e: dict) -> Dibujo:
     return Dibujo("".join(partes), (-135, -105, 270, 230))
 
 
+def tablero(e: dict) -> Dibujo:
+    """Tablero blanco con patas y una gráfica simple (sin texto)."""
+    w, h = 520, 340
+    partes = [tubo([(-w / 2 + 50, h / 2), (-w / 2 + 30, h / 2 + 170)], "tab/p1", GRIS, 16),
+              tubo([(w / 2 - 50, h / 2), (w / 2 - 30, h / 2 + 170)], "tab/p2", GRIS, 16),
+              figura(_rect(-w / 2, -h / 2, w, h, 12), "tab/marco", GRIS),
+              figura(_rect(-w / 2 + 18, -h / 2 + 18, w - 36, h - 36, 6), "tab/hoja", BLANCO, amplitud=0.8),
+              raya([(-w / 2 + 60, h / 2 - 60), (-w / 2 + 60, -h / 2 + 50)], "tab/eje1", NEGRO, 6),
+              raya([(-w / 2 + 60, h / 2 - 60), (w / 2 - 50, h / 2 - 60)], "tab/eje2", NEGRO, 6),
+              raya([(-w / 2 + 80, h / 2 - 90), (-60, 10), (30, -10), (w / 2 - 80, -h / 2 + 70)], "tab/linea", ROJO, 9)]
+    return Dibujo("".join(partes), (-w / 2 - 14, -h / 2 - 14, w + 28, h + 200))
+
+
 PIEZAS = {
+    "tablero": tablero,
     "personaje": personaje, "vecino": vecino, "gente": gente,
     "x_roja": x_roja, "chulo": chulo, "flecha": flecha, "rotulo": rotulo, "numero": numero,
     "barra": barra, "cronometro": cronometro, "calendario": calendario, "documento": documento,
