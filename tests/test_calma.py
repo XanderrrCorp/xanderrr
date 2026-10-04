@@ -202,7 +202,17 @@ def test_muestras_con_proveedor_simulado():
     p = ProveedorSimulado(ConfigCostos.cargar())
     assert I.costo_muestras(p)["usd"] > 0
     hechas = I.generar_muestras(Trabajo("muestras"), proveedor=p)
-    assert hechas == ["papa_sofa.png", "papa_periodico.png", "papa_parrillero.png"]
+    assert hechas == ["muneca.png", "piel_de_gallina.png", "dentista.png"]
     assert all((I.carpeta() / h).exists() for h in hechas)
     assert I.estado_muestras()["archivos"] == hechas
     assert "Sin texto" in I.prompt("algo") and (I.carpeta() / "referencia_personaje.png").exists()
+
+
+
+def test_el_calvo_explica_genera_por_google():
+    from estudio.config import leer_config
+    from estudio.explica import canal as C
+    from estudio.imagenes.proveedores import proveedor_elegido
+
+    assert "proveedor_imagenes" not in C.POR_DEFECTO
+    assert proveedor_elegido(leer_config("proveedores.json")["imagenes"]) == "vertex"

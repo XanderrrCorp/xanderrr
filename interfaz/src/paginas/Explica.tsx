@@ -41,8 +41,9 @@ export function Explica() {
       <p className="tenue">TODAS las X explicadas en N minutos. Fondo blanco, tu personaje y animación por código.</p>
       <section className="rev-tarjeta">
         <h2>Ilustraciones de muestra</h2>
-        <p>Tres tipos de papá (sofá, «pregúntale a tu mamá», parrillero) para ver si el personaje se mantiene. Se generan con Google
-          ({c.modelo || '—'}) y la imagen del personaje como referencia.</p>
+        <p>Tres escenas del primer video (muñeca en primer plano, piel de gallina, dentista) para ver si el personaje
+          se mantiene. Se generan con Google ({c.modelo || '—'}) con la
+          imagen del personaje como referencia.</p>
         {c.error ? <p className="error pequeno">{c.error}</p>
           : <p>Costo de las 3: <b>unos {c.cop}</b>.</p>}
         <button className="boton" disabled={!!t?.activo} onClick={generar}>

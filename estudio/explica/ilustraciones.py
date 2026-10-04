@@ -14,21 +14,21 @@ from . import canal as C
 
 MODULO = "ilustracion_explica"
 
-# Las 3 muestras prueban si el modelo mantiene al personaje haciendo de distintos tipos de papá (primer video:
-# «TODOS los tipos de PAPÁS explicados»): siempre reconocible, con los accesorios encima.
+# Las 3 muestras son del primer video («Partes de tu cuerpo que YA NO SIRVEN para nada»). La de la muñeca prueba
+# si un primer plano de anatomía se entiende con un personaje de palitos; si no, esos detalles van por código.
 MUESTRAS = [
-    ("papa_sofa", "El personaje hace de papá dormido en un sofá gris frente a un televisor, con el control remoto en "
-                  "la mano, la boca abierta y los ojos cerrados. La pantalla del televisor es un rectángulo gris "
-                  "liso, sin imagen ni marca."),
-    ("papa_periodico", "El personaje hace de papá «pregúntale a tu mamá»: sentado en un sillón, leyendo un periódico "
-                       "abierto que le tapa medio cuerpo, sin levantar la vista. El periódico no tiene letras: solo "
-                       "rayas grises y un recuadro gris."),
-    ("papa_parrillero", "El personaje hace de papá parrillero: de pie, orgulloso y sonriente frente a un asador negro "
-                        "con humo, con un delantal blanco encima del cuerpo amarillo y unas pinzas en la mano."),
+    ("muneca", "Plano cercano: el personaje se mira la muñeca con curiosidad. Junta la punta del pulgar con la punta "
+               "del meñique y en el centro de la muñeca se marca un tendón delgado, como un cordón levantado bajo la "
+               "piel. La mano y el antebrazo se ven grandes en primer plano; la cara del personaje asoma atrás."),
+    ("piel_de_gallina", "El personaje tiene frío: se abraza a sí mismo, tiembla, con copos de nieve alrededor. En sus "
+                        "brazos se ven muchos pelitos negros parados (piel de gallina)."),
+    ("dentista", "El personaje está sentado en una silla de dentista gris, con la mejilla muy hinchada, una mano en la "
+                 "cara y gesto de dolor. Al lado, una lámpara de dentista blanca."),
 ]
 ACCESORIOS = ("Debe reconocerse siempre al mismo personaje de la referencia: cabeza redonda color crema, calvo, "
-              "ojos grandes, cuerpo de palitos amarillo, mochila roja y tenis negros. Los accesorios del papel "
-              "(ropa, objetos) van ENCIMA del personaje, sin cambiarle la cabeza, el color ni las proporciones.")
+              "ojos grandes, cuerpo de palitos amarillo, mochila roja y tenis negros. La mochila roja se queda, "
+              "salvo cuando está acostado o sentado de espaldas. Los accesorios van ENCIMA del personaje, sin "
+              "cambiarle la cabeza, el color ni las proporciones.")
 
 
 def carpeta() -> Path:
@@ -59,6 +59,7 @@ def prompt(descripcion: str, preset: dict | None = None) -> str:
 
 
 def proveedor_imagenes(config: ConfigCostos):
+    """El de Ajustes, como el resto de Xandart: Google (Together quedó descartado por el dueño)."""
     from ..imagenes.proveedores import crear_proveedor
 
     return crear_proveedor(config, leer_config("proveedores.json")["imagenes"])

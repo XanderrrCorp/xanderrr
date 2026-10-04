@@ -45,8 +45,9 @@ POR_DEFECTO: dict[str, Any] = {
     "estilo_ilustracion": (
         "Ilustración simple de explicación: línea negra gruesa tipo marcador, ligeramente temblorosa, colores "
         "planos (negro, blanco, gris, amarillo, rojo, verde), fondo blanco liso, sin sombras ni degradados. "
-        "El personaje es el de la imagen de referencia: cabeza redonda color crema, calvo, cejas preocupadas, "
-        "ojos grandes, cuerpo de palitos amarillo, mochila roja y tenis negros; no lo cambies. "
+        "El personaje es el de la imagen de referencia: cabeza redonda color crema, calvo, cejas neutras y cara amable, "
+        "ojos grandes, cuerpo de palitos amarillo, mochila roja y tenis negros; no lo cambies (la mochila no va "
+        "cuando está acostado o sentado de espaldas). "
         "Sin texto, letras ni números dentro de la imagen. Sin personas reales, sin personajes de películas, "
         "series o videojuegos, sin marcas ni logos."),
     "titulo": "TODAS las {x} explicadas en {n} minutos",
