@@ -1,0 +1,1456 @@
+{
+ "video": {
+  "ancho": 1920,
+  "alto": 1080,
+  "fps": 30,
+  "guion": "garrapata_60s.txt"
+ },
+ "escenas": [
+  {
+   "id": 1,
+   "palabra_inicio": "Te quitas",
+   "fondo": "blanco",
+   "temblor": [],
+   "elementos": [
+    {
+     "id": "pie",
+     "pieza": "pierna",
+     "estado": {},
+     "posicion": [
+      860,
+      900
+     ],
+     "tamano": 1.3,
+     "movimiento": [
+      "aparecer"
+     ],
+     "palabra": "Te"
+    },
+    {
+     "id": "calcetin",
+     "pieza": "calcetin",
+     "estado": {},
+     "posicion": [
+      860,
+      900
+     ],
+     "tamano": 1.3,
+     "movimiento": [
+      "aparecer",
+      {
+       "tipo": "deslizar",
+       "hasta": [
+        2300,
+        1000
+       ],
+       "palabra": "calcetín",
+       "duracion": 0.6,
+       "sale": true
+      }
+     ],
+     "palabra": "Te"
+    },
+    {
+     "id": "garrapata",
+     "pieza": "garrapata",
+     "estado": {},
+     "posicion": [
+      912.0,
+      744.0
+     ],
+     "tamano": 0.45,
+     "movimiento": [
+      "aparecer",
+      {
+       "tipo": "temblor",
+       "palabra": "pegada",
+       "fuerza": 10
+      }
+     ],
+     "palabra": "está",
+     "rotacion": 25
+    },
+    {
+     "id": "flecha",
+     "pieza": "flecha",
+     "estado": {},
+     "posicion": [
+      1150,
+      520
+     ],
+     "tamano": 1.0,
+     "movimiento": [
+      "aparecer"
+     ],
+     "palabra": "garrapata",
+     "rotacion": 140
+    },
+    {
+     "id": "rotulo",
+     "pieza": "rotulo",
+     "estado": {
+      "texto": "GARRAPATA",
+      "color": "negro"
+     },
+     "posicion": [
+      1420,
+      330
+     ],
+     "tamano": 1.0,
+     "movimiento": [
+      "aparecer"
+     ],
+     "palabra": "garrapata"
+    }
+   ]
+  },
+  {
+   "id": 2,
+   "palabra_inicio": "No duele",
+   "fondo": "blanco",
+   "temblor": [],
+   "elementos": [
+    {
+     "id": "yo",
+     "pieza": "personaje",
+     "estado": {
+      "pose": "de_pie",
+      "gesto": "neutral"
+     },
+     "posicion": [
+      640,
+      990
+     ],
+     "tamano": 1.1,
+     "movimiento": [
+      "aparecer"
+     ],
+     "palabra": "No"
+    },
+    {
+     "id": "duele",
+     "pieza": "rotulo",
+     "estado": {
+      "texto": "NO DUELE"
+     },
+     "posicion": [
+      1300,
+      430
+     ],
+     "tamano": 1.0,
+     "movimiento": [
+      "aparecer"
+     ],
+     "palabra": "duele"
+    },
+    {
+     "id": "pica",
+     "pieza": "rotulo",
+     "estado": {
+      "texto": "NO PICA"
+     },
+     "posicion": [
+      1300,
+      640
+     ],
+     "tamano": 1.0,
+     "movimiento": [
+      "aparecer"
+     ],
+     "palabra": "pica"
+    }
+   ]
+  },
+  {
+   "id": 3,
+   "palabra_inicio": "Lleva horas",
+   "fondo": "campo",
+   "temblor": [],
+   "elementos": [
+    {
+     "id": "yo",
+     "pieza": "personaje",
+     "estado": {
+      "pose": "de_pie",
+      "gesto": "neutral"
+     },
+     "posicion": [
+      520,
+      990
+     ],
+     "tamano": 1.1,
+     "movimiento": [
+      "aparecer",
+      {
+       "tipo": "cambiar_pose",
+       "palabra": "enterado",
+       "estado": {
+        "ojos": "lado"
+       }
+      }
+     ],
+     "palabra": "Lleva"
+    },
+    {
+     "id": "crono",
+     "pieza": "cronometro",
+     "estado": {},
+     "posicion": [
+      1260,
+      420
+     ],
+     "tamano": 1.0,
+     "movimiento": [
+      "aparecer",
+      {
+       "tipo": "girar",
+       "velocidad": 540,
+       "parte": "aguja"
+      }
+     ],
+     "palabra": "horas"
+    },
+    {
+     "id": "barra",
+     "pieza": "barra",
+     "estado": {
+      "etiqueta": "horas",
+      "color": "rojo"
+     },
+     "posicion": [
+      1260,
+      780
+     ],
+     "tamano": 1.0,
+     "movimiento": [
+      "aparecer",
+      {
+       "tipo": "llenar_barra",
+       "hasta": 0.9,
+       "duracion": 2.6
+      }
+     ],
+     "palabra": "horas"
+    }
+   ]
+  },
+  {
+   "id": 4,
+   "palabra_inicio": "Tu mano",
+   "fondo": "blanco",
+   "temblor": [],
+   "elementos": [
+    {
+     "id": "pie",
+     "pieza": "pierna",
+     "estado": {},
+     "posicion": [
+      860,
+      900
+     ],
+     "tamano": 1.3,
+     "movimiento": [],
+     "ya_estaba": true
+    },
+    {
+     "id": "garrapata",
+     "pieza": "garrapata",
+     "estado": {},
+     "posicion": [
+      912.0,
+      744.0
+     ],
+     "tamano": 0.45,
+     "movimiento": [],
+     "ya_estaba": true
+    },
+    {
+     "id": "mano",
+     "pieza": "brazo",
+     "estado": {},
+     "posicion": [
+      992.0,
+      738.0
+     ],
+     "tamano": 1.0,
+     "movimiento": [
+      {
+       "tipo": "deslizar",
+       "desde": [
+        2100,
+        684.0
+       ],
+       "duracion": 1.1
+      }
+     ],
+     "palabra": "mano"
+    }
+   ]
+  },
+  {
+   "id": 5,
+   "palabra_inicio": "No la arranques",
+   "fondo": "blanco",
+   "temblor": [
+    {
+     "palabra": "arranques"
+    }
+   ],
+   "elementos": [
+    {
+     "id": "garrapata",
+     "pieza": "garrapata",
+     "estado": {},
+     "posicion": [
+      660,
+      560
+     ],
+     "tamano": 0.9,
+     "movimiento": [],
+     "ya_estaba": true
+    },
+    {
+     "id": "mano",
+     "pieza": "brazo",
+     "estado": {},
+     "posicion": [
+      830,
+      560
+     ],
+     "tamano": 1.1,
+     "movimiento": [],
+     "ya_estaba": true
+    },
+    {
+     "id": "x",
+     "pieza": "x_roja",
+     "estado": {},
+     "posicion": [
+      1180,
+      560
+     ],
+     "tamano": 1.1,
+     "movimiento": [
+      "aparecer"
+     ],
+     "palabra": "No"
+    },
+    {
+     "id": "rotulo",
+     "pieza": "rotulo",
+     "estado": {
+      "texto": "NO LA ARRANQUES",
+      "color": "rojo"
+     },
+     "posicion": [
+      960,
+      920
+     ],
+     "tamano": 1.1,
+     "movimiento": [
+      "aparecer"
+     ],
+     "palabra": "arranques"
+    }
+   ]
+  },
+  {
+   "id": 6,
+   "palabra_inicio": "Porque lo que",
+   "fondo": "blanco",
+   "temblor": [],
+   "elementos": [
+    {
+     "id": "garrapata",
+     "pieza": "garrapata",
+     "estado": {},
+     "posicion": [
+      600,
+      560
+     ],
+     "tamano": 0.8,
+     "movimiento": [
+      "aparecer"
+     ],
+     "palabra": "pegado"
+    },
+    {
+     "id": "barra",
+     "pieza": "barra",
+     "estado": {
+      "etiqueta": "daño",
+      "color": "rojo"
+     },
+     "posicion": [
+      1270,
+      560
+     ],
+     "tamano": 1.0,
+     "movimiento": [
+      "aparecer",
+      {
+       "tipo": "llenar_barra",
+       "hasta": 0.12,
+       "duracion": 1.0
+      }
+     ],
+     "palabra": "casi"
+    },
+    {
+     "id": "todavia",
+     "pieza": "rotulo",
+     "estado": {
+      "texto": "TODAVÍA",
+      "color": "amarillo"
+     },
+     "posicion": [
+      1270,
+      800
+     ],
+     "tamano": 1.0,
+     "movimiento": [
+      "aparecer"
+     ],
+     "palabra": "todavía"
+    }
+   ]
+  },
+  {
+   "id": 7,
+   "palabra_inicio": "Lo que te enferma",
+   "fondo": "blanco",
+   "temblor": [
+    {
+     "palabra": "enferma"
+    }
+   ],
+   "elementos": [
+    {
+     "id": "yo",
+     "pieza": "personaje",
+     "estado": {
+      "pose": "asustado",
+      "gesto": "susto"
+     },
+     "posicion": [
+      560,
+      990
+     ],
+     "tamano": 1.1,
+     "movimiento": [
+      "aparecer"
+     ],
+     "palabra": "enferma"
+    },
+    {
+     "id": "rotulo",
+     "pieza": "rotulo",
+     "estado": {
+      "texto": "CÓMO TE LA QUITAS",
+      "color": "rojo"
+     },
+     "posicion": [
+      1270,
+      420
+     ],
+     "tamano": 0.9,
+     "movimiento": [
+      "aparecer"
+     ],
+     "palabra": "cómo"
+    },
+    {
+     "id": "pinzas",
+     "pieza": "pinzas",
+     "estado": {},
+     "posicion": [
+      1150,
+      700
+     ],
+     "tamano": 1.0,
+     "movimiento": [
+      {
+       "tipo": "deslizar",
+       "desde": [
+        2100,
+        700
+       ]
+      }
+     ],
+     "palabra": "quitas"
+    }
+   ]
+  },
+  {
+   "id": 8,
+   "palabra_inicio": "Y las tres formas",
+   "fondo": "blanco",
+   "temblor": [],
+   "elementos": [
+    {
+     "id": "tres",
+     "pieza": "numero",
+     "estado": {
+      "valor": "3"
+     },
+     "posicion": [
+      380,
+      380
+     ],
+     "tamano": 1.2,
+     "movimiento": [
+      "aparecer"
+     ],
+     "palabra": "tres"
+    },
+    {
+     "id": "gente",
+     "pieza": "gente",
+     "estado": {},
+     "posicion": [
+      900,
+      960
+     ],
+     "tamano": 1.0,
+     "movimiento": [
+      "aparecer"
+     ],
+     "palabra": "mundo"
+    },
+    {
+     "id": "rotulo",
+     "pieza": "rotulo",
+     "estado": {
+      "texto": "DESACONSEJADAS",
+      "color": "rojo"
+     },
+     "posicion": [
+      1200,
+      180
+     ],
+     "tamano": 1.0,
+     "movimiento": [
+      "aparecer"
+     ],
+     "palabra": "desaconsejadas"
+    },
+    {
+     "id": "doc",
+     "pieza": "documento",
+     "estado": {},
+     "posicion": [
+      1560,
+      600
+     ],
+     "tamano": 0.9,
+     "movimiento": [
+      "aparecer"
+     ],
+     "palabra": "escrito"
+    }
+   ]
+  },
+  {
+   "id": 9,
+   "palabra_inicio": "El encendedor",
+   "fondo": "blanco",
+   "temblor": [
+    {
+     "palabra": "desaconsejado"
+    }
+   ],
+   "elementos": [
+    {
+     "id": "n",
+     "pieza": "numero",
+     "estado": {
+      "valor": "1"
+     },
+     "posicion": [
+      360,
+      300
+     ],
+     "tamano": 0.9,
+     "movimiento": [
+      "aparecer"
+     ],
+     "palabra": "El"
+    },
+    {
+     "id": "enc",
+     "pieza": "encendedor",
+     "estado": {},
+     "posicion": [
+      860,
+      640
+     ],
+     "tamano": 1.3,
+     "movimiento": [
+      "aparecer",
+      {
+       "tipo": "alternar_color",
+       "campo": "llama",
+       "valores": [
+        "amarillo",
+        "rojo"
+       ],
+       "periodo": 0.25
+      }
+     ],
+     "palabra": "encendedor"
+    },
+    {
+     "id": "x",
+     "pieza": "x_roja",
+     "estado": {},
+     "posicion": [
+      1250,
+      600
+     ],
+     "tamano": 1.0,
+     "movimiento": [
+      "aparecer"
+     ],
+     "palabra": "desaconsejado"
+    }
+   ]
+  },
+  {
+   "id": 10,
+   "palabra_inicio": "El aceite",
+   "fondo": "blanco",
+   "temblor": [
+    {
+     "palabra": "desaconsejados"
+    }
+   ],
+   "elementos": [
+    {
+     "id": "n",
+     "pieza": "numero",
+     "estado": {
+      "valor": "2"
+     },
+     "posicion": [
+      360,
+      300
+     ],
+     "tamano": 0.9,
+     "movimiento": [
+      "aparecer"
+     ],
+     "palabra": "El"
+    },
+    {
+     "id": "aceite",
+     "pieza": "aceite",
+     "estado": {},
+     "posicion": [
+      700,
+      640
+     ],
+     "tamano": 1.0,
+     "movimiento": [
+      "aparecer"
+     ],
+     "palabra": "aceite"
+    },
+    {
+     "id": "vas",
+     "pieza": "vaselina",
+     "estado": {},
+     "posicion": [
+      1020,
+      700
+     ],
+     "tamano": 1.0,
+     "movimiento": [
+      "aparecer"
+     ],
+     "palabra": "vaselina"
+    },
+    {
+     "id": "x",
+     "pieza": "x_roja",
+     "estado": {},
+     "posicion": [
+      1420,
+      620
+     ],
+     "tamano": 1.0,
+     "movimiento": [
+      "aparecer"
+     ],
+     "palabra": "desaconsejados"
+    }
+   ]
+  },
+  {
+   "id": 11,
+   "palabra_inicio": "Tirar de ella",
+   "fondo": "blanco",
+   "temblor": [
+    {
+     "palabra": "desaconsejado"
+    }
+   ],
+   "elementos": [
+    {
+     "id": "n",
+     "pieza": "numero",
+     "estado": {
+      "valor": "3"
+     },
+     "posicion": [
+      360,
+      300
+     ],
+     "tamano": 0.9,
+     "movimiento": [
+      "aparecer"
+     ],
+     "palabra": "Tirar"
+    },
+    {
+     "id": "garrapata",
+     "pieza": "garrapata",
+     "estado": {},
+     "posicion": [
+      700,
+      600
+     ],
+     "tamano": 0.7,
+     "movimiento": [
+      "aparecer"
+     ],
+     "palabra": "Tirar"
+    },
+    {
+     "id": "dedos",
+     "pieza": "dedos",
+     "estado": {},
+     "posicion": [
+      810,
+      600
+     ],
+     "tamano": 1.0,
+     "movimiento": [
+      {
+       "tipo": "deslizar",
+       "desde": [
+        2100,
+        600
+       ]
+      }
+     ],
+     "palabra": "dedos"
+    },
+    {
+     "id": "x",
+     "pieza": "x_roja",
+     "estado": {},
+     "posicion": [
+      1550,
+      600
+     ],
+     "tamano": 1.0,
+     "movimiento": [
+      "aparecer"
+     ],
+     "palabra": "desaconsejado"
+    }
+   ]
+  },
+  {
+   "id": 12,
+   "palabra_inicio": "Eso no lo dice",
+   "fondo": "blanco",
+   "temblor": [],
+   "elementos": [
+    {
+     "id": "vecino",
+     "pieza": "vecino",
+     "estado": {
+      "pose": "de_pie",
+      "gesto": "neutral"
+     },
+     "posicion": [
+      760,
+      990
+     ],
+     "tamano": 1.1,
+     "movimiento": [
+      "aparecer"
+     ],
+     "palabra": "Eso"
+    },
+    {
+     "id": "x",
+     "pieza": "x_roja",
+     "estado": {},
+     "posicion": [
+      1250,
+      560
+     ],
+     "tamano": 1.0,
+     "movimiento": [
+      "aparecer"
+     ],
+     "palabra": "vecino"
+    }
+   ]
+  },
+  {
+   "id": 13,
+   "palabra_inicio": "Lo dice la guía",
+   "fondo": "blanco",
+   "temblor": [],
+   "elementos": [
+    {
+     "id": "doc",
+     "pieza": "documento",
+     "estado": {
+      "titulo": "GUÍA"
+     },
+     "posicion": [
+      560,
+      580
+     ],
+     "tamano": 1.2,
+     "movimiento": [
+      "aparecer",
+      {
+       "tipo": "crecer",
+       "hasta": 1.08,
+       "duracion": 5
+      }
+     ],
+     "palabra": "guía"
+    },
+    {
+     "id": "es",
+     "pieza": "rotulo",
+     "estado": {
+      "texto": "ESPAÑA"
+     },
+     "posicion": [
+      1320,
+      380
+     ],
+     "tamano": 1.0,
+     "movimiento": [
+      "aparecer"
+     ],
+     "palabra": "España"
+    },
+    {
+     "id": "mx",
+     "pieza": "rotulo",
+     "estado": {
+      "texto": "MÉXICO"
+     },
+     "posicion": [
+      1320,
+      600
+     ],
+     "tamano": 1.0,
+     "movimiento": [
+      "aparecer"
+     ],
+     "palabra": "México"
+    },
+    {
+     "id": "ok",
+     "pieza": "chulo",
+     "estado": {},
+     "posicion": [
+      1320,
+      830
+     ],
+     "tamano": 1.0,
+     "movimiento": [
+      "aparecer"
+     ],
+     "palabra": "mismo"
+    }
+   ]
+  },
+  {
+   "id": 14,
+   "palabra_inicio": "Y dicen por qué",
+   "fondo": "blanco",
+   "temblor": [],
+   "elementos": [
+    {
+     "id": "yo",
+     "pieza": "personaje",
+     "estado": {
+      "pose": "senalando",
+      "gesto": "concentrado"
+     },
+     "posicion": [
+      640,
+      990
+     ],
+     "tamano": 1.1,
+     "movimiento": [
+      "aparecer"
+     ],
+     "palabra": "dicen"
+    },
+    {
+     "id": "rotulo",
+     "pieza": "rotulo",
+     "estado": {
+      "texto": "¿POR QUÉ?",
+      "color": "amarillo"
+     },
+     "posicion": [
+      1350,
+      420
+     ],
+     "tamano": 1.1,
+     "movimiento": [
+      "aparecer"
+     ],
+     "palabra": "por qué"
+    }
+   ]
+  },
+  {
+   "id": 15,
+   "palabra_inicio": "Esos métodos",
+   "fondo": "blanco",
+   "temblor": [
+    {
+     "palabra": "aprietan"
+    }
+   ],
+   "elementos": [
+    {
+     "id": "garrapata",
+     "pieza": "garrapata",
+     "estado": {},
+     "posicion": [
+      860,
+      560
+     ],
+     "tamano": 1.0,
+     "movimiento": [
+      "aparecer",
+      {
+       "tipo": "cambiar_pose",
+       "palabra": "irritan",
+       "estado": {
+        "variante": "irritada"
+       }
+      },
+      {
+       "tipo": "temblor",
+       "palabra": "irritan"
+      },
+      {
+       "tipo": "cambiar_pose",
+       "palabra": "aprietan",
+       "retraso": 0.35,
+       "estado": {
+        "variante": "apretada"
+       }
+      }
+     ],
+     "palabra": "Esos"
+    },
+    {
+     "id": "dedos",
+     "pieza": "dedos",
+     "estado": {},
+     "posicion": [
+      1010,
+      560
+     ],
+     "tamano": 1.0,
+     "movimiento": [
+      {
+       "tipo": "deslizar",
+       "desde": [
+        2100,
+        560
+       ],
+       "duracion": 0.4
+      }
+     ],
+     "palabra": "aprietan"
+    }
+   ]
+  },
+  {
+   "id": 16,
+   "palabra_inicio": "Y un bicho apretado",
+   "fondo": "blanco",
+   "temblor": [],
+   "elementos": [
+    {
+     "id": "garrapata",
+     "pieza": "garrapata",
+     "estado": {
+      "variante": "apretada"
+     },
+     "posicion": [
+      960,
+      360
+     ],
+     "tamano": 0.8,
+     "movimiento": [
+      "aparecer"
+     ],
+     "palabra": "bicho"
+    },
+    {
+     "id": "flecha",
+     "pieza": "flecha",
+     "estado": {
+      "curva": 0.05
+     },
+     "posicion": [
+      960,
+      600
+     ],
+     "tamano": 1.1,
+     "movimiento": [
+      "aparecer"
+     ],
+     "palabra": "vacía",
+     "rotacion": 90
+    },
+    {
+     "id": "gotas",
+     "pieza": "gotas",
+     "estado": {},
+     "posicion": [
+      960,
+      830
+     ],
+     "tamano": 1.6,
+     "movimiento": [
+      "aparecer",
+      {
+       "tipo": "temblor",
+       "palabra": "cuerpo"
+      }
+     ],
+     "palabra": "vacía",
+     "retraso": 0.25
+    }
+   ]
+  },
+  {
+   "id": 17,
+   "palabra_inicio": "Te lo mete",
+   "fondo": "blanco",
+   "temblor": [],
+   "elementos": [
+    {
+     "id": "vena",
+     "pieza": "vena",
+     "estado": {},
+     "posicion": [
+      960,
+      760
+     ],
+     "tamano": 1.0,
+     "movimiento": [
+      "aparecer"
+     ],
+     "palabra": "Te"
+    },
+    {
+     "id": "garrapata",
+     "pieza": "garrapata",
+     "estado": {
+      "variante": "apretada"
+     },
+     "posicion": [
+      960,
+      400
+     ],
+     "tamano": 0.75,
+     "movimiento": [
+      "aparecer"
+     ],
+     "palabra": "Te"
+    },
+    {
+     "id": "gotas",
+     "pieza": "gotas",
+     "estado": {},
+     "posicion": [
+      960,
+      800
+     ],
+     "tamano": 0.9,
+     "movimiento": [
+      {
+       "tipo": "deslizar",
+       "desde": [
+        960,
+        470
+       ],
+       "duracion": 0.8
+      }
+     ],
+     "palabra": "mete"
+    },
+    {
+     "id": "rotulo",
+     "pieza": "rotulo",
+     "estado": {
+      "texto": "EN LA SANGRE",
+      "color": "rojo"
+     },
+     "posicion": [
+      960,
+      140
+     ],
+     "tamano": 1.0,
+     "movimiento": [
+      "aparecer"
+     ],
+     "palabra": "sangre"
+    }
+   ]
+  },
+  {
+   "id": 18,
+   "palabra_inicio": "Y tú no vas",
+   "fondo": "campo",
+   "temblor": [],
+   "elementos": [
+    {
+     "id": "yo",
+     "pieza": "personaje",
+     "estado": {
+      "pose": "de_pie",
+      "gesto": "alivio"
+     },
+     "posicion": [
+      960,
+      990
+     ],
+     "tamano": 1.15,
+     "movimiento": [
+      "aparecer",
+      {
+       "tipo": "cambiar_pose",
+       "palabra": "notar",
+       "estado": {
+        "ojos": "lado"
+       }
+      }
+     ],
+     "palabra": "tú"
+    },
+    {
+     "id": "nada",
+     "pieza": "rotulo",
+     "estado": {
+      "texto": "NI LO NOTAS"
+     },
+     "posicion": [
+      1500,
+      350
+     ],
+     "tamano": 1.0,
+     "movimiento": [
+      "aparecer"
+     ],
+     "palabra": "nada"
+    }
+   ]
+  },
+  {
+   "id": 19,
+   "palabra_inicio": "Ni ese día",
+   "fondo": "blanco",
+   "temblor": [],
+   "elementos": [
+    {
+     "id": "hoy",
+     "pieza": "calendario",
+     "estado": {
+      "texto": "HOY"
+     },
+     "posicion": [
+      700,
+      540
+     ],
+     "tamano": 1.2,
+     "movimiento": [
+      "aparecer"
+     ],
+     "palabra": "día"
+    },
+    {
+     "id": "man",
+     "pieza": "calendario",
+     "estado": {
+      "texto": "MAÑANA"
+     },
+     "posicion": [
+      1220,
+      540
+     ],
+     "tamano": 1.2,
+     "movimiento": [
+      "aparecer"
+     ],
+     "palabra": "siguiente"
+    }
+   ]
+  },
+  {
+   "id": 20,
+   "palabra_inicio": "Hay otra cosa",
+   "fondo": "blanco",
+   "temblor": [
+    {
+     "palabra": "falsa"
+    }
+   ],
+   "elementos": [
+    {
+     "id": "mito",
+     "pieza": "rotulo",
+     "estado": {
+      "texto": "MITO",
+      "color": "amarillo"
+     },
+     "posicion": [
+      700,
+      260
+     ],
+     "tamano": 1.2,
+     "movimiento": [
+      "aparecer"
+     ],
+     "palabra": "otra"
+    },
+    {
+     "id": "gente",
+     "pieza": "gente",
+     "estado": {},
+     "posicion": [
+      960,
+      980
+     ],
+     "tamano": 1.0,
+     "movimiento": [
+      "aparecer"
+     ],
+     "palabra": "mundo"
+    },
+    {
+     "id": "falso",
+     "pieza": "rotulo",
+     "estado": {
+      "texto": "FALSO",
+      "color": "rojo"
+     },
+     "posicion": [
+      1300,
+      260
+     ],
+     "tamano": 1.2,
+     "movimiento": [
+      "aparecer"
+     ],
+     "palabra": "falsa"
+    }
+   ]
+  },
+  {
+   "id": 21,
+   "palabra_inicio": "que no corre prisa",
+   "fondo": "blanco",
+   "temblor": [],
+   "elementos": [
+    {
+     "id": "yo",
+     "pieza": "personaje",
+     "estado": {
+      "pose": "sentado",
+      "gesto": "alivio"
+     },
+     "posicion": [
+      700,
+      950
+     ],
+     "tamano": 1.3,
+     "movimiento": [
+      "aparecer"
+     ],
+     "palabra": "que"
+    },
+    {
+     "id": "prisa",
+     "pieza": "rotulo",
+     "estado": {
+      "texto": "NO CORRE PRISA"
+     },
+     "posicion": [
+      1300,
+      420
+     ],
+     "tamano": 1.0,
+     "movimiento": [
+      "aparecer"
+     ],
+     "palabra": "corre"
+    }
+   ]
+  },
+  {
+   "id": 22,
+   "palabra_inicio": "Que ya te la",
+   "fondo": "calle",
+   "temblor": [],
+   "elementos": [
+    {
+     "id": "yo",
+     "pieza": "personaje",
+     "estado": {
+      "pose": "de_pie",
+      "gesto": "alivio"
+     },
+     "posicion": [
+      480,
+      980
+     ],
+     "tamano": 1.0,
+     "movimiento": [
+      "aparecer"
+     ],
+     "palabra": "Que"
+    },
+    {
+     "id": "calma",
+     "pieza": "rotulo",
+     "estado": {
+      "texto": "CON CALMA"
+     },
+     "posicion": [
+      960,
+      240
+     ],
+     "tamano": 1.0,
+     "movimiento": [
+      "aparecer"
+     ],
+     "palabra": "calma"
+    },
+    {
+     "id": "casa",
+     "pieza": "casa",
+     "estado": {},
+     "posicion": [
+      1450,
+      560
+     ],
+     "tamano": 1.1,
+     "movimiento": [
+      "aparecer"
+     ],
+     "palabra": "casa"
+    }
+   ]
+  },
+  {
+   "id": 23,
+   "palabra_inicio": "Esa hora",
+   "fondo": "blanco",
+   "temblor": [
+    {
+     "palabra": "suya"
+    }
+   ],
+   "elementos": [
+    {
+     "id": "crono",
+     "pieza": "cronometro",
+     "estado": {},
+     "posicion": [
+      620,
+      500
+     ],
+     "tamano": 1.2,
+     "movimiento": [
+      "aparecer",
+      {
+       "tipo": "girar",
+       "velocidad": 540,
+       "parte": "aguja"
+      }
+     ],
+     "palabra": "hora",
+     "sale_palabra": "suya"
+    },
+    {
+     "id": "yo",
+     "pieza": "personaje",
+     "estado": {
+      "pose": "de_pie",
+      "gesto": "concentrado"
+     },
+     "posicion": [
+      1300,
+      990
+     ],
+     "tamano": 1.1,
+     "movimiento": [
+      "aparecer",
+      {
+       "tipo": "cambiar_pose",
+       "palabra": "suya",
+       "estado": {
+        "pose": "asustado",
+        "gesto": "susto"
+       }
+      }
+     ],
+     "palabra": "esperas"
+    },
+    {
+     "id": "tuya",
+     "pieza": "rotulo",
+     "estado": {
+      "texto": "NO ES TUYA"
+     },
+     "posicion": [
+      1300,
+      200
+     ],
+     "tamano": 1.0,
+     "movimiento": [
+      "aparecer"
+     ],
+     "palabra": "tuya"
+    },
+    {
+     "id": "garrapata",
+     "pieza": "garrapata",
+     "estado": {
+      "variante": "llena"
+     },
+     "posicion": [
+      620,
+      540
+     ],
+     "tamano": 1.0,
+     "movimiento": [
+      "aparecer"
+     ],
+     "palabra": "suya"
+    }
+   ]
+  }
+ ]
+}

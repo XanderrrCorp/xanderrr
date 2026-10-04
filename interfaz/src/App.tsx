@@ -13,6 +13,7 @@ import { Planes } from './paginas/Planes';
 import { Pronto } from './paginas/Pronto';
 import { Revision } from './paginas/Revision';
 import { Tracy, TracyVideo } from './paginas/Tracy';
+import { Calma } from './paginas/Calma';
 
 export function App() {
   const [cuenta, setCuenta] = useState<Cuenta | null>(null);
@@ -56,6 +57,7 @@ export function App() {
             <Route path="/videos/:slug/miniatura" element={<Miniatura />} />
             <Route path="/videos/:slug" element={<Revision />} />
             <Route path="/tracy" element={<Tracy />} />
+            <Route path="/calma" element={<Calma />} />
             <Route path="/tracy/:slug" element={<TracyVideo />} />
             <Route path="/canales" element={<Canales />} />
             <Route path="/formatos" element={<Formatos />} />

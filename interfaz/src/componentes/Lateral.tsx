@@ -15,6 +15,7 @@ const GRUPOS: Grupo[] = [
         { nombre: 'Short vertical', icono: 'short', ir: '/videos' },
         { nombre: 'Miniatura', icono: 'miniatura', ir: '/videos' },
         { nombre: 'Canal Tracy', icono: 'video', ir: '/tracy' },
+        { nombre: 'Hazlo con Calma', icono: 'video', ir: '/calma' },
       ] },
       { titulo: 'Identidad', items: [
         { nombre: 'Personaje', icono: 'personaje', ir: '/pronto/personaje', pronto: true },

@@ -91,19 +91,19 @@ def _tenis(rodilla, pie, semilla: str, en_suelo: bool) -> str:
     return zapato + suela
 
 
-def _pierna(cadera, lado, semilla, pose) -> str:
+def _pierna(cadera, lado, semilla, pose, color=AMARILLO) -> str:
     rodilla, pie = lado
-    return tubo([cadera, rodilla, pie], semilla, AMARILLO, GROSOR_PIERNA) + \
+    return tubo([cadera, rodilla, pie], semilla, color, GROSOR_PIERNA) + \
         _tenis(rodilla, pie, semilla + "t", pose.get("suelo", True) and pie[1] > -20)
 
 
-def _brazo(hombro, lado, semilla, dedo=False) -> str:
+def _brazo(hombro, lado, semilla, dedo=False, color=AMARILLO) -> str:
     codo, mano = lado
-    salida = tubo([hombro, codo, mano], semilla, AMARILLO, GROSOR_BRAZO)
+    salida = tubo([hombro, codo, mano], semilla, color, GROSOR_BRAZO)
     if dedo:
         u = _unit(_menos(mano, codo))
         punta = (mano[0] + u[0] * 26, mano[1] + u[1] * 26)
-        salida += tubo([mano, punta], semilla + "d", AMARILLO, 7)
+        salida += tubo([mano, punta], semilla + "d", color, 7)
     return salida
 
 
@@ -140,19 +140,20 @@ def _correa(pose, semilla) -> str:
     return tubo([a, b], semilla, ROJO, 8)
 
 
-def cuerpo(nombre: str) -> str:
-    """El cuerpo SIN cabeza en una pose (la cabeza va aparte para cambiar cara y ojos)."""
+def cuerpo(nombre: str, color: str = AMARILLO, mochila: bool = True) -> str:
+    """El cuerpo SIN cabeza en una pose (la cabeza va aparte para cambiar cara y ojos).
+    Con otro color y sin mochila sirve para «otra persona» (un vecino, la gente)."""
     p = POSES[nombre]
     cad, cue, hom = p["cadera"], p["cuello"], p["hombro"]
     s = f"cuerpo/{nombre}"
     partes = [
-        _brazo(hom, p["brazo_atras"], s + "/ba"),
-        _mochila(p, s + "/mo"),
-        _pierna(cad, p["pierna_atras"], s + "/pa", p),
-        _pierna(cad, p["pierna_frente"], s + "/pf", p),
-        tubo([cad, cue], s + "/to", AMARILLO, GROSOR_TORSO),
-        _correa(p, s + "/co"),
-        _brazo(hom, p["brazo_frente"], s + "/bf", p.get("dedo", False)),
+        _brazo(hom, p["brazo_atras"], s + "/ba", color=color),
+        _mochila(p, s + "/mo") if mochila else "",
+        _pierna(cad, p["pierna_atras"], s + "/pa", p, color),
+        _pierna(cad, p["pierna_frente"], s + "/pf", p, color),
+        tubo([cad, cue], s + "/to", color, GROSOR_TORSO),
+        _correa(p, s + "/co") if mochila else "",
+        _brazo(hom, p["brazo_frente"], s + "/bf", p.get("dedo", False), color),
     ]
     return "".join(partes)
 
@@ -199,8 +200,9 @@ def cara(gesto: str) -> str:
     return "".join(raya(c, f"ceja/{gesto}/{i}") for i, c in enumerate(cejas)) + boca
 
 
-def personaje(pose: str = "de_pie", ojo: str = "abiertos", gesto: str = "neutral") -> str:
-    """El personaje completo (para hojas de prueba): cuerpo + cabeza + ojos + cara."""
+def personaje(pose: str = "de_pie", ojo: str = "abiertos", gesto: str = "neutral", color: str = AMARILLO,
+              mochila: bool = True) -> str:
+    """El personaje completo: cuerpo + cabeza + ojos + cara."""
     cx, cy = centro_cabeza(POSES[pose])
-    return (cuerpo(pose) + f'<g transform="translate({cx:.1f},{cy:.1f})">'
+    return (cuerpo(pose, color, mochila) + f'<g transform="translate({cx:.1f},{cy:.1f})">'
             + cabeza() + ojos(ojo) + cara(gesto) + "</g>")
