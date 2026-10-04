@@ -14,15 +14,21 @@ from . import canal as C
 
 MODULO = "ilustracion_explica"
 
-# Las 3 muestras salen del tema de ejemplo del dueño («Sacudida al dormirte»), escena en segunda persona.
+# Las 3 muestras prueban si el modelo mantiene al personaje haciendo de distintos tipos de papá (primer video:
+# «TODOS los tipos de PAPÁS explicados»): siempre reconocible, con los accesorios encima.
 MUESTRAS = [
-    ("cama", "El personaje está acostado en su cama, de noche, con los ojos cerrados y el cuerpo relajado, a punto "
-             "de quedarse dormido. Cobija roja, almohada blanca, una mesa de noche con una lámpara apagada."),
-    ("escalon", "El personaje cae en el aire con cara de susto y los brazos arriba: pisó un escalón que no existe. "
-                "Debajo de su pie, una escalera gris que termina en el vacío."),
-    ("brinco", "El personaje se despierta de golpe, sentado en la cama, con los ojos muy abiertos y una mano en el "
-               "pecho. Líneas cortas de movimiento alrededor del cuerpo muestran el brinco."),
+    ("papa_sofa", "El personaje hace de papá dormido en un sofá gris frente a un televisor, con el control remoto en "
+                  "la mano, la boca abierta y los ojos cerrados. La pantalla del televisor es un rectángulo gris "
+                  "liso, sin imagen ni marca."),
+    ("papa_periodico", "El personaje hace de papá «pregúntale a tu mamá»: sentado en un sillón, leyendo un periódico "
+                       "abierto que le tapa medio cuerpo, sin levantar la vista. El periódico no tiene letras: solo "
+                       "rayas grises y un recuadro gris."),
+    ("papa_parrillero", "El personaje hace de papá parrillero: de pie, orgulloso y sonriente frente a un asador negro "
+                        "con humo, con un delantal blanco encima del cuerpo amarillo y unas pinzas en la mano."),
 ]
+ACCESORIOS = ("Debe reconocerse siempre al mismo personaje de la referencia: cabeza redonda color crema, calvo, "
+              "ojos grandes, cuerpo de palitos amarillo, mochila roja y tenis negros. Los accesorios del papel "
+              "(ropa, objetos) van ENCIMA del personaje, sin cambiarle la cabeza, el color ni las proporciones.")
 
 
 def carpeta() -> Path:
@@ -48,7 +54,7 @@ def referencia(destino: Path) -> Path:
 
 def prompt(descripcion: str, preset: dict | None = None) -> str:
     preset = preset or C.cargar()
-    return (f"{preset['estilo_ilustracion']}\n\nEscena: {descripcion}\n\n"
+    return (f"{preset['estilo_ilustracion']}\n\n{ACCESORIOS}\n\nEscena: {descripcion}\n\n"
             "Formato horizontal 16:9. Composición limpia con mucho blanco alrededor. El personaje se ve completo.")
 
 

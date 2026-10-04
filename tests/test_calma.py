@@ -202,7 +202,7 @@ def test_muestras_con_proveedor_simulado():
     p = ProveedorSimulado(ConfigCostos.cargar())
     assert I.costo_muestras(p)["usd"] > 0
     hechas = I.generar_muestras(Trabajo("muestras"), proveedor=p)
-    assert hechas == ["cama.png", "escalon.png", "brinco.png"]
+    assert hechas == ["papa_sofa.png", "papa_periodico.png", "papa_parrillero.png"]
     assert all((I.carpeta() / h).exists() for h in hechas)
     assert I.estado_muestras()["archivos"] == hechas
     assert "Sin texto" in I.prompt("algo") and (I.carpeta() / "referencia_personaje.png").exists()

@@ -41,7 +41,7 @@ export function Explica() {
       <p className="tenue">TODAS las X explicadas en N minutos. Fondo blanco, tu personaje y animación por código.</p>
       <section className="rev-tarjeta">
         <h2>Ilustraciones de muestra</h2>
-        <p>Tres escenas del tema de ejemplo («Sacudida al dormirte») para aprobar el estilo. Se generan con Google
+        <p>Tres tipos de papá (sofá, «pregúntale a tu mamá», parrillero) para ver si el personaje se mantiene. Se generan con Google
           ({c.modelo || '—'}) y la imagen del personaje como referencia.</p>
         {c.error ? <p className="error pequeno">{c.error}</p>
           : <p>Costo de las 3: <b>unos {c.cop}</b>.</p>}
