@@ -247,8 +247,10 @@ class Escenario:
         dentro = (bx + marco, by + marco, bx + marco + iw, by + marco + ih)
         return tablero, (bx, by), dentro, (bx + marco + dx, by + marco + dy, d.width, d.height)
 
-    def animado(self, clip: dict, dx: float = 0.0, dy: float = 0.0, escala: float = 1.0) -> Image.Image | None:
-        """El papel con el objeto (recorte o recuadro) movido o escalado; None si no tiene capas."""
+    def animado(self, clip: dict, dx: float = 0.0, dy: float = 0.0, escala: float = 1.0,
+                vel: tuple[float, float] = (0.0, 0.0)) -> Image.Image | None:
+        """El papel con el objeto (recorte o recuadro) movido o escalado; None si no tiene capas.
+        `vel`: cuánto se movió desde el cuadro anterior (para el desenfoque de movimiento)."""
         capas = self.capas.get(clip["id"])
         if capas is None:
             return None
@@ -262,6 +264,8 @@ class Escenario:
             sombra = _escalar(sombra, (max(1, int(sombra.width * escala)), max(1, int(sombra.height * escala))))
             x, y = cx - obj.width / 2, cy - obj.height / 2
             sx, sy = x + (sx - capas[1][1][0]) * escala, y + (sy - capas[1][1][1]) * escala
+        if abs(vel[0]) + abs(vel[1]) > 4:
+            obj, sombra = estela(obj, *vel), estela(sombra, *vel)
         lienzo.alpha_composite(sombra, (int(max(-sombra.width + 1, min(W - 1, sx + dx))), int(max(-sombra.height + 1, min(H - 1, sy + dy)))))
         ox, oy = int(x + dx), int(y + dy)
         if ox < W and oy < H and ox + obj.width > 0 and oy + obj.height > 0:
@@ -498,6 +502,64 @@ def _camara(img: Image.Image, s: float, foco: tuple[float, float], dx: float = 0
                               borderMode=_cv2.BORDER_REPLICATE)
         return Image.fromarray(out, img.mode)
     return img.resize((W, H), Image.Resampling.BILINEAR, box=(x0, y0, x0 + w, y0 + h))
+
+
+def estela(rgba: Image.Image, vx: float, vy: float) -> Image.Image:
+    """Desenfoque de movimiento de una capa que se mueve vx, vy píxeles por cuadro (como una cámara con
+    obturador de 180°): el rastro va en la dirección del movimiento. Se hace con alfa premultiplicado
+    para que los bordes no salgan oscuros."""
+    largo = int(min(120, math.hypot(vx, vy) * 0.5))
+    if largo < 3 or _cv2 is None:
+        return rgba
+    k = np.zeros((largo, largo), np.float32)
+    c = (largo - 1) / 2
+    ang = math.atan2(vy, vx)
+    for t in np.linspace(-c, c, largo * 2):
+        k[int(round(c + t * math.sin(ang))), int(round(c + t * math.cos(ang)))] = 1
+    k /= k.sum()
+    a = np.asarray(rgba, np.float32)
+    alfa = a[:, :, 3:4] / 255
+    pre = np.concatenate([a[:, :, :3] * alfa, alfa * 255], axis=2)
+    pad = largo
+    pre = _cv2.copyMakeBorder(pre, pad, pad, pad, pad, _cv2.BORDER_CONSTANT, value=0)
+    f = _cv2.filter2D(pre, -1, k, borderType=_cv2.BORDER_CONSTANT)
+    al = np.clip(f[:, :, 3:4] / 255, 1e-4, 1)
+    rgb = np.where(f[:, :, 3:4] > 0.5, f[:, :, :3] / al, 0)
+    salida = np.concatenate([np.clip(rgb, 0, 255), np.clip(f[:, :, 3:4], 0, 255)], axis=2).astype("uint8")
+    return Image.fromarray(salida[pad:-pad, pad:-pad], "RGBA")
+
+
+def zoom_con_estela(base: Image.Image, s0: float, s1: float, foco0, foco1, dx: float = 0, dy: float = 0) -> Image.Image:
+    """Un zoom rápido (de golpe, ráfaga) con desenfoque de movimiento: el promedio de varias tomas entre
+    la escala del cuadro anterior y la de este."""
+    pasos = 4
+    acum = None
+    for k in range(pasos):
+        t = (k + 0.5) / pasos
+        s = s0 + (s1 - s0) * t
+        f = (foco0[0] + (foco1[0] - foco0[0]) * t, foco0[1] + (foco1[1] - foco0[1]) * t)
+        cuadro = np.asarray(_camara(base, s, f, dx, dy).convert("RGB"), np.float32)
+        acum = cuadro if acum is None else acum + cuadro
+    return Image.fromarray((acum / pasos).astype("uint8"))
+
+
+DUR_BARRIDO = 0.2
+
+
+def barrido(saliente: Image.Image, entrante: Image.Image, p: float, desde: str = "derecha") -> Image.Image:
+    """Transición de barrido rápido (whip pan): la escena anterior sale y la nueva entra de lado con un
+    desenfoque horizontal fuerte que se apaga al llegar."""
+    q = _sale(p)
+    sentido = 1 if desde == "derecha" else -1
+    off = int(round(W * (1 - q))) * sentido
+    lienzo = Image.new("RGB", (W, H))
+    lienzo.paste(saliente.convert("RGB"), (off - W * sentido, 0))
+    lienzo.paste(entrante.convert("RGB"), (off, 0))
+    velocidad = W * 3 * (1 - p) ** 2 / FPS             # derivada de _sale, en px por cuadro
+    largo = int(min(220, velocidad * 0.8))
+    if largo >= 3 and _cv2 is not None:
+        return Image.fromarray(_cv2.blur(np.asarray(lienzo), (largo, 1)))
+    return lienzo
 
 
 # ------------------------------------------------------------------ foco y flechas
@@ -1864,6 +1926,8 @@ def _renderizar(carpeta: CarpetaProyecto, ffmpeg: str, destino: Path | None, des
         return RuntimeError(f"el programa que arma el video (ffmpeg) se cerró{memoria}: {dijo or ex}")
 
     temblor = random.Random(proyecto.semilla)
+    zoom_previo: dict = {}           # escala y foco del cuadro anterior (para el desenfoque de los zooms)
+    saliente_barrido: dict = {}      # la imagen que sale en la transición de barrido
     capa_foco = Foco()
     lector = LectorClips(raiz, ffmpeg)
     ultimo: Image.Image | None = None
@@ -1903,24 +1967,29 @@ def _renderizar(carpeta: CarpetaProyecto, ffmpeg: str, destino: Path | None, des
             entrada = next((ef[k] for k in ("entrada_abajo", "entrada_lado", "entrada_rebote") if k in ef), None)
             vaiven = ef.get("vaiven")
             if entrada or vaiven:
-                ddx = ddy = 0.0
-                esc_obj = 1.0
-                # «retraso»: la imagen espera tapada (tarjeta de la especie) y entra cuando esta se va
-                loc_e = loc - entrada.get("retraso", 0.0) if entrada else loc
-                if entrada and loc_e < entrada.get("dur", 0.42):
-                    p = max(0.0, loc_e) / entrada.get("dur", 0.42)
-                    # «suave»: se desliza y frena sin pasarse (Peligro Tropical); si no, con rebote
-                    curva = _sale(p) if entrada.get("curva") == "suave" else _atras(p)
-                    if "entrada_abajo" in ef:
-                        ddy = (1 - curva) * H * 0.75
-                    elif "entrada_lado" in ef:
-                        ddx = (1 - curva) * W * 0.7 * (-1 if entrada.get("desde") == "izquierda" else 1)
-                    else:
-                        esc_obj = 0.5 + 0.5 * _atras(p)
-                if vaiven:
-                    ddy += math.sin(2 * math.pi * vaiven.get("hz", 0.7) * loc + vaiven.get("fase", 0)) * vaiven.get("px", 6)
-                    esc_obj *= 1 + 0.008 * math.sin(2 * math.pi * vaiven.get("hz", 0.7) * 2 * loc)
-                movido = escenario.animado(c, ddx, ddy, esc_obj)
+                def desplazamiento(l: float) -> tuple[float, float, float]:
+                    ddx = ddy = 0.0
+                    esc_obj = 1.0
+                    # «retraso»: la imagen espera tapada (tarjeta de la especie) y entra cuando esta se va
+                    loc_e = l - entrada.get("retraso", 0.0) if entrada else l
+                    if entrada and loc_e < entrada.get("dur", 0.42):
+                        p = max(0.0, loc_e) / entrada.get("dur", 0.42)
+                        # «suave»: se desliza y frena sin pasarse (Peligro Tropical); si no, con rebote
+                        curva = _sale(p) if entrada.get("curva") == "suave" else _atras(p)
+                        if "entrada_abajo" in ef:
+                            ddy = (1 - curva) * H * 0.75
+                        elif "entrada_lado" in ef:
+                            ddx = (1 - curva) * W * 0.7 * (-1 if entrada.get("desde") == "izquierda" else 1)
+                        else:
+                            esc_obj = 0.5 + 0.5 * _atras(p)
+                    if vaiven:
+                        ddy += math.sin(2 * math.pi * vaiven.get("hz", 0.7) * l + vaiven.get("fase", 0)) * vaiven.get("px", 6)
+                        esc_obj *= 1 + 0.008 * math.sin(2 * math.pi * vaiven.get("hz", 0.7) * 2 * l)
+                    return ddx, ddy, esc_obj
+
+                ddx, ddy, esc_obj = desplazamiento(loc)
+                antes = desplazamiento(max(0.0, loc - 1 / FPS))
+                movido = escenario.animado(c, ddx, ddy, esc_obj, vel=(ddx - antes[0], ddy - antes[1]))
                 if movido is not None:
                     base = movido
             off = ef["revelar_pixelado"]["duracion"] if "revelar_pixelado" in ef else 0.0
@@ -1964,11 +2033,21 @@ def _renderizar(carpeta: CarpetaProyecto, ffmpeg: str, destino: Path | None, des
             if "temblor_leve" in ef:
                 a = ef["temblor_leve"].get("amplitud", 3)
                 dx, dy = temblor.uniform(-a, a), temblor.uniform(-a, a)
-            img = _camara(base, s, foco, dx, dy)
+            previo = zoom_previo.get(c["id"])
+            if previo is not None and abs(s - previo[0]) > 0.006 and _cv2 is not None:
+                img = zoom_con_estela(base, previo[0], s, previo[1], foco, dx, dy)   # zoom rápido: con estela
+            else:
+                img = _camara(base, s, foco, dx, dy)
+            zoom_previo.clear()
+            zoom_previo[c["id"]] = (s, foco)
             camara = (s, foco[0])
         # --- transición y destellos
         if c["transicion_entrada"] == "fundido_corto" and loc < 0.25 and ultimo is not None:
             img = Image.blend(ultimo, img, _suave(loc / 0.25))
+        if c["transicion_entrada"] == "barrido" and loc < DUR_BARRIDO and not vertical:
+            if saliente_barrido.get("imagen") is not None:
+                lado_barrido = "derecha" if sum(map(ord, c["id"])) % 2 else "izquierda"
+                img = barrido(saliente_barrido["imagen"], img, loc / DUR_BARRIDO, lado_barrido)
         if "destello_rojo" in ef:
             dt = tt - ef["destello_rojo"]["en"]
             if 0 <= dt < 0.6:
@@ -2026,6 +2105,10 @@ def _renderizar(carpeta: CarpetaProyecto, ffmpeg: str, destino: Path | None, des
             clip_previo = c["id"]
             horizontal = img                        # los fundidos mezclan cuadros de 1920×1080
             img = _cuadro_vertical(img, cx_suave, titulo_v)
+        # la última imagen de cada escena, sin textos ni subtítulos: la que sale en un barrido
+        if not vertical and ci + 1 < len(clips) and clips[ci + 1]["transicion_entrada"] == "barrido" \
+                and (n + 1) / FPS >= clips[ci + 1]["inicio"]:
+            saliente_barrido["imagen"] = img.copy()
         # --- textos en pantalla
         for t in textos if not vertical else ():
             if t["inicio"] <= tt < t["fin"]:

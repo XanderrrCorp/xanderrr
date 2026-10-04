@@ -63,7 +63,7 @@ def test_historia_pantalla_completa_zoom_variado_capitulos_y_vineta():
     assert {"zoom_lento", "alejamiento_lento", "paneo_lento"} & set(tipos)
     seguidos = [(a, b) for a, b in zip(tipos, tipos[1:]) if a == b and a != "zoom_golpe"]
     assert len(seguidos) <= 2                     # casi nunca el mismo movimiento dos veces seguidas
-    assert any(c["transicion_entrada"] == "fundido_corto" for c in clips)
+    assert {c["transicion_entrada"] for c in clips} & {"fundido_corto", "barrido"}
     caps = [_ef(c, "capitulo") for c in clips if _ef(c, "capitulo")]
     assert [(x["numero"], x["titulo"]) for x in caps] == [(1, "El río que no se cruza"), (2, "La selva que no deja pasar")]
     assert not any(_ef(c, x) for c in clips for x in ("vaiven", "temblor_leve", "pila_fotos"))
@@ -81,3 +81,30 @@ def test_render_historia():
     c, _ = _proyecto()
     f = renderizar(c, ffmpeg(), c.ruta / "render" / "h.mp4", avisar=lambda _: None, salida=(320, 180, 3), procesos=1)
     assert f.exists() and f.stat().st_size > 0
+
+
+def test_estela_y_barrido():
+    from estudio.render import H, W, barrido, estela
+
+    capa = Image.new("RGBA", (200, 100), (0, 0, 0, 0))
+    capa.paste((200, 80, 40, 255), (50, 20, 150, 80))
+    quieta, movida = estela(capa, 0, 0), estela(capa, 60, 0)
+    assert quieta is capa                                               # sin movimiento no se toca
+    a = np.asarray(movida)[:, :, 3]
+    assert a[50, 40] > 0 and a[50, 160] > 0 and a[50, 100] == 255       # el rastro sale a los lados, el centro sigue
+    assert np.asarray(movida)[50, 45, :3].tolist()[0] > 150             # sin bordes oscuros (alfa premultiplicado)
+    sale = Image.new("RGB", (W, H), (255, 0, 0))
+    entra = Image.new("RGB", (W, H), (0, 0, 255))
+    medio = np.asarray(barrido(sale, entra, 0.15, "derecha"))
+    assert medio[H // 2, 5, 0] > 100 and medio[H // 2, W - 5, 2] > 100  # se ven las dos escenas a la vez
+    final = np.asarray(barrido(sale, entra, 1.0))
+    assert final[H // 2, W // 2].tolist() == [0, 0, 255]                # al terminar, solo la nueva y nítida
+
+
+def test_barridos_entre_escenas_grandes_con_swoosh():
+    _, edl = _proyecto()
+    clips = edl["pistas"]["escenas"]
+    con_barrido = [c for c in clips if c["transicion_entrada"] == "barrido"]
+    assert con_barrido and all(c["modo"] == "pantalla_completa" for c in con_barrido)
+    swoosh = {round(s["inicio"], 2) for s in edl["pistas"]["sfx"] if s["tipo"] == "barrido"}
+    assert all(round(c["inicio"], 2) in swoosh for c in con_barrido)

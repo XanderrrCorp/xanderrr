@@ -755,6 +755,11 @@ def construir_edl(carpeta: CarpetaProyecto) -> dict:
         movimiento = None
         transicion = "corte"
         respiro = False
+        if (deslizar and modo == "pantalla_completa" and idx > 0 and clips and clips[-1]["modo"] != "tira"
+                and rng.random() < (0.4 if historia else 0.6)):
+            # aspecto de editor: barrido rápido con desenfoque entre escenas grandes, con su swoosh
+            transicion = "barrido"
+            _sfx(sfx, "barrido", ini, idx, "Swoosh del barrido entre escenas")
         if modo == "pantalla_completa" and historia:
             # documental: acercar, alejar o recorrer la imagen, sin repetir el de la escena anterior; en los
             # momentos fuertes, un zoom de golpe
@@ -780,7 +785,8 @@ def construir_edl(carpeta: CarpetaProyecto) -> dict:
                 ultimo_mov_completo = elegido
             efectos.append({"efecto": "vineta"})
             # dentro de una misma parte, a veces se funde con la escena anterior (más de historia)
-            if idx > 0 and not nueva_seccion and clips and clips[-1]["modo"] == "pantalla_completa" and rng.random() < 0.5:
+            if (transicion == "corte" and idx > 0 and not nueva_seccion and clips
+                    and clips[-1]["modo"] == "pantalla_completa" and rng.random() < 0.5):
                 transicion = "fundido_corto"
         elif modo == "pantalla_completa":
             # la imagen llena la pantalla y se acerca muy despacio durante toda la escena
