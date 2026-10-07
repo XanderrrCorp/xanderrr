@@ -21,7 +21,7 @@ from ..calma.piezas import PIEZAS, ancho_texto, dibujar
 from ..config import escribir_json, leer_json
 from . import canal as C
 from . import guion as G
-from .catalogo import MOVIMIENTOS, texto_catalogo
+from .catalogo import FONDOS_ESCENA, MOVIMIENTOS, texto_catalogo, texto_fondos
 from .escenas import cuadricula
 
 EJEMPLOS = Path(__file__).resolve().parent / "ejemplos"
@@ -186,10 +186,14 @@ REGLAS (las más importantes primero)
 - Empujón de cámara («empujon»: [{{"palabra": "...", "foco": [x, y]}}]) en la palabra clave de la explicación y del bautizo.
 - «temblor» de pantalla ([{{"palabra": "..."}}]) solo en golpes o sustos.
 - Ilustra lo que dice la frase, no algo genérico. Pantalla limpia: mucho blanco.
+- «fondo» (solo escenas ilustracion donde el personaje vive la situación en un lugar): {texto_fondos()}.
+  Los dibujos del fondo son pálidos y grises; el piso queda en y≈940 (pies del personaje en y≈990 se ven bien).
+  Si la escena es un objeto de cerca (mano, ojo, oreja…), deja «blanco». Si dos escenas seguidas pasan en el mismo
+  lugar, repite el mismo fondo.
 
 Devuelve SOLO un JSON:
 {{"icono": {{"pieza": ..., "estado": {{...}}}}  ← el dibujo del tema para su círculo en la cuadrícula,
- "escenas": [{{"tipo": ..., "elementos": [{{"id", "pieza", "estado", "posicion": [x, y], "tamano", "palabra",
+ "escenas": [{{"tipo": ..., "fondo": "blanco", "elementos": [{{"id", "pieza", "estado", "posicion": [x, y], "tamano", "palabra",
    "movimiento": [...], "retraso", "rotacion", "ya_estaba"}}], "temblor": [...], "empujon": [...]}}, ...]}}
 
 FRASES:
@@ -210,6 +214,11 @@ def _ancla_en(ancla: str, frase: str) -> bool:
     return bool(objetivo) and any(ws[i:i + len(objetivo)] == objetivo for i in range(len(ws) - len(objetivo) + 1))
 
 
+def _fondo_valido(fondo, tipo: str) -> str:
+    """Solo las ilustraciones llevan lugar de fondo; un nombre que no existe queda en blanco."""
+    return fondo if tipo == "ilustracion" and fondo in FONDOS_ESCENA else "blanco"
+
+
 def validar(respuesta: dict, tema: dict) -> tuple[list[dict], dict, list[str]]:
     """Revisa y arregla lo que Claude devolvió. Devuelve (escenas, icono, notas)."""
     frases = frases_del_tema(tema)
@@ -220,7 +229,8 @@ def validar(respuesta: dict, tema: dict) -> tuple[list[dict], dict, list[str]]:
     salida = []
     for (parte, frase), esc in zip(frases, escenas):
         ws = frase.split()
-        esc = {"tipo": esc.get("tipo") or TIPO_DE_PARTE[parte], "palabra_inicio": " ".join(ws[:2]), "fondo": "blanco",
+        esc = {"tipo": esc.get("tipo") or TIPO_DE_PARTE[parte], "palabra_inicio": " ".join(ws[:2]),
+               "fondo": _fondo_valido(esc.get("fondo"), esc.get("tipo") or TIPO_DE_PARTE[parte]),
                "temblor": [m for m in esc.get("temblor") or [] if _ancla_en(m.get("palabra", ""), frase)],
                "empujon": [m for m in esc.get("empujon") or [] if _ancla_en(m.get("palabra", ""), frase)],
                "elementos": esc.get("elementos") or []}

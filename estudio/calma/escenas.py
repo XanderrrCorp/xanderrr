@@ -25,7 +25,8 @@ from .movimientos import TIPOS
 TIPOS_MOVIMIENTO = TIPOS
 from .piezas import PIEZAS
 
-FONDOS = ("blanco", "calle", "campo")
+FONDOS = ("blanco", "calle", "campo", "cuarto", "cuarto_noche", "bano", "sala", "cocina", "clase", "consultorio",
+          "piscina")
 MAX_EN_PANTALLA = 4
 MAX_SIN_CAMBIO_S = 2.0
 ADELANTO_CORTE_S = 0.08       # el corte de escena cae un pelín antes de la palabra (se siente a tiempo)

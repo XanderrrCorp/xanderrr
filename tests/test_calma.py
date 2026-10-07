@@ -177,7 +177,7 @@ def test_canal_el_calvo_explica_por_defecto():
 
     p = completar({"velocidad": 1.1, "cosa_rara": 1})
     assert p["velocidad"] == 1.1 and "cosa_rara" not in p
-    assert p["max_ilustraciones"] == 60 and p["fondo"] == "blanco" and p["efectos_sonido"] is False
+    assert p["max_ilustraciones"] == 60 and p["fondo"] == "blanco" and p["efectos_sonido"] is True
     assert ajustes_voz(completar(None))["voz_id"] == leer_config("proveedores.json")["voz"]["voz_id"]   # la de PT
     assert "Sin texto" in p["estilo_ilustracion"]
 
@@ -493,3 +493,54 @@ def test_pagina_de_videos_nuevos(tmp_path, monkeypatch):
     assert v["guion"].startswith("NOMBRE") and v["costo_voz"]["caracteres"] > 500
     assert cliente.post(f"/api/explica/videos/{v['slug']}/video", json={}).status_code == 400    # faltan escenas
     assert cliente.get("/api/explica/videos/../../etc").status_code == 404
+
+
+def test_efectos_de_sonido_siguen_lo_que_pasa_y_se_frenan(tmp_path):
+    from estudio.calma import sonidos
+
+    el = lambda i, pieza, entra, mov="aparecer": {"id": i, "pieza": pieza, "entra": entra, "movimiento": [mov]}
+    datos = {"video": {"duracion": 4.0}, "escenas": [
+        {"id": 1, "inicio": 0.0, "fin": 4.0, "temblor": [{"t": 2.0}],
+         "elementos": [el("a", "texto", 0.2), el("b", "texto", 0.4), el("x", "x_roja", 1.0, "dibujar"),
+                       el("c", "chulo", 3.0, "dibujar"), el("f", "flecha", 3.5, "dibujar")]}]}
+    ev = sonidos.eventos(datos)
+    nombres = [n for _, n, _ in ev]
+    assert nombres == ["pop", "error", "golpe", "ding", "rayon"]        # el segundo pop seguido no suena
+    x = sonidos.pista(datos, 4.0)
+    assert len(x) == 4 * sonidos.SR and 0.3 < float(abs(x).max()) <= 0.56
+    assert abs(x[int(0.4 * sonidos.SR):int(0.95 * sonidos.SR)]).max() < 1e-6   # silencio entre efectos
+
+
+def test_render_mezcla_voz_y_efectos(tmp_path):
+    import numpy as np
+
+    from estudio.calma import render as R
+    from estudio.pipeline import ffmpeg
+    from estudio.tracy.audio import escribir_wav
+
+    datos = {"video": {"ancho": 320, "alto": 180, "fps": 10, "duracion": 1.5}, "escenas": [
+        {"id": 1, "inicio": 0.0, "fin": 1.5, "fondo": "cocina", "temblor": [],
+         "elementos": [{"id": "x", "pieza": "x_roja", "posicion": [160, 90], "tamano": 0.3, "entra": 0.3,
+                        "movimiento": [{"tipo": "dibujar"}], "estado": {}}]}]}
+    voz = tmp_path / "voz.wav"
+    escribir_wav(voz, np.zeros(16000, np.float32))
+    salida = tmp_path / "v.mp4"
+    R.render(datos, salida, ffmpeg(), voz=voz, efectos=True, avisar=lambda *_: None, en_paralelo=1)
+    r = subprocess.run([ffmpeg(), "-i", str(salida), "-af", "volumedetect", "-f", "null", "-"],
+                       capture_output=True, text=True)
+    assert "Audio" in r.stderr and "max_volume: -91" not in r.stderr        # se oye el efecto aunque la voz calle
+    assert not (tmp_path / "v_efectos.wav").exists()
+
+
+def test_fondos_de_lugar_solo_en_ilustraciones():
+    from estudio.calma.escenarios import ESCENARIOS
+    from estudio.explica import autor
+    from estudio.explica.catalogo import FONDOS_ESCENA
+
+    assert set(FONDOS_ESCENA) == set(E.FONDOS) and set(ESCENARIOS) <= set(E.FONDOS)
+    assert autor._fondo_valido("cocina", "ilustracion") == "cocina"
+    assert autor._fondo_valido("cocina", "codigo") == "blanco"
+    assert autor._fondo_valido("luna", "ilustracion") == "blanco"
+    assert "cuarto_noche" in autor._prompt_escenas(
+        {"nombre": ["Hipo."], "escena": ["Estás en tu cama."], "bautizo": ["Se llama hipo."],
+         "explicacion": ["Es un reflejo."], "cierre": ["Así es."]}, 0, 1)

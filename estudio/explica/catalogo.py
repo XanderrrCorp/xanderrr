@@ -97,5 +97,19 @@ MOVIMIENTOS = (
 )
 
 
+FONDOS_ESCENA = {
+    "blanco": "nada (por defecto; SIEMPRE en codigo y personaje)",
+    "cuarto": "habitación de día (cama, ventana, lámpara)", "cuarto_noche": "la misma habitación de noche",
+    "bano": "baño (espejo, lavamanos, azulejos)", "sala": "sala (sofá, cuadro, planta)",
+    "cocina": "cocina (mesón, alacena, nevera)", "clase": "salón de clases (tablero, pupitres)",
+    "consultorio": "consultorio (camilla, cartel de la vista)", "piscina": "piscina (agua, escalerilla)",
+    "calle": "calle (aceras, edificios)", "campo": "campo (pasto, árboles, colinas)",
+}
+
+
+def texto_fondos() -> str:
+    return "; ".join(f"{k} = {v}" for k, v in FONDOS_ESCENA.items())
+
+
 def texto_catalogo() -> str:
     return "\n".join(f"- {k}: {v}" for k, v in CATALOGO.items())

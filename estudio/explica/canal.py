@@ -28,7 +28,7 @@ POR_DEFECTO: dict[str, Any] = {
     "pausa_tras_nombre_s": 0.6,     # tras el nombre de cada tema sí queda una pausa (para la cuadrícula)
     "musica": None,                 # None = tranquila y constante, elegida de la biblioteca
     "volumen_musica_db": -27.0,
-    "efectos_sonido": False,
+    "efectos_sonido": True,         # pop, swoosh, rayón, golpe, X y chulo, generados por código (sin licencias)
     "fondo": "blanco",
     # molde del guion
     "temas": [8, 9],

@@ -63,6 +63,9 @@ Estado al 04-10-2026. El repositorio es PÚBLICO: nunca escribir claves, tokens 
   explica/guiones/partes_que_no_sirven.txt (+ _dudas.md), escenas en partes_que_no_sirven_escenas.py → ejemplos/
   partes_que_no_sirven.json. Revisor del guion: explica/guion.py. El dueño NO quiere revisar guiones: el guion
   es trabajo de Claude (estructura que enganche); él solo mira la lista de dudas.
+- Efectos de sonido por código (calma/sonidos.py: pop, swoosh, rayón, golpe, error, ding; con freno) y fondos de
+  lugar pálidos (calma/escenarios.py: cuarto, cuarto_noche, baño, sala, cocina, clase, consultorio, piscina) solo en
+  escenas «ilustracion»; los elige el autor (Claude). Activos en El Calvo Explica (efectos_sonido True).
 - Aquí (nube) la voz MiniMax sí funciona; Whisper no baja su modelo: vista previa con voz frase por frase.
 ## Pendiente
 - Preguntas sin responder del dueño: ¿en qué canal notó la voz lenta? (Peligro Tropical está en 1.3 en

@@ -22,7 +22,11 @@ W, H = 1920, 1080
 # ------------------------------------------------------------------ fondos
 
 def _fondo_svg(tipo: str) -> str:
-    if tipo == "blanco":
+    from .escenarios import ESCENARIOS
+
+    if tipo in ESCENARIOS:
+        return ESCENARIOS[tipo]()
+    if tipo == "blanco" or tipo not in ("calle", "campo"):
         return f'<rect width="{W}" height="{H}" fill="{BLANCO}"/>'
     partes = [f'<rect width="{W}" height="{H}" fill="#EEF5FA"/>']
     for i, (cx, cy, k) in enumerate(((330, 190, 1.0), (1500, 140, 0.8), (1020, 250, 0.6))):
@@ -163,7 +167,8 @@ def procesos() -> int:
 
 
 def render(datos: dict, salida: Path, ffmpeg: str, voz: Path | None = None, musica: Path | None = None,
-           volumen_musica_db: float = -26.0, avisar=print, progreso=None, en_paralelo: int | None = None) -> dict:
+           volumen_musica_db: float = -26.0, avisar=print, progreso=None, en_paralelo: int | None = None,
+           efectos: bool = False) -> dict:
     """Escribe el MP4 armando varios pedazos a la vez (uno por proceso) y uniéndolos sin recodificar.
     Devuelve cuánto tardó (segundos) y cuántos cuadros."""
     from concurrent.futures import ProcessPoolExecutor, as_completed
@@ -195,20 +200,29 @@ def render(datos: dict, salida: Path, ffmpeg: str, voz: Path | None = None, musi
                     str(mudo)], check=True, capture_output=True)
     shutil.rmtree(carpeta, ignore_errors=True)
     t_cuadros = time.time() - inicio
-    _mezclar(mudo, salida, ffmpeg, dur, voz, musica, volumen_musica_db)
+    sfx = None
+    if efectos:
+        from . import sonidos
+
+        sfx = salida.with_name(salida.stem + "_efectos.wav")
+        sonidos.escribir(datos, dur, sfx)
+    _mezclar(mudo, salida, ffmpeg, dur, voz, musica, volumen_musica_db, sfx)
     mudo.unlink(missing_ok=True)
+    if sfx:
+        sfx.unlink(missing_ok=True)
     total = time.time() - inicio
     avisar(f"Render: {n} cuadros en {t_cuadros:.0f} s ({k} a la vez); con el audio, {total:.0f} s en total")
     return {"cuadros": n, "segundos_cuadros": round(t_cuadros, 1), "segundos_total": round(total, 1), "procesos": k}
 
 
 def _mezclar(mudo: Path, salida: Path, ffmpeg: str, dur: float, voz: Path | None, musica: Path | None,
-             volumen_db: float) -> None:
-    """Voz al frente; la música de fondo bajita, en bucle, se agacha sola cuando habla la voz."""
-    if not voz and not musica:
+             volumen_db: float, efectos: Path | None = None) -> None:
+    """Voz al frente; la música de fondo bajita, en bucle, se agacha sola cuando habla la voz; los efectos de
+    sonido (si hay) se suman al final, por debajo de la voz."""
+    if not voz and not musica and not efectos:
         mudo.replace(salida)
         return
-    entradas, filtro = ["-i", str(mudo)], []
+    entradas, filtro, mezcla = ["-i", str(mudo)], [], []
     if voz:
         entradas += ["-i", str(voz)]
         filtro.append(f"[1:a]aresample=48000,apad,atrim=0:{dur:.3f}[vz]")
@@ -220,11 +234,21 @@ def _mezclar(mudo: Path, salida: Path, ffmpeg: str, dur: float, voz: Path | None
                       f"afade=t=out:st={sale:.3f}:d=2.5,atrim=0:{dur:.3f}[m]")
         if voz:
             filtro.append("[vz]asplit=2[vz1][guia];[m][guia]sidechaincompress=threshold=0.04:ratio=3:attack=30:"
-                          "release=600[mb];[vz1][mb]amix=inputs=2:duration=first:normalize=0[a]")
+                          "release=600[mb]")
+            mezcla += ["[vz1]", "[mb]"]
         else:
-            filtro.append("[m]anull[a]")
+            mezcla.append("[m]")
+    elif voz:
+        mezcla.append("[vz]")
+    if efectos:
+        k = len([e for e in entradas if e == "-i"])
+        entradas += ["-i", str(efectos)]
+        filtro.append(f"[{k}:a]aresample=48000,apad,atrim=0:{dur:.3f}[fx]")
+        mezcla.append("[fx]")
+    if len(mezcla) == 1:
+        filtro.append(f"{mezcla[0]}anull[a]")
     else:
-        filtro.append("[vz]anull[a]")
+        filtro.append(f"{''.join(mezcla)}amix=inputs={len(mezcla)}:duration=first:normalize=0[a]")
     subprocess.run([ffmpeg, "-y", "-loglevel", "error", *entradas, "-filter_complex", ";".join(filtro),
                     "-map", "0:v", "-map", "[a]", "-c:v", "copy", "-c:a", "aac", "-b:a", "192k",
                     "-t", f"{dur:.3f}", "-movflags", "+faststart", str(salida)], check=True, capture_output=True)

@@ -126,7 +126,8 @@ def producir(c: Carpeta, t, permiso: bool = False, voz=None, transcriptor=None, 
 
     salida = c.ruta / "final.mp4"
     r = render(datos, salida, ff, voz=c.ruta / "audio" / "voz.wav", musica=Path(musica["ruta"]) if musica else None,
-               volumen_musica_db=float(preset["volumen_musica_db"]), avisar=t.avisar, progreso=avance)
+               volumen_musica_db=float(preset["volumen_musica_db"]), avisar=t.avisar, progreso=avance,
+               efectos=bool(preset.get("efectos_sonido", True)))
     destino = carpeta_videos() / f"el_calvo_explica_{c.ruta.name}.mp4"
     shutil.copy(salida, destino)
     informe = {"fecha": time.strftime("%Y-%m-%d %H:%M:%S"), "duracion": datos["video"]["duracion"],
