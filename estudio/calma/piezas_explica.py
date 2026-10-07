@@ -55,7 +55,7 @@ def circulo_tema(e: dict) -> Dibujo:
     """Un tema de la cuadrícula: círculo con su ícono adentro y la etiqueta debajo.
     «icono»: {"pieza": ..., "estado": {...}, "escala": ...} o «?» para un tema sin revelar."""
     r = 120
-    relleno = AMARILLO if e.get("actual") else BLANCO
+    relleno = AMARILLO if e.get("actual") else "#E4E4E4" if e.get("visto") else BLANCO
     partes = [figura(elipse(0, 0, r, r, n=60), f"circ/{e.get('etiqueta', '')}", relleno)]
     ic = e.get("icono")
     if ic == "?" or not ic:
@@ -66,11 +66,21 @@ def circulo_tema(e: dict) -> Dibujo:
         k = float(ic.get("escala", 0)) or min(1.5 * r / w, 1.5 * r / h)
         cx, cy = x0 + w / 2, y0 + h / 2
         partes.append(f'<g transform="scale({k:.3f}) translate({-cx:.1f},{-cy:.1f})">{d.svg}</g>')
+    if e.get("visto"):                                # ya explicado: chulo verde encima
+        partes.append(f'<g transform="translate({r * 0.62:.1f},{-r * 0.62:.1f}) scale(0.42)">'
+                      f'{PIEZAS["chulo"]({}).svg}</g>')
     etiqueta = str(e.get("etiqueta", "")).upper()
     if etiqueta:
-        alto = 44 if ancho_texto(etiqueta, 44) < 2.6 * r else 2.6 * r / ancho_texto(etiqueta, 1)
-        partes.append(_texto(0, r + 52, etiqueta, alto))
-    return Dibujo("".join(partes), (-1.35 * r, -r - 14, 2.7 * r, 2 * r + 100))
+        lineas = [etiqueta]
+        if ancho_texto(etiqueta, 46) > 2.6 * r and " " in etiqueta:      # en dos renglones parejos
+            palabras = etiqueta.split()
+            corte = min(range(1, len(palabras)),
+                        key=lambda k: abs(len(" ".join(palabras[:k])) - len(" ".join(palabras[k:]))))
+            lineas = [" ".join(palabras[:corte]), " ".join(palabras[corte:])]
+        alto = min([46.0] + [2.6 * r / ancho_texto(l, 1) for l in lineas])
+        for k, linea in enumerate(lineas):
+            partes.append(_texto(0, r + 50 + k * alto * 1.1, linea, alto))
+    return Dibujo("".join(partes), (-1.35 * r, -r - 14, 2.7 * r, 2 * r + 140))
 
 
 # ------------------------------------------------------------------ resaltar
@@ -79,14 +89,16 @@ def corchete(e: dict) -> Dibujo:
     """Corchete rojo para resaltar algo (abre hacia la derecha; gíralo con «rotacion»)."""
     alto = float(e.get("alto", 300))
     pts = [(30, -alto / 2), (0, -alto / 2), (0, alto / 2), (30, alto / 2)]
-    return Dibujo(tubo(pts, f"corchete/{alto:.0f}", ROJO, 14), (-30, -alto / 2 - 30, 90, alto + 60))
+    return Dibujo(tubo(pts, f"corchete/{alto:.0f}", ROJO, 14, float(e.get("trazo", 1))),
+                  (-30, -alto / 2 - 30, 90, alto + 60))
 
 
 def circulo_rojo(e: dict) -> Dibujo:
     """Óvalo rojo a mano alrededor de algo."""
     rx, ry = float(e.get("ancho", 220)) / 2, float(e.get("alto", 160)) / 2
     pts = arco(0, 0, rx, ry, -100, 250, 40)
-    return Dibujo(tubo(pts, "circ_rojo", ROJO, 10), (-rx - 30, -ry - 30, 2 * rx + 60, 2 * ry + 60))
+    return Dibujo(tubo(pts, "circ_rojo", ROJO, 10, float(e.get("trazo", 1))),
+                  (-rx - 30, -ry - 30, 2 * rx + 60, 2 * ry + 60))
 
 
 # ------------------------------------------------------------------ íconos (diagramas)
@@ -183,7 +195,8 @@ def lineas_movimiento(e: dict) -> Dibujo:
     partes = []
     for i, a in enumerate((-160, -120, -60, -20, 200, 160)):
         c, s = math.cos(math.radians(a)), math.sin(math.radians(a))
-        partes.append(raya([(c * 150, s * 150), (c * 200, s * 200)], f"mov/{i}", NEGRO, 8))
+        partes.append(raya([(c * 150, s * 150), (c * 200, s * 200)], f"mov/{i}", NEGRO, 8,
+                           parcial=float(e.get("trazo", 1))))
     return Dibujo("".join(partes), (-215, -215, 430, 430))
 
 

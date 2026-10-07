@@ -243,3 +243,33 @@ def test_tema_de_prueba_de_el_calvo_explica():
 def test_desaparecer_se_infla_y_se_va():
     el = {"id": "a", "pieza": "chulo", "entra": 0.0, "movimiento": [{"tipo": "desaparecer", "t": 1.0}]}
     assert M.estado_en(el, 1.1, 5).escala > 1.0 and not M.estado_en(el, 1.4, 5).visible
+
+
+def test_trazos_que_se_dibujan_solos():
+    from estudio.calma.piezas import dibujar
+
+    el = {"id": "f", "pieza": "flecha", "entra": 1.0, "movimiento": [{"tipo": "dibujar", "duracion": 0.5}]}
+    trazos = [M.estado_en(el, 1.0 + i * 0.1, 5).estado["trazo"] for i in range(7)]
+    assert trazos[0] == 0 and trazos[-1] == 1 and trazos == sorted(trazos)
+    assert dibujar("x_roja", {"trazo": 0}).svg == ""                          # nada todavía
+    medio, lleno = dibujar("corchete", {"trazo": 0.5}).svg, dibujar("corchete", {}).svg
+    assert 0 < len(medio) < len(lleno) + 50 and medio != lleno
+
+
+def test_empujon_de_camara_sube_y_vuelve():
+    emp = [{"t": 2.0, "duracion": 0.9, "foco": (1000, 500)}]
+    zs = [M.empujon_camara(emp, 2.0 + i * 0.1)[0] for i in range(10)]
+    assert zs[0] == 1.0 and max(zs) > 1.05 and zs[-1] < 1.01 and M.empujon_camara(emp, 5)[0] == 1.0
+
+
+def test_cuadricula_con_progreso():
+    from estudio.explica.escenas import cuadricula
+
+    temas = [{"etiqueta": f"Tema {i}", "icono": {"pieza": "rayo"}} for i in range(12)]
+    g = cuadricula(temas, 3, "Piel", "gallina", "Piel de gallina", "GALLINA")
+    circs = {x["id"]: x for x in g["elementos"] if x["pieza"] == "circulo_tema"}
+    assert len(circs) == 12 and g["tipo"] == "cuadricula"
+    assert all(circs[f"tema{i}"]["estado"]["visto"] for i in (1, 2, 3)) and circs["tema4"]["estado"]["actual"]
+    assert circs["tema9"]["estado"]["icono"] == "?" and circs["tema9"]["estado"]["etiqueta"] == ""
+    assert any(x["pieza"] == "texto" and x["estado"]["texto"] == "4 de 12" for x in g["elementos"])
+    assert g["elementos"][-2]["id"] == "tema4"                                  # el actual, encima de los demás

@@ -45,7 +45,8 @@ def resorte(p: float) -> float:
 # ------------------------------------------------------------------ duraciones por defecto
 
 DURACION = {"aparecer": 0.42, "deslizar": 0.55, "girar": 0.8, "crecer": 2.5, "llenar_barra": 1.2,
-            "temblor": 0.4, "alternar_color": 0.0, "cambiar_pose": 0.0, "desaparecer": 0.32}
+            "temblor": 0.4, "alternar_color": 0.0, "cambiar_pose": 0.0, "desaparecer": 0.32,
+            "dibujar": 0.5}
 TIPOS = tuple(DURACION) + ("parpadear",)
 PASADA_MAX = 1.14          # cuánto puede pasarse una escala de entrada (para dibujar nítido)
 
@@ -98,7 +99,7 @@ def estado_en(el: dict, t: float, fin_escena: float) -> Aspecto:
         tipo = m["tipo"]
         t0 = float(m.get("t", entra))
         dur = float(m.get("duracion", DURACION.get(tipo, 0.5)))
-        if t < t0 and tipo not in ("aparecer", "deslizar"):
+        if t < t0 and tipo not in ("aparecer", "deslizar", "dibujar"):
             continue
         p = _p(t, t0, dur)
         if tipo == "aparecer":
@@ -124,6 +125,8 @@ def estado_en(el: dict, t: float, fin_escena: float) -> Aspecto:
                 a.estado[m["parte"]] = round((float(a.estado.get(m["parte"], 0)) + giro) / 3) * 3 % 360
             else:
                 a.giro += giro
+        elif tipo == "dibujar":                # el trazo se va dibujando de punta a punta, como con marcador
+            a.estado["trazo"] = round(frenar(p) * 20) / 20 if t >= t0 else 0.0
         elif tipo == "desaparecer":            # se infla un poquito y se encoge hasta 0 (sale con aceleración)
             c1 = 1.4
             a.escala *= max(0.0, 1 - ((c1 + 1) * p ** 3 - c1 * p ** 2)) if p < 1 else 0.0
@@ -168,6 +171,20 @@ def temblor_pantalla(temblores: list[dict], t: float) -> tuple[float, float]:
             dx += amp * math.sin((t - t0) * 2 * math.pi * 14)
             dy += amp * math.cos((t - t0) * 2 * math.pi * 11)
     return dx, dy
+
+
+def empujon_camara(empujones: list[dict], t: float) -> tuple[float, float, float]:
+    """Acercamiento corto de toda la imagen en el momento clave (sube suave y vuelve). Devuelve
+    (zoom, foco_x, foco_y)."""
+    for m in empujones:
+        t0 = float(m.get("t", 0))
+        dur = float(m.get("duracion", 0.9))
+        if t0 <= t < t0 + dur:
+            p = (t - t0) / dur
+            subida = suave(min(1.0, p / 0.35)) if p < 0.35 else 1 - suave((p - 0.35) / 0.65)
+            fx, fy = m.get("foco", (960, 540))
+            return 1 + float(m.get("fuerza", 0.07)) * subida, float(fx), float(fy)
+    return 1.0, 960.0, 540.0
 
 
 def escala_maxima(el: dict) -> float:

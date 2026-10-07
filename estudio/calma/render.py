@@ -4,6 +4,7 @@ y ffmpeg lo codifica (la tarjeta NVIDIA si hay). Solo cortes secos entre escenas
 from __future__ import annotations
 
 import math
+import shutil
 import subprocess
 import time
 from pathlib import Path
@@ -11,7 +12,7 @@ from pathlib import Path
 import cv2
 import numpy as np
 
-from .movimientos import escala_maxima, estado_en, temblor_pantalla
+from .movimientos import empujon_camara, escala_maxima, estado_en, temblor_pantalla
 from .raster import sprite, svg_a_rgba
 from .trazo import BLANCO, GRIS, NEGRO, VERDE, camino, figura, raya
 
@@ -107,9 +108,10 @@ def cuadro_en(datos: dict, t: float) -> np.ndarray:
         img, ancla = sprite(el["pieza"], a.estado, base)
         _pegar(cuadro, img, ancla, a.x, a.y, a.escala / base, a.giro)
     dx, dy = temblor_pantalla(esc.get("temblor", []), t)
-    if abs(dx) > 0.3 or abs(dy) > 0.3:
-        m = np.array([[1, 0, dx], [0, 1, dy]], np.float32)
-        cuadro = cv2.warpAffine(cuadro, m, (W, H), borderMode=cv2.BORDER_REPLICATE)
+    z, fx, fy = empujon_camara(esc.get("empujon", []), t)
+    if abs(dx) > 0.3 or abs(dy) > 0.3 or z > 1.0005:
+        m = np.array([[z, 0, fx - z * fx + dx], [0, z, fy - z * fy + dy]], np.float32)
+        cuadro = cv2.warpAffine(cuadro, m, (W, H), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_REPLICATE)
     return cuadro
 
 
@@ -119,35 +121,69 @@ def codificar_args(ffmpeg: str) -> list[str]:
     return _argumentos_codificador(ffmpeg, "veryfast", "20", None)
 
 
-def render(datos: dict, salida: Path, ffmpeg: str, voz: Path | None = None, musica: Path | None = None,
-           volumen_musica_db: float = -26.0, avisar=print, progreso=None) -> dict:
-    """Escribe el MP4. Devuelve cuánto tardó (segundos) y cuántos cuadros."""
+def _tramo(datos: dict, desde: int, hasta: int, ruta: str, ffmpeg: str) -> int:
+    """Escribe los cuadros [desde, hasta) en un MP4 (corre en otro proceso)."""
     fps = int(datos.get("video", {}).get("fps", 30))
-    dur = float(datos["video"]["duracion"])
-    n = int(round(dur * fps))
-    inicio = time.time()
-    salida.parent.mkdir(parents=True, exist_ok=True)
-    mudo = salida.with_name(salida.stem + "_mudo.mp4")
     cmd = [ffmpeg, "-y", "-loglevel", "error", "-f", "rawvideo", "-pix_fmt", "bgr24", "-s", f"{W}x{H}",
-           "-r", str(fps), "-i", "pipe:0", *codificar_args(ffmpeg), "-pix_fmt", "yuv420p", "-r", str(fps), str(mudo)]
+           "-r", str(fps), "-i", "pipe:0", *codificar_args(ffmpeg), "-pix_fmt", "yuv420p", "-r", str(fps), ruta]
     proc = subprocess.Popen(cmd, stdin=subprocess.PIPE, stderr=subprocess.PIPE)
     try:
-        for i in range(n):
+        for i in range(desde, hasta):
             proc.stdin.write(cuadro_en(datos, i / fps).tobytes())
-            if progreso and i % fps == 0:
-                progreso(i / n)
         proc.stdin.close()
     except BrokenPipeError:
         pass
     err = proc.stderr.read().decode(errors="replace")
     if proc.wait() != 0:
         raise RuntimeError(f"ffmpeg falló: {err[-400:]}")
+    return hasta - desde
+
+
+def procesos() -> int:
+    """Cuántos pedazos a la vez: los mismos que el render de siempre (núcleos y memoria libre)."""
+    from ..render import _procesos
+
+    return _procesos(None)
+
+
+def render(datos: dict, salida: Path, ffmpeg: str, voz: Path | None = None, musica: Path | None = None,
+           volumen_musica_db: float = -26.0, avisar=print, progreso=None, en_paralelo: int | None = None) -> dict:
+    """Escribe el MP4 armando varios pedazos a la vez (uno por proceso) y uniéndolos sin recodificar.
+    Devuelve cuánto tardó (segundos) y cuántos cuadros."""
+    from concurrent.futures import ProcessPoolExecutor, as_completed
+
+    fps = int(datos.get("video", {}).get("fps", 30))
+    dur = float(datos["video"]["duracion"])
+    n = int(round(dur * fps))
+    inicio = time.time()
+    salida.parent.mkdir(parents=True, exist_ok=True)
+    mudo = salida.with_name(salida.stem + "_mudo.mp4")
+    k = max(1, min(en_paralelo or procesos(), max(1, n // (fps * 4))))      # pedazos de 4 s como mínimo
+    cortes = [round(n * i / k) for i in range(k + 1)]
+    carpeta = salida.with_name(salida.stem + "_pedazos")
+    carpeta.mkdir(exist_ok=True)
+    rutas = [carpeta / f"p{i:02d}.mp4" for i in range(k)]
+    if k == 1:
+        _tramo(datos, 0, n, str(rutas[0]), ffmpeg)
+    else:
+        hechos = 0
+        with ProcessPoolExecutor(max_workers=k) as grupo:
+            tareas = [grupo.submit(_tramo, datos, cortes[i], cortes[i + 1], str(rutas[i]), ffmpeg) for i in range(k)]
+            for f in as_completed(tareas):
+                hechos += f.result()
+                if progreso:
+                    progreso(hechos / n)
+    lista = carpeta / "lista.txt"
+    lista.write_text("".join(f"file '{r.as_posix()}'\n" for r in rutas), encoding="utf-8")
+    subprocess.run([ffmpeg, "-y", "-loglevel", "error", "-f", "concat", "-safe", "0", "-i", str(lista), "-c", "copy",
+                    str(mudo)], check=True, capture_output=True)
+    shutil.rmtree(carpeta, ignore_errors=True)
     t_cuadros = time.time() - inicio
     _mezclar(mudo, salida, ffmpeg, dur, voz, musica, volumen_musica_db)
     mudo.unlink(missing_ok=True)
     total = time.time() - inicio
-    avisar(f"Render: {n} cuadros en {t_cuadros:.0f} s; con el audio, {total:.0f} s en total")
-    return {"cuadros": n, "segundos_cuadros": round(t_cuadros, 1), "segundos_total": round(total, 1)}
+    avisar(f"Render: {n} cuadros en {t_cuadros:.0f} s ({k} a la vez); con el audio, {total:.0f} s en total")
+    return {"cuadros": n, "segundos_cuadros": round(t_cuadros, 1), "segundos_total": round(total, 1), "procesos": k}
 
 
 def _mezclar(mudo: Path, salida: Path, ffmpeg: str, dur: float, voz: Path | None, musica: Path | None,

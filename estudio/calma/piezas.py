@@ -86,12 +86,15 @@ def gente(e: dict) -> Dibujo:
 
 def x_roja(e: dict) -> Dibujo:
     r = 110
-    return Dibujo(tubo([(-r, -r), (r, r)], "x/1", ROJO, 34) + tubo([(r, -r), (-r, r)], "x/2", ROJO, 34),
+    k = float(e.get("trazo", 1))                      # «dibujar»: primero una raya y luego la otra
+    return Dibujo(tubo([(-r, -r), (r, r)], "x/1", ROJO, 34, min(1.0, k * 2))
+                  + tubo([(r, -r), (-r, r)], "x/2", ROJO, 34, max(0.0, k * 2 - 1)),
                   (-r - 40, -r - 40, 2 * r + 80, 2 * r + 80))
 
 
 def chulo(e: dict) -> Dibujo:
-    return Dibujo(tubo([(-100, 0), (-30, 70), (110, -90)], "chulo", VERDE, 34), (-150, -140, 300, 260))
+    return Dibujo(tubo([(-100, 0), (-30, 70), (110, -90)], "chulo", VERDE, 34, float(e.get("trazo", 1))),
+                  (-150, -140, 300, 260))
 
 
 def flecha(e: dict) -> Dibujo:
@@ -106,8 +109,9 @@ def flecha(e: dict) -> Dibujo:
     for a, d in ((0, 34), (2.45, 38), (-2.45, 38)):
         punta.append((fin[0] + math.cos(ang + a) * d * (1 if a == 0 else 1),
                       fin[1] + math.sin(ang + a) * d))
-    cuerpo = tubo(pts[:-1], "flecha/c", color, 20)
-    cabeza = figura([punta[0], punta[1], punta[2]], "flecha/p", color)
+    k = float(e.get("trazo", 1))                      # «dibujar»: el cuerpo se traza y la punta sale al final
+    cuerpo = tubo(pts[:-1], "flecha/c", color, 20, min(1.0, k / 0.85))
+    cabeza = figura([punta[0], punta[1], punta[2]], "flecha/p", color) if k >= 0.85 else ""
     return Dibujo(cuerpo + cabeza, (-largo / 2 - 30, -largo * curva - 60, largo + 90, largo * curva + 120))
 
 

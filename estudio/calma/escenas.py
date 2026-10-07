@@ -59,7 +59,7 @@ def fijar_tiempos(datos: dict, palabras: list[dict], duracion: float) -> dict:
         if esc.get("palabra_inicio"):
             cursor = _buscar(palabras, esc["palabra_inicio"], cursor)
             esc["inicio"] = 0.0 if esc is escenas[0] else round(max(0.0, palabras[cursor]["inicio"] - ADELANTO_CORTE_S), 3)
-        for m in esc.get("temblor", []):
+        for m in esc.get("temblor", []) + esc.get("empujon", []):
             if m.get("palabra"):
                 m["t"] = palabras[_buscar(palabras, m["palabra"], cursor)]["inicio"]
         for el in esc["elementos"]:
@@ -84,6 +84,10 @@ def fijar_tiempos(datos: dict, palabras: list[dict], duracion: float) -> dict:
         for el in esc["elementos"]:                   # lo que «ya estaba» entra con el corte
             if el.get("ya_estaba"):
                 el["entra"] = esc["inicio"]
+            movs = el.get("movimiento") or []
+            for m in movs if isinstance(movs, list) else []:
+                if isinstance(m, dict) and "t_rel" in m:      # relativo al corte (escalonados)
+                    m["t"] = round(esc["inicio"] + float(m["t_rel"]), 3)
     datos.setdefault("video", {})["duracion"] = round(duracion, 3)
     return datos
 

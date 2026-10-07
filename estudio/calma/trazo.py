@@ -54,8 +54,29 @@ def temblar(puntos, semilla: str, cerrado: bool = False, amplitud: float = TEMBL
     return salida
 
 
-def camino(puntos, semilla: str, cerrado: bool = False, amplitud: float = TEMBLOR) -> str:
+def recortar(pts, parcial: float):
+    """Solo el primer `parcial` (0 a 1) del recorrido: así una línea «se dibuja» de punta a punta."""
+    if parcial >= 1:
+        return pts
+    largos = [math.hypot(b[0] - a[0], b[1] - a[1]) for a, b in zip(pts, pts[1:])]
+    falta = sum(largos) * max(0.0, parcial)
+    salida = [pts[0]]
+    for (a, b), l in zip(zip(pts, pts[1:]), largos):
+        if falta >= l:
+            salida.append(b)
+            falta -= l
+            continue
+        k = falta / l if l else 0
+        salida.append((a[0] + (b[0] - a[0]) * k, a[1] + (b[1] - a[1]) * k))
+        break
+    return salida
+
+
+def camino(puntos, semilla: str, cerrado: bool = False, amplitud: float = TEMBLOR, parcial: float = 1.0) -> str:
     pts = temblar(puntos, semilla, cerrado, amplitud)
+    if parcial < 1:
+        pts = recortar(pts + ([pts[0]] if cerrado else []), parcial)
+        cerrado = False
     return "M" + " L".join(f"{x:.1f},{y:.1f}" for x, y in pts) + (" Z" if cerrado else "")
 
 
@@ -83,15 +104,20 @@ def figura(puntos, semilla: str, relleno: str, cerrado: bool = True, linea: floa
             f'stroke-width="{linea}" stroke-linejoin="round" stroke-linecap="round"/>')
 
 
-def raya(puntos, semilla: str, color: str = NEGRO, ancho: float = LINEA, amplitud: float = TEMBLOR) -> str:
-    """Línea suelta (cejas, boca, flechas)."""
-    return (f'<path d="{camino(puntos, semilla, False, amplitud)}" fill="none" stroke="{color}" '
+def raya(puntos, semilla: str, color: str = NEGRO, ancho: float = LINEA, amplitud: float = TEMBLOR,
+         parcial: float = 1.0) -> str:
+    """Línea suelta (cejas, boca, flechas). `parcial` < 1 la deja dibujada a medias."""
+    if parcial <= 0.001:
+        return ""
+    return (f'<path d="{camino(puntos, semilla, False, amplitud, parcial)}" fill="none" stroke="{color}" '
             f'stroke-width="{ancho}" stroke-linejoin="round" stroke-linecap="round"/>')
 
 
-def tubo(puntos, semilla: str, relleno: str, grueso: float) -> str:
+def tubo(puntos, semilla: str, relleno: str, grueso: float, parcial: float = 1.0) -> str:
     """Extremidad: tubo de color con contorno (la misma línea temblorosa dos veces)."""
-    d = camino(puntos, semilla, False)
+    if parcial <= 0.001:
+        return ""
+    d = camino(puntos, semilla, False, parcial=parcial)
     return (f'<path d="{d}" fill="none" stroke="{NEGRO}" stroke-width="{grueso + 2 * LINEA}" '
             f'stroke-linejoin="round" stroke-linecap="round"/>'
             f'<path d="{d}" fill="none" stroke="{relleno}" stroke-width="{grueso}" '
