@@ -91,7 +91,8 @@ def producir(c: Carpeta, t, permiso: bool = False, voz=None, transcriptor=None, 
 
     t.paso, t.progreso = "whisper", 0.2
     ors = alinear(c, transcriptor or transcriptor_para(proveedor), avisar=t.avisar)
-    t.avisar(f"Whisper: coincidencia con el guion {ors['confianza']:.0%}")
+    quien = "Whisper" if ors.get("metodo") not in ("pausas", "simulado") else f"Tiempos ({ors.get('metodo')})"
+    t.avisar(f"{quien}: coincidencia con el guion {ors['confianza']:.0%}")
 
     t.paso, t.progreso = "escenas", 0.3
     datos = json.loads((c.ruta / "escenas.json").read_text(encoding="utf-8"))

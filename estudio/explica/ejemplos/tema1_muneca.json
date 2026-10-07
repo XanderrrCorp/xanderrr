@@ -3,6 +3,7 @@
   "ancho": 1920,
   "alto": 1080,
   "fps": 30,
+  "ritmo": 0.75,
   "guion": "tema1_muneca.txt"
  },
  "escenas": [
@@ -426,6 +427,27 @@
      "palabra": "Estás"
     },
     {
+     "id": "mesa",
+     "pieza": "mesa",
+     "estado": {},
+     "posicion": [
+      960,
+      1010
+     ],
+     "tamano": 1.0,
+     "movimiento": [
+      {
+       "tipo": "deslizar",
+       "desde": [
+        960,
+        1300
+       ],
+       "duracion": 0.4
+      }
+     ],
+     "palabra": "mesa"
+    },
+    {
      "id": "t",
      "pieza": "texto",
      "estado": {
@@ -470,6 +492,38 @@
       }
      ],
      "ya_estaba": true
+    },
+    {
+     "id": "tp",
+     "pieza": "texto",
+     "estado": {
+      "texto": "pulgar"
+     },
+     "posicion": [
+      640,
+      330
+     ],
+     "tamano": 0.8,
+     "movimiento": [
+      "aparecer"
+     ],
+     "palabra": "pulgar"
+    },
+    {
+     "id": "tm",
+     "pieza": "texto",
+     "estado": {
+      "texto": "meñique"
+     },
+     "posicion": [
+      1290,
+      240
+     ],
+     "tamano": 0.8,
+     "movimiento": [
+      "aparecer"
+     ],
+     "palabra": "meñique"
     },
     {
      "id": "o",
@@ -542,6 +596,23 @@
      ],
      "palabra": "dobla",
      "rotacion": -60
+    },
+    {
+     "id": "ti",
+     "pieza": "texto",
+     "estado": {
+      "texto": "hacia ti",
+      "color": "rojo"
+     },
+     "posicion": [
+      1450,
+      520
+     ],
+     "tamano": 1.0,
+     "movimiento": [
+      "aparecer"
+     ],
+     "palabra": "ti"
     }
    ]
   },
@@ -659,6 +730,22 @@
      ],
      "palabra": "cordón",
      "rotacion": 180
+    },
+    {
+     "id": "piel",
+     "pieza": "texto",
+     "estado": {
+      "texto": "bajo la piel"
+     },
+     "posicion": [
+      560,
+      560
+     ],
+     "tamano": 0.8,
+     "movimiento": [
+      "aparecer"
+     ],
+     "palabra": "piel"
     },
     {
      "id": "t",
@@ -809,7 +896,7 @@
      "movimiento": [
       {
        "tipo": "dibujar",
-       "duracion": 0.4
+       "duracion": 0.3
       }
      ],
      "palabra": "no"
@@ -845,7 +932,19 @@
      ],
      "tamano": 1.05,
      "movimiento": [
-      "aparecer"
+      "aparecer",
+      {
+       "tipo": "cambiar_pose",
+       "palabra": "tendón",
+       "estado": {
+        "gesto": "contento"
+       }
+      },
+      {
+       "tipo": "temblor",
+       "palabra": "músculo",
+       "fuerza": 6
+      }
      ],
      "palabra": "Ese"
     },
@@ -933,9 +1032,14 @@
      ],
      "tamano": 1.2,
      "movimiento": [
-      "aparecer"
+      "aparecer",
+      {
+       "tipo": "temblor",
+       "palabra": "agarrarse",
+       "fuerza": 10
+      }
      ],
-     "palabra": "antepasados"
+     "palabra": "ayudaba"
     },
     {
      "id": "yo",
@@ -959,7 +1063,7 @@
        "duracion": 0.6
       }
      ],
-     "palabra": "agarrarse"
+     "palabra": "antepasados"
     },
     {
      "id": "tr",
@@ -1015,7 +1119,7 @@
        }
       }
      ],
-     "palabra": "siete"
+     "palabra": "Hoy"
     },
     {
      "id": "t",
@@ -1032,8 +1136,23 @@
      "movimiento": [
       "aparecer"
      ],
-     "palabra": "siete",
-     "retraso": 0.2
+     "palabra": "una"
+    },
+    {
+     "id": "br",
+     "pieza": "texto",
+     "estado": {
+      "texto": "en al menos un brazo"
+     },
+     "posicion": [
+      960,
+      930
+     ],
+     "tamano": 0.9,
+     "movimiento": [
+      "aparecer"
+     ],
+     "palabra": "brazo"
     }
    ]
   },
@@ -1096,7 +1215,12 @@
      ],
      "tamano": 1.1,
      "movimiento": [
-      "aparecer"
+      "aparecer",
+      {
+       "tipo": "temblor",
+       "palabra": "reduce",
+       "fuerza": 12
+      }
      ],
      "palabra": "curioso"
     },
@@ -1359,6 +1483,34 @@
      ],
      "palabra": "repuesto",
      "retraso": 0.3
+    },
+    {
+     "id": "m",
+     "pieza": "muneca",
+     "estado": {
+      "tendon": true
+     },
+     "posicion": [
+      1720,
+      420
+     ],
+     "tamano": 0.35,
+     "movimiento": [
+      {
+       "tipo": "deslizar",
+       "desde": [
+        2100,
+        420
+       ],
+       "duracion": 0.5
+      },
+      {
+       "tipo": "temblor",
+       "palabra": "tendones",
+       "fuerza": 10
+      }
+     ],
+     "palabra": "reparar"
     }
    ]
   }

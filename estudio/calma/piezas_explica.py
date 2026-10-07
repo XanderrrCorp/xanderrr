@@ -280,7 +280,16 @@ def cordon(e: dict) -> Dibujo:
     return Dibujo(tubo(pts, "cordon", "#FFE98A", 22, float(e.get("trazo", 1))), (-290, -70, 580, 130))
 
 
-PIEZAS.update({"muneca": muneca, "rama": rama, "fila_personas": fila_personas, "grafica_barras": grafica_barras,
+def mesa(e: dict) -> Dibujo:
+    """Borde de una mesa de madera gris vista de frente."""
+    w = float(e.get("ancho", 1400))
+    partes = [figura([(-w / 2, -30), (w / 2, -30), (w / 2, 30), (-w / 2, 30)], "mesa", "#C9C9C9"),
+              tubo([(-w / 2 + 80, 30), (-w / 2 + 80, 260)], "mesa/p1", "#9A9A9A", 30),
+              tubo([(w / 2 - 80, 30), (w / 2 - 80, 260)], "mesa/p2", "#9A9A9A", 30)]
+    return Dibujo("".join(partes), (-w / 2 - 12, -45, w + 24, 320))
+
+
+PIEZAS.update({"mesa": mesa, "muneca": muneca, "rama": rama, "fila_personas": fila_personas, "grafica_barras": grafica_barras,
                "cordon": cordon})
 
 _ = (P, BLANCO, _rect)

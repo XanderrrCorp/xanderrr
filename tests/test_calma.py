@@ -310,3 +310,27 @@ def test_tema_de_prueba_completo_simulado(tmp_path, monkeypatch):
     assert info["tiempo_total_s"] > 0 and not [a for a in info["avisos_ritmo"] if "no existe" in a or "a la vez" in a]
     r = subprocess.run([ffmpeg(), "-i", str(destino)], capture_output=True, text=True)
     assert "1920x1080" in r.stderr and "Audio: aac" in r.stderr
+
+
+def test_tiempos_por_pausas_siguen_la_voz():
+    import numpy as np
+
+    from estudio.calma.alinear_pausas import TranscriptorPausas
+
+    sr = 16000
+    trozos = []
+    for dur in (1.0, 0.8):                                   # dos frases con una pausa larga en medio
+        t = np.arange(int(dur * sr)) / sr
+        trozos += [0.4 * np.sin(2 * np.pi * 200 * t), np.zeros(int(0.5 * sr))]
+    audio = np.concatenate(trozos).astype(np.float32)
+    ws = TranscriptorPausas().transcribir(audio, "Hola mundo bonito. Adiós ya.")
+    assert [w["palabra"] for w in ws] == ["Hola", "mundo", "bonito.", "Adiós", "ya."]
+    assert abs(ws[3]["inicio"] - 1.5) < 0.1 and ws[2]["fin"] <= 1.05
+
+
+def test_ritmo_acorta_las_animaciones():
+    datos, texto = _ejemplo()
+    datos["video"]["ritmo"] = 0.5
+    E.fijar_tiempos(datos, *E.tiempos_estimados(texto))
+    m = datos["escenas"][0]["elementos"][0]["movimiento"][0]
+    assert m["tipo"] == "aparecer" and abs(m["duracion"] - M.DURACION["aparecer"] * 0.5) < 0.01

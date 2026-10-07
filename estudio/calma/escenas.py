@@ -55,6 +55,23 @@ def fijar_tiempos(datos: dict, palabras: list[dict], duracion: float) -> dict:
     palabras. Se busca en orden: cada palabra se encuentra a partir de la anterior encontrada."""
     cursor = 0
     escenas = datos["escenas"]
+    ritmo = float(datos.get("video", {}).get("ritmo", 1.0))
+    if ritmo != 1.0:                                   # «ritmo» < 1: todas las animaciones más cortas (más ágil)
+        from .movimientos import DURACION
+
+        for esc in escenas:
+            for el in esc["elementos"]:
+                movs = el.get("movimiento") or []
+                movs = [movs] if isinstance(movs, (str, dict)) else movs
+                nuevos = []
+                for m in movs:
+                    m = {"tipo": m} if isinstance(m, str) else m
+                    if "duracion" not in m and DURACION.get(m["tipo"]) and m["tipo"] not in ("crecer",):
+                        m["duracion"] = round(DURACION[m["tipo"]] * ritmo, 3)
+                    elif "duracion" in m and m["tipo"] not in ("crecer", "llenar_barra"):
+                        m["duracion"] = round(float(m["duracion"]) * ritmo, 3)
+                    nuevos.append(m)
+                el["movimiento"] = nuevos
     for esc in escenas:
         if esc.get("palabra_inicio"):
             cursor = _buscar(palabras, esc["palabra_inicio"], cursor)
