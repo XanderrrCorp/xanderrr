@@ -383,3 +383,4 @@ def dibujar(pieza: str, estado: dict) -> Dibujo:
 
 
 from . import piezas_explica  # noqa: E402,F401 — registra las piezas de El Calvo Explica
+from . import piezas_cuerpo  # noqa: E402,F401 — piezas del primer video (partes del cuerpo)

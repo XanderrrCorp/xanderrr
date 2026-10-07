@@ -9,6 +9,11 @@ interface EstadoExplica {
   costo_muestras: { usd?: number; cop?: string; proveedor?: string; modelo?: string; error?: string };
   muestras: { archivos: string[]; costo_total: string; proveedor: string; modelo: string } | null;
   trabajo: Trabajo | null;
+  video: {
+    video: boolean; titulo: string; costo_voz: { caracteres: number; cop: string }; trabajo: Trabajo | null;
+    informe: { duracion: number; tiempo_total_s: number; costos: Record<'guion' | 'voz' | 'imagenes', { cop: string }>;
+               musica: { nombre_original: string } | null; video: string } | null;
+  };
   tema_prueba: {
     video: boolean; costo_voz: { caracteres: number; cop: string }; trabajo: Trabajo | null;
     informe: { duracion: number; tiempo_total_s: number; render: { segundos_total: number; procesos: number };
@@ -28,11 +33,16 @@ export function Explica() {
   }, []);
   useEffect(() => { cargar(); }, [cargar]);
   useEffect(() => {
-    if (!est?.trabajo?.activo && !est?.tema_prueba.trabajo?.activo) return;
+    if (!est?.trabajo?.activo && !est?.tema_prueba.trabajo?.activo && !est?.video.trabajo?.activo) return;
     const id = setInterval(cargar, 2000);
     return () => clearInterval(id);
-  }, [est?.trabajo?.activo, est?.tema_prueba.trabajo?.activo, cargar]);
+  }, [est?.trabajo?.activo, est?.tema_prueba.trabajo?.activo, est?.video.trabajo?.activo, cargar]);
 
+  const hacerVideo = async () => {
+    setError('');
+    try { setEst(await api<EstadoExplica>('/api/explica/video', { cuerpo: { permiso: false } })); }
+    catch (e) { setError((e as Error).message); }
+  };
   const hacerTema = async () => {
     setError('');
     try { setEst(await api<EstadoExplica>('/api/explica/tema-prueba', { cuerpo: { permiso: false } })); }
@@ -68,6 +78,34 @@ export function Explica() {
           </div>
         )}
         {error && <p className="error">{error}</p>}
+      </section>
+      <section className="rev-tarjeta">
+        <h2>Video completo: {est.video.titulo}</h2>
+        <p>Los 12 temas con voz, tiempos de cada palabra, animación y música tranquila. La voz cuesta unos{' '}
+          <b>{est.video.costo_voz.cop}</b> ({est.video.costo_voz.caracteres} caracteres); lo ya grabado no se vuelve a pagar.</p>
+        <button className="boton" disabled={!!est.video.trabajo?.activo} onClick={hacerVideo}>
+          {est.video.trabajo?.activo ? 'Trabajando…' : est.video.video ? 'Volver a hacerlo' : 'Hacer el video completo'}
+        </button>
+        {est.video.trabajo && (
+          <div>
+            <div className="barra-progreso"><i style={{ width: `${Math.round(est.video.trabajo.progreso * 100)}%` }} /></div>
+            <div className="pequeno">{est.video.trabajo.error ? <span className="error">Error: {est.video.trabajo.error}</span>
+              : est.video.trabajo.mensaje}</div>
+          </div>
+        )}
+        {est.video.video && (
+          <video src={`/api/explica/video/archivo?v=${version}`} controls style={{ width: '100%', borderRadius: 8, marginTop: 10 }} />
+        )}
+        {est.video.informe && (
+          <ul className="pequeno">
+            <li>Duración {Math.round(est.video.informe.duracion / 60 * 10) / 10} min · tiempo total{' '}
+              {Math.round(est.video.informe.tiempo_total_s / 60)} min</li>
+            <li>Costo real: guion {est.video.informe.costos.guion.cop} · voz {est.video.informe.costos.voz.cop} ·
+              imágenes {est.video.informe.costos.imagenes.cop}</li>
+            <li>Música: {est.video.informe.musica ? est.video.informe.musica.nombre_original : 'sin música'}</li>
+            <li className="tenue">Guardado en: {est.video.informe.video}</li>
+          </ul>
+        )}
       </section>
       <section className="rev-tarjeta">
         <h2>Tema de prueba con voz</h2>

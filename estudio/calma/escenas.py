@@ -52,7 +52,8 @@ def _buscar(palabras: list[dict], ancla: str, desde: int) -> int:
 
 def fijar_tiempos(datos: dict, palabras: list[dict], duracion: float) -> dict:
     """Escribe «inicio»/«fin» de cada escena y «entra»/«t» de cada elemento y movimiento a partir de sus
-    palabras. Se busca en orden: cada palabra se encuentra a partir de la anterior encontrada."""
+    palabras. Cada escena se busca después de la anterior; dentro de una escena, cada palabra se busca desde
+    el inicio de la escena (así no importa en qué orden estén escritos sus elementos)."""
     cursor = 0
     escenas = datos["escenas"]
     ritmo = float(datos.get("video", {}).get("ritmo", 1.0))
@@ -76,13 +77,15 @@ def fijar_tiempos(datos: dict, palabras: list[dict], duracion: float) -> dict:
         if esc.get("palabra_inicio"):
             cursor = _buscar(palabras, esc["palabra_inicio"], cursor)
             esc["inicio"] = 0.0 if esc is escenas[0] else round(max(0.0, palabras[cursor]["inicio"] - ADELANTO_CORTE_S), 3)
+        base, mas_lejos = cursor, cursor
         for m in esc.get("temblor", []) + esc.get("empujon", []):
             if m.get("palabra"):
-                m["t"] = palabras[_buscar(palabras, m["palabra"], cursor)]["inicio"]
+                m["t"] = palabras[_buscar(palabras, m["palabra"], base)]["inicio"]
         for el in esc["elementos"]:
+            cursor = base
             if el.get("palabra"):
-                i = _buscar(palabras, el["palabra"], cursor)
-                cursor = i
+                i = _buscar(palabras, el["palabra"], base)
+                mas_lejos = max(mas_lejos, i)
                 el["entra"] = round(palabras[i]["inicio"] + float(el.get("retraso", 0)), 3)
             elif "entra" not in el:
                 el["entra"] = esc.get("inicio", 0.0)
@@ -96,6 +99,7 @@ def fijar_tiempos(datos: dict, palabras: list[dict], duracion: float) -> dict:
                     el["sale"] = round(float(m.get("t", el["entra"])) + float(m.get("duracion", 0.55)), 3)
             if el.get("sale_palabra"):
                 el["sale"] = palabras[_buscar(palabras, el["sale_palabra"], cursor)]["inicio"]
+        cursor = mas_lejos
     for k, esc in enumerate(escenas):
         esc["fin"] = escenas[k + 1]["inicio"] if k + 1 < len(escenas) else round(duracion, 3)
         for el in esc["elementos"]:                   # lo que «ya estaba» entra con el corte

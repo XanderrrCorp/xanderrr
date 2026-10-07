@@ -55,11 +55,15 @@ Estado al 04-10-2026. El repositorio es PÚBLICO: nunca escribir claves, tokens 
   con rebote, escenas.json atado a palabras de Whisper, render OpenCV+ffmpeg (60 s en ~30 s). Canal «Hazlo con Calma»
   (supervivencia, página /calma, prueba de la garrapata): guardado TAL CUAL, no tocar; le falta el código de voz.
 - «El Calvo Explica» (nombre interno provisional, `estudio/explica/`, página /explica): cuerpo y mente, molde de 5
-  partes, fondo blanco, voz de Peligro Tropical a 1.0, imágenes por GOOGLE (Together descartado: no volver a
-  proponerlo), cara amable por defecto (GESTO_POR_POSE). Hojas de poses aprobadas. Primer video: «Partes de tu
-  cuerpo que YA NO SIRVEN para nada», 12 temas (lista del dueño, solo sus datos). Muestras: muñeca, piel de gallina,
-  dentista (botón en /explica, ~632 COP); si la muñeca no se entiende, la anatomía va como diagrama por código.
-
+  partes, fondo blanco, voz de Peligro Tropical a 1.3 (a 1.0 el dueño lo sintió lento), silencios recortados a
+  0,22 s, ritmo 0.75 y cámara siempre en movimiento; algo cambia cada ≤1,5–2 s. Imágenes por GOOGLE (Together
+  descartado: no proponerlo). Cara amable por defecto (canal.GESTO_POR_POSE). Escenas por código (piezas en
+  calma/piezas_explica.py y piezas_cuerpo.py); 4 tipos: cuadrícula (explica/escenas.cuadricula, con «4 de 12»),
+  ilustración, código, personaje. Primer video «Partes de tu cuerpo que YA NO SIRVEN para nada»: guion en
+  explica/guiones/partes_que_no_sirven.txt (+ _dudas.md), escenas en partes_que_no_sirven_escenas.py → ejemplos/
+  partes_que_no_sirven.json. Revisor del guion: explica/guion.py. El dueño NO quiere revisar guiones: el guion
+  es trabajo de Claude (estructura que enganche); él solo mira la lista de dudas.
+- Aquí (nube) la voz MiniMax sí funciona; Whisper no baja su modelo: vista previa con voz frase por frase.
 ## Pendiente
 - Preguntas sin responder del dueño: ¿en qué canal notó la voz lenta? (Peligro Tropical está en 1.3 en
   config/proveedores.json; Tracy en 1.0 por pedido suyo). ¿En qué momento sale «la tira de animales» sin sentido?
@@ -70,6 +74,6 @@ Estado al 04-10-2026. El repositorio es PÚBLICO: nunca escribir claves, tokens 
   y sacar la estructura del guion (sin copiar textos) antes de construir.
 - Editor (música, mover, cortar): en pausa por pedido del dueño; backend hecho, sin interfaz.
 - Prueba inestable: 1 de 3 corridas completas falló una prueba (no identificada) el 04-10; el dueño dijo no perseguirla aún.
-- El Calvo Explica, siguiente: el dueño genera las 3 muestras → paso 3 (un tema completo: guion + lista de dudas,
-  cuadrícula, escenas, voz) → video completo. Revisor del guion: aceptar variantes de hipótesis («se cree que»,
-  «lo más probable», «la hipótesis principal») y máximo 2 temas con la misma fórmula.
+- El Calvo Explica: falta el botón para hacer el video completo en el PC (hoy /explica hace el tema 1), música
+  tranquila (biblioteca), miniatura (personaje señalando la muñeca + «¿TÚ LO TIENES?») y título. Muestras de
+  Google sin generar (botón en /explica). «Liberar espacio»: en un git stash, sin terminar.

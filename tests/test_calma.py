@@ -377,3 +377,17 @@ def test_guion_completo_del_primer_video():
     assert len(temas) == 12 and G.revisar(temas) == []
     assert temas[-1]["final"][-1] == "Si te gustó, suscríbete."                # cierre de 5 s del video
     assert G.texto_para_voz(temas).split("\n")[0] == "Músculo de la muñeca."   # sin saludo: arranca con el tema
+
+
+def test_escenas_del_video_completo_atadas_al_guion():
+    from estudio.explica import guion as G
+    from estudio.explica.guiones.partes_que_no_sirven_escenas import armar
+
+    datos = armar()
+    texto = G.texto_para_voz(G.leer(open(E.__file__.replace("calma/escenas.py",
+                                                         "explica/guiones/partes_que_no_sirven.txt"), encoding="utf-8").read()))
+    E.fijar_tiempos(datos, *E.tiempos_estimados(texto, 3.6))          # toda palabra de las escenas existe
+    assert sum(1 for e in datos["escenas"] if e["tipo"] == "cuadricula") == 12
+    assert not [a for a in E.revisar(datos, 3.0) if "no existe" in a or "a la vez" in a or "fuera de la escena" in a]
+    ultimo = datos["escenas"][-1]
+    assert any(x["estado"].get("texto") == "SUSCRÍBETE" for x in ultimo["elementos"])

@@ -21,6 +21,8 @@ from . import ilustraciones as I
 rutas = APIRouter(prefix="/api/explica")
 SLUG_MUESTRAS = "explica-muestras"
 SLUG_TEMA = "explica-tema-prueba"
+SLUG_VIDEO = "explica-video"
+VIDEO = "partes_que_no_sirven"          # primer video: «Partes de tu cuerpo que YA NO SIRVEN para nada»
 
 
 def _trabajo(slug: str):
@@ -43,7 +45,9 @@ def _estado() -> dict:
             "costo_muestras": costo, "muestras": I.estado_muestras(),
             "trabajo": ({"paso": t.paso, "progreso": round(t.progreso, 3), "mensaje": t.mensaje, "activo": t.activo,
                          "error": t.error} if t else None),
-            "tema_prueba": {**F.estado(), "costo_voz": F.costo_voz(), "trabajo": _trabajo(SLUG_TEMA)}}
+            "tema_prueba": {**F.estado(), "costo_voz": F.costo_voz(), "trabajo": _trabajo(SLUG_TEMA)},
+            "video": {**F.estado(VIDEO), "costo_voz": F.costo_voz(VIDEO, VIDEO), "trabajo": _trabajo(SLUG_VIDEO),
+                      "titulo": "Partes de tu cuerpo que YA NO SIRVEN para nada"}}
 
 
 @rutas.get("")
@@ -91,6 +95,26 @@ def tema_prueba(p: Permiso = Permiso()):
 @rutas.get("/tema-prueba/video")
 def tema_prueba_video():
     ruta = F.carpeta_base() / F.TEMA_PRUEBA / "final.mp4"
+    if not ruta.exists():
+        raise HTTPException(404, "Todavía no hay video")
+    return FileResponse(ruta, media_type="video/mp4")
+
+
+@rutas.post("/video")
+def video_completo(p: Permiso = Permiso()):
+    from .. import pipeline
+
+    c = F.preparar(VIDEO, VIDEO)
+    try:
+        pipeline.lanzar(SLUG_VIDEO, "video", lambda t: F.producir(c, t, permiso=p.permiso))
+    except RuntimeError as ex:
+        raise HTTPException(409, str(ex)) from ex
+    return _estado()
+
+
+@rutas.get("/video/archivo")
+def video_archivo():
+    ruta = F.carpeta_base() / VIDEO / "final.mp4"
     if not ruta.exists():
         raise HTTPException(404, "Todavía no hay video")
     return FileResponse(ruta, media_type="video/mp4")
