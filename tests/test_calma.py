@@ -28,9 +28,14 @@ def test_personaje_completo_por_piezas():
         assert img.shape[2] == 4 and img[:, :, 3].max() == 255
 
 
-def test_todas_las_piezas_se_dibujan():
+def test_todas_las_piezas_se_dibujan(tmp_path):
+    from PIL import Image
+
+    Image.new("RGB", (160, 90), "red").save(tmp_path / "ilus.png")
+    estados = {"rotulo": {"texto": "PRUEBA"}, "numero": {"valor": "3"}, "texto": {"texto": "PRUEBA"},
+               "titulo_tema": {"texto": "PRUEBA ROJA", "rojo": "ROJA"}, "imagen": {"archivo": str(tmp_path / "ilus.png")}}
     for nombre in PIEZAS:
-        img, _ = sprite(nombre, {"texto": "PRUEBA", "valor": "3"} if nombre in ("rotulo", "numero") else {}, 0.4)
+        img, _ = sprite(nombre, estados.get(nombre, {}), 0.4)
         assert (img[:, :, 3] > 0).mean() > 0.01, nombre
 
 
@@ -216,3 +221,25 @@ def test_el_calvo_explica_genera_por_google():
 
     assert "proveedor_imagenes" not in C.POR_DEFECTO
     assert proveedor_elegido(leer_config("proveedores.json")["imagenes"]) == "vertex"
+
+
+def test_tema_de_prueba_de_el_calvo_explica():
+    from estudio.calma.render import cuadro_en
+
+    base = E.__file__.replace("calma/escenas.py", "explica/ejemplos/sacudida")
+    datos = json.load(open(base + ".json", encoding="utf-8"))
+    E.fijar_tiempos(datos, *E.tiempos_estimados(open(base + ".txt", encoding="utf-8").read(), 2.7))
+    assert {e["tipo"] for e in datos["escenas"]} == {"cuadricula", "ilustracion", "personaje", "codigo"}
+    assert not [a for a in E.revisar(datos) if "a la vez" in a or "no existe" in a]   # la cuadrícula puede tener 10
+    grid = datos["escenas"][0]
+    otro = next(x for x in grid["elementos"] if x["id"] == "tema2")
+    fin = grid["fin"] - 0.01
+    assert not M.estado_en(otro, fin, grid["fin"]).visible                          # los demás temas desaparecen
+    actual = M.estado_en(next(x for x in grid["elementos"] if x["id"] == "tema1"), fin, grid["fin"])
+    assert abs(actual.x - 960) < 1 and actual.escala > 1.5                           # el actual pasa al centro y crece
+    assert cuadro_en(datos, 1.0).shape == (1080, 1920, 3)
+
+
+def test_desaparecer_se_infla_y_se_va():
+    el = {"id": "a", "pieza": "chulo", "entra": 0.0, "movimiento": [{"tipo": "desaparecer", "t": 1.0}]}
+    assert M.estado_en(el, 1.1, 5).escala > 1.0 and not M.estado_en(el, 1.4, 5).visible

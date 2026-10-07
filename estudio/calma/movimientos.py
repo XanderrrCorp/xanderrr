@@ -45,7 +45,7 @@ def resorte(p: float) -> float:
 # ------------------------------------------------------------------ duraciones por defecto
 
 DURACION = {"aparecer": 0.42, "deslizar": 0.55, "girar": 0.8, "crecer": 2.5, "llenar_barra": 1.2,
-            "temblor": 0.4, "alternar_color": 0.0, "cambiar_pose": 0.0}
+            "temblor": 0.4, "alternar_color": 0.0, "cambiar_pose": 0.0, "desaparecer": 0.32}
 TIPOS = tuple(DURACION) + ("parpadear",)
 PASADA_MAX = 1.14          # cuánto puede pasarse una escala de entrada (para dibujar nítido)
 
@@ -124,6 +124,11 @@ def estado_en(el: dict, t: float, fin_escena: float) -> Aspecto:
                 a.estado[m["parte"]] = round((float(a.estado.get(m["parte"], 0)) + giro) / 3) * 3 % 360
             else:
                 a.giro += giro
+        elif tipo == "desaparecer":            # se infla un poquito y se encoge hasta 0 (sale con aceleración)
+            c1 = 1.4
+            a.escala *= max(0.0, 1 - ((c1 + 1) * p ** 3 - c1 * p ** 2)) if p < 1 else 0.0
+            if p >= 1:
+                a.visible = False
         elif tipo == "crecer":
             a.escala *= 1 + (float(m.get("hasta", 1.35)) - 1) * suave(p)
         elif tipo == "llenar_barra":

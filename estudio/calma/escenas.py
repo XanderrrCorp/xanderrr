@@ -123,8 +123,8 @@ def revisar(datos: dict) -> list[str]:
             momentos.append(el["entra"])
         for m in esc.get("temblor", []):
             momentos.append(float(m.get("t", esc["inicio"])))
-        # máximo de elementos a la vez (rótulos y signos incluidos)
-        for el in esc["elementos"]:
+        # máximo de elementos a la vez (rótulos y signos incluidos); la cuadrícula de temas es la excepción
+        for el in ([] if esc.get("tipo") == "cuadricula" else esc["elementos"]):
             t = el["entra"] + 0.01
             vivos = [x for x in esc["elementos"] if x["entra"] <= t and (x.get("sale") is None or x["sale"] > t)]
             if len(vivos) > MAX_EN_PANTALLA:

@@ -1,0 +1,1287 @@
+{
+ "video": {
+  "ancho": 1920,
+  "alto": 1080,
+  "fps": 30,
+  "guion": "sacudida.txt"
+ },
+ "escenas": [
+  {
+   "id": 1,
+   "tipo": "cuadricula",
+   "palabra_inicio": "Sacudida",
+   "fondo": "blanco",
+   "temblor": [],
+   "elementos": [
+    {
+     "id": "tema2",
+     "pieza": "circulo_tema",
+     "estado": {
+      "icono": "?"
+     },
+     "posicion": [
+      620,
+      300
+     ],
+     "tamano": 0.85,
+     "movimiento": [
+      {
+       "tipo": "aparecer",
+       "t": 0.04
+      },
+      {
+       "tipo": "desaparecer",
+       "palabra": "dormirte",
+       "retraso": 0.03
+      }
+     ],
+     "entra": 0.04
+    },
+    {
+     "id": "tema3",
+     "pieza": "circulo_tema",
+     "estado": {
+      "icono": "?"
+     },
+     "posicion": [
+      960,
+      300
+     ],
+     "tamano": 0.85,
+     "movimiento": [
+      {
+       "tipo": "aparecer",
+       "t": 0.08
+      },
+      {
+       "tipo": "desaparecer",
+       "palabra": "dormirte",
+       "retraso": 0.06
+      }
+     ],
+     "entra": 0.08
+    },
+    {
+     "id": "tema4",
+     "pieza": "circulo_tema",
+     "estado": {
+      "icono": "?"
+     },
+     "posicion": [
+      1300,
+      300
+     ],
+     "tamano": 0.85,
+     "movimiento": [
+      {
+       "tipo": "aparecer",
+       "t": 0.12
+      },
+      {
+       "tipo": "desaparecer",
+       "palabra": "dormirte",
+       "retraso": 0.09
+      }
+     ],
+     "entra": 0.12
+    },
+    {
+     "id": "tema5",
+     "pieza": "circulo_tema",
+     "estado": {
+      "icono": "?"
+     },
+     "posicion": [
+      1640,
+      300
+     ],
+     "tamano": 0.85,
+     "movimiento": [
+      {
+       "tipo": "aparecer",
+       "t": 0.16
+      },
+      {
+       "tipo": "desaparecer",
+       "palabra": "dormirte",
+       "retraso": 0.12
+      }
+     ],
+     "entra": 0.16
+    },
+    {
+     "id": "tema6",
+     "pieza": "circulo_tema",
+     "estado": {
+      "icono": "?"
+     },
+     "posicion": [
+      450,
+      660
+     ],
+     "tamano": 0.85,
+     "movimiento": [
+      {
+       "tipo": "aparecer",
+       "t": 0.2
+      },
+      {
+       "tipo": "desaparecer",
+       "palabra": "dormirte",
+       "retraso": 0.15
+      }
+     ],
+     "entra": 0.2
+    },
+    {
+     "id": "tema7",
+     "pieza": "circulo_tema",
+     "estado": {
+      "icono": "?"
+     },
+     "posicion": [
+      790,
+      660
+     ],
+     "tamano": 0.85,
+     "movimiento": [
+      {
+       "tipo": "aparecer",
+       "t": 0.24
+      },
+      {
+       "tipo": "desaparecer",
+       "palabra": "dormirte",
+       "retraso": 0.18
+      }
+     ],
+     "entra": 0.24
+    },
+    {
+     "id": "tema8",
+     "pieza": "circulo_tema",
+     "estado": {
+      "icono": "?"
+     },
+     "posicion": [
+      1130,
+      660
+     ],
+     "tamano": 0.85,
+     "movimiento": [
+      {
+       "tipo": "aparecer",
+       "t": 0.28
+      },
+      {
+       "tipo": "desaparecer",
+       "palabra": "dormirte",
+       "retraso": 0.21
+      }
+     ],
+     "entra": 0.28
+    },
+    {
+     "id": "tema9",
+     "pieza": "circulo_tema",
+     "estado": {
+      "icono": "?"
+     },
+     "posicion": [
+      1470,
+      660
+     ],
+     "tamano": 0.85,
+     "movimiento": [
+      {
+       "tipo": "aparecer",
+       "t": 0.32
+      },
+      {
+       "tipo": "desaparecer",
+       "palabra": "dormirte",
+       "retraso": 0.24
+      }
+     ],
+     "entra": 0.32
+    },
+    {
+     "id": "tema1",
+     "pieza": "circulo_tema",
+     "estado": {
+      "etiqueta": "",
+      "actual": true,
+      "icono": {
+       "pieza": "personaje",
+       "estado": {
+        "pose": "acostado",
+        "gesto": "neutral",
+        "ojos": "cerrados"
+       }
+      }
+     },
+     "posicion": [
+      280,
+      300
+     ],
+     "tamano": 0.85,
+     "movimiento": [
+      {
+       "tipo": "aparecer",
+       "t": 0.0
+      },
+      {
+       "tipo": "deslizar",
+       "hasta": [
+        960,
+        430
+       ],
+       "palabra": "dormirte",
+       "duracion": 0.6
+      },
+      {
+       "tipo": "crecer",
+       "hasta": 1.9,
+       "palabra": "dormirte",
+       "duracion": 0.6
+      }
+     ],
+     "entra": 0.0
+    },
+    {
+     "id": "titulo",
+     "pieza": "titulo_tema",
+     "estado": {
+      "texto": "Sacudida al dormirte",
+      "rojo": "SACUDIDA"
+     },
+     "posicion": [
+      960,
+      860
+     ],
+     "tamano": 1.0,
+     "movimiento": [
+      "aparecer"
+     ],
+     "palabra": "dormirte",
+     "retraso": 0.45
+    }
+   ]
+  },
+  {
+   "id": 2,
+   "tipo": "ilustracion",
+   "palabra_inicio": "Estás en la cama",
+   "fondo": "blanco",
+   "temblor": [],
+   "elementos": [
+    {
+     "id": "yo",
+     "pieza": "personaje",
+     "estado": {
+      "pose": "acostado",
+      "gesto": "neutral",
+      "ojos": "abiertos"
+     },
+     "posicion": [
+      960,
+      760
+     ],
+     "tamano": 1.5,
+     "movimiento": [
+      "aparecer",
+      {
+       "tipo": "crecer",
+       "hasta": 1.04,
+       "duracion": 3.0
+      }
+     ],
+     "palabra": "Estás"
+    },
+    {
+     "id": "cama",
+     "pieza": "texto",
+     "estado": {
+      "texto": "en la cama"
+     },
+     "posicion": [
+      960,
+      960
+     ],
+     "tamano": 1.0,
+     "movimiento": [
+      "aparecer"
+     ],
+     "palabra": "cama"
+    }
+   ]
+  },
+  {
+   "id": 3,
+   "tipo": "ilustracion",
+   "palabra_inicio": "Por fin",
+   "fondo": "blanco",
+   "temblor": [],
+   "elementos": [
+    {
+     "id": "yo",
+     "pieza": "personaje",
+     "estado": {
+      "pose": "acostado",
+      "gesto": "neutral",
+      "ojos": "cerrados"
+     },
+     "posicion": [
+      960,
+      760
+     ],
+     "tamano": 1.5,
+     "movimiento": [
+      {
+       "tipo": "crecer",
+       "hasta": 1.04,
+       "duracion": 3.0
+      }
+     ],
+     "ya_estaba": true
+    },
+    {
+     "id": "zzz",
+     "pieza": "zzz",
+     "estado": {},
+     "posicion": [
+      1240,
+      330
+     ],
+     "tamano": 1.1,
+     "movimiento": [
+      "aparecer",
+      {
+       "tipo": "deslizar",
+       "desde": [
+        1180,
+        420
+       ],
+       "duracion": 0.8
+      }
+     ],
+     "palabra": "dormido"
+    }
+   ]
+  },
+  {
+   "id": 4,
+   "tipo": "ilustracion",
+   "palabra_inicio": "El cuerpo se afloja",
+   "fondo": "blanco",
+   "temblor": [],
+   "elementos": [
+    {
+     "id": "yo",
+     "pieza": "personaje",
+     "estado": {
+      "pose": "acostado",
+      "gesto": "neutral",
+      "ojos": "cerrados"
+     },
+     "posicion": [
+      960,
+      760
+     ],
+     "tamano": 1.5,
+     "movimiento": [
+      {
+       "tipo": "crecer",
+       "hasta": 1.04,
+       "duracion": 3.0
+      }
+     ],
+     "ya_estaba": true
+    },
+    {
+     "id": "s1",
+     "pieza": "cafe",
+     "estado": {},
+     "posicion": [
+      640,
+      300
+     ],
+     "tamano": 0.6,
+     "movimiento": [
+      "aparecer"
+     ],
+     "palabra": "pensamientos",
+     "rotacion": -15
+    },
+    {
+     "id": "s2",
+     "pieza": "escalon",
+     "estado": {},
+     "posicion": [
+      960,
+      250
+     ],
+     "tamano": 0.55,
+     "movimiento": [
+      "aparecer"
+     ],
+     "palabra": "pensamientos",
+     "retraso": 0.25
+    },
+    {
+     "id": "s3",
+     "pieza": "corazon",
+     "estado": {},
+     "posicion": [
+      1280,
+      300
+     ],
+     "tamano": 0.6,
+     "movimiento": [
+      "aparecer"
+     ],
+     "palabra": "raros",
+     "rotacion": 12
+    }
+   ]
+  },
+  {
+   "id": 5,
+   "tipo": "ilustracion",
+   "palabra_inicio": "Y de golpe",
+   "fondo": "blanco",
+   "temblor": [
+    {
+     "palabra": "golpe"
+    }
+   ],
+   "elementos": [
+    {
+     "id": "yo",
+     "pieza": "personaje",
+     "estado": {
+      "pose": "asustado",
+      "gesto": "susto"
+     },
+     "posicion": [
+      960,
+      980
+     ],
+     "tamano": 1.3,
+     "movimiento": [
+      "aparecer"
+     ],
+     "palabra": "golpe"
+    },
+    {
+     "id": "f1",
+     "pieza": "flecha",
+     "estado": {
+      "curva": 0.04,
+      "color": "negro"
+     },
+     "posicion": [
+      620,
+      560
+     ],
+     "tamano": 1.0,
+     "movimiento": [
+      "aparecer"
+     ],
+     "palabra": "caes",
+     "rotacion": 90
+    },
+    {
+     "id": "f2",
+     "pieza": "flecha",
+     "estado": {
+      "curva": 0.04,
+      "color": "negro"
+     },
+     "posicion": [
+      1300,
+      560
+     ],
+     "tamano": 1.0,
+     "movimiento": [
+      "aparecer"
+     ],
+     "palabra": "caes",
+     "rotacion": 90,
+     "retraso": 0.12
+    }
+   ]
+  },
+  {
+   "id": 6,
+   "tipo": "ilustracion",
+   "palabra_inicio": "Pisas un escalón",
+   "fondo": "blanco",
+   "temblor": [],
+   "elementos": [
+    {
+     "id": "esc",
+     "pieza": "escalon",
+     "estado": {},
+     "posicion": [
+      900,
+      700
+     ],
+     "tamano": 1.6,
+     "movimiento": [
+      "aparecer"
+     ],
+     "palabra": "Pisas"
+    },
+    {
+     "id": "yo",
+     "pieza": "personaje",
+     "estado": {
+      "pose": "corriendo",
+      "gesto": "concentrado"
+     },
+     "posicion": [
+      830,
+      600
+     ],
+     "tamano": 0.55,
+     "movimiento": [
+      "aparecer"
+     ],
+     "palabra": "Pisas",
+     "retraso": 0.15
+    },
+    {
+     "id": "ojo",
+     "pieza": "circulo_rojo",
+     "estado": {
+      "ancho": 240,
+      "alto": 440
+     },
+     "posicion": [
+      985,
+      690
+     ],
+     "tamano": 1.0,
+     "movimiento": [
+      "aparecer"
+     ],
+     "palabra": "existe"
+    }
+   ]
+  },
+  {
+   "id": 7,
+   "tipo": "ilustracion",
+   "palabra_inicio": "Todo tu cuerpo",
+   "fondo": "blanco",
+   "temblor": [
+    {
+     "palabra": "brinco"
+    }
+   ],
+   "elementos": [
+    {
+     "id": "yo",
+     "pieza": "personaje",
+     "estado": {
+      "pose": "sorprendido",
+      "gesto": "sorpresa"
+     },
+     "posicion": [
+      960,
+      980
+     ],
+     "tamano": 1.3,
+     "movimiento": [
+      "aparecer",
+      {
+       "tipo": "temblor",
+       "palabra": "brinco",
+       "fuerza": 22
+      }
+     ],
+     "palabra": "Todo"
+    },
+    {
+     "id": "mov",
+     "pieza": "lineas_movimiento",
+     "estado": {},
+     "posicion": [
+      960,
+      640
+     ],
+     "tamano": 1.6,
+     "movimiento": [
+      "aparecer"
+     ],
+     "palabra": "brinco"
+    },
+    {
+     "id": "cor",
+     "pieza": "corazon",
+     "estado": {},
+     "posicion": [
+      1420,
+      420
+     ],
+     "tamano": 1.0,
+     "movimiento": [
+      "aparecer",
+      {
+       "tipo": "crecer",
+       "hasta": 1.15,
+       "palabra": "acelerado",
+       "duracion": 0.4
+      },
+      {
+       "tipo": "temblor",
+       "palabra": "acelerado",
+       "fuerza": 10
+      }
+     ],
+     "palabra": "corazón"
+    }
+   ]
+  },
+  {
+   "id": 8,
+   "tipo": "personaje",
+   "palabra_inicio": "Eso se llama",
+   "fondo": "blanco",
+   "temblor": [],
+   "elementos": [
+    {
+     "id": "yo",
+     "pieza": "personaje",
+     "estado": {
+      "pose": "tablero",
+      "gesto": "seguro"
+     },
+     "posicion": [
+      430,
+      990
+     ],
+     "tamano": 1.05,
+     "movimiento": [
+      "aparecer"
+     ],
+     "palabra": "Eso"
+    },
+    {
+     "id": "tab",
+     "pieza": "tablero",
+     "estado": {},
+     "posicion": [
+      1180,
+      480
+     ],
+     "tamano": 1.45,
+     "movimiento": [
+      "aparecer"
+     ],
+     "palabra": "Eso"
+    },
+    {
+     "id": "nombre",
+     "pieza": "titulo_tema",
+     "estado": {
+      "texto": "sacudida hípnica",
+      "rojo": "HÍPNICA"
+     },
+     "posicion": [
+      1180,
+      430
+     ],
+     "tamano": 0.5,
+     "movimiento": [
+      "aparecer"
+     ],
+     "palabra": "sacudida"
+    },
+    {
+     "id": "mayoria",
+     "pieza": "texto",
+     "estado": {
+      "texto": "a la mayoría",
+      "color": "rojo"
+     },
+     "posicion": [
+      1180,
+      620
+     ],
+     "tamano": 0.8,
+     "movimiento": [
+      "aparecer"
+     ],
+     "palabra": "mayoría"
+    }
+   ]
+  },
+  {
+   "id": 9,
+   "tipo": "codigo",
+   "palabra_inicio": "Nadie sabe",
+   "fondo": "blanco",
+   "temblor": [],
+   "elementos": [
+    {
+     "id": "yo",
+     "pieza": "personaje",
+     "estado": {
+      "pose": "hombros",
+      "gesto": "neutral"
+     },
+     "posicion": [
+      960,
+      990
+     ],
+     "tamano": 1.15,
+     "movimiento": [
+      "aparecer"
+     ],
+     "palabra": "Nadie"
+    },
+    {
+     "id": "cert",
+     "pieza": "texto",
+     "estado": {
+      "texto": "nadie sabe con certeza",
+      "color": "rojo"
+     },
+     "posicion": [
+      960,
+      230
+     ],
+     "tamano": 1.0,
+     "movimiento": [
+      "aparecer"
+     ],
+     "palabra": "certeza"
+    }
+   ]
+  },
+  {
+   "id": 10,
+   "tipo": "codigo",
+   "palabra_inicio": "La explicación más aceptada",
+   "fondo": "blanco",
+   "temblor": [],
+   "elementos": [
+    {
+     "id": "acep",
+     "pieza": "texto",
+     "estado": {
+      "texto": "la más aceptada"
+     },
+     "posicion": [
+      960,
+      200
+     ],
+     "tamano": 0.8,
+     "movimiento": [
+      "aparecer"
+     ],
+     "palabra": "aceptada"
+    },
+    {
+     "id": "r1",
+     "pieza": "rayo",
+     "estado": {},
+     "posicion": [
+      880,
+      560
+     ],
+     "tamano": 1.4,
+     "movimiento": [
+      {
+       "tipo": "deslizar",
+       "desde": [
+        300,
+        560
+       ],
+       "duracion": 0.5
+      }
+     ],
+     "palabra": "cruce",
+     "rotacion": -20
+    },
+    {
+     "id": "r2",
+     "pieza": "rayo",
+     "estado": {
+      "color": "rojo"
+     },
+     "posicion": [
+      1040,
+      560
+     ],
+     "tamano": 1.4,
+     "movimiento": [
+      {
+       "tipo": "deslizar",
+       "desde": [
+        1620,
+        560
+       ],
+       "duracion": 0.5
+      }
+     ],
+     "palabra": "cruce",
+     "rotacion": 20
+    },
+    {
+     "id": "senal",
+     "pieza": "texto",
+     "estado": {
+      "texto": "cruce de señales",
+      "color": "rojo"
+     },
+     "posicion": [
+      960,
+      860
+     ],
+     "tamano": 1.1,
+     "movimiento": [
+      "aparecer"
+     ],
+     "palabra": "señales"
+    }
+   ]
+  },
+  {
+   "id": 11,
+   "tipo": "codigo",
+   "palabra_inicio": "Al dormirte",
+   "fondo": "blanco",
+   "temblor": [],
+   "elementos": [
+    {
+     "id": "mus",
+     "pieza": "musculo",
+     "estado": {},
+     "posicion": [
+      700,
+      560
+     ],
+     "tamano": 1.4,
+     "movimiento": [
+      "aparecer",
+      {
+       "tipo": "cambiar_pose",
+       "palabra": "relajan",
+       "estado": {
+        "relajado": true
+       }
+      }
+     ],
+     "palabra": "músculos"
+    },
+    {
+     "id": "barra",
+     "pieza": "barra",
+     "estado": {
+      "etiqueta": "tensión",
+      "color": "rojo"
+     },
+     "posicion": [
+      1350,
+      500
+     ],
+     "tamano": 0.9,
+     "movimiento": [
+      "aparecer",
+      {
+       "tipo": "llenar_barra",
+       "desde": 1.0,
+       "hasta": 0.1,
+       "duracion": 0.6
+      }
+     ],
+     "palabra": "relajan"
+    },
+    {
+     "id": "rap",
+     "pieza": "texto",
+     "estado": {
+      "texto": "muy rápido",
+      "color": "rojo"
+     },
+     "posicion": [
+      1350,
+      700
+     ],
+     "tamano": 1.0,
+     "movimiento": [
+      "aparecer"
+     ],
+     "palabra": "rápido"
+    }
+   ]
+  },
+  {
+   "id": 12,
+   "tipo": "codigo",
+   "palabra_inicio": "Una parte de tu cerebro",
+   "fondo": "blanco",
+   "temblor": [],
+   "elementos": [
+    {
+     "id": "cer",
+     "pieza": "cerebro",
+     "estado": {},
+     "posicion": [
+      820,
+      520
+     ],
+     "tamano": 1.6,
+     "movimiento": [
+      "aparecer",
+      {
+       "tipo": "cambiar_pose",
+       "palabra": "despierta",
+       "estado": {
+        "despierta": true
+       }
+      }
+     ],
+     "palabra": "cerebro"
+    },
+    {
+     "id": "cor",
+     "pieza": "corchete",
+     "estado": {
+      "alto": 220
+     },
+     "posicion": [
+      1060,
+      450
+     ],
+     "tamano": 1.0,
+     "movimiento": [
+      "aparecer"
+     ],
+     "palabra": "despierta",
+     "rotacion": 180
+    },
+    {
+     "id": "fl",
+     "pieza": "flecha",
+     "estado": {
+      "curva": 0.1
+     },
+     "posicion": [
+      1350,
+      560
+     ],
+     "tamano": 0.9,
+     "movimiento": [
+      "aparecer"
+     ],
+     "palabra": "interpreta",
+     "rotacion": 60
+    },
+    {
+     "id": "caida",
+     "pieza": "texto",
+     "estado": {
+      "texto": "¡caída!",
+      "color": "rojo"
+     },
+     "posicion": [
+      1450,
+      800
+     ],
+     "tamano": 1.2,
+     "movimiento": [
+      "aparecer"
+     ],
+     "palabra": "caída"
+    }
+   ]
+  },
+  {
+   "id": 13,
+   "tipo": "codigo",
+   "palabra_inicio": "Entonces da la orden",
+   "fondo": "blanco",
+   "temblor": [
+    {
+     "palabra": "golpe"
+    }
+   ],
+   "elementos": [
+    {
+     "id": "cer",
+     "pieza": "cerebro",
+     "estado": {
+      "despierta": true
+     },
+     "posicion": [
+      460,
+      500
+     ],
+     "tamano": 0.9,
+     "movimiento": [],
+     "ya_estaba": true
+    },
+    {
+     "id": "rayo",
+     "pieza": "rayo",
+     "estado": {},
+     "posicion": [
+      960,
+      500
+     ],
+     "tamano": 1.0,
+     "movimiento": [
+      {
+       "tipo": "deslizar",
+       "desde": [
+        560,
+        500
+       ],
+       "duracion": 0.5
+      }
+     ],
+     "palabra": "orden",
+     "rotacion": -60
+    },
+    {
+     "id": "mus",
+     "pieza": "musculo",
+     "estado": {
+      "relajado": true
+     },
+     "posicion": [
+      1450,
+      560
+     ],
+     "tamano": 1.3,
+     "movimiento": [
+      "aparecer",
+      {
+       "tipo": "cambiar_pose",
+       "palabra": "contraen",
+       "estado": {
+        "relajado": false
+       }
+      },
+      {
+       "tipo": "temblor",
+       "palabra": "contraen",
+       "fuerza": 18
+      }
+     ],
+     "palabra": "músculos"
+    },
+    {
+     "id": "golpe",
+     "pieza": "texto",
+     "estado": {
+      "texto": "de golpe",
+      "color": "rojo"
+     },
+     "posicion": [
+      960,
+      880
+     ],
+     "tamano": 1.2,
+     "movimiento": [
+      "aparecer"
+     ],
+     "palabra": "golpe"
+    }
+   ]
+  },
+  {
+   "id": 14,
+   "tipo": "codigo",
+   "palabra_inicio": "Es más frecuente",
+   "fondo": "blanco",
+   "temblor": [],
+   "elementos": [
+    {
+     "id": "frec",
+     "pieza": "texto",
+     "estado": {
+      "texto": "más frecuente si…"
+     },
+     "posicion": [
+      960,
+      200
+     ],
+     "tamano": 0.9,
+     "movimiento": [
+      "aparecer"
+     ],
+     "palabra": "frecuente"
+    },
+    {
+     "id": "z",
+     "pieza": "zzz",
+     "estado": {},
+     "posicion": [
+      480,
+      560
+     ],
+     "tamano": 1.4,
+     "movimiento": [
+      "aparecer"
+     ],
+     "palabra": "cansado"
+    },
+    {
+     "id": "es",
+     "pieza": "estres",
+     "estado": {},
+     "posicion": [
+      960,
+      560
+     ],
+     "tamano": 1.2,
+     "movimiento": [
+      "aparecer"
+     ],
+     "palabra": "estresado"
+    },
+    {
+     "id": "cafe",
+     "pieza": "cafe",
+     "estado": {},
+     "posicion": [
+      1440,
+      560
+     ],
+     "tamano": 1.2,
+     "movimiento": [
+      "aparecer"
+     ],
+     "palabra": "café"
+    }
+   ]
+  },
+  {
+   "id": 15,
+   "tipo": "personaje",
+   "palabra_inicio": "No te estabas",
+   "fondo": "blanco",
+   "temblor": [],
+   "elementos": [
+    {
+     "id": "yo",
+     "pieza": "personaje",
+     "estado": {
+      "pose": "aliviado",
+      "gesto": "aliviado",
+      "ojos": "cerrados"
+     },
+     "posicion": [
+      700,
+      990
+     ],
+     "tamano": 1.15,
+     "movimiento": [
+      "aparecer"
+     ],
+     "palabra": "No"
+    },
+    {
+     "id": "fl",
+     "pieza": "flecha",
+     "estado": {
+      "curva": 0.04,
+      "color": "negro"
+     },
+     "posicion": [
+      1350,
+      520
+     ],
+     "tamano": 1.0,
+     "movimiento": [
+      "aparecer"
+     ],
+     "palabra": "cayendo",
+     "rotacion": 90
+    },
+    {
+     "id": "x",
+     "pieza": "x_roja",
+     "estado": {},
+     "posicion": [
+      1350,
+      520
+     ],
+     "tamano": 0.9,
+     "movimiento": [
+      "aparecer"
+     ],
+     "palabra": "cayendo",
+     "retraso": 0.25
+    }
+   ]
+  },
+  {
+   "id": 16,
+   "tipo": "personaje",
+   "palabra_inicio": "Tu cerebro solo",
+   "fondo": "blanco",
+   "temblor": [],
+   "elementos": [
+    {
+     "id": "yo",
+     "pieza": "personaje",
+     "estado": {
+      "pose": "senalando_contento",
+      "gesto": "contento"
+     },
+     "posicion": [
+      640,
+      990
+     ],
+     "tamano": 1.15,
+     "movimiento": [
+      "aparecer"
+     ],
+     "palabra": "Tu"
+    },
+    {
+     "id": "cer",
+     "pieza": "cerebro",
+     "estado": {},
+     "posicion": [
+      1330,
+      520
+     ],
+     "tamano": 0.9,
+     "movimiento": [
+      "aparecer",
+      {
+       "tipo": "temblor",
+       "palabra": "asustó",
+       "fuerza": 12
+      }
+     ],
+     "palabra": "cerebro"
+    },
+    {
+     "id": "asus",
+     "pieza": "texto",
+     "estado": {
+      "texto": "solo se asustó",
+      "color": "rojo"
+     },
+     "posicion": [
+      1330,
+      800
+     ],
+     "tamano": 1.0,
+     "movimiento": [
+      "aparecer"
+     ],
+     "palabra": "asustó"
+    }
+   ]
+  }
+ ]
+}

@@ -376,3 +376,6 @@ def dibujar(pieza: str, estado: dict) -> Dibujo:
     if pieza not in PIEZAS:
         raise KeyError(f"no hay pieza «{pieza}» (hay: {', '.join(sorted(PIEZAS))})")
     return PIEZAS[pieza](estado)
+
+
+from . import piezas_explica  # noqa: E402,F401 — registra las piezas de El Calvo Explica
