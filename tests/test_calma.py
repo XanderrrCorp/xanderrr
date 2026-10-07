@@ -334,3 +334,36 @@ def test_ritmo_acorta_las_animaciones():
     E.fijar_tiempos(datos, *E.tiempos_estimados(texto))
     m = datos["escenas"][0]["elementos"][0]["movimiento"][0]
     assert m["tipo"] == "aparecer" and abs(m["duracion"] - M.DURACION["aparecer"] * 0.5) < 0.01
+
+
+def test_recortar_pausas_corrige_los_tiempos(tmp_path):
+    import numpy as np
+
+    from estudio.calma.flujo import Carpeta
+    from estudio.calma.pausas import recortar_pausas
+    from estudio.config import escribir_json
+    from estudio.tracy.audio import escribir_wav
+    from estudio.voz import SR
+
+    c = Carpeta(tmp_path)
+    (tmp_path / "audio").mkdir()
+    t = np.arange(SR) / SR
+    tono = (0.4 * np.sin(2 * np.pi * 220 * t)).astype(np.float32)
+    escribir_wav(tmp_path / "audio" / "voz.wav", np.concatenate([tono, np.zeros(SR, np.float32), tono]))
+    escribir_json(tmp_path / "audio" / "bloques_tiempos.json", {"duracion": 3.0, "bloques": [{"inicio": 0, "fin": 3.0}]})
+    escribir_json(tmp_path / "audio" / "oraciones.json", {"duracion": 3.0, "oraciones": [
+        {"inicio": 2.0, "fin": 3.0, "palabras": [{"p": "b", "inicio": 2.0, "fin": 3.0}]}]})
+    quitado = recortar_pausas(c, 0.2)
+    assert 0.7 < quitado < 0.85
+    ors = json.loads((tmp_path / "audio" / "oraciones.json").read_text())
+    assert abs(ors["oraciones"][0]["palabras"][0]["inicio"] - (2.0 - quitado)) < 0.02
+
+
+def test_deriva_de_camara_mueve_cada_escena():
+    from estudio.calma.render import _deriva
+
+    datos = {"video": {"deriva": 0.04}}
+    esc1, esc2 = {"id": 1, "inicio": 0, "fin": 2}, {"id": 2, "inicio": 2, "fin": 4}
+    assert _deriva(datos, esc1, 0.0) < _deriva(datos, esc1, 1.9)                 # una se acerca
+    assert _deriva(datos, esc2, 2.0) > _deriva(datos, esc2, 3.9)                 # la siguiente se aleja
+    assert _deriva({"video": {}}, esc1, 1.0) == 1.0

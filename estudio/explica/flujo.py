@@ -91,11 +91,20 @@ def producir(c: Carpeta, t, permiso: bool = False, voz=None, transcriptor=None, 
 
     t.paso, t.progreso = "whisper", 0.2
     ors = alinear(c, transcriptor or transcriptor_para(proveedor), avisar=t.avisar)
+    from ..calma.pausas import recortar_pausas
+
+    nombres = {" ".join(x["nombre"]).strip() for x in temas}
+    tras_nombre = [o["fin"] for o in ors["oraciones"] if o["texto"].strip() in nombres]
+    quitado = recortar_pausas(c, float(preset["pausa_max_s"]), tras_nombre, float(preset["pausa_tras_nombre_s"]))
+    if quitado:
+        t.avisar(f"Silencios recortados: {quitado:.1f} s menos")
+        ors = leer_json(c.ruta / "audio" / "oraciones.json")
     quien = "Whisper" if ors.get("metodo") not in ("pausas", "simulado") else f"Tiempos ({ors.get('metodo')})"
     t.avisar(f"{quien}: coincidencia con el guion {ors['confianza']:.0%}")
 
     t.paso, t.progreso = "escenas", 0.3
     datos = json.loads((c.ruta / "escenas.json").read_text(encoding="utf-8"))
+    datos.setdefault("video", {}).update(ritmo=float(preset["ritmo"]), deriva=float(preset["deriva_camara"]))
     E.fijar_tiempos(datos, E.palabras_de(ors), float(ors["duracion"]) + 0.6)
     ritmo = E.revisar(datos, max_sin_cambio=float(preset["cambio_cada_s"][1]))
     for a in ritmo:

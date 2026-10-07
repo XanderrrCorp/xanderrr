@@ -97,6 +97,17 @@ def _pegar(cuadro: np.ndarray, img: np.ndarray, ancla: tuple[float, float], x: f
 
 # ------------------------------------------------------------------ cuadro y video
 
+def _deriva(datos: dict, esc: dict, t: float) -> float:
+    """Zoom lento de cámara durante toda la escena; una escena se acerca y la siguiente se aleja."""
+    d = float(datos.get("video", {}).get("deriva", 0))
+    if not d or esc.get("tipo") == "cuadricula":
+        return 1.0
+    p = (t - esc["inicio"]) / max(0.1, esc["fin"] - esc["inicio"])
+    p = min(1.0, max(0.0, p))
+    k = int(esc.get("id", 0))
+    return 1 + d * (p if k % 2 else 1 - p)
+
+
 def cuadro_en(datos: dict, t: float) -> np.ndarray:
     esc = next((e for e in datos["escenas"] if e["inicio"] <= t < e["fin"]), datos["escenas"][-1])
     cuadro = fondo(esc.get("fondo", "blanco")).copy()
@@ -109,6 +120,11 @@ def cuadro_en(datos: dict, t: float) -> np.ndarray:
         _pegar(cuadro, img, ancla, a.x, a.y, a.escala / base, a.giro)
     dx, dy = temblor_pantalla(esc.get("temblor", []), t)
     z, fx, fy = empujon_camara(esc.get("empujon", []), t)
+    zd = _deriva(datos, esc, t)
+    if zd > 1.0005:                                    # la deriva se centra en la mitad de la pantalla
+        fx, fy = (fx * (z - 1) + 960 * (zd - 1)) / max(1e-6, (z - 1) + (zd - 1)), \
+                 (fy * (z - 1) + 540 * (zd - 1)) / max(1e-6, (z - 1) + (zd - 1))
+        z = z * zd
     if abs(dx) > 0.3 or abs(dy) > 0.3 or z > 1.0005:
         m = np.array([[z, 0, fx - z * fx + dx], [0, z, fy - z * fy + dy]], np.float32)
         cuadro = cv2.warpAffine(cuadro, m, (W, H), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_REPLICATE)

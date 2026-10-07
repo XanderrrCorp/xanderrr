@@ -101,6 +101,8 @@ def fijar_tiempos(datos: dict, palabras: list[dict], duracion: float) -> dict:
         for el in esc["elementos"]:                   # lo que «ya estaba» entra con el corte
             if el.get("ya_estaba"):
                 el["entra"] = esc["inicio"]
+            elif el.get("entra", 0) > esc["fin"] - 0.25:   # un «retraso» que se pasaría del corte: se adelanta
+                el["entra"] = round(max(esc["inicio"], esc["fin"] - 0.25), 3)
             movs = el.get("movimiento") or []
             for m in movs if isinstance(movs, list) else []:
                 if isinstance(m, dict) and "t_rel" in m:      # relativo al corte (escalonados)

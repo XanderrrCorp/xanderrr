@@ -23,7 +23,9 @@ OJOS_POR_POSE = {"acostado": "cerrados", "rechazo": "otro_lado"}
 
 POR_DEFECTO: dict[str, Any] = {
     "voz_id": None,                 # None = la de proveedores.json (la misma de Peligro Tropical)
-    "velocidad": 1.0,               # tono calmado (Peligro Tropical va a 1,3)
+    "velocidad": 1.3,               # igual de rápida que Peligro Tropical (a 1,0 el dueño lo sintió lento)
+    "pausa_max_s": 0.22,            # los silencios entre frases se recortan a esto (ritmo de editor)
+    "pausa_tras_nombre_s": 0.6,     # tras el nombre de cada tema sí queda una pausa (para la cuadrícula)
     "musica": None,                 # None = tranquila y constante, elegida de la biblioteca
     "volumen_musica_db": -27.0,
     "efectos_sonido": False,
@@ -51,6 +53,8 @@ POR_DEFECTO: dict[str, Any] = {
         "Sin texto, letras ni números dentro de la imagen. Sin personas reales, sin personajes de películas, "
         "series o videojuegos, sin marcas ni logos."),
     "titulo": "TODAS las {x} explicadas en {n} minutos",
+    "ritmo": 0.75,                  # animaciones un 25 % más cortas
+    "deriva_camara": 0.04,          # cada escena se acerca o se aleja un 4 % mientras dura (nada queda quieto)
 }
 
 
