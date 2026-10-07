@@ -219,6 +219,58 @@ def _fondo_valido(fondo, tipo: str) -> str:
     return fondo if tipo == "ilustracion" and fondo in FONDOS_ESCENA else "blanco"
 
 
+def limpiar_escena(crudo: dict, frase: str, tipo: str, fondo: str, notas: list[str]) -> dict:
+    """Revisa y arregla UNA escena que armó Claude para una frase: piezas que existen, palabras que sí
+    dice la voz, movimientos válidos, posiciones dentro de la pantalla, textos que quepan y máximo 4."""
+    ws = frase.split()
+    esc = {"tipo": tipo, "palabra_inicio": " ".join(ws[:2]), "fondo": fondo,
+           "temblor": [m for m in crudo.get("temblor") or [] if _ancla_en(m.get("palabra", ""), frase)],
+           "empujon": [m for m in crudo.get("empujon") or [] if _ancla_en(m.get("palabra", ""), frase)],
+           "elementos": crudo.get("elementos") or []}
+    buenos = []
+    for el in esc["elementos"]:
+        if el.get("pieza") not in PIEZAS:
+            notas.append(f"pieza que no existe «{el.get('pieza')}» en «{frase[:40]}»: va como texto")
+            el = {**el, "pieza": "texto", "estado": {"texto": str(el.get("id", ""))[:20]}}
+        el.setdefault("id", f"e{len(buenos)}")
+        el["estado"] = dict(el.get("estado") or {})
+        if el.get("palabra") and not _ancla_en(el["palabra"], frase):
+            notas.append(f"«{el['palabra']}» no está en la frase: entra con el corte")
+            el.pop("palabra")
+        movs = el.get("movimiento")
+        movs = [movs] if isinstance(movs, (str, dict)) else list(movs or (["aparecer"] if not el.get("ya_estaba") else []))
+        limpios = []
+        for m in movs:
+            m = {"tipo": m} if isinstance(m, str) else dict(m)
+            if m.get("tipo") not in E.TIPOS_MOVIMIENTO:
+                continue
+            if m.get("palabra") and not _ancla_en(m["palabra"], frase):
+                m.pop("palabra")
+            limpios.append(m)
+        el["movimiento"] = limpios
+        x, y = (list(el.get("posicion") or [960, 540]) + [540])[:2]
+        el["posicion"] = [min(1840, max(80, float(x))), min(1060, max(60, float(y)))]
+        el["tamano"] = float(el.get("tamano") or 1.0)
+        if el["pieza"] in ("texto", "titulo_tema", "rotulo"):         # que el texto quepa en pantalla
+            alto = {"texto": 72, "titulo_tema": 110, "rotulo": 92}[el["pieza"]]
+            ancho = ancho_texto(str(el["estado"].get("texto", "")).upper(), alto) * el["tamano"]
+            maximo = 2 * min(el["posicion"][0], W - el["posicion"][0]) - 40
+            if ancho > maximo:
+                el["tamano"] = round(el["tamano"] * maximo / ancho, 3)
+        if el["pieza"] != "imagen":                                     # la imagen se revisa al dibujar
+            try:
+                dibujar(el["pieza"], el["estado"])
+            except Exception as ex:  # noqa: BLE001 — un estado raro: se deja la pieza sin estado
+                notas.append(f"estado raro en {el['pieza']}: {ex}")
+                el["estado"] = {}
+        buenos.append(el)
+    if len([e for e in buenos if not e.get("sale")]) > E.MAX_EN_PANTALLA:
+        notas.append(f"más de {E.MAX_EN_PANTALLA} elementos en «{frase[:40]}»: se dejan los primeros")
+        buenos = buenos[:E.MAX_EN_PANTALLA]
+    esc["elementos"] = buenos
+    return esc
+
+
 def validar(respuesta: dict, tema: dict) -> tuple[list[dict], dict, list[str]]:
     """Revisa y arregla lo que Claude devolvió. Devuelve (escenas, icono, notas)."""
     frases = frases_del_tema(tema)
@@ -228,53 +280,8 @@ def validar(respuesta: dict, tema: dict) -> tuple[list[dict], dict, list[str]]:
         raise ValueError(f"vinieron {len(escenas)} escenas para {len(frases)} frases")
     salida = []
     for (parte, frase), esc in zip(frases, escenas):
-        ws = frase.split()
-        esc = {"tipo": esc.get("tipo") or TIPO_DE_PARTE[parte], "palabra_inicio": " ".join(ws[:2]),
-               "fondo": _fondo_valido(esc.get("fondo"), esc.get("tipo") or TIPO_DE_PARTE[parte]),
-               "temblor": [m for m in esc.get("temblor") or [] if _ancla_en(m.get("palabra", ""), frase)],
-               "empujon": [m for m in esc.get("empujon") or [] if _ancla_en(m.get("palabra", ""), frase)],
-               "elementos": esc.get("elementos") or []}
-        buenos = []
-        for el in esc["elementos"]:
-            if el.get("pieza") not in PIEZAS:
-                notas.append(f"pieza que no existe «{el.get('pieza')}» en «{frase[:40]}»: va como texto")
-                el = {**el, "pieza": "texto", "estado": {"texto": str(el.get("id", ""))[:20]}}
-            el.setdefault("id", f"e{len(buenos)}")
-            el["estado"] = dict(el.get("estado") or {})
-            if el.get("palabra") and not _ancla_en(el["palabra"], frase):
-                notas.append(f"«{el['palabra']}» no está en la frase: entra con el corte")
-                el.pop("palabra")
-            movs = el.get("movimiento")
-            movs = [movs] if isinstance(movs, (str, dict)) else list(movs or (["aparecer"] if not el.get("ya_estaba") else []))
-            limpios = []
-            for m in movs:
-                m = {"tipo": m} if isinstance(m, str) else dict(m)
-                if m.get("tipo") not in E.TIPOS_MOVIMIENTO:
-                    continue
-                if m.get("palabra") and not _ancla_en(m["palabra"], frase):
-                    m.pop("palabra")
-                limpios.append(m)
-            el["movimiento"] = limpios
-            x, y = (list(el.get("posicion") or [960, 540]) + [540])[:2]
-            el["posicion"] = [min(1840, max(80, float(x))), min(1060, max(60, float(y)))]
-            el["tamano"] = float(el.get("tamano") or 1.0)
-            if el["pieza"] in ("texto", "titulo_tema", "rotulo"):         # que el texto quepa en pantalla
-                alto = {"texto": 72, "titulo_tema": 110, "rotulo": 92}[el["pieza"]]
-                ancho = ancho_texto(str(el["estado"].get("texto", "")).upper(), alto) * el["tamano"]
-                maximo = 2 * min(el["posicion"][0], W - el["posicion"][0]) - 40
-                if ancho > maximo:
-                    el["tamano"] = round(el["tamano"] * maximo / ancho, 3)
-            try:
-                dibujar(el["pieza"], el["estado"])
-            except Exception as ex:  # noqa: BLE001 — un estado raro: se deja la pieza sin estado
-                notas.append(f"estado raro en {el['pieza']}: {ex}")
-                el["estado"] = {}
-            buenos.append(el)
-        if len([e for e in buenos if not e.get("sale")]) > E.MAX_EN_PANTALLA:
-            notas.append(f"más de {E.MAX_EN_PANTALLA} elementos en «{frase[:40]}»: se dejan los primeros")
-            buenos = buenos[:E.MAX_EN_PANTALLA]
-        esc["elementos"] = buenos
-        salida.append(esc)
+        tipo = esc.get("tipo") or TIPO_DE_PARTE[parte]
+        salida.append(limpiar_escena(esc, frase, tipo, _fondo_valido(esc.get("fondo"), tipo), notas))
     icono = respuesta.get("icono") or {"pieza": "personaje", "estado": {"pose": "pensando", "gesto": "pensativo"}}
     if icono.get("pieza") not in PIEZAS:
         icono = {"pieza": "personaje", "estado": {"pose": "pensando", "gesto": "pensativo"}}

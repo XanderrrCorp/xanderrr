@@ -39,6 +39,8 @@ EFECTOS = (
     "lupa",
     # lo REAL (Pexels, verificado): foto en marco rojo con la mascota señalando, o video a pantalla completa
     "foto_real", "video_real",
+    # (07-10) escena animada por código (video híbrido), a pantalla completa sobre el papel del canal
+    "animacion",
     # entradas del objeto al cortar (sale de abajo o de un lado con rebote) y vaivén suave mientras está
     "entrada_abajo", "entrada_lado", "vaiven",
     # escala de peligro 0–10 a pantalla completa cuando se presenta un nivel (dibujada con código)
@@ -194,6 +196,9 @@ class Estilo(Modelo):
     # «negro»: títulos de arriba en negro sin borde (con triángulo rojo en amenazas), como en la hoja
     # cuadriculada de la competencia; «contorno»: blancos con borde negro
     titulo: Literal["contorno", "negro"] = "contorno"
+    # (07-10) video híbrido: parte de las escenas (0-0.5) que explican algo van animadas por código
+    # (motor de El Calvo Explica) en vez de imagen; 0 = ninguna
+    animaciones_codigo: float = Field(0.0, ge=0, le=0.5)
     # tipos de escena que solo muestran al animal: se pueden cambiar por una foto o video real de Pexels
     tipos_reemplazables_por_foto_real: list[str] = []
     poses_canal: list["PoseCanal"] = []

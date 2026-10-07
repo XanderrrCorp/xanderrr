@@ -59,6 +59,11 @@ _FONDOS: dict[str, np.ndarray] = {}
 
 
 def fondo(tipo: str) -> np.ndarray:
+    if tipo not in _FONDOS and tipo.startswith("archivo:"):         # el papel de otro canal (video híbrido)
+        img = cv2.imread(tipo[len("archivo:"):], cv2.IMREAD_COLOR)
+        if img is None:
+            return fondo("blanco")
+        _FONDOS[tipo] = np.ascontiguousarray(cv2.resize(img, (W, H), interpolation=cv2.INTER_AREA))
     if tipo not in _FONDOS:
         svg = f'<svg xmlns="http://www.w3.org/2000/svg" width="{W}" height="{H}">{_fondo_svg(tipo)}</svg>'
         _FONDOS[tipo] = np.ascontiguousarray(svg_a_rgba(svg, W, H)[:, :, :3])

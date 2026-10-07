@@ -261,6 +261,13 @@ def paso_guion(c: CarpetaProyecto, t: Trabajo, ejecutar=None) -> None:
     c.guardar(p)
     c.marcar("guionista", "completo", ["escenas.json", "guion.md", "direccion.json"])
     t.avisar(f"Guion listo: {r['escenas']} escenas, {r['palabras']} palabras")
+    if cargar_estilo(p.estilo).animaciones_codigo > 0:
+        from .animaciones_codigo import disenar
+
+        try:                                    # video híbrido: algunas explicaciones animadas por código
+            disenar(c, ejecutar=ejecutar, avisar=t.avisar)
+        except Exception as ex:  # noqa: BLE001 — sin animaciones el video sale igual, solo con imágenes
+            t.avisar(f"Sin animaciones por código esta vez ({str(ex)[:160]})")
 
 
 def precio_imagen_usd(config: ConfigCostos) -> float:
@@ -791,6 +798,9 @@ def paso_video(c: CarpetaProyecto, t: Trabajo, permiso: bool = False, fps: int |
     generar_voz(c, ffmpeg(), permiso=permiso, avisar=t.avisar)
     c.marcar("voz", "completo", ["audio/voz.wav"])
     t.progreso = 0.2
+    from .animaciones_codigo import renderizar as animar
+
+    animar(c, ffmpeg(), avisar=t.avisar)          # video híbrido (si el guion trae animaciones por código)
     direccion = c.ruta / "direccion.json"
     if not direccion.exists() or "focos_revisados" not in leer_json(direccion):
         _ubicar_focos(c, t)

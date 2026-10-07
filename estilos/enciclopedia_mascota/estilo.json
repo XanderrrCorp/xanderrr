@@ -265,5 +265,6 @@
     "diagrama_fondo_blanco"
   ],
   "marca_agua": "assets/canal/marca_agua.png",
-  "titulo": "negro"
+  "titulo": "negro",
+  "animaciones_codigo": 0.25
 }

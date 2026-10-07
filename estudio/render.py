@@ -2146,7 +2146,7 @@ def _renderizar(carpeta: CarpetaProyecto, ffmpeg: str, destino: Path | None, des
                 img = cuadro.copy()
                 if r.get("globo"):
                     img = _globo_pregunta(img, tt - r["en"] - 0.25)
-        v_real, f_real = ef.get("video_real"), ef.get("foto_real")
+        v_real, f_real = ef.get("video_real") or ef.get("animacion"), ef.get("foto_real")
         if not en_reaccion and v_real and v_real["en"] <= tt < v_real["en"] + v_real["dur"]:
             cuadro = lector.cuadro(v_real, tt - v_real["en"])
             if cuadro is not None:

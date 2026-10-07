@@ -32,7 +32,9 @@ CAMPOS: dict[str, dict] = {
     # (03-10) logo de Peligro Tropical abajo a la derecha en todo el video, como la competencia
     # y la edición de la competencia: entradas deslizándose, sin vaivén, títulos negros (perfil propio)
     "enciclopedia_mascota": {"fondo_montaje": CUADRICULA, "marca_agua": "assets/canal/marca_agua.png",
-                             "perfil_edicion": "perfiles/peligro_tropical.json", "titulo": "negro"},
+                             "perfil_edicion": "perfiles/peligro_tropical.json", "titulo": "negro",
+                             # (07-10) video híbrido: ~1 de cada 4 escenas que explican algo, animada por código
+                             "animaciones_codigo": 0.25},
     "paradoja_sapiens": {"fondo_montaje": CUADRICULA,
                          # (04-10) edición de historia: pantalla completa con zoom, capítulos y viñeta
                          "movimiento_maximo": 0.05, "perfil_edicion": "perfiles/paradoja_historia.json"},

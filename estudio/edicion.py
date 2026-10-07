@@ -1123,6 +1123,19 @@ def construir_edl(carpeta: CarpetaProyecto) -> dict:
             c["efectos"].append({"efecto": "video_real", "en": c["inicio"], "dur": round(c["fin"] - c["inicio"], 3),
                                  "archivo": v["archivo"], "desde": v.get("desde", 0.5), "origen": v.get("origen", "")})
             c["razon"] += "; escena con video REAL de Pexels (verificado)"
+    animadas = direccion.get("animacion_escena") or {}
+    for idx, (e, c) in enumerate(zip(escenas, clips)):
+        a = animadas.get(str(e.id))
+        if not a or not (carpeta.ruta / a["archivo"]).exists() or c["modo"] == "tira":
+            continue
+        # video híbrido: la escena va animada por código a pantalla completa (sus textos y sonidos van dentro)
+        c["efectos"] = [{"efecto": "animacion", "en": c["inicio"], "dur": round(c["fin"] - c["inicio"], 3),
+                         "archivo": a["archivo"], "desde": 0}]
+        c["razon"] = "Escena explicada con animación por código (video híbrido)"
+        textos[:] = [t for t in textos if not (c["inicio"] <= t["inicio"] < c["fin"])]
+        sfx[:] = [x for x in sfx if x["clip"] != idx]
+        for x in a.get("efectos") or []:
+            _sfx(sfx, x["tipo"], c["inicio"] + float(x["t"]), idx, f"{x['tipo']} con la animación")
     _stock(esc, escenas, clips, carpeta.ruta, revelacion, rng, sfx)
     reacciones = _reacciones(estilo, escenas, clips, carpeta.ruta, revelacion, rng, direccion.get("reacciones"), sfx)
     if reacciones:
@@ -1157,7 +1170,7 @@ def validar(edl: dict, perfil=None) -> list[str]:
         dur = c["fin"] - c["inicio"]
         cambia = any(x["efecto"] in ("reencuadre", "zoom_golpe", "tira_deslizar_a_nivel", "revelar_pixelado",
                                      "rafaga", "circulo_rojo", "flecha", "icono_advertencia", "signos_pregunta",
-                                     "reaccion_presentador", "etiqueta", "lupa", "foto_real", "video_real", "dato")
+                                     "reaccion_presentador", "etiqueta", "lupa", "foto_real", "video_real", "dato", "animacion")
                      for x in c["efectos"])
         if dur > MAX_SIN_CAMBIO and not cambia and not c.get("respiro"):
             avisos.append(f"{c['id']}: {dur:.1f} s sin cambio visual")

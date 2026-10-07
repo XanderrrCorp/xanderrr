@@ -72,6 +72,12 @@ Estado al 04-10-2026. El repositorio es PÚBLICO: nunca escribir claves, tokens 
   termómetro, estirado, alas…), casco y ojos «x» del personaje, fondos del espacio en escenarios.py. Video de
   8:23 enviado sin música (en la nube no hay biblioteca). Voz: 125 COP. El dueño está validando ideas: no
   proponer ni empezar videos nuevos sin que él lo pida.
+- Video HÍBRIDO de Peligro Tropical (07-10, pedido del dueño): el guion NO cambia; tras escribirlo,
+  estudio/animaciones_codigo.py hace que Claude elija ~25 % de escenas que explican algo (estilo.animaciones_codigo
+  = 0.25 vía CAMPOS) y las arme con piezas de calma (sin el Calvo; puede usar la imagen del animal del nivel).
+  Esas escenas reusan una imagen anterior (no pagan). Tras la voz se dibujan (assets/animaciones/*.mp4) sobre el
+  papel cuadriculado del canal; la EDL les pone el efecto «animacion» (pantalla completa). `deshacer` lo revierte.
+  Probado de punta a punta en la nube con imágenes simuladas (36 COP de voz).
 - Aquí (nube) la voz MiniMax sí funciona; Whisper no baja su modelo: vista previa con voz frase por frase.
 ## Pendiente
 - Preguntas sin responder del dueño: ¿en qué canal notó la voz lenta? (Peligro Tropical está en 1.3 en
