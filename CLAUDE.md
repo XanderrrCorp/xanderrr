@@ -66,6 +66,12 @@ Estado al 04-10-2026. El repositorio es PÚBLICO: nunca escribir claves, tokens 
 - Efectos de sonido por código (calma/sonidos.py: pop, swoosh, rayón, golpe, error, ding; con freno) y fondos de
   lugar pálidos (calma/escenarios.py: cuarto, cuarto_noche, baño, sala, cocina, clase, consultorio, piscina) solo en
   escenas «ilustracion»; los elige el autor (Claude). Activos en El Calvo Explica (efectos_sonido True).
+- Segundo video (07-10) «Cómo sería morir en cada planeta»: guion en explica/guiones/morir_en_cada_planeta.txt
+  (+ _dudas.md), 12 temas (Luna → planetas → Titán, Plutón, Sol, agujero negro), escenas hechas por el autor
+  (Claude) en ejemplos/morir_en_cada_planeta.json; piezas en calma/piezas_espacio.py (planeta {tipo}, medidor,
+  termómetro, estirado, alas…), casco y ojos «x» del personaje, fondos del espacio en escenarios.py. Video de
+  8:23 enviado sin música (en la nube no hay biblioteca). Voz: 125 COP. El dueño está validando ideas: no
+  proponer ni empezar videos nuevos sin que él lo pida.
 - Aquí (nube) la voz MiniMax sí funciona; Whisper no baja su modelo: vista previa con voz frase por frase.
 ## Pendiente
 - Preguntas sin responder del dueño: ¿en qué canal notó la voz lenta? (Peligro Tropical está en 1.3 en
