@@ -61,6 +61,11 @@ def personaje(e: dict) -> Dibujo:
     pose = e.get("pose", "de_pie")
     svg = P.personaje(pose, e.get("ojos", "abiertos"), e.get("gesto", "neutral"),
                       e.get("color", AMARILLO), e.get("mochila", True))
+    if e.get("casco") and not P.POSES[pose].get("acostado"):     # casco de astronauta: burbuja de vidrio
+        cx, cy = P.centro_cabeza(P.POSES[pose])
+        svg += (f'<circle cx="{cx:.1f}" cy="{cy:.1f}" r="{P.RADIO_CABEZA + 26}" fill="#CFE8F7" fill-opacity="0.35" '
+                f'stroke="{NEGRO}" stroke-width="7"/><path d="M {cx - 40:.1f} {cy - 62:.1f} q 30 -22 66 -14" '
+                f'fill="none" stroke="{BLANCO}" stroke-width="9" stroke-linecap="round"/>')
     if P.POSES[pose].get("acostado"):
         return Dibujo(svg, (-320, -300, 670, 350))
     if any(P.POSES[pose].get(k) for k in ("bombillo", "signos", "mano_abierta")) or pose == "senalando_contento":
@@ -384,3 +389,4 @@ def dibujar(pieza: str, estado: dict) -> Dibujo:
 
 from . import piezas_explica  # noqa: E402,F401 — registra las piezas de El Calvo Explica
 from . import piezas_cuerpo  # noqa: E402,F401 — piezas del primer video (partes del cuerpo)
+from . import piezas_espacio  # noqa: E402,F401 — piezas del espacio (planetas, Sol, agujero negro)

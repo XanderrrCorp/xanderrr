@@ -18,7 +18,8 @@ CATALOGO: dict[str, str] = {
                  "Poses útiles: tablero (señala hacia arriba a la derecha), senalando_contento (señala a la derecha), "
                  "pensando, confundido (con signos ?), hombros, sorprendido, aliviado, idea (con bombillo), rechazo, "
                  "asustado (brazos arriba; también sirve para colgarse de una rama), corriendo, sentado, acostado (en "
-                 "una cama, la pieza ya trae la cama).",
+                 "una cama, la pieza ya trae la cama). Extra: «casco»: true = casco de astronauta; ojos «x» = desmayado "
+                 "(caricatura, para «mueres» o «pierdes el conocimiento»; sin sangre ni heridas).",
     "vecino": "Otra persona igual al Calvo pero gris y sin mochila. Mismo estado que personaje. Ancla en los pies.",
     "gente": "Tres personas grises (un grupo, «todo el mundo»). Ancla abajo al centro, tamaño 1.0, y≈900-980.",
     "fila_personas": "Fila de personas grises; estado {cuantas: 5|7|10, destacada: índice en rojo}. Para «una de cada N». "
@@ -66,6 +67,31 @@ CATALOGO: dict[str, str] = {
     "vena": "Corte de piel con un vaso de sangre rojo.",
     "gotas": "Tres gotas rojas.",
     "muneca_brazo": "",
+    # espacio
+    "planeta": "Planeta, luna, Sol o agujero negro (radio ~200 px a tamaño 1). estado {tipo: luna|mercurio|venus|"
+               "tierra|marte|jupiter|saturno|titan|urano|neptuno|pluton|sol|agujero_negro}. Saturno y Urano traen anillo.",
+    "estrellas": "Estrellitas amarillas (el espacio). ~860x500.",
+    "cohete": "Cohete blanco con fuego. estado {fuego: false} sin fuego.",
+    "termometro": "Termómetro. estado {nivel: 0-1, color: rojo (calor)|azul (frío)}. Alto ~520 px.",
+    "medidor": "Medidor de presión con aguja. estado {nivel: 0-1}: 0 = casi nada de presión, 1 = muchísima (en rojo).",
+    "viento": "Líneas de viento con remolinos hacia la derecha. Entra con dibujar.",
+    "burbujas": "Burbujitas (algo que hierve: saliva, agua). Pequeñas (~200 px).",
+    "vapor": "Rayitas onduladas de vapor o calor que suben. Entra con dibujar.",
+    "fuego": "Llama naranja (calor extremo, horno, fogata).",
+    "diamante": "Diamante celeste.",
+    "hexagono": "El hexágono del polo de Saturno visto desde arriba, con remolino. Entra con dibujar. ~620 px.",
+    "lago": "Lago oscuro (de metano); estado {color: azul} si es de agua. ~640x220.",
+    "lluvia": "Gotas que caen; estado {color: azul} si es agua (por defecto, metano morado).",
+    "alas": "Par de alas blancas; ponlas detrás del personaje con el centro a la altura de sus hombros (y≈pies-430).",
+    "tanque": "Tanque de oxígeno (O₂) con mascarilla.",
+    "huella": "Huella de bota en el polvo.",
+    "tormenta": "Nube enorme de polvo café (tormenta de Marte). ~820x360.",
+    "huevo": "Huevo podrido con rayitas verdes de mal olor.",
+    "iman": "Imán rojo de herradura (magnetismo, escudo magnético).",
+    "sonda": "Máquina que aterriza en otro planeta (patas y antena).",
+    "banera": "Bañera con agua (~700 px de ancho).",
+    "estirado": "El Calvo estirado como un fideo (agujero negro). Ancla en los pies. estado {cuanto: 1-3}; usa "
+                "cambiar_pose {estado: {cuanto: 3}} para que se estire más.",
     # animales y cosas
     "gato": "Cabeza de gato gris. estado {giro_orejas: grados, erizado: true, oliendo: true (boca entreabierta)}.",
     "rama": "Rama de árbol con hojas (trepar, colgarse). Ancho ~900 px a tamaño 1.",
@@ -104,6 +130,10 @@ FONDOS_ESCENA = {
     "cocina": "cocina (mesón, alacena, nevera)", "clase": "salón de clases (tablero, pupitres)",
     "consultorio": "consultorio (camilla, cartel de la vista)", "piscina": "piscina (agua, escalerilla)",
     "calle": "calle (aceras, edificios)", "campo": "campo (pasto, árboles, colinas)",
+    "luna": "suelo gris con cráteres", "mercurio": "suelo con cráteres y un Sol enorme", "venus": "suelo caliente y "
+    "nubes amarillas", "marte": "suelo rojo con rocas", "nubes_gas": "dentro de las nubes de Júpiter o Saturno (sin "
+    "suelo)", "nubes_hielo": "dentro de las nubes de Urano o Neptuno (sin suelo)", "titan": "cielo naranja y un lago",
+    "pluton": "llanura de hielo blanca", "espacio": "el espacio con estrellas", "sol_cerca": "muy cerca del Sol",
 }
 
 

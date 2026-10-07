@@ -110,7 +110,7 @@ POSES["acostado"] = {**POSES["de_pie"], "acostado": True}    # en la cama: solo 
 OJOS = ("abiertos", "cerrados", "lado")
 CARAS = ("neutral", "susto", "alivio", "concentrado")
 CARAS_NUEVAS = ("sorpresa", "duda", "pensativo", "amable", "seguro", "aliviado", "contento", "disgusto")
-OJOS_NUEVOS = ("otro_lado",)           # mira hacia la izquierda (cara girada)
+OJOS_NUEVOS = ("otro_lado", "x")      # otro_lado: mira a la izquierda (cara girada); x: desmayado (caricatura)
 
 
 def _menos(a, b):
@@ -230,6 +230,10 @@ def ojos(estado: str) -> str:
         s = f"ojo/{estado}/{i}"
         if estado == "cerrados":
             salida.append(raya(arco(x, OJO_Y + 2, 18, 10, 20, 160), s))
+            continue
+        if estado == "x":
+            salida.append(raya([(x - 14, OJO_Y - 14), (x + 14, OJO_Y + 14)], s + "a", NEGRO, 8)
+                          + raya([(x + 14, OJO_Y - 14), (x - 14, OJO_Y + 14)], s + "b", NEGRO, 8))
             continue
         salida.append(figura(elipse(x, OJO_Y, 19, 25, n=30), s, BLANCO, amplitud=0.8))
         dx = 9 if estado == "lado" else -7 if estado == "otro_lado" else 3

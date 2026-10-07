@@ -540,7 +540,27 @@ def test_fondos_de_lugar_solo_en_ilustraciones():
     assert set(FONDOS_ESCENA) == set(E.FONDOS) and set(ESCENARIOS) <= set(E.FONDOS)
     assert autor._fondo_valido("cocina", "ilustracion") == "cocina"
     assert autor._fondo_valido("cocina", "codigo") == "blanco"
-    assert autor._fondo_valido("luna", "ilustracion") == "blanco"
+    assert autor._fondo_valido("no_existe", "ilustracion") == "blanco"
     assert "cuarto_noche" in autor._prompt_escenas(
         {"nombre": ["Hipo."], "escena": ["Estás en tu cama."], "bautizo": ["Se llama hipo."],
          "explicacion": ["Es un reflejo."], "cierre": ["Así es."]}, 0, 1)
+
+
+def test_piezas_y_fondos_del_espacio():
+    from estudio.calma.escenarios import ESCENARIOS
+    from estudio.calma.piezas_espacio import TIPOS_PLANETA
+    from estudio.calma.render import fondo
+    from estudio.explica.catalogo import CATALOGO, FONDOS_ESCENA
+
+    for tipo in TIPOS_PLANETA:
+        img, _ = sprite("planeta", {"tipo": tipo}, 0.3)
+        assert (img[:, :, 3] > 0).mean() > 0.2, tipo
+    for nombre in ("planeta", "medidor", "termometro", "estirado", "hexagono", "alas"):
+        assert nombre in CATALOGO
+    casco, _ = sprite("personaje", {"pose": "de_pie", "casco": True}, 0.4)
+    normal, _ = sprite("personaje", {"pose": "de_pie"}, 0.4)
+    assert casco.shape != normal.shape or (casco != normal).any()
+    assert "x" in __import__("estudio.calma.personaje", fromlist=["OJOS_NUEVOS"]).OJOS_NUEVOS
+    for f in ("luna", "marte", "nubes_gas", "espacio", "sol_cerca"):
+        assert f in ESCENARIOS and f in E.FONDOS and f in FONDOS_ESCENA
+        assert fondo(f).std() > 1                      # no es un color plano

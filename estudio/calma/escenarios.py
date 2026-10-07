@@ -121,3 +121,99 @@ def piscina() -> str:
 
 ESCENARIOS = {"cuarto": cuarto, "cuarto_noche": cuarto_noche, "bano": bano, "sala": sala, "cocina": cocina,
               "clase": clase, "consultorio": consultorio, "piscina": piscina}
+
+
+# ------------------------------------------------------------------ el espacio (cielos pálidos, suelos de cada lugar)
+
+def _estrellitas(semilla: str, color="#B9BCCB", n=14, alto=560) -> list[str]:
+    import random
+
+    r = random.Random(semilla)
+    salida = []
+    for i in range(n):
+        x, y, k = r.uniform(40, W - 40), r.uniform(30, alto), r.uniform(5, 11)
+        salida.append(f'<circle cx="{x:.0f}" cy="{y:.0f}" r="{k:.1f}" fill="{color}"/>')
+    return salida
+
+
+def _suelo(cielo: str, suelo: str, s: str, crateres: str | None = None, rocas: str | None = None) -> list[str]:
+    p = [f'<rect width="{W}" height="{H}" fill="{cielo}"/>',
+         _f([(-20, PISO_Y + 10), (500, PISO_Y - 20), (1100, PISO_Y + 15), (1500, PISO_Y - 10), (W + 20, PISO_Y + 5),
+             (W + 20, H + 20), (-20, H + 20)], f"{s}/suelo", suelo)]
+    if crateres:
+        for i, (x, y, rx) in enumerate(((240, 1010, 120), (900, 1040, 80), (1560, 1000, 140))):
+            p.append(_f(elipse(x, y, rx, rx * 0.22, n=24), f"{s}/cr{i}", crateres))
+    if rocas:
+        for i, (x, y, r) in enumerate(((120, PISO_Y + 10, 50), (1780, PISO_Y + 5, 64), (1400, PISO_Y + 40, 30))):
+            p.append(_f(arco(x, y, r, r * 0.7, 180, 360, 14), f"{s}/roca{i}", rocas))
+    return p
+
+
+def luna() -> str:
+    p = _suelo("#D9DBE6", "#CFCFCF", "luna", crateres="#BDBDBD")
+    return "".join(p + _estrellitas("luna"))
+
+
+def mercurio() -> str:
+    p = _suelo("#E4DEDB", "#C7BCB0", "merc", crateres="#B5A99C")
+    p.insert(1, f'<circle cx="1660" cy="190" r="150" fill="#FBE6A6"/>')
+    return "".join(p + _estrellitas("merc", n=8))
+
+
+def venus() -> str:
+    p = _suelo("#F3E0B6", "#DDBE90", "venus", rocas="#CFAE7E")
+    for i, y in enumerate((120, 230, 330)):
+        p.append(_r([(x, y + 14 * ((x // 160) % 2)) for x in range(-40, W + 80, 160)], f"venus/nube{i}", 6, "#D9BB80"))
+    return "".join(p)
+
+
+def marte() -> str:
+    p = _suelo("#F2DCC8", "#E5AE90", "marte", rocas="#D49174")
+    p.append(_f(arco(1500, PISO_Y + 5, 420, 160, 180, 360, 30), "marte/colina", "#E9B99E"))
+    return "".join(p)
+
+
+def nubes_gas() -> str:
+    """Dentro de un gigante de gas (Júpiter, Saturno): franjas de nubes, sin suelo."""
+    p = [f'<rect width="{W}" height="{H}" fill="#F3E3C8"/>']
+    for i, (y, color) in enumerate(((140, "#EBD3AE"), (380, "#E6C9A0"), (640, "#EAD2B0"), (880, "#DFBE94"))):
+        pts = [(x, y + 26 * ((x // 240) % 2)) for x in range(-60, W + 300, 240)]
+        p.append(_f(pts + [(W + 60, y + 150), (-60, y + 150)], f"gas/f{i}", color))
+    return "".join(p)
+
+
+def nubes_hielo() -> str:
+    """Dentro de Urano o Neptuno: franjas frías, azul pálido."""
+    p = [f'<rect width="{W}" height="{H}" fill="#E1F0F6"/>']
+    for i, (y, color) in enumerate(((160, "#D2E9F1"), (420, "#C7E2EE"), (700, "#D5EBF3"))):
+        pts = [(x, y + 24 * ((x // 260) % 2)) for x in range(-60, W + 300, 260)]
+        p.append(_f(pts + [(W + 60, y + 170), (-60, y + 170)], f"hielo/f{i}", color))
+    return "".join(p)
+
+
+def titan() -> str:
+    p = _suelo("#F5DCB2", "#D6BD95", "titan", rocas="#C4A982")
+    p.append(_f(elipse(330, 1000, 300, 40, n=30), "titan/lago", "#B6A6C4"))
+    return "".join(p)
+
+
+def pluton() -> str:
+    p = _suelo("#DCDDE8", "#F3F2F4", "pluton", crateres="#E1DFE6")
+    p.insert(1, f'<circle cx="1640" cy="180" r="12" fill="#FFF3C4"/>')
+    return "".join(p + _estrellitas("pluton", n=16))
+
+
+def espacio() -> str:
+    return "".join([f'<rect width="{W}" height="{H}" fill="#E8E9F2"/>'] + _estrellitas("espacio", n=30, alto=H - 40))
+
+
+def sol_cerca() -> str:
+    p = [f'<rect width="{W}" height="{H}" fill="#FDF0D2"/>']
+    for i, r in enumerate((900, 700, 520)):
+        p.append(f'<circle cx="{W + 120}" cy="{H // 2}" r="{r}" fill="{("#FCE4B0", "#FBD892", "#FAC873")[i]}"/>')
+    return "".join(p)
+
+
+ESCENARIOS.update({"luna": luna, "mercurio": mercurio, "venus": venus, "marte": marte, "nubes_gas": nubes_gas,
+                   "nubes_hielo": nubes_hielo, "titan": titan, "pluton": pluton, "espacio": espacio,
+                   "sol_cerca": sol_cerca})
