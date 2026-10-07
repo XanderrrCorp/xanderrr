@@ -367,3 +367,13 @@ def test_deriva_de_camara_mueve_cada_escena():
     assert _deriva(datos, esc1, 0.0) < _deriva(datos, esc1, 1.9)                 # una se acerca
     assert _deriva(datos, esc2, 2.0) > _deriva(datos, esc2, 3.9)                 # la siguiente se aleja
     assert _deriva({"video": {}}, esc1, 1.0) == 1.0
+
+
+def test_guion_completo_del_primer_video():
+    from estudio.explica import guion as G
+
+    ruta = E.__file__.replace("calma/escenas.py", "explica/guiones/partes_que_no_sirven.txt")
+    temas = G.leer(open(ruta, encoding="utf-8").read())
+    assert len(temas) == 12 and G.revisar(temas) == []
+    assert temas[-1]["final"][-1] == "Si te gustó, suscríbete."                # cierre de 5 s del video
+    assert G.texto_para_voz(temas).split("\n")[0] == "Músculo de la muñeca."   # sin saludo: arranca con el tema

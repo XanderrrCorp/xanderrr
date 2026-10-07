@@ -21,7 +21,7 @@ from . import canal as C
 
 PARTES = ("nombre", "escena", "bautizo", "explicacion", "cierre")
 _CABECERA = {"NOMBRE": "nombre", "ESCENA": "escena", "BAUTIZO": "bautizo", "EXPLICACION": "explicacion",
-             "EXPLICACIÓN": "explicacion", "CIERRE": "cierre"}
+             "EXPLICACIÓN": "explicacion", "CIERRE": "cierre", "FINAL": "final", "CIERRE DEL VIDEO": "final"}
 
 # fórmulas de hipótesis aceptadas en la explicación (pedido del dueño: variantes, no una frase fija)
 FORMULAS = {
@@ -45,6 +45,12 @@ def leer(texto: str) -> list[dict]:
         if not r:
             continue
         cab = _CABECERA.get(r.upper().rstrip(":"))
+        if cab == "final":                         # el cierre de 5 s del video (va después del último tema)
+            if actual is None:
+                raise ValueError("FINAL va después de los temas")
+            actual.setdefault("final", [])
+            parte = "final"
+            continue
         if cab:
             if cab == "nombre":
                 actual = {p: [] for p in PARTES}
@@ -53,7 +59,7 @@ def leer(texto: str) -> list[dict]:
             continue
         if actual is None or parte is None:
             raise ValueError(f"texto fuera de un tema: «{r[:60]}» (cada tema empieza con NOMBRE)")
-        actual[parte].append(r)
+        actual.setdefault(parte, []).append(r)
     return temas
 
 
@@ -118,4 +124,4 @@ def revisar(temas: list[dict], preset: dict | None = None, video_completo: bool 
 
 def texto_para_voz(temas: list[dict]) -> str:
     """Lo que lee la voz: cada frase en orden (el nombre de cada tema, solo, abre el tema)."""
-    return "\n".join(f for t in temas for parte in PARTES for f in t[parte])
+    return "\n".join(f for t in temas for parte in PARTES + ("final",) for f in t.get(parte, []))
