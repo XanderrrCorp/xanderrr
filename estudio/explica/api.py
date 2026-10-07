@@ -3,6 +3,8 @@
 - GET  /api/explica                 → ajustes del canal, costo de las 3 muestras, muestras hechas y avance.
 - POST /api/explica/muestras        → genera las 3 ilustraciones de muestra (en segundo plano, con freno).
 - GET  /api/explica/muestras/{arch} → una imagen de muestra.
+- POST /api/explica/tema-prueba     → el tema 1 del primer video con voz real (voz → Whisper → render).
+- GET  /api/explica/tema-prueba/video → el MP4 del tema de prueba.
 """
 from __future__ import annotations
 
@@ -13,10 +15,20 @@ from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
 from . import canal as C
+from . import flujo as F
 from . import ilustraciones as I
 
 rutas = APIRouter(prefix="/api/explica")
 SLUG_MUESTRAS = "explica-muestras"
+SLUG_TEMA = "explica-tema-prueba"
+
+
+def _trabajo(slug: str):
+    from .. import pipeline
+
+    t = pipeline.TRABAJOS.get(slug)
+    return ({"paso": t.paso, "progreso": round(t.progreso, 3), "mensaje": t.mensaje, "activo": t.activo,
+             "error": t.error} if t else None)
 
 
 def _estado() -> dict:
@@ -30,7 +42,8 @@ def _estado() -> dict:
     return {"canal": {"clave": C.CLAVE_CANAL, "nombre": C.NOMBRE_CANAL}, "ajustes": C.cargar(),
             "costo_muestras": costo, "muestras": I.estado_muestras(),
             "trabajo": ({"paso": t.paso, "progreso": round(t.progreso, 3), "mensaje": t.mensaje, "activo": t.activo,
-                         "error": t.error} if t else None)}
+                         "error": t.error} if t else None),
+            "tema_prueba": {**F.estado(), "costo_voz": F.costo_voz(), "trabajo": _trabajo(SLUG_TEMA)}}
 
 
 @rutas.get("")
@@ -61,3 +74,23 @@ def muestra(archivo: str):
     if not ruta.exists():
         raise HTTPException(404)
     return FileResponse(ruta, media_type="image/png")
+
+
+@rutas.post("/tema-prueba")
+def tema_prueba(p: Permiso = Permiso()):
+    from .. import pipeline
+
+    c = F.preparar()
+    try:
+        pipeline.lanzar(SLUG_TEMA, "tema", lambda t: F.producir(c, t, permiso=p.permiso))
+    except RuntimeError as ex:
+        raise HTTPException(409, str(ex)) from ex
+    return _estado()
+
+
+@rutas.get("/tema-prueba/video")
+def tema_prueba_video():
+    ruta = F.carpeta_base() / F.TEMA_PRUEBA / "final.mp4"
+    if not ruta.exists():
+        raise HTTPException(404, "Todavía no hay video")
+    return FileResponse(ruta, media_type="video/mp4")

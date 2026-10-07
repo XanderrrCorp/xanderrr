@@ -273,3 +273,40 @@ def test_cuadricula_con_progreso():
     assert circs["tema9"]["estado"]["icono"] == "?" and circs["tema9"]["estado"]["etiqueta"] == ""
     assert any(x["pieza"] == "texto" and x["estado"]["texto"] == "4 de 12" for x in g["elementos"])
     assert g["elementos"][-2]["id"] == "tema4"                                  # el actual, encima de los demás
+
+
+def test_guion_del_tema_1_cumple_el_molde():
+    from estudio.explica import guion as G
+
+    temas = G.leer(open(E.__file__.replace("calma/escenas.py", "explica/guiones/partes_que_no_sirven_tema1.txt"),
+                        encoding="utf-8").read())
+    assert len(temas) == 1 and G.revisar(temas) == []
+    assert G.formula(temas[0]) == "la explicación más aceptada"
+
+
+def test_revisor_del_guion_acepta_variantes_y_limita_repeticiones():
+    from estudio.explica import guion as G
+
+    def tema(formula):
+        return {"nombre": ["Algo raro."], "escena": ["Estás en la cama."], "bautizo": ["Eso se llama algo."],
+                "explicacion": [f"{formula} pasa por algo."], "cierre": ["Y ya."]}
+    variantes = [tema("Se cree que"), tema("Lo más probable es que"), tema("La hipótesis principal es que")]
+    assert not [a for a in G.revisar(variantes) if "hipótesis" in a or "fórmula" in a]
+    repetidas = [tema("Se cree que")] * 3
+    assert any("se repite en 3 temas" in a for a in G.revisar(repetidas))
+    assert any("en cifras" in a for a in G.revisar([tema("Se cree que 7")]))
+    assert any("prohibida" in a for a in G.revisar([{**tema("Se cree que"), "cierre": ["¿Sabías que sí?"]}]))
+
+
+def test_tema_de_prueba_completo_simulado(tmp_path, monkeypatch):
+    monkeypatch.setenv("HOME", str(tmp_path))
+    from estudio.explica import flujo as F
+    from estudio.pipeline import Trabajo, ffmpeg
+
+    c = F.preparar()
+    destino = F.producir(c, Trabajo("tema"), proveedor="simulado")
+    info = json.loads((c.ruta / "informe.json").read_text(encoding="utf-8"))
+    assert destino.exists() and info["escenas"] == 16 and set(info["costos"]) == {"guion", "voz", "imagenes"}
+    assert info["tiempo_total_s"] > 0 and not [a for a in info["avisos_ritmo"] if "no existe" in a or "a la vez" in a]
+    r = subprocess.run([ffmpeg(), "-i", str(destino)], capture_output=True, text=True)
+    assert "1920x1080" in r.stderr and "Audio: aac" in r.stderr

@@ -101,7 +101,7 @@ def recortar(datos: dict, hasta: float) -> dict:
     return datos
 
 
-def revisar(datos: dict) -> list[str]:
+def revisar(datos: dict, max_sin_cambio: float = MAX_SIN_CAMBIO_S) -> list[str]:
     """Las reglas de ritmo y de forma. Devuelve avisos (vacío = todo bien)."""
     avisos = []
     momentos = []
@@ -136,7 +136,7 @@ def revisar(datos: dict) -> list[str]:
                 break
     momentos = sorted(set(round(m, 2) for m in momentos) | {round(datos["video"]["duracion"], 2)})
     for a, b in zip(momentos, momentos[1:]):
-        if b - a > MAX_SIN_CAMBIO_S + 0.05:
+        if b - a > max_sin_cambio + 0.05:
             avisos.append(f"de {a:.1f} a {b:.1f} s ({b - a:.1f} s) no aparece ni cambia nada")
     return avisos
 

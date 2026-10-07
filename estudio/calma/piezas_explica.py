@@ -206,4 +206,81 @@ PIEZAS.update({
     "cafe": cafe, "zzz": zzz, "escalon": escalon, "estres": estres, "imagen": imagen,
     "lineas_movimiento": lineas_movimiento,
 })
+
+# ------------------------------------------------------------------ primer video: partes que ya no sirven
+
+def muneca(e: dict) -> Dibujo:
+    """Primer plano de la mano del personaje (amarilla), palma hacia ti y la muñeca abajo.
+    «dedos»: abierta | pinza (pulgar tocando el meñique). «tendon»: el cordón que salta en el centro."""
+    pinza = e.get("dedos") == "pinza"
+    partes = [tubo([(0, 460), (0, 60)], "mun/antebrazo", AMARILLO, 170)]
+    dedos = [("indice", (-62, -120), (-78, -330)), ("medio", (-18, -130), (-20, -360)),
+             ("anular", (30, -125), (44, -335))]
+    for nombre, a, b in dedos:
+        partes.append(tubo([a, b], f"mun/{nombre}", AMARILLO, 50))
+    if pinza:
+        partes.append(tubo([(78, -100), (108, -185), (66, -222)], "mun/menique_p", AMARILLO, 46))
+    else:
+        partes.append(tubo([(78, -100), (124, -270)], "mun/menique", AMARILLO, 46))
+        partes.append(tubo([(-118, 10), (-210, -110)], "mun/pulgar", AMARILLO, 52))
+    partes.append(figura(elipse(-4, -20, 128, 140, n=60), "mun/palma", AMARILLO))
+    if pinza:                                          # el pulgar va por encima de la palma
+        partes.append(tubo([(-118, 0), (-70, -140), (10, -205), (52, -218)], "mun/pulgar_p2", AMARILLO, 52))
+        partes.append(figura(elipse(58, -220, 30, 26, n=20), "mun/yemas", AMARILLO, amplitud=0.6))
+    partes += [raya(arco(0, 150, 70, 16, 200, 340, 10), "mun/pliegue1", NEGRO, 5),
+               raya(arco(0, 185, 62, 14, 200, 340, 10), "mun/pliegue2", NEGRO, 5)]
+    if e.get("tendon"):
+        partes += [f'<path d="M -9 330 L -11 110 L 11 110 L 9 330 Z" fill="#FFE98A" stroke="none"/>',
+                   raya([(-11, 330), (-12, 110)], "mun/tend1", NEGRO, 6),
+                   raya([(11, 330), (12, 110)], "mun/tend2", NEGRO, 6)]
+    return Dibujo("".join(partes), (-260, -400, 420, 870))
+
+
+def rama(e: dict) -> Dibujo:
+    """Rama de árbol gris con hojas verdes (para trepar y colgarse)."""
+    partes = [tubo([(-420, 10), (-100, -6), (200, 8), (430, -10)], "rama", "#8A8A8A", 34),
+              tubo([(-200, 0), (-260, -90)], "rama/r1", "#8A8A8A", 16),
+              tubo([(240, 4), (300, -80)], "rama/r2", "#8A8A8A", 16)]
+    for i, (x, y) in enumerate(((-270, -110), (-230, -120), (300, -100), (340, -80), (420, -40))):
+        partes.append(figura(elipse(x, y, 34, 18, rot=-30 + 20 * i, n=18), f"rama/h{i}", "#5BB85C", amplitud=0.7))
+    return Dibujo("".join(partes), (-445, -150, 900, 190))
+
+
+def fila_personas(e: dict) -> Dibujo:
+    """Fila de personas en gris; la «destacada» va en rojo (una de cada siete)."""
+    n = int(e.get("cuantas", 7))
+    dest = e.get("destacada")
+    partes = []
+    for i in range(n):
+        x = (i - (n - 1) / 2) * 170
+        color = ROJO if dest == i else "#B5B5B5"
+        partes.append(f'<g transform="translate({x:.1f},0) scale(0.55)">'
+                      f'{P.personaje("de_pie", "abiertos", "amable", color, False)}</g>')
+    w = n * 170 + 60
+    return Dibujo("".join(partes), (-w / 2, -330, w, 350))
+
+
+def grafica_barras(e: dict) -> Dibujo:
+    """Gráfica simple de barras grises sin números (para «cambia mucho de un lugar a otro»)."""
+    valores = e.get("valores", [0.4, 0.8, 0.25, 0.6, 0.15])
+    w, h = 700, 380
+    partes = [raya([(-w / 2, -h / 2), (-w / 2, h / 2), (w / 2, h / 2)], "graf/ejes", NEGRO, 8)]
+    paso = (w - 60) / len(valores)
+    for i, v in enumerate(valores):
+        alto = (h - 30) * max(0.05, min(1.0, float(v)))
+        x = -w / 2 + 40 + i * paso
+        partes.append(figura([(x, h / 2), (x, h / 2 - alto), (x + paso * 0.62, h / 2 - alto), (x + paso * 0.62, h / 2)],
+                             f"graf/b{i}", ROJO if i == e.get("destacada") else GRIS))
+    return Dibujo("".join(partes), (-w / 2 - 20, -h / 2 - 20, w + 40, h + 40))
+
+
+def cordon(e: dict) -> Dibujo:
+    """Un tendón suelto, como un cordón (el repuesto que usan los cirujanos)."""
+    pts = [(-260, 20), (-140, -30), (0, 10), (140, -20), (260, 15)]
+    return Dibujo(tubo(pts, "cordon", "#FFE98A", 22, float(e.get("trazo", 1))), (-290, -70, 580, 130))
+
+
+PIEZAS.update({"muneca": muneca, "rama": rama, "fila_personas": fila_personas, "grafica_barras": grafica_barras,
+               "cordon": cordon})
+
 _ = (P, BLANCO, _rect)

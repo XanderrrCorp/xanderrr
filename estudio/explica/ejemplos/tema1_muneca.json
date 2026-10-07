@@ -1,0 +1,1366 @@
+{
+ "video": {
+  "ancho": 1920,
+  "alto": 1080,
+  "fps": 30,
+  "guion": "tema1_muneca.txt"
+ },
+ "escenas": [
+  {
+   "tipo": "cuadricula",
+   "palabra_inicio": "Músculo",
+   "fondo": "blanco",
+   "temblor": [],
+   "elementos": [
+    {
+     "id": "contador",
+     "pieza": "texto",
+     "estado": {
+      "texto": "1 de 12"
+     },
+     "posicion": [
+      960,
+      105
+     ],
+     "tamano": 0.8,
+     "movimiento": [
+      "aparecer"
+     ],
+     "ya_estaba": true
+    },
+    {
+     "id": "tema2",
+     "pieza": "circulo_tema",
+     "estado": {
+      "etiqueta": "",
+      "icono": "?",
+      "visto": false,
+      "actual": false
+     },
+     "posicion": [
+      535,
+      330
+     ],
+     "tamano": 0.74,
+     "movimiento": [
+      {
+       "tipo": "aparecer",
+       "t_rel": 0.035
+      },
+      {
+       "tipo": "desaparecer",
+       "palabra": "muñeca",
+       "retraso": 0.025
+      }
+     ],
+     "ya_estaba": true
+    },
+    {
+     "id": "tema3",
+     "pieza": "circulo_tema",
+     "estado": {
+      "etiqueta": "",
+      "icono": "?",
+      "visto": false,
+      "actual": false
+     },
+     "posicion": [
+      818,
+      330
+     ],
+     "tamano": 0.74,
+     "movimiento": [
+      {
+       "tipo": "aparecer",
+       "t_rel": 0.07
+      },
+      {
+       "tipo": "desaparecer",
+       "palabra": "muñeca",
+       "retraso": 0.05
+      }
+     ],
+     "ya_estaba": true
+    },
+    {
+     "id": "tema4",
+     "pieza": "circulo_tema",
+     "estado": {
+      "etiqueta": "",
+      "icono": "?",
+      "visto": false,
+      "actual": false
+     },
+     "posicion": [
+      1102,
+      330
+     ],
+     "tamano": 0.74,
+     "movimiento": [
+      {
+       "tipo": "aparecer",
+       "t_rel": 0.10500000000000001
+      },
+      {
+       "tipo": "desaparecer",
+       "palabra": "muñeca",
+       "retraso": 0.075
+      }
+     ],
+     "ya_estaba": true
+    },
+    {
+     "id": "tema5",
+     "pieza": "circulo_tema",
+     "estado": {
+      "etiqueta": "",
+      "icono": "?",
+      "visto": false,
+      "actual": false
+     },
+     "posicion": [
+      1385,
+      330
+     ],
+     "tamano": 0.74,
+     "movimiento": [
+      {
+       "tipo": "aparecer",
+       "t_rel": 0.14
+      },
+      {
+       "tipo": "desaparecer",
+       "palabra": "muñeca",
+       "retraso": 0.1
+      }
+     ],
+     "ya_estaba": true
+    },
+    {
+     "id": "tema6",
+     "pieza": "circulo_tema",
+     "estado": {
+      "etiqueta": "",
+      "icono": "?",
+      "visto": false,
+      "actual": false
+     },
+     "posicion": [
+      1668,
+      330
+     ],
+     "tamano": 0.74,
+     "movimiento": [
+      {
+       "tipo": "aparecer",
+       "t_rel": 0.17500000000000002
+      },
+      {
+       "tipo": "desaparecer",
+       "palabra": "muñeca",
+       "retraso": 0.125
+      }
+     ],
+     "ya_estaba": true
+    },
+    {
+     "id": "tema7",
+     "pieza": "circulo_tema",
+     "estado": {
+      "etiqueta": "",
+      "icono": "?",
+      "visto": false,
+      "actual": false
+     },
+     "posicion": [
+      252,
+      680
+     ],
+     "tamano": 0.74,
+     "movimiento": [
+      {
+       "tipo": "aparecer",
+       "t_rel": 0.21000000000000002
+      },
+      {
+       "tipo": "desaparecer",
+       "palabra": "muñeca",
+       "retraso": 0.15
+      }
+     ],
+     "ya_estaba": true
+    },
+    {
+     "id": "tema8",
+     "pieza": "circulo_tema",
+     "estado": {
+      "etiqueta": "",
+      "icono": "?",
+      "visto": false,
+      "actual": false
+     },
+     "posicion": [
+      535,
+      680
+     ],
+     "tamano": 0.74,
+     "movimiento": [
+      {
+       "tipo": "aparecer",
+       "t_rel": 0.24500000000000002
+      },
+      {
+       "tipo": "desaparecer",
+       "palabra": "muñeca",
+       "retraso": 0.175
+      }
+     ],
+     "ya_estaba": true
+    },
+    {
+     "id": "tema9",
+     "pieza": "circulo_tema",
+     "estado": {
+      "etiqueta": "",
+      "icono": "?",
+      "visto": false,
+      "actual": false
+     },
+     "posicion": [
+      818,
+      680
+     ],
+     "tamano": 0.74,
+     "movimiento": [
+      {
+       "tipo": "aparecer",
+       "t_rel": 0.28
+      },
+      {
+       "tipo": "desaparecer",
+       "palabra": "muñeca",
+       "retraso": 0.2
+      }
+     ],
+     "ya_estaba": true
+    },
+    {
+     "id": "tema10",
+     "pieza": "circulo_tema",
+     "estado": {
+      "etiqueta": "",
+      "icono": "?",
+      "visto": false,
+      "actual": false
+     },
+     "posicion": [
+      1102,
+      680
+     ],
+     "tamano": 0.74,
+     "movimiento": [
+      {
+       "tipo": "aparecer",
+       "t_rel": 0.31500000000000006
+      },
+      {
+       "tipo": "desaparecer",
+       "palabra": "muñeca",
+       "retraso": 0.225
+      }
+     ],
+     "ya_estaba": true
+    },
+    {
+     "id": "tema11",
+     "pieza": "circulo_tema",
+     "estado": {
+      "etiqueta": "",
+      "icono": "?",
+      "visto": false,
+      "actual": false
+     },
+     "posicion": [
+      1385,
+      680
+     ],
+     "tamano": 0.74,
+     "movimiento": [
+      {
+       "tipo": "aparecer",
+       "t_rel": 0.35000000000000003
+      },
+      {
+       "tipo": "desaparecer",
+       "palabra": "muñeca",
+       "retraso": 0.25
+      }
+     ],
+     "ya_estaba": true
+    },
+    {
+     "id": "tema12",
+     "pieza": "circulo_tema",
+     "estado": {
+      "etiqueta": "",
+      "icono": "?",
+      "visto": false,
+      "actual": false
+     },
+     "posicion": [
+      1668,
+      680
+     ],
+     "tamano": 0.74,
+     "movimiento": [
+      {
+       "tipo": "aparecer",
+       "t_rel": 0.385
+      },
+      {
+       "tipo": "desaparecer",
+       "palabra": "muñeca",
+       "retraso": 0.275
+      }
+     ],
+     "ya_estaba": true
+    },
+    {
+     "id": "tema1",
+     "pieza": "circulo_tema",
+     "estado": {
+      "etiqueta": "Músculo de la muñeca",
+      "icono": {
+       "pieza": "muneca",
+       "estado": {
+        "dedos": "pinza",
+        "tendon": true
+       }
+      },
+      "visto": false,
+      "actual": true
+     },
+     "posicion": [
+      252,
+      330
+     ],
+     "tamano": 0.74,
+     "movimiento": [
+      {
+       "tipo": "aparecer",
+       "t_rel": 0.0
+      },
+      {
+       "tipo": "cambiar_pose",
+       "palabra": "muñeca",
+       "estado": {
+        "etiqueta": ""
+       }
+      },
+      {
+       "tipo": "deslizar",
+       "hasta": [
+        960,
+        430
+       ],
+       "palabra": "muñeca",
+       "duracion": 0.6
+      },
+      {
+       "tipo": "crecer",
+       "hasta": 2.16,
+       "palabra": "muñeca",
+       "duracion": 0.6
+      }
+     ],
+     "ya_estaba": true
+    },
+    {
+     "id": "titulo",
+     "pieza": "titulo_tema",
+     "estado": {
+      "texto": "Músculo de la muñeca",
+      "rojo": "MUÑECA"
+     },
+     "posicion": [
+      960,
+      860
+     ],
+     "tamano": 1.0,
+     "movimiento": [
+      "aparecer"
+     ],
+     "palabra": "muñeca",
+     "retraso": 0.45
+    }
+   ],
+   "id": 1
+  },
+  {
+   "id": 2,
+   "tipo": "ilustracion",
+   "palabra_inicio": "Estás en la mesa",
+   "fondo": "blanco",
+   "temblor": [],
+   "empujon": [],
+   "elementos": [
+    {
+     "id": "mano",
+     "pieza": "muneca",
+     "estado": {},
+     "posicion": [
+      960,
+      600
+     ],
+     "tamano": 1.0,
+     "movimiento": [
+      {
+       "tipo": "deslizar",
+       "desde": [
+        960,
+        1500
+       ],
+       "duracion": 0.7
+      }
+     ],
+     "palabra": "Estás"
+    },
+    {
+     "id": "t",
+     "pieza": "texto",
+     "estado": {
+      "texto": "tu mano"
+     },
+     "posicion": [
+      1500,
+      300
+     ],
+     "tamano": 0.9,
+     "movimiento": [
+      "aparecer"
+     ],
+     "palabra": "mano"
+    }
+   ]
+  },
+  {
+   "id": 3,
+   "tipo": "ilustracion",
+   "palabra_inicio": "Junta la punta",
+   "fondo": "blanco",
+   "temblor": [],
+   "empujon": [],
+   "elementos": [
+    {
+     "id": "mano",
+     "pieza": "muneca",
+     "estado": {},
+     "posicion": [
+      960,
+      600
+     ],
+     "tamano": 1.0,
+     "movimiento": [
+      {
+       "tipo": "cambiar_pose",
+       "palabra": "meñique",
+       "estado": {
+        "dedos": "pinza"
+       }
+      }
+     ],
+     "ya_estaba": true
+    },
+    {
+     "id": "o",
+     "pieza": "circulo_rojo",
+     "estado": {
+      "ancho": 170,
+      "alto": 150
+     },
+     "posicion": [
+      1018,
+      380
+     ],
+     "tamano": 1.0,
+     "movimiento": [
+      {
+       "tipo": "dibujar",
+       "duracion": 0.5
+      }
+     ],
+     "palabra": "meñique",
+     "retraso": 0.2
+    }
+   ]
+  },
+  {
+   "id": 4,
+   "tipo": "ilustracion",
+   "palabra_inicio": "Ahora dobla",
+   "fondo": "blanco",
+   "temblor": [],
+   "empujon": [],
+   "elementos": [
+    {
+     "id": "mano",
+     "pieza": "muneca",
+     "estado": {
+      "dedos": "pinza"
+     },
+     "posicion": [
+      960,
+      600
+     ],
+     "tamano": 1.0,
+     "movimiento": [
+      {
+       "tipo": "girar",
+       "grados": -10,
+       "palabra": "dobla",
+       "duracion": 0.7
+      }
+     ],
+     "ya_estaba": true
+    },
+    {
+     "id": "f",
+     "pieza": "flecha",
+     "estado": {
+      "curva": 0.35
+     },
+     "posicion": [
+      1330,
+      760
+     ],
+     "tamano": 1.0,
+     "movimiento": [
+      {
+       "tipo": "dibujar",
+       "duracion": 0.6
+      }
+     ],
+     "palabra": "dobla",
+     "rotacion": -60
+    }
+   ]
+  },
+  {
+   "id": 5,
+   "tipo": "ilustracion",
+   "palabra_inicio": "Mira el centro",
+   "fondo": "blanco",
+   "temblor": [],
+   "empujon": [
+    {
+     "palabra": "centro",
+     "foco": [
+      960,
+      780
+     ]
+    }
+   ],
+   "elementos": [
+    {
+     "id": "mano",
+     "pieza": "muneca",
+     "estado": {
+      "dedos": "pinza"
+     },
+     "posicion": [
+      960,
+      600
+     ],
+     "tamano": 1.0,
+     "movimiento": [],
+     "ya_estaba": true
+    },
+    {
+     "id": "o",
+     "pieza": "circulo_rojo",
+     "estado": {
+      "ancho": 200,
+      "alto": 260
+     },
+     "posicion": [
+      960,
+      790
+     ],
+     "tamano": 1.0,
+     "movimiento": [
+      {
+       "tipo": "dibujar",
+       "duracion": 0.5
+      }
+     ],
+     "palabra": "centro"
+    }
+   ]
+  },
+  {
+   "id": 6,
+   "tipo": "ilustracion",
+   "palabra_inicio": "Si salta un cordón",
+   "fondo": "blanco",
+   "temblor": [],
+   "empujon": [
+    {
+     "palabra": "ahí",
+     "foco": [
+      960,
+      780
+     ]
+    }
+   ],
+   "elementos": [
+    {
+     "id": "mano",
+     "pieza": "muneca",
+     "estado": {
+      "dedos": "pinza"
+     },
+     "posicion": [
+      960,
+      600
+     ],
+     "tamano": 1.0,
+     "movimiento": [
+      {
+       "tipo": "cambiar_pose",
+       "palabra": "salta",
+       "estado": {
+        "tendon": true
+       }
+      },
+      {
+       "tipo": "temblor",
+       "palabra": "salta",
+       "fuerza": 8
+      }
+     ],
+     "ya_estaba": true
+    },
+    {
+     "id": "f",
+     "pieza": "flecha",
+     "estado": {
+      "curva": 0.2
+     },
+     "posicion": [
+      1200,
+      820
+     ],
+     "tamano": 1.0,
+     "movimiento": [
+      {
+       "tipo": "dibujar",
+       "duracion": 0.5
+      }
+     ],
+     "palabra": "cordón",
+     "rotacion": 180
+    },
+    {
+     "id": "t",
+     "pieza": "texto",
+     "estado": {
+      "texto": "¡ahí está!",
+      "color": "rojo"
+     },
+     "posicion": [
+      1500,
+      560
+     ],
+     "tamano": 1.1,
+     "movimiento": [
+      "aparecer"
+     ],
+     "palabra": "ahí"
+    }
+   ]
+  },
+  {
+   "id": 7,
+   "tipo": "ilustracion",
+   "palabra_inicio": "Si no ves nada",
+   "fondo": "blanco",
+   "temblor": [],
+   "empujon": [],
+   "elementos": [
+    {
+     "id": "m1",
+     "pieza": "muneca",
+     "estado": {},
+     "posicion": [
+      640,
+      600
+     ],
+     "tamano": 0.8,
+     "movimiento": [
+      "aparecer"
+     ],
+     "palabra": "Si"
+    },
+    {
+     "id": "nada",
+     "pieza": "texto",
+     "estado": {
+      "texto": "¿nada?"
+     },
+     "posicion": [
+      640,
+      170
+     ],
+     "tamano": 1.0,
+     "movimiento": [
+      "aparecer"
+     ],
+     "palabra": "nada"
+    },
+    {
+     "id": "m2",
+     "pieza": "muneca",
+     "estado": {},
+     "posicion": [
+      1280,
+      600
+     ],
+     "tamano": 0.8,
+     "movimiento": [
+      {
+       "tipo": "deslizar",
+       "desde": [
+        2200,
+        600
+       ],
+       "duracion": 0.6
+      }
+     ],
+     "palabra": "otra"
+    }
+   ]
+  },
+  {
+   "id": 8,
+   "tipo": "ilustracion",
+   "palabra_inicio": "Puede que en una",
+   "fondo": "blanco",
+   "temblor": [],
+   "empujon": [],
+   "elementos": [
+    {
+     "id": "m1",
+     "pieza": "muneca",
+     "estado": {},
+     "posicion": [
+      640,
+      600
+     ],
+     "tamano": 0.8,
+     "movimiento": [
+      {
+       "tipo": "cambiar_pose",
+       "palabra": "una",
+       "estado": {
+        "tendon": true
+       }
+      }
+     ],
+     "ya_estaba": true
+    },
+    {
+     "id": "m2",
+     "pieza": "muneca",
+     "estado": {},
+     "posicion": [
+      1280,
+      600
+     ],
+     "tamano": 0.8,
+     "movimiento": [],
+     "ya_estaba": true
+    },
+    {
+     "id": "ok",
+     "pieza": "chulo",
+     "estado": {},
+     "posicion": [
+      640,
+      140
+     ],
+     "tamano": 0.8,
+     "movimiento": [
+      {
+       "tipo": "dibujar",
+       "duracion": 0.4
+      }
+     ],
+     "palabra": "sí"
+    },
+    {
+     "id": "x",
+     "pieza": "x_roja",
+     "estado": {},
+     "posicion": [
+      1280,
+      140
+     ],
+     "tamano": 0.6,
+     "movimiento": [
+      {
+       "tipo": "dibujar",
+       "duracion": 0.4
+      }
+     ],
+     "palabra": "no"
+    }
+   ]
+  },
+  {
+   "id": 9,
+   "tipo": "personaje",
+   "palabra_inicio": "Ese cordón es",
+   "fondo": "blanco",
+   "temblor": [],
+   "empujon": [
+    {
+     "palabra": "palmar",
+     "foco": [
+      1180,
+      430
+     ]
+    }
+   ],
+   "elementos": [
+    {
+     "id": "yo",
+     "pieza": "personaje",
+     "estado": {
+      "pose": "tablero",
+      "gesto": "seguro"
+     },
+     "posicion": [
+      430,
+      990
+     ],
+     "tamano": 1.05,
+     "movimiento": [
+      "aparecer"
+     ],
+     "palabra": "Ese"
+    },
+    {
+     "id": "tab",
+     "pieza": "tablero",
+     "estado": {},
+     "posicion": [
+      1180,
+      480
+     ],
+     "tamano": 1.45,
+     "movimiento": [
+      "aparecer"
+     ],
+     "palabra": "Ese"
+    },
+    {
+     "id": "n",
+     "pieza": "titulo_tema",
+     "estado": {
+      "texto": "palmar largo",
+      "rojo": "PALMAR"
+     },
+     "posicion": [
+      1180,
+      430
+     ],
+     "tamano": 0.66,
+     "movimiento": [
+      "aparecer"
+     ],
+     "palabra": "palmar"
+    },
+    {
+     "id": "t",
+     "pieza": "texto",
+     "estado": {
+      "texto": "no todos lo tienen",
+      "color": "rojo"
+     },
+     "posicion": [
+      1180,
+      620
+     ],
+     "tamano": 0.75,
+     "movimiento": [
+      "aparecer"
+     ],
+     "palabra": "todos"
+    }
+   ]
+  },
+  {
+   "id": 10,
+   "tipo": "codigo",
+   "palabra_inicio": "La explicación más aceptada",
+   "fondo": "blanco",
+   "temblor": [],
+   "empujon": [],
+   "elementos": [
+    {
+     "id": "t",
+     "pieza": "texto",
+     "estado": {
+      "texto": "la más aceptada"
+     },
+     "posicion": [
+      960,
+      75
+     ],
+     "tamano": 0.75,
+     "movimiento": [
+      "aparecer"
+     ],
+     "palabra": "aceptada"
+    },
+    {
+     "id": "rama",
+     "pieza": "rama",
+     "estado": {},
+     "posicion": [
+      960,
+      320
+     ],
+     "tamano": 1.2,
+     "movimiento": [
+      "aparecer"
+     ],
+     "palabra": "antepasados"
+    },
+    {
+     "id": "yo",
+     "pieza": "personaje",
+     "estado": {
+      "pose": "asustado",
+      "gesto": "contento"
+     },
+     "posicion": [
+      960,
+      720
+     ],
+     "tamano": 1.0,
+     "movimiento": [
+      {
+       "tipo": "deslizar",
+       "desde": [
+        960,
+        1300
+       ],
+       "duracion": 0.6
+      }
+     ],
+     "palabra": "agarrarse"
+    },
+    {
+     "id": "tr",
+     "pieza": "texto",
+     "estado": {
+      "texto": "trepar",
+      "color": "rojo"
+     },
+     "posicion": [
+      1500,
+      620
+     ],
+     "tamano": 1.1,
+     "movimiento": [
+      "aparecer"
+     ],
+     "palabra": "trepar"
+    }
+   ]
+  },
+  {
+   "id": 11,
+   "tipo": "codigo",
+   "palabra_inicio": "Hoy, a más o menos",
+   "fondo": "blanco",
+   "temblor": [],
+   "empujon": [
+    {
+     "palabra": "falta",
+     "foco": [
+      960,
+      600
+     ]
+    }
+   ],
+   "elementos": [
+    {
+     "id": "fila",
+     "pieza": "fila_personas",
+     "estado": {},
+     "posicion": [
+      960,
+      700
+     ],
+     "tamano": 1.5,
+     "movimiento": [
+      "aparecer",
+      {
+       "tipo": "cambiar_pose",
+       "palabra": "falta",
+       "estado": {
+        "destacada": 3
+       }
+      }
+     ],
+     "palabra": "siete"
+    },
+    {
+     "id": "t",
+     "pieza": "texto",
+     "estado": {
+      "texto": "1 de cada 7",
+      "color": "rojo"
+     },
+     "posicion": [
+      960,
+      230
+     ],
+     "tamano": 1.3,
+     "movimiento": [
+      "aparecer"
+     ],
+     "palabra": "siete",
+     "retraso": 0.2
+    }
+   ]
+  },
+  {
+   "id": 12,
+   "tipo": "codigo",
+   "palabra_inicio": "Y eso cambia",
+   "fondo": "blanco",
+   "temblor": [],
+   "empujon": [],
+   "elementos": [
+    {
+     "id": "g",
+     "pieza": "grafica_barras",
+     "estado": {},
+     "posicion": [
+      960,
+      560
+     ],
+     "tamano": 1.2,
+     "movimiento": [
+      "aparecer"
+     ],
+     "palabra": "cambia"
+    },
+    {
+     "id": "t",
+     "pieza": "texto",
+     "estado": {
+      "texto": "según la población",
+      "color": "rojo"
+     },
+     "posicion": [
+      960,
+      900
+     ],
+     "tamano": 1.0,
+     "movimiento": [
+      "aparecer"
+     ],
+     "palabra": "población"
+    }
+   ]
+  },
+  {
+   "id": 13,
+   "tipo": "codigo",
+   "palabra_inicio": "Lo curioso es que",
+   "fondo": "blanco",
+   "temblor": [],
+   "empujon": [],
+   "elementos": [
+    {
+     "id": "mus",
+     "pieza": "musculo",
+     "estado": {},
+     "posicion": [
+      440,
+      560
+     ],
+     "tamano": 1.1,
+     "movimiento": [
+      "aparecer"
+     ],
+     "palabra": "curioso"
+    },
+    {
+     "id": "b1",
+     "pieza": "barra",
+     "estado": {
+      "etiqueta": "con él",
+      "color": "verde"
+     },
+     "posicion": [
+      1060,
+      420
+     ],
+     "tamano": 1.0,
+     "movimiento": [
+      "aparecer",
+      {
+       "tipo": "llenar_barra",
+       "hasta": 0.9,
+       "duracion": 0.8
+      }
+     ],
+     "palabra": "fuerza"
+    },
+    {
+     "id": "b2",
+     "pieza": "barra",
+     "estado": {
+      "etiqueta": "sin él",
+      "color": "verde"
+     },
+     "posicion": [
+      1060,
+      660
+     ],
+     "tamano": 1.0,
+     "movimiento": [
+      "aparecer",
+      {
+       "tipo": "llenar_barra",
+       "hasta": 0.9,
+       "duracion": 0.8
+      }
+     ],
+     "palabra": "fuerza",
+     "retraso": 0.25
+    },
+    {
+     "id": "t",
+     "pieza": "texto",
+     "estado": {
+      "texto": "misma fuerza",
+      "color": "rojo"
+     },
+     "posicion": [
+      1060,
+      880
+     ],
+     "tamano": 1.0,
+     "movimiento": [
+      "aparecer"
+     ],
+     "palabra": "mano"
+    }
+   ]
+  },
+  {
+   "id": 14,
+   "tipo": "codigo",
+   "palabra_inicio": "Tu mano agarra",
+   "fondo": "blanco",
+   "temblor": [],
+   "empujon": [],
+   "elementos": [
+    {
+     "id": "b1",
+     "pieza": "barra",
+     "estado": {
+      "etiqueta": "con él",
+      "color": "verde",
+      "relleno": 0.9
+     },
+     "posicion": [
+      1060,
+      420
+     ],
+     "tamano": 1.0,
+     "movimiento": [],
+     "ya_estaba": true
+    },
+    {
+     "id": "b2",
+     "pieza": "barra",
+     "estado": {
+      "etiqueta": "sin él",
+      "color": "verde",
+      "relleno": 0.9
+     },
+     "posicion": [
+      1060,
+      660
+     ],
+     "tamano": 1.0,
+     "movimiento": [],
+     "ya_estaba": true
+    },
+    {
+     "id": "ok",
+     "pieza": "chulo",
+     "estado": {},
+     "posicion": [
+      1560,
+      540
+     ],
+     "tamano": 1.0,
+     "movimiento": [
+      {
+       "tipo": "dibujar",
+       "duracion": 0.4
+      }
+     ],
+     "palabra": "igual"
+    },
+    {
+     "id": "t",
+     "pieza": "texto",
+     "estado": {
+      "texto": "igual",
+      "color": "rojo"
+     },
+     "posicion": [
+      1060,
+      880
+     ],
+     "tamano": 1.1,
+     "movimiento": [
+      "aparecer"
+     ],
+     "palabra": "igual",
+     "retraso": 0.3
+    }
+   ]
+  },
+  {
+   "id": 15,
+   "tipo": "personaje",
+   "palabra_inicio": "Pero no es",
+   "fondo": "blanco",
+   "temblor": [],
+   "empujon": [
+    {
+     "palabra": "inútil",
+     "foco": [
+      1330,
+      460
+     ]
+    }
+   ],
+   "elementos": [
+    {
+     "id": "yo",
+     "pieza": "personaje",
+     "estado": {
+      "pose": "sorprendido",
+      "gesto": "sorpresa"
+     },
+     "posicion": [
+      640,
+      990
+     ],
+     "tamano": 1.15,
+     "movimiento": [
+      "aparecer"
+     ],
+     "palabra": "Pero"
+    },
+    {
+     "id": "t",
+     "pieza": "texto",
+     "estado": {
+      "texto": "no tan inútil",
+      "color": "rojo"
+     },
+     "posicion": [
+      1330,
+      460
+     ],
+     "tamano": 1.2,
+     "movimiento": [
+      "aparecer"
+     ],
+     "palabra": "inútil"
+    }
+   ]
+  },
+  {
+   "id": 16,
+   "tipo": "personaje",
+   "palabra_inicio": "Los cirujanos",
+   "fondo": "blanco",
+   "temblor": [],
+   "empujon": [],
+   "elementos": [
+    {
+     "id": "yo",
+     "pieza": "personaje",
+     "estado": {
+      "pose": "sorprendido",
+      "gesto": "sorpresa"
+     },
+     "posicion": [
+      640,
+      990
+     ],
+     "tamano": 1.15,
+     "movimiento": [
+      {
+       "tipo": "cambiar_pose",
+       "palabra": "cirujanos",
+       "estado": {
+        "pose": "idea",
+        "gesto": "contento"
+       }
+      }
+     ],
+     "ya_estaba": true
+    },
+    {
+     "id": "c",
+     "pieza": "cordon",
+     "estado": {},
+     "posicion": [
+      1330,
+      560
+     ],
+     "tamano": 1.2,
+     "movimiento": [
+      {
+       "tipo": "dibujar",
+       "duracion": 0.6
+      }
+     ],
+     "palabra": "repuesto"
+    },
+    {
+     "id": "t",
+     "pieza": "texto",
+     "estado": {
+      "texto": "repuesto",
+      "color": "rojo"
+     },
+     "posicion": [
+      1330,
+      760
+     ],
+     "tamano": 1.1,
+     "movimiento": [
+      "aparecer"
+     ],
+     "palabra": "repuesto",
+     "retraso": 0.3
+    }
+   ]
+  }
+ ]
+}

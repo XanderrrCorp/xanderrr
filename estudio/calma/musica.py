@@ -35,19 +35,19 @@ def medir(audio: np.ndarray, sr: int = SR, segundos: float = 60.0) -> dict:
     return {"golpes_s": round(golpes, 2), "melodia": round(melodia, 3)}
 
 
-def elegir(ffmpeg: str, avisar=print) -> dict | None:
+def elegir(ffmpeg: str, avisar=print, animos: tuple[str, ...] = ANIMOS) -> dict | None:
     """La pista más adecuada de la biblioteca, o None si no hay música con licencia."""
     from .. import biblioteca
 
     candidatas: list[Path] = []
     animo = None
-    for a in ANIMOS:
+    for a in animos:
         candidatas = biblioteca.utilizables("musica", a)
         if candidatas:
             animo = a
             break
     if not candidatas:
-        avisar("No hay música de ánimo «tensión» ni «misterio» en la biblioteca: el video va solo con la voz")
+        avisar(f"No hay música de ánimo {' ni '.join(animos)} en la biblioteca: el video va solo con la voz")
         return None
     medidas = []
     for ruta in candidatas:

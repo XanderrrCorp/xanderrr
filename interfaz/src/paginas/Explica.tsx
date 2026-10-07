@@ -8,8 +8,15 @@ interface EstadoExplica {
   canal: { clave: string; nombre: string };
   costo_muestras: { usd?: number; cop?: string; proveedor?: string; modelo?: string; error?: string };
   muestras: { archivos: string[]; costo_total: string; proveedor: string; modelo: string } | null;
-  trabajo: { paso: string; progreso: number; mensaje: string; activo: boolean; error: string | null } | null;
+  trabajo: Trabajo | null;
+  tema_prueba: {
+    video: boolean; costo_voz: { caracteres: number; cop: string }; trabajo: Trabajo | null;
+    informe: { duracion: number; tiempo_total_s: number; render: { segundos_total: number; procesos: number };
+               costos: Record<'guion' | 'voz' | 'imagenes', { cop: string }>; avisos_guion: string[];
+               avisos_ritmo: string[]; musica: { nombre_original: string } | null; video: string } | null;
+  };
 }
+interface Trabajo { paso: string; progreso: number; mensaje: string; activo: boolean; error: string | null }
 
 export function Explica() {
   const [est, setEst] = useState<EstadoExplica | null>(null);
@@ -21,11 +28,16 @@ export function Explica() {
   }, []);
   useEffect(() => { cargar(); }, [cargar]);
   useEffect(() => {
-    if (!est?.trabajo?.activo) return;
+    if (!est?.trabajo?.activo && !est?.tema_prueba.trabajo?.activo) return;
     const id = setInterval(cargar, 2000);
     return () => clearInterval(id);
-  }, [est?.trabajo?.activo, cargar]);
+  }, [est?.trabajo?.activo, est?.tema_prueba.trabajo?.activo, cargar]);
 
+  const hacerTema = async () => {
+    setError('');
+    try { setEst(await api<EstadoExplica>('/api/explica/tema-prueba', { cuerpo: { permiso: false } })); }
+    catch (e) { setError((e as Error).message); }
+  };
   const generar = async () => {
     setError('');
     try { setEst(await api<EstadoExplica>('/api/explica/muestras', { cuerpo: { permiso: false } })); }
@@ -56,6 +68,39 @@ export function Explica() {
           </div>
         )}
         {error && <p className="error">{error}</p>}
+      </section>
+      <section className="rev-tarjeta">
+        <h2>Tema de prueba con voz</h2>
+        <p>«Músculo de la muñeca», el tema 1 de «Partes de tu cuerpo que YA NO SIRVEN para nada»: voz de Peligro
+          Tropical, tiempos de cada palabra con Whisper, animación y música tranquila. La voz cuesta unos{' '}
+          <b>{est.tema_prueba.costo_voz.cop}</b>; si ya se grabó, no se vuelve a pagar.</p>
+        <button className="boton" disabled={!!est.tema_prueba.trabajo?.activo} onClick={hacerTema}>
+          {est.tema_prueba.trabajo?.activo ? 'Trabajando…' : est.tema_prueba.video ? 'Volver a hacerlo' : 'Hacer el tema de prueba'}
+        </button>
+        {est.tema_prueba.trabajo && (
+          <div>
+            <div className="barra-progreso"><i style={{ width: `${Math.round(est.tema_prueba.trabajo.progreso * 100)}%` }} /></div>
+            <div className="pequeno">{est.tema_prueba.trabajo.error ? <span className="error">Error: {est.tema_prueba.trabajo.error}</span>
+              : est.tema_prueba.trabajo.mensaje}</div>
+          </div>
+        )}
+        {est.tema_prueba.video && (
+          <video src={`/api/explica/tema-prueba/video?v=${version}`} controls style={{ width: '100%', borderRadius: 8, marginTop: 10 }} />
+        )}
+        {est.tema_prueba.informe && (() => {
+          const inf = est.tema_prueba.informe;
+          return (
+            <ul className="pequeno">
+              <li>Duración {Math.round(inf.duracion)} s · tiempo total {Math.round(inf.tiempo_total_s)} s (render
+                {' '}{Math.round(inf.render.segundos_total)} s, {inf.render.procesos} a la vez)</li>
+              <li>Costo real: guion {inf.costos.guion.cop} · voz {inf.costos.voz.cop} · imágenes {inf.costos.imagenes.cop}</li>
+              <li>Música: {inf.musica ? inf.musica.nombre_original : 'sin música'}</li>
+              {inf.avisos_guion.length > 0 && <li>Guion: {inf.avisos_guion.join(' · ')}</li>}
+              {inf.avisos_ritmo.length > 0 && <li>Ritmo: {inf.avisos_ritmo.join(' · ')}</li>}
+              <li className="tenue">Guardado en: {inf.video}</li>
+            </ul>
+          );
+        })()}
       </section>
       {est.muestras && (
         <section className="rev-tarjeta">
