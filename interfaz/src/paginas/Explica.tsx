@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { api } from '../api';
+import { ExplicaNuevo } from './ExplicaNuevo';
 
 // El Calvo Explica (nombre provisional): «TODAS las X explicadas en N minutos». Por ahora: las 3 ilustraciones de
 // muestra para aprobar el estilo (Google, con el personaje como referencia). Lo demás llega en los pasos siguientes.
@@ -61,6 +62,7 @@ export function Explica() {
     <div className="pagina tracy">
       <h1>{est.canal.nombre}</h1>
       <p className="tenue">TODAS las X explicadas en N minutos. Fondo blanco, tu personaje y animación por código.</p>
+      <ExplicaNuevo />
       <section className="rev-tarjeta">
         <h2>Ilustraciones de muestra</h2>
         <p>Tres escenas del primer video (muñeca en primer plano, piel de gallina, dentista) para ver si el personaje

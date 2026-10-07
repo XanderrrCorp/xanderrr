@@ -391,3 +391,105 @@ def test_escenas_del_video_completo_atadas_al_guion():
     assert not [a for a in E.revisar(datos, 3.0) if "no existe" in a or "a la vez" in a or "fuera de la escena" in a]
     ultimo = datos["escenas"][-1]
     assert any(x["estado"].get("texto") == "SUSCRÍBETE" for x in ultimo["elementos"])
+
+
+# ------------------------------------------------------------------ El Calvo Explica hecho por Xandart sola
+
+def _guion_corto(n=2):
+    from estudio.explica import guion as G
+
+    ruta = E.__file__.replace("calma/escenas.py", "explica/guiones/partes_que_no_sirven.txt")
+    texto = open(ruta, encoding="utf-8").read()
+    bloques = texto.split("\nNOMBRE\n")
+    corto = "\nNOMBRE\n".join(bloques[:n]).rstrip() + "\n\nFINAL\nY ahora ya sabes un poco más.\nSi te gustó, suscríbete.\n"
+    return corto, G.leer(corto)
+
+
+def _claude_falso(guion_texto):
+    """Responde como Claude: el guion, las escenas de cada tema (las armadas a mano) y la revisión «ok»."""
+    from estudio.explica.guiones.partes_que_no_sirven_escenas import armar
+
+    datos = armar()
+    por_tema, actual = [], None
+    for e in datos["escenas"]:
+        if e["tipo"] == "cuadricula":
+            actual = []
+            por_tema.append(actual)
+        elif actual is not None:
+            actual.append(e)
+    llamadas = []
+
+    def ejecutar(prompt, cwd=None, herramientas=None):
+        llamadas.append((prompt[:40], herramientas))
+        if prompt.startswith("Eres el guionista"):
+            return guion_texto + "\nDUDAS\n- una duda de prueba\n", {}
+        if prompt.startswith("Mira con la herramienta Read"):
+            return '{"ok": true}', {}
+        k = int(re.search(r"Arma las escenas del tema (\d+)", prompt).group(1)) - 1
+        escenas = por_tema[k][:len(re.findall(r"^\d+\. \[", prompt, re.M))]
+        return json.dumps({"icono": {"pieza": "oreja", "estado": {}}, "escenas": escenas}, ensure_ascii=False), {}
+    return ejecutar, llamadas
+
+
+import re  # noqa: E402
+
+
+def test_autor_escribe_el_guion_y_separa_las_dudas(tmp_path):
+    from estudio.explica import autor
+
+    texto, _ = _guion_corto(2)
+    falso, _ = _claude_falso(texto)
+    r = autor.escribir_guion(tmp_path, "Partes que no sirven", 2, ejecutar=falso, avisar=lambda *_: None)
+    assert r["avisos"] == [] and "una duda de prueba" in r["dudas"]
+    assert (tmp_path / "guion.txt").read_text(encoding="utf-8").startswith("NOMBRE")
+    assert "DUDAS" not in (tmp_path / "guion.txt").read_text(encoding="utf-8")
+
+
+def test_autor_arma_las_escenas_y_las_revisa_mirando(tmp_path):
+    from estudio.explica import autor
+
+    texto, temas = _guion_corto(2)
+    (tmp_path / "guion.txt").write_text(texto, encoding="utf-8")
+    falso, llamadas = _claude_falso(texto)
+    datos = autor.armar_escenas(tmp_path, ejecutar=falso, avisar=lambda *_: None, a_la_vez=1)
+    assert sum(1 for e in datos["escenas"] if e["tipo"] == "cuadricula") == 2
+    assert any(h == ["Read"] for _, h in llamadas)                          # la revisión mira la hoja de cuadros
+    assert (tmp_path / "revision" / "tema_01.png").exists() and (tmp_path / "escenas.json").exists()
+    assert datos["escenas"][-1]["elementos"][-1]["estado"]["texto"] == "SUSCRÍBETE"
+
+
+def test_validar_arregla_lo_que_claude_hace_mal():
+    from estudio.explica import autor
+
+    _, temas = _guion_corto(1)
+    frases = autor.frases_del_tema(temas[0])
+    escenas = [{"elementos": [{"id": "a", "pieza": "dragon", "posicion": [5000, -20], "palabra": "mesa"},
+                              {"id": "b", "pieza": "texto", "estado": {"texto": "UN TEXTO LARGUÍSIMO QUE NO CABE"},
+                               "posicion": [1800, 500], "tamano": 2, "palabra": "palabra_que_no_esta"}]}
+               for _ in frases]
+    salida, icono, notas = autor.validar({"escenas": escenas}, temas[0])
+    a, b = salida[0]["elementos"]
+    assert a["pieza"] == "texto" and a["posicion"] == [1840, 60]                  # pieza inexistente → texto
+    assert "palabra" not in b and b["tamano"] < 1                                 # palabra ajena fuera; texto cabe
+    assert any("dragon" in n for n in notas) and icono["pieza"] in autor.PIEZAS
+    with pytest.raises(ValueError):
+        autor.validar({"escenas": escenas[:2]}, temas[0])                        # una escena por frase
+
+
+def test_pagina_de_videos_nuevos(tmp_path, monkeypatch):
+    from fastapi.testclient import TestClient
+
+    import estudio.app as modulo
+    from estudio import pipeline
+
+    monkeypatch.setattr(pipeline, "lanzar", lambda slug, paso, f: None)
+    cliente = TestClient(modulo.app)
+    assert cliente.get("/api/explica/videos").json() == []
+    assert cliente.post("/api/explica/videos", json={"titulo": "x"}).status_code == 400
+    v = cliente.post("/api/explica/videos", json={"titulo": "Cosas raras del cerebro", "temas": 8}).json()
+    assert v["slug"] == "cosas-raras-del-cerebro" and v["guion"] is None
+    texto, _ = _guion_corto(2)
+    v = cliente.put(f"/api/explica/videos/{v['slug']}/guion", json={"texto": texto}).json()
+    assert v["guion"].startswith("NOMBRE") and v["costo_voz"]["caracteres"] > 500
+    assert cliente.post(f"/api/explica/videos/{v['slug']}/video", json={}).status_code == 400    # faltan escenas
+    assert cliente.get("/api/explica/videos/../../etc").status_code == 404

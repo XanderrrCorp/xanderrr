@@ -21,6 +21,8 @@ import re
 import unicodedata
 
 from .movimientos import TIPOS
+
+TIPOS_MOVIMIENTO = TIPOS
 from .piezas import PIEZAS
 
 FONDOS = ("blanco", "calle", "campo")
