@@ -184,23 +184,35 @@ def _lanzar(slug: str, funcion):
     return _estado_video(slug)
 
 
-@rutas.post("/videos")
-def nuevo_video(n: NuevoVideo):
+def crear_carpeta(titulo: str, temas: int, datos: str = ""):
+    """Carpeta de un video nuevo de El Calvo Explica (también la usa la cola de la semana)."""
     from ..proyecto import slugificar
-    from . import autor
 
-    titulo = n.titulo.strip()
+    titulo = titulo.strip()
     if len(titulo) < 4:
-        raise HTTPException(400, "Escribe el tema del video")
-    if not 3 <= n.temas <= 15:
-        raise HTTPException(400, "Entre 3 y 15 temas")
+        raise ValueError("Escribe el tema del video")
+    if not 3 <= temas <= 15:
+        raise ValueError("Entre 3 y 15 temas")
     base = slugificar(titulo)[:50] or "video"
     slug, k = base, 2
     while (F.carpeta_base() / "videos" / slug).exists():
         slug, k = f"{base}-{k}", k + 1
     c = F.carpeta_base() / "videos" / slug
     c.mkdir(parents=True)
-    (c / "video.json").write_text(json.dumps({"titulo": titulo, "temas": n.temas}, ensure_ascii=False), encoding="utf-8")
+    (c / "video.json").write_text(json.dumps({"titulo": titulo, "temas": temas, "datos": datos}, ensure_ascii=False),
+                                  encoding="utf-8")
+    return slug, c
+
+
+@rutas.post("/videos")
+def nuevo_video(n: NuevoVideo):
+    from . import autor
+
+    try:
+        slug, c = crear_carpeta(n.titulo, n.temas, n.datos)
+    except ValueError as ex:
+        raise HTTPException(400, str(ex)) from ex
+    titulo = n.titulo.strip()
     return _lanzar(slug, lambda t: autor.escribir_guion(c, titulo, n.temas, n.datos, avisar=t.avisar))
 
 

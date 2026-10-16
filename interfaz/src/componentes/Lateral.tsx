@@ -11,6 +11,7 @@ const GRUPOS: Grupo[] = [
   {
     clave: 'crear', nombre: 'Crear', icono: 'chispa', secciones: [
       { titulo: 'Producir', items: [
+        { nombre: 'Cola de la semana', icono: 'videos', ir: '/cola' },
         { nombre: 'Video largo', icono: 'video', ir: '/' },
         { nombre: 'Short vertical', icono: 'short', ir: '/videos' },
         { nombre: 'Miniatura', icono: 'miniatura', ir: '/videos' },

@@ -84,6 +84,11 @@ Estado al 04-10-2026. El repositorio es PÚBLICO: nunca escribir claves, tokens 
   cierre con carrusel y mascota; sonidos por código (sello, campanita, tic_tac, boing, glitch, ding); piezas
   lista/mapa/pin/etiqueta/advertencia para las animaciones híbridas. Falta: mandarle el video de prueba.
 - Tracy (16-10): el PC del dueño (16 GB) se trababa: ensamblar usa máximo 2 FFmpeg, 2 hilos y espera memoria.
+- COLA DE LA SEMANA (16-10): estudio/cola.py + cola_api.py + página /cola (interfaz/src/paginas/Cola.tsx).
+  Pega varios guiones de Tracy (con etiqueta del canal de YouTube) o ideas de Peligro Tropical / El Calvo Explica;
+  un solo trabajador los hace UNO A LA VEZ (datos/cola.json; si se cierra Xandart, «haciendo» vuelve a esperar).
+  Peligro corre guion→imágenes→video sin parar (respeta el tope; «Dar permiso y seguir» si lo pasa).
+  Semana del dueño: lunes un canal Tracy, martes Mentalidad Imparable, miércoles Peligro Tropical, jueves El Calvo.
 - Estrategia del dueño (16-10): foco en los 2 canales Tracy monetizados y Peligro Tropical; El Calvo en pausa.
 - Aquí (nube) la voz MiniMax sí funciona; Whisper no baja su modelo: vista previa con voz frase por frase.
 ## Pendiente

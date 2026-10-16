@@ -15,6 +15,7 @@ import { Revision } from './paginas/Revision';
 import { Tracy, TracyVideo } from './paginas/Tracy';
 import { Calma } from './paginas/Calma';
 import { Explica } from './paginas/Explica';
+import { Cola } from './paginas/Cola';
 
 export function App() {
   const [cuenta, setCuenta] = useState<Cuenta | null>(null);
@@ -30,6 +31,7 @@ export function App() {
     mirar();
     return () => window.clearTimeout(espera);
   }, []);
+  useEffect(() => { api('/api/cola').catch(() => {}); }, []);   // la cola sigue donde iba al abrir Xandart
   useEffect(() => {
     const traer = () => api<Cuenta>('/api/v2/cuenta').then(setCuenta).catch(() => {});
     traer();
@@ -60,6 +62,7 @@ export function App() {
             <Route path="/tracy" element={<Tracy />} />
             <Route path="/calma" element={<Calma />} />
             <Route path="/explica" element={<Explica />} />
+            <Route path="/cola" element={<Cola />} />
             <Route path="/tracy/:slug" element={<TracyVideo />} />
             <Route path="/canales" element={<Canales />} />
             <Route path="/formatos" element={<Formatos />} />

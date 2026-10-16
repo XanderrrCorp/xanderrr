@@ -76,6 +76,9 @@ app.include_router(api_calma)
 from .explica.api import rutas as api_explica  # noqa: E402 — El Calvo Explica
 
 app.include_router(api_explica)
+from .cola_api import rutas as api_cola  # noqa: E402 — cola de la semana (varios videos seguidos)
+
+app.include_router(api_cola)
 
 
 def _proyecto(slug: str) -> CarpetaProyecto:
