@@ -117,7 +117,7 @@ def comando_tramo(ffmpeg: str, clip: dict, subs: list[tuple[Path, float, float]]
     """`final` (solo en la escena final): {"particulas", "voz", "presentador"?, "suscribete"?: (carpeta, en_s)}."""
     n = _cuadros(clip["fin"]) - _cuadros(clip["inicio"])
     dur = n / FPS
-    cmd = [ffmpeg, "-y", "-loglevel", "error"]
+    cmd = [ffmpeg, "-y", "-loglevel", "error", "-filter_threads", HILOS_POR_SEGMENTO]
     if clip["tipo"] in ("stock", "final"):
         cmd += ["-stream_loop", "-1"]           # por si el clip se queda corto (el fondo final va en bucle)
     cmd += ["-ss", f"{clip['desde']:.3f}", "-t", f"{dur + 1:.3f}", "-i", str(clip["archivo"])]
@@ -177,7 +177,7 @@ def comando_tramo(ffmpeg: str, clip: dict, subs: list[tuple[Path, float, float]]
                    f"drawbox=x=0:y=ih-{barras}:w=iw:h={barras}:color=black:t=fill[cine]")
         salida_v = "cine"
     cmd += ["-filter_complex", filtro, "-map", f"[{salida_v}]", "-frames:v", str(n), "-an",
-            *_codec(ffmpeg), "-pix_fmt", "yuv420p", "-r", str(FPS), str(salida)]
+            *_codec(ffmpeg), "-threads", HILOS_POR_SEGMENTO, "-pix_fmt", "yuv420p", "-r", str(FPS), str(salida)]
     return cmd
 
 
@@ -233,10 +233,33 @@ def pista_swoosh(cortes: list[float], duracion: float, ffmpeg: str, destino: Pat
     return destino
 
 
+# (16-10) el dueño vio el PC trabado con Tracy (16 GB al 82 %): cada segmento es un FFmpeg que abre el clip de
+# Pexels, el del seminario, el anterior (fundido) y un PNG por subtítulo, y por defecto usa TODOS los núcleos.
+# Con 4 a la vez se ahogaban memoria y procesador. Ahora: máximo 2 a la vez, 2 hilos cada uno, y uno nuevo
+# solo arranca si queda memoria libre.
+MAX_A_LA_VEZ = 2
+HILOS_POR_SEGMENTO = "2"
+MEMORIA_MINIMA_GB = 2.5
+
+
 def _procesos() -> int:
     from ..render import _procesos as procesos
 
-    return procesos(None)
+    return max(1, min(MAX_A_LA_VEZ, procesos(None)))
+
+
+def _esperar_memoria(maximo_s: float = 60.0) -> None:
+    """Antes de abrir otro FFmpeg, espera (hasta un minuto) a que haya memoria libre."""
+    import time
+
+    from ..render import memoria_libre_gb
+
+    inicio = time.time()
+    while time.time() - inicio < maximo_s:
+        libre = memoria_libre_gb()
+        if libre is None or libre >= MEMORIA_MINIMA_GB:
+            return
+        time.sleep(1.0)
 
 
 def ensamblar(carpeta: CarpetaProyecto, ffmpeg: str, avisar=print, progreso=None, musica: str | None = None,
@@ -276,6 +299,7 @@ def ensamblar(carpeta: CarpetaProyecto, ffmpeg: str, avisar=print, progreso=None
             final = {"particulas": extra["particulas"], "voz": extra["voz"], "presentador": extra["presentador"],
                      "suscribete": (extra["carpeta_sus"], en) if en is not None else None}
         barras = int(preset.get("alto_barras", 130)) if preset.get("barras_cine", True) else 0
+        _esperar_memoria()
         k = posicion[clip["id"]]
         previo = clips[k - 1] if k > 0 and not (clip["tipo"] == "final" and clips[k - 1]["tipo"] == "final") else None
         r = subprocess.run(comando_tramo(ffmpeg, clip, subs, salida, final, barras, previo), capture_output=True, text=True,
