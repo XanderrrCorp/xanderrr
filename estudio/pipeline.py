@@ -854,7 +854,9 @@ def paso_video(c: CarpetaProyecto, t: Trabajo, permiso: bool = False, fps: int |
         t.avisar("Quitando los tramos que cortaste en el editor…")
         editor.aplicar_recortes(c.ruta, final, ffmpeg())
     destino = carpeta_videos() / f"{slugificar(c.cargar().titulo)[:60]}.mp4"
-    shutil.copy(final, destino)
+    from .limpieza import copiar_o_enlazar
+
+    copiar_o_enlazar(final, destino)         # ocupa el espacio una sola vez (no dos copias del mismo video)
     shutil.copy(final.with_suffix(".srt"), destino.with_suffix(".srt"))
     c.marcar("export_final", "completo", [str(destino)])
     from .plataforma import cobro

@@ -34,6 +34,7 @@ const GRUPOS: Grupo[] = [
         { nombre: 'Personajes', icono: 'personaje', ir: '/pronto/personajes', pronto: true },
         { nombre: 'Estilos', icono: 'estilo', ir: '/pronto/estilos', pronto: true },
         { nombre: 'Sonidos', icono: 'sonidos', ir: '/#sonidos', externo: true },
+        { nombre: 'Liberar espacio', icono: 'videos', ir: '/espacio' },
       ] },
     ],
   },

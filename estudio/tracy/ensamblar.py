@@ -363,6 +363,8 @@ def entregar(carpeta: CarpetaProyecto, final: Path) -> Path:
     from ..proyecto import slugificar
 
     destino = carpeta_videos() / f"{slugificar(carpeta.cargar().titulo)[:60]}.mp4"
-    shutil.copy(final, destino)
+    from ..limpieza import copiar_o_enlazar
+
+    copiar_o_enlazar(final, destino)         # ocupa el espacio una sola vez (no dos copias del mismo video)
     shutil.copy(final.with_suffix(".srt"), destino.with_suffix(".srt"))
     return destino

@@ -89,6 +89,10 @@ Estado al 04-10-2026. El repositorio es PÚBLICO: nunca escribir claves, tokens 
   un solo trabajador los hace UNO A LA VEZ (datos/cola.json; si se cierra Xandart, «haciendo» vuelve a esperar).
   Peligro corre guion→imágenes→video sin parar (respeta el tope; «Dar permiso y seguir» si lo pasa).
   Semana del dueño: lunes un canal Tracy, martes Mentalidad Imparable, miércoles Peligro Tropical, jueves El Calvo.
+- LIBERAR ESPACIO (16-10): estudio/limpieza.py + página /espacio (Mis recursos). Seguro: pedazos de render de
+  videos terminados, capas 2.5D, clips de Pexels sin uso y el video final guardado dos veces (ahora enlace duro:
+  copiar_o_enlazar en las 4 entregas). Con permiso: copias de seguridad viejas (deja la última) y archivos de trabajo
+  de videos terminados hace >30 días con su final a salvo en Videos (marca archivado.json). La cola limpia sola.
 - Estrategia del dueño (16-10): foco en los 2 canales Tracy monetizados y Peligro Tropical; El Calvo en pausa.
 - Aquí (nube) la voz MiniMax sí funciona; Whisper no baja su modelo: vista previa con voz frase por frase.
 ## Pendiente
@@ -103,4 +107,4 @@ Estado al 04-10-2026. El repositorio es PÚBLICO: nunca escribir claves, tokens 
 - Prueba inestable: 1 de 3 corridas completas falló una prueba (no identificada) el 04-10; el dueño dijo no perseguirla aún.
 - El Calvo Explica: falta el botón para hacer el video completo en el PC (hoy /explica hace el tema 1), música
   tranquila (biblioteca), miniatura (personaje señalando la muñeca + «¿TÚ LO TIENES?») y título. Muestras de
-  Google sin generar (botón en /explica). «Liberar espacio»: en un git stash, sin terminar.
+  Google sin generar (botón en /explica).

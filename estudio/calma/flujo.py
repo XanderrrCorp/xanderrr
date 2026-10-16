@@ -155,7 +155,9 @@ def producir(c: Carpeta, t, permiso: bool = False, voz=None, transcriptor=None, 
                       musica=Path(musica["ruta"]) if musica else None,
                       volumen_musica_db=float(a["volumen_musica_db"]), avisar=t.avisar, progreso=avance)
     destino = carpeta_videos() / f"hazlo_con_calma_{c.ruta.name}.mp4"
-    shutil.copy(salida, destino)
+    from ..limpieza import copiar_o_enlazar
+
+    copiar_o_enlazar(salida, destino)        # ocupa el espacio una sola vez
     informe.update(render=r_render, duracion=round(largo, 2), escenas=len(datos["escenas"]), avisos_ritmo=avisos,
                    musica=musica, confianza_whisper=ors["confianza"], video=str(destino))
     escribir_json(c.ruta / "informe.json", informe)

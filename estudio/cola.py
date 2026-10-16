@@ -222,6 +222,13 @@ def _trabajar() -> None:
             _cambiar(x["id"], estado="error", error=t.error[:300], fin=time.time())
         else:
             _cambiar(x["id"], estado="listo", fin=time.time())
+            if x["tipo"] in ("tracy", "peligro"):
+                try:                       # los pedazos del armado ya no sirven: no se acumulan en el disco
+                    from .limpieza import limpiar_proyecto
+
+                    limpiar_proyecto(x["slug"])
+                except Exception:  # noqa: BLE001 — limpiar es una ayuda: nunca frena la cola
+                    pass
 
 
 def estado() -> dict:

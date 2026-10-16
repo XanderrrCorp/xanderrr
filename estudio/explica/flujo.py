@@ -129,7 +129,9 @@ def producir(c: Carpeta, t, permiso: bool = False, voz=None, transcriptor=None, 
                volumen_musica_db=float(preset["volumen_musica_db"]), avisar=t.avisar, progreso=avance,
                efectos=bool(preset.get("efectos_sonido", True)))
     destino = carpeta_videos() / f"el_calvo_explica_{c.ruta.name}.mp4"
-    shutil.copy(salida, destino)
+    from ..limpieza import copiar_o_enlazar
+
+    copiar_o_enlazar(salida, destino)        # ocupa el espacio una sola vez
     informe = {"fecha": time.strftime("%Y-%m-%d %H:%M:%S"), "duracion": datos["video"]["duracion"],
                "escenas": len(datos["escenas"]), "render": r, "tiempo_total_s": round(time.time() - inicio, 1),
                "costos": _costos(c, config), "avisos_guion": avisos_guion, "avisos_ritmo": ritmo,

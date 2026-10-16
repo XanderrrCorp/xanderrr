@@ -81,6 +81,47 @@ from .cola_api import rutas as api_cola  # noqa: E402 — cola de la semana (var
 app.include_router(api_cola)
 
 
+@app.get("/api/espacio")
+def espacio_en_disco():
+    """Cuánto ocupa Xandart y cuánto se puede liberar sin perder nada (ver limpieza.py)."""
+    from . import limpieza
+
+    return limpieza.inventario()
+
+
+@app.post("/api/espacio/liberar")
+def liberar_espacio():
+    from . import limpieza
+
+    try:
+        r = limpieza.liberar()
+    except RuntimeError as ex:
+        raise HTTPException(409, str(ex)) from ex
+    return {**r, **limpieza.inventario()}
+
+
+@app.post("/api/espacio/copias-viejas")
+def borrar_copias_viejas():
+    from . import limpieza
+
+    try:
+        r = limpieza.borrar_copias_viejas()
+    except RuntimeError as ex:
+        raise HTTPException(409, str(ex)) from ex
+    return {**r, **limpieza.inventario()}
+
+
+@app.post("/api/espacio/videos-viejos")
+def archivar_videos_viejos():
+    from . import limpieza
+
+    try:
+        r = limpieza.archivar_viejos()
+    except RuntimeError as ex:
+        raise HTTPException(409, str(ex)) from ex
+    return {**r, **limpieza.inventario()}
+
+
 def _proyecto(slug: str) -> CarpetaProyecto:
     try:
         return CarpetaProyecto.abrir(slug)
