@@ -42,7 +42,7 @@ def _proyecto(estilo, n=14, por_escena=4.0):
 
 
 def test_perfil_de_peligro_tropical_es_deslizar(estilo, perfil):
-    assert estilo.perfil_edicion == "perfiles/peligro_tropical.json"
+    assert estilo.perfil_edicion == "perfiles/peligro_tropical_v2.json"
     assert perfil.movimiento == "deslizar" and estilo.titulo == "negro"
 
 
@@ -269,3 +269,11 @@ def test_render_con_pizarra_lugar_y_personaje(estilo):
     c, _ = _proyecto_extras(estilo, n_animales=5)
     f = renderizar(c, ffmpeg(), c.ruta / "render" / "x.mp4", avisar=lambda _: None, salida=(320, 180, 3), procesos=1)
     assert f.exists() and f.stat().st_size > 0
+
+
+def test_receta_del_dueno_veredicto_pero_espera_y_subtitulos():
+    from estudio.receta_pt import palabras_con_tiempo, veredicto
+
+    assert veredicto(0) == ("No hay amenaza", True) and veredicto(9) == ("Grave", False)
+    p = palabras_con_tiempo("en una hamaca", 1.0, 2.0)
+    assert [x[0] for x in p] == ["en", "una", "hamaca"] and p[0][1] == 1.0 and p[-1][2] == 2.0

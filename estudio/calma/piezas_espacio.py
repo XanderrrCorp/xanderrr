@@ -343,3 +343,78 @@ PIEZAS.update({"planeta": planeta, "estrellas": estrellas, "cohete": cohete, "te
                "diamante": diamante, "hexagono": hexagono, "lago": lago, "lluvia": lluvia, "alas": alas,
                "tanque": tanque, "huella": huella, "tormenta": tormenta, "huevo": huevo, "iman": iman,
                "sonda": sonda, "banera": banera, "estirado": estirado})
+
+
+# ------------------------------------------------------------------ componentes de la receta de Peligro Tropical
+
+def etiqueta(e: dict) -> Dibujo:
+    """Etiqueta blanca muy redondeada con sombra suave y texto negro en negrita (2 a 4 palabras)."""
+    from .piezas import _texto, ancho_texto
+
+    t = str(e.get("texto", "")).strip()
+    alto = 64
+    w = ancho_texto(t, alto) + 90
+    h = 120
+    svg = (f'<rect x="{-w / 2 + 8:.0f}" y="{-h / 2 + 12:.0f}" width="{w:.0f}" height="{h}" rx="34" fill="#000" '
+           f'opacity="0.18"/><rect x="{-w / 2:.0f}" y="{-h / 2:.0f}" width="{w:.0f}" height="{h}" rx="34" fill="#FFF"/>'
+           + _texto(0, 4, t, alto, NEGRO))
+    return Dibujo(svg, (-w / 2 - 4, -h / 2 - 4, w + 20, h + 24))
+
+
+def lista(e: dict) -> Dibujo:
+    """Lista con viñetas (síntomas, pasos). estado {items: [...], visibles: k}. Ancla a la izquierda del
+    primer renglón; las líneas aparecen con cambiar_pose {estado: {visibles: k}}."""
+    from .piezas import _texto, ancho_texto
+
+    items = [str(x).upper()[:26] for x in (e.get("items") or [])][:5]
+    vis = int(e.get("visibles", len(items)))
+    alto, paso = 62, 104
+    partes = []
+    for i, t in enumerate(items[:vis]):
+        y = i * paso
+        partes.append(f'<circle cx="20" cy="{y}" r="16" fill="{ROJO}"/>')
+        partes.append(_texto(60, y + 3, t, alto, NEGRO, ancla="start"))
+    ancho = max([ancho_texto(t, alto) for t in items] + [100]) + 80
+    return Dibujo("".join(partes) or '<circle cx="20" cy="0" r="1" fill="none"/>',
+                  (-10, -paso / 2, ancho, paso * max(1, len(items))))
+
+
+_CONTINENTES = {
+    "america_norte": [(80, 90), (260, 60), (330, 110), (300, 170), (250, 200), (215, 255), (170, 250), (120, 180)],
+    "america_central": [(215, 255), (250, 265), (275, 300), (258, 312), (226, 292)],
+    "america_sur": [(258, 312), (322, 322), (362, 372), (332, 452), (292, 522), (272, 472), (250, 382)],
+    "europa": [(470, 90), (560, 80), (582, 130), (532, 162), (482, 150)],
+    "africa": [(470, 182), (572, 172), (622, 232), (602, 332), (552, 422), (522, 402), (502, 302), (460, 242)],
+    "asia": [(584, 70), (862, 70), (902, 142), (832, 222), (762, 252), (702, 232), (642, 192), (592, 142)],
+    "oceania": [(800, 352), (900, 352), (912, 412), (842, 432), (800, 402)],
+}
+
+
+def mapa(e: dict) -> Dibujo:
+    """Mapa del mundo simple con la región marcada en rojo. estado {region: america_norte|america_central|
+    america_sur|europa|africa|asia|oceania|mundo}. ~1000x560 a tamaño 1 (centro en el medio)."""
+    region = str(e.get("region", "mundo"))
+    partes = [figura([(-500, -280), (500, -280), (500, 280), (-500, 280)], "mapa/mar", "#CFE6F5")]
+    for nombre, pts in _CONTINENTES.items():
+        pts = [(x - 500, y - 290) for x, y in pts]
+        partes.append(figura(pts, f"mapa/{nombre}", "#E8574A" if nombre == region else "#BFDDA4", linea=5,
+                             amplitud=0.8))
+    return Dibujo("".join(partes), (-510, -290, 1020, 580))
+
+
+def pin(e: dict) -> Dibujo:
+    """Pin rojo de mapa; la punta queda en (x,y). Que caiga con deslizar {desde: [x, y-400]}."""
+    pts = arco(0, -95, 48, 48, 150, 390, 20) + [(0, 0)]
+    return Dibujo(figura(pts, "pin", ROJO) + f'<circle cx="0" cy="-95" r="18" fill="#FFF"/>', (-60, -155, 120, 165))
+
+
+def advertencia(e: dict) -> Dibujo:
+    """Triángulo de advertencia con «!» (amarillo, o rojo con color: rojo)."""
+    from .piezas import _texto
+
+    color = ROJO if e.get("color") == "rojo" else "#FFC928"
+    return Dibujo(figura([(0, -130), (140, 110), (-140, 110)], "advertencia", color)
+                  + _texto(0, 30, "!", 150, NEGRO), (-160, -150, 320, 280))
+
+
+PIEZAS.update({"etiqueta": etiqueta, "lista": lista, "mapa": mapa, "pin": pin, "advertencia": advertencia})

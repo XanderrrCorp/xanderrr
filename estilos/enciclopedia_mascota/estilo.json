@@ -89,7 +89,7 @@
     "pizarra_sobre_papel"
   ],
   "gramatica_edicion": "gramaticas/estandar.json",
-  "perfil_edicion": "perfiles/peligro_tropical.json",
+  "perfil_edicion": "perfiles/peligro_tropical_v2.json",
   "movimiento_maximo": 0.05,
   "subtitulos": {
     "estilo": "blanco_contorno_negro",

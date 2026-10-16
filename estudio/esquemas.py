@@ -41,6 +41,10 @@ EFECTOS = (
     "foto_real", "video_real",
     # (07-10) escena animada por código (video híbrido), a pantalla completa sobre el papel del canal
     "animacion",
+    # (07-10) receta de Peligro Tropical: ambiente oscuro en niveles altos, veredicto de cada nivel, «PERO ESPERA»,
+    # destello blanco al salir de la tira, temblor corto en golpes, llamados a la acción y cierre con la mascota
+    "ambiente_oscuro", "veredicto", "pero_espera", "destello_blanco", "temblor_corto", "cta_like", "cta_suscribir",
+    "final_personaje",
     # entradas del objeto al cortar (sale de abajo o de un lado con rebote) y vaivén suave mientras está
     "entrada_abajo", "entrada_lado", "vaiven",
     # escala de peligro 0–10 a pantalla completa cuando se presenta un nivel (dibujada con código)
@@ -281,6 +285,8 @@ class PerfilEdicion(Modelo):
     # «historia» (Paradoja Sapiens): como «deslizar», pero casi todo a pantalla completa con zoom tipo
     # documental (acercar, alejar, paneo), fundidos suaves, tarjetas de capítulo y viñeta de cine
     movimiento: Literal["normal", "sin_vaiven", "deslizar", "historia"] = "normal"
+    # (07-10) la receta del dueño para Peligro Tropical (ver estudio/receta_pt.py)
+    receta: bool = False
 
 
 # ---------------------------------------------------------- perfil_canal.json
@@ -540,6 +546,8 @@ class Texto(Tramo):
 class Subtitulo(Tramo):
     texto: str
     escena: int | None = None      # de qué escena es (el editor corrige los de una escena)
+    # [palabra, inicio, fin]: la que se está diciendo va en amarillo (receta de Peligro Tropical)
+    palabras: list[list] = []
 
 
 class PistaVoz(Modelo):

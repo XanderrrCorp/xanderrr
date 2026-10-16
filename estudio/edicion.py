@@ -49,6 +49,9 @@ VOLUMEN_CLASICO = {"barrido": 0.42, "golpe_grave": 0.9, "pop": 0.32, "zumbido": 
                    "ruleta": 0.5, "camara": 0.4}
 VOLUMEN["camara"] = 0.3
 PRIORIDAD["camara"] = 3
+# (07-10) sonidos de la receta de Peligro Tropical (hechos por código si la biblioteca no los tiene)
+PRIORIDAD.update({"sello": 6, "campanita": 5, "tic_tac": 4, "boing": 3, "glitch": 3, "ding": 3})
+VOLUMEN.update({"sello": 0.45, "campanita": 0.3, "tic_tac": 0.28, "boing": 0.26, "glitch": 0.22, "ding": 0.26})
 # sonidos de relleno en los cortes de la clásica: dan vida sin tapar la voz (pedido del dueño)
 RELLENO_CLASICO = ("pop", "barrido", "camara")
 VARIANTES = 4
@@ -1143,6 +1146,12 @@ def construir_edl(carpeta: CarpetaProyecto) -> dict:
         if not p.requiere_divulgacion_contenido_sintetico:
             p.requiere_divulgacion_contenido_sintetico = True
             carpeta.guardar(p)
+    if perfil.receta and esc.niveles:
+        from .receta_pt import aplicar as receta
+
+        receta(clips, textos, subtitulos, sfx, escenas, esc, _sfx,
+               lambda n: n.peligro if n.peligro is not None else valor_por_posicion(n.numero, len(esc.niveles)),
+               poses_mascota, rng, total)
     musica = [] if clasica else _musica(escenas, clips, revelacion, total, rng)   # clásica: sin música
     _equilibrar_movimientos(clips, perfil, rng, estilo.movimiento_maximo)
     _sonido_en_cada_corte(sfx, escenas, clips, rng, clasica)   # el recorte deja solo sfx_por_minuto

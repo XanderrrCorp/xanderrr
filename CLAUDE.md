@@ -78,6 +78,13 @@ Estado al 04-10-2026. El repositorio es PÚBLICO: nunca escribir claves, tokens 
   Esas escenas reusan una imagen anterior (no pagan). Tras la voz se dibujan (assets/animaciones/*.mp4) sobre el
   papel cuadriculado del canal; la EDL les pone el efecto «animacion» (pantalla completa). `deshacer` lo revierte.
   Probado de punta a punta en la nube con imágenes simuladas (36 COP de voz).
+- RECETA de Peligro Tropical (07/16-10, spec del dueño): perfil peligro_tropical_v2.json (receta: true) →
+  estudio/receta_pt.py (EDL) + render_receta.py (dibujo): niveles altos en negro con humo, veredicto por nivel,
+  «PERO ESPERA», destello blanco, subtítulos 1-3 palabras con la activa en amarillo, like ~1:40, suscribirse ~3:00,
+  cierre con carrusel y mascota; sonidos por código (sello, campanita, tic_tac, boing, glitch, ding); piezas
+  lista/mapa/pin/etiqueta/advertencia para las animaciones híbridas. Falta: mandarle el video de prueba.
+- Tracy (16-10): el PC del dueño (16 GB) se trababa: ensamblar usa máximo 2 FFmpeg, 2 hilos y espera memoria.
+- Estrategia del dueño (16-10): foco en los 2 canales Tracy monetizados y Peligro Tropical; El Calvo en pausa.
 - Aquí (nube) la voz MiniMax sí funciona; Whisper no baja su modelo: vista previa con voz frase por frase.
 ## Pendiente
 - Preguntas sin responder del dueño: ¿en qué canal notó la voz lenta? (Peligro Tropical está en 1.3 en

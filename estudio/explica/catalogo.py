@@ -92,6 +92,15 @@ CATALOGO: dict[str, str] = {
     "banera": "Bañera con agua (~700 px de ancho).",
     "estirado": "El Calvo estirado como un fideo (agujero negro). Ancla en los pies. estado {cuanto: 1-3}; usa "
                 "cambiar_pose {estado: {cuanto: 3}} para que se estire más.",
+    "etiqueta": "Etiqueta blanca redondeada con sombra y texto negro (2 a 4 palabras: «HASTA 50 VECES»). Entra "
+                "con aparecer (salta). Para datos sueltos arriba al centro (y≈180).",
+    "lista": "Lista con viñetas rojas (síntomas, pasos). estado {items: [máx 5 textos cortos], visibles: 1}; ancla en "
+             "el primer renglón a la izquierda (x≈700, y≈330). Cada renglón aparece con cambiar_pose {estado: "
+             "{visibles: 2}} en la palabra que lo dice.",
+    "mapa": "Mapa del mundo simple con una región en rojo. estado {region: america_norte|america_central|america_sur|"
+            "europa|africa|asia|oceania|mundo}. ~1000x560 a tamaño 1; centro (960,520).",
+    "pin": "Pin rojo de mapa (la punta en x,y). Que caiga: movimiento deslizar {desde: [x, y-400]}.",
+    "advertencia": "Triángulo de advertencia con «!» (amarillo; estado {color: rojo}). Entra con aparecer y temblor.",
     # animales y cosas
     "gato": "Cabeza de gato gris. estado {giro_orejas: grados, erizado: true, oliendo: true (boca entreabierta)}.",
     "rama": "Rama de árbol con hojas (trepar, colgarse). Ancho ~900 px a tamaño 1.",

@@ -28,7 +28,9 @@ import numpy as np
 from .config import RAIZ, escribir_json, leer_json
 
 TIPOS_SFX = ("golpe_grave", "pop", "zumbido", "latido", "subida_tension", "alerta", "comico", "barrido",
-             "stinger_terror", "piano_miedo", "ruleta", "camara")
+             "stinger_terror", "piano_miedo", "ruleta", "camara",
+             # (07-10) receta de Peligro Tropical (si no hay archivo, se hacen por código)
+             "sello", "campanita", "tic_tac", "boing", "glitch", "ding")
 ANIMOS_MUSICA = ("suave", "tension", "misterio", "epico", "alivio", "curiosidad", "final")
 # «suave»: una sola pista tranquila de fondo en todo el video (lo pidió el dueño); si no hay, por secciones
 EXTENSIONES = (".wav", ".mp3", ".ogg", ".flac", ".m4a", ".aac")

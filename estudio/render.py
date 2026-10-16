@@ -1503,6 +1503,36 @@ def _sfx(tipo: str, variante: int) -> np.ndarray:
         n = min(int(0.12 * SR), len(x) - i)
         salida[i:i + n] += np.sin(2 * math.pi * 420 * np.arange(n) / SR) * np.exp(-np.arange(n) / SR * 40) * 0.8
         return salida * 0.45
+    if tipo == "sello":
+        # sello de goma que golpea la mesa: golpe grave seco + ruido corto
+        x = t(0.5)
+        golpe = np.sin(2 * math.pi * (70 * np.exp(-x * 9) + 45) * x) * np.exp(-x * 9)
+        return (golpe * 0.9 + rng.normal(0, 1, len(x)) * np.exp(-x * 70) * 0.5) * 0.8
+    if tipo in ("campanita", "ding"):
+        # campanita brillante (dos parciales que se apagan)
+        x = t(1.1 if tipo == "campanita" else 0.6)
+        f0 = (1568 if tipo == "campanita" else 1320) * (1 + 0.02 * variante)
+        return (np.sin(2 * math.pi * f0 * x) + 0.45 * np.sin(2 * math.pi * f0 * 2.76 * x)) * np.exp(-x * 4.5) * 0.3
+    if tipo == "tic_tac":
+        # tic-tac de reloj: clics alternando agudo y grave
+        x = t(1.6)
+        salida = np.zeros(len(x))
+        for k in range(8):
+            i = int(k * 0.2 * SR)
+            n = min(int(0.03 * SR), len(x) - i)
+            f0 = 3000 if k % 2 == 0 else 2200
+            salida[i:i + n] += np.sin(2 * math.pi * f0 * np.arange(n) / SR) * np.exp(-np.arange(n) / SR * 300)
+        return salida * 0.4
+    if tipo == "boing":
+        # resorte gracioso: tono que sube y baja con vibrato
+        x = t(0.55)
+        f = 180 * (1 + 0.9 * np.sin(x * 12) * np.exp(-x * 3)) * (1 + 0.04 * variante)
+        return np.sin(2 * math.pi * np.cumsum(f) / SR) * np.exp(-x * 4) * 0.4
+    if tipo == "glitch":
+        # glitch digital: trocitos de ruido y tono cortados
+        x = t(0.35)
+        cortes = (np.floor(x * 40) % 2).astype(np.float32)
+        return (np.sign(np.sin(2 * math.pi * 220 * x)) * 0.3 + rng.normal(0, 0.4, len(x))) * cortes * 0.5
     x = t(0.12)
     f0 = 620 + 70 * variante
     return np.sin(2 * math.pi * f0 * x * (1 + 1.5 * x)) * np.exp(-x * 40) * 0.5   # pop
@@ -1942,6 +1972,11 @@ def _renderizar(carpeta: CarpetaProyecto, ffmpeg: str, destino: Path | None, des
     papel_ruta = asegurar_fondo(raiz, estilo, proyecto.semilla % 1000)
     papel = Image.open(papel_ruta).convert("RGB").resize((W, H))
     escenario = Escenario(raiz, papel, estilo.comportamiento_montaje)
+    from . import render_receta as RR
+
+    # receta de Peligro Tropical: en los niveles altos el papel se cambia por fondo negro con humo
+    escenario_oscuro = Escenario(raiz, RR.papel_oscuro(semilla=proyecto.semilla % 1000), estilo.comportamiento_montaje) \
+        if any(x["efecto"] == "ambiente_oscuro" for c in edl["pistas"]["escenas"] for x in c["efectos"]) else None
     logo = None if vertical else marca_agua(estilo)
     hilos_x264 = os.environ.get("XANDART_HILOS_X264")
 
@@ -2044,7 +2079,8 @@ def _renderizar(carpeta: CarpetaProyecto, ffmpeg: str, destino: Path | None, des
                 b = int(round(tira["bloque"] * (1 - _suave((loc - 0.55) / 0.4)))) or 1
                 img = cuadro_tira(tira["cx"][niv], False, b if b > 1 else None)
         else:
-            base = escenario.cuadro(c)
+            esc_c = escenario_oscuro if (escenario_oscuro is not None and "ambiente_oscuro" in ef) else escenario
+            base = esc_c.cuadro(c)
             entrada = next((ef[k] for k in ("entrada_abajo", "entrada_lado", "entrada_rebote") if k in ef), None)
             vaiven = ef.get("vaiven")
             if entrada or vaiven:
@@ -2070,7 +2106,7 @@ def _renderizar(carpeta: CarpetaProyecto, ffmpeg: str, destino: Path | None, des
 
                 ddx, ddy, esc_obj = desplazamiento(loc)
                 antes = desplazamiento(max(0.0, loc - 1 / FPS))
-                movido = escenario.animado(c, ddx, ddy, esc_obj, vel=(ddx - antes[0], ddy - antes[1]))
+                movido = esc_c.animado(c, ddx, ddy, esc_obj, vel=(ddx - antes[0], ddy - antes[1]))
                 if movido is not None:
                     base = movido
             off = ef["revelar_pixelado"]["duracion"] if "revelar_pixelado" in ef else 0.0
@@ -2102,20 +2138,24 @@ def _renderizar(carpeta: CarpetaProyecto, ffmpeg: str, destino: Path | None, des
                         s = s + (esc_k - s) * _sale((tt - t_k) / 0.07)
                 foco = foco_r
             if "oscurecer_fondo" in ef or "circulo_rojo" in ef or "flecha" in ef or "lupa" in ef:
-                ubic = escenario.ubicacion.get(c["id"])
+                ubic = esc_c.ubicacion.get(c["id"])
                 base = capa_foco.aplicar(base, c, ef, ubic, tt)
                 if "flecha" in ef:
                     base = _flecha(base, ef["flecha"], ubic, tt)
                 if "lupa" in ef:
                     base = _lupa(base, ef["lupa"], ubic, tt)
             if "rotulos" in ef:
-                base = _rotulos(base, ef["rotulos"], escenario.tablero.get(c["id"]), tt)
+                base = _rotulos(base, ef["rotulos"], esc_c.tablero.get(c["id"]), tt)
             dx = dy = 0.0
             if "temblor_leve" in ef:
                 a = ef["temblor_leve"].get("amplitud", 3)
                 dx, dy = temblor.uniform(-a, a), temblor.uniform(-a, a)
+            tc = ef.get("temblor_corto")
+            if tc and 0 <= tt - tc["en"] < tc["dur"]:
+                a = 14 * (1 - (tt - tc["en"]) / tc["dur"])        # golpe en un nivel alto: sacudida corta
+                dx, dy = temblor.uniform(-a, a), temblor.uniform(-a, a)
             previo = zoom_previo.get(c["id"])
-            capas_p = escenario.profundidad.get(c["id"]) if c["modo"] == "pantalla_completa" else None
+            capas_p = esc_c.profundidad.get(c["id"]) if c["modo"] == "pantalla_completa" else None
             if capas_p is not None and _cv2 is not None:
                 img = con_profundidad(capas_p, s, foco, max(0.0, min(1.0, p)))
             elif previo is not None and abs(s - previo[0]) > 0.006 and _cv2 is not None:
@@ -2136,7 +2176,12 @@ def _renderizar(carpeta: CarpetaProyecto, ffmpeg: str, destino: Path | None, des
             dt = tt - ef["destello_rojo"]["en"]
             if 0 <= dt < 0.6:
                 img = Image.blend(img, Image.new("RGB", (W, H), (255, 42, 42)), 0.55 * math.exp(-dt * 6))
-        if any(img is v for v in escenario.cache.values()):
+        if "destello_blanco" in ef:
+            img = RR.destello_blanco(img, tt - ef["destello_blanco"]["en"])
+        if "ambiente_oscuro" in ef and c["modo"] == "pantalla_completa":
+            img = RR.vineta_fuerte(img)
+        if any(img is v for v in escenario.cache.values()) or (
+                escenario_oscuro is not None and any(img is v for v in escenario_oscuro.cache.values())):
             img = img.copy()           # nunca escribir sobre el cuadro guardado en caché
         r = ef.get("reaccion_presentador")
         en_reaccion = bool(r and r["en"] <= tt < r["en"] + r["dur"])
@@ -2162,6 +2207,9 @@ def _renderizar(carpeta: CarpetaProyecto, ffmpeg: str, destino: Path | None, des
         pal = ef.get("palabra_completa")
         if not en_reaccion and pal and pal["en"] <= tt < pal["en"] + pal["dur"]:
             img, en_reaccion = _palabra_completa(pal, tt - pal["en"], papel), True
+        fin_p = ef.get("final_personaje")
+        if not en_reaccion and fin_p and fin_p["en"] <= tt < fin_p["en"] + fin_p["dur"]:
+            img, en_reaccion = RR.final_personaje(raiz, fin_p, tt - fin_p["en"]), True
         cap = ef.get("capitulo")
         if not en_reaccion and cap and cap["en"] <= tt < cap["en"] + cap["dur"]:
             img, en_reaccion = _capitulo(papel, cap, tt - cap["en"]), True
@@ -2177,6 +2225,17 @@ def _renderizar(carpeta: CarpetaProyecto, ffmpeg: str, destino: Path | None, des
             img = _poner_dato(img, ef["dato"], tt, c["fin"])
         if "rotulo_tiempo" in ef and not en_reaccion:
             img = _rotulo_tiempo(img, ef["rotulo_tiempo"], tt)
+        for nombre in ("veredicto", "pero_espera", "cta_like", "cta_suscribir"):
+            x = ef.get(nombre)
+            if x and not en_reaccion and x["en"] <= tt < x["en"] + x["dur"]:
+                if nombre == "veredicto":
+                    img = RR.veredicto(img, x, tt - x["en"])
+                elif nombre == "pero_espera":
+                    img = RR.pero_espera(img, x, tt - x["en"], n)
+                elif nombre == "cta_like":
+                    img = RR.cta_like(img, raiz, x, tt - x["en"])
+                else:
+                    img = RR.cta_suscribir(img, x, tt - x["en"])
         if vertical:
             if en_reaccion or c["modo"] == "tira" or camara is None:
                 objetivo = 0.5
@@ -2246,6 +2305,9 @@ def _renderizar(carpeta: CarpetaProyecto, ffmpeg: str, destino: Path | None, des
                     if pop > 1.001:
                         sv = sv.resize((int(sv.width * pop), int(sv.height * pop)), Image.Resampling.BILINEAR)
                     img.paste(sv, ((VW - sv.width) // 2, V_SUB_Y - sv.height // 2), sv)
+                elif sb.get("palabras"):
+                    sp = RR.subtitulo(sb, tt)                   # 1 a 3 palabras, la activa en amarillo
+                    img.paste(sp, ((W - sp.width) // 2, H - 150 - sp.height // 2), sp)
                 else:
                     img.paste(si, ((W - si.width) // 2, H - 150 - si.height // 2), si)
                 break

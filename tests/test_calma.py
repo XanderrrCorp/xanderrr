@@ -33,7 +33,8 @@ def test_todas_las_piezas_se_dibujan(tmp_path):
 
     Image.new("RGB", (160, 90), "red").save(tmp_path / "ilus.png")
     estados = {"rotulo": {"texto": "PRUEBA"}, "numero": {"valor": "3"}, "texto": {"texto": "PRUEBA"},
-               "titulo_tema": {"texto": "PRUEBA ROJA", "rojo": "ROJA"}, "imagen": {"archivo": str(tmp_path / "ilus.png")}}
+               "titulo_tema": {"texto": "PRUEBA ROJA", "rojo": "ROJA"}, "imagen": {"archivo": str(tmp_path / "ilus.png")},
+               "lista": {"items": ["DOLOR", "FIEBRE"]}, "etiqueta": {"texto": "HASTA 50 VECES"}}
     for nombre in PIEZAS:
         img, _ = sprite(nombre, estados.get(nombre, {}), 0.4)
         assert (img[:, :, 3] > 0).mean() > 0.01, nombre

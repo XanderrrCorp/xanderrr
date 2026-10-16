@@ -79,6 +79,10 @@ REGLAS
 - Máximo 4 elementos en pantalla. Textos de máximo ~22 caracteres, en mayúsculas, palabras clave en rojo.
 - Nada se sale de la pantalla. Deja libre la franja de abajo (y > 930): ahí van los subtítulos.
 - Empujón de cámara («empujon»: [{{"palabra": "...", "foco": [x, y]}}]) en la palabra más fuerte.
+- Recursos que funcionan en este canal: síntomas o pasos → «lista» (cada renglón entra cuando la voz lo dice);
+  un lugar → «mapa» con la región en rojo y un «pin» que cae; una comparación → dos cosas que entran desde lados
+  opuestos (deslizar desde la izquierda y desde la derecha); un dato de 2 a 4 palabras → «etiqueta» blanca;
+  algo peligroso → «advertencia».
 - Sin sangre ni heridas; nada de consejos de salud.
 
 Devuelve SOLO un JSON:
