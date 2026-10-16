@@ -630,6 +630,7 @@ def construir_edl(carpeta: CarpetaProyecto) -> dict:
     escala_pendiente = None
     presentar_pendiente = None
     ultimo_al_lado = -99.0
+    tarjetas_gancho = 0
     poses_mascota = {p.stem: p.relative_to(carpeta.ruta).as_posix()
                      for p in sorted((carpeta.ruta / "assets" / "poses").glob("*.png"))}
     # tipos que muestran solo al animal (no al personaje): con ellos el personaje puede salir al lado
@@ -741,13 +742,19 @@ def construir_edl(carpeta: CarpetaProyecto) -> dict:
                                                     revelacion, rng):
                 modo = "pantalla_completa"
                 razon = (razon + "; " if razon else "") + "Escena completa a pantalla completa, sin papel"
-            elif (deslizar and tipo in estilo.ids_tipos and (historia or not e.seccion.lower().startswith("gancho"))
+            elif (deslizar and tipo in estilo.ids_tipos
+                  and (historia or not e.seccion.lower().startswith("gancho")
+                       # receta (16-10, el dueño: «no abusar de las tarjetas»): en el gancho solo 1 de cada 3
+                       # escenas va en tarjeta de foto; las demás, a pantalla completa como en los niveles
+                       or (perfil.receta and tarjetas_gancho % 3 != 0))
                   and _a_pantalla_completa(estilo, modo, e, (direccion.get("pixelar") or {}).get(str(e.id)),
                                            revelacion, None)):
                 # Peligro Tropical (como la competencia): las escenas ilustradas completas van a pantalla
                 # completa; las tarjetas de foto vieja quedan para las fotos reales y la lista del gancho
                 modo = "pantalla_completa"
                 razon = (razon + "; " if razon else "") + "Escena ilustrada completa a pantalla completa"
+            if e.seccion.lower().startswith("gancho") and tipo in estilo.ids_tipos:
+                tarjetas_gancho += 1
             if nueva_seccion:
                 _sfx(sfx, "barrido", ini, idx, f"Barrido de cambio de sección: empieza «{e.seccion}»")
         # --- villano pixelado antes de su revelación (15.4)

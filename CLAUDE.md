@@ -77,7 +77,8 @@ Estado al 04-10-2026. El repositorio es PÚBLICO: nunca escribir claves, tokens 
   = 0.25 vía CAMPOS) y las arme con piezas de calma (sin el Calvo; puede usar la imagen del animal del nivel).
   Esas escenas reusan una imagen anterior (no pagan). Tras la voz se dibujan (assets/animaciones/*.mp4) sobre el
   papel cuadriculado del canal; la EDL les pone el efecto «animacion» (pantalla completa). `deshacer` lo revierte.
-  Probado de punta a punta en la nube con imágenes simuladas (36 COP de voz).
+  Probado de punta a punta en la nube con imágenes simuladas (36 COP de voz). Receta: en el gancho solo 1 de cada 3
+  escenas va en tarjeta de foto (el dueño, molesto: «no abusar de las tarjetas»; las demás a pantalla completa).
 - RECETA de Peligro Tropical (07/16-10, spec del dueño): perfil peligro_tropical_v2.json (receta: true) →
   estudio/receta_pt.py (EDL) + render_receta.py (dibujo): niveles altos en negro con humo, veredicto por nivel,
   «PERO ESPERA», destello blanco, subtítulos 1-3 palabras con la activa en amarillo, like ~1:40, suscribirse ~3:00,
