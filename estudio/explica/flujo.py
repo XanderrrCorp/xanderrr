@@ -61,6 +61,12 @@ def _costos(c: Carpeta, config: ConfigCostos) -> dict:
     return {k: {"usd": round(v, 4), "cop": formato_cop(config.a_cop(v))} for k, v in por.items()}
 
 
+def _claude():
+    from .. import claude_cli
+
+    return claude_cli.ejecutar
+
+
 def _proveedor_simulado(config):
     from ..imagenes.proveedores import ProveedorSimulado
 
@@ -116,7 +122,17 @@ def producir(c: Carpeta, t, permiso: bool = False, voz=None, transcriptor=None, 
         t.paso = "ilustraciones"
         aplicar(c.ruta, datos, t, permiso=permiso,
                 proveedor=_proveedor_simulado(config) if proveedor == "simulado" else None)
-    datos.setdefault("video", {}).update(ritmo=float(preset["ritmo"]), deriva=float(preset["deriva_camara"]))
+    from .ambiente import aplicar as ambientar, resumen
+
+    t.paso = "fondos"
+    ambientes = ambientar(c.ruta, datos, temas, t, permiso=permiso,
+                          proveedor=_proveedor_simulado(config) if proveedor == "simulado" else None,
+                          ejecutar=None if proveedor == "simulado" else _claude(), preset=preset)
+    if ambientes:
+        t.avisar(f"Lugares: {resumen(ambientes)}")
+    datos.setdefault("video", {}).update(ritmo=float(preset["ritmo"]), deriva=float(preset["deriva_camara"]),
+                                         trazo_limpio=bool(preset.get("trazo_limpio")),
+                                         sombras=bool(preset.get("sombras")), parallax=bool(preset.get("parallax")))
     E.fijar_tiempos(datos, E.palabras_de(ors), float(ors["duracion"]) + 0.6)
     ritmo = E.revisar(datos, max_sin_cambio=float(preset["cambio_cada_s"][1]))
     for a in ritmo:

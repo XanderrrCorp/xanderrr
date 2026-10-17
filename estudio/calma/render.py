@@ -14,7 +14,7 @@ import numpy as np
 
 from .movimientos import empujon_camara, escala_maxima, estado_en, temblor_pantalla
 from .raster import sprite, svg_a_rgba
-from .trazo import BLANCO, GRIS, NEGRO, VERDE, camino, figura, raya
+from .trazo import BLANCO, GRIS, NEGRO, VERDE, camino, factor_temblor, figura, fijar_estilo, raya
 
 W, H = 1920, 1080
 
@@ -58,16 +58,106 @@ def _fondo_svg(tipo: str) -> str:
 _FONDOS: dict[str, np.ndarray] = {}
 
 
+LAVADO = 0.72          # «lavado:»: cuánto se acerca al blanco (los diagramas encima se leen bien)
+
+
 def fondo(tipo: str) -> np.ndarray:
-    if tipo not in _FONDOS and tipo.startswith("archivo:"):         # el papel de otro canal (video híbrido)
+    clave = f"{tipo}|{factor_temblor():.2f}"
+    if clave in _FONDOS:
+        return _FONDOS[clave]
+    if tipo.startswith("lavado:"):
+        base = fondo(tipo[len("lavado:"):]).astype(np.float32)
+        img = (base * (1 - LAVADO) + 255 * LAVADO).astype(np.uint8)
+    elif tipo.startswith("archivo:"):                               # el papel de otro canal o un fondo pintado
         img = cv2.imread(tipo[len("archivo:"):], cv2.IMREAD_COLOR)
         if img is None:
             return fondo("blanco")
-        _FONDOS[tipo] = np.ascontiguousarray(cv2.resize(img, (W, H), interpolation=cv2.INTER_AREA))
-    if tipo not in _FONDOS:
+        img = cv2.resize(img, (W, H), interpolation=cv2.INTER_AREA)
+    elif tipo.startswith("color:"):
+        hx = tipo[len("color:"):].lstrip("#")
+        try:
+            r, g, b = (int(hx[i:i + 2], 16) for i in (0, 2, 4))
+        except ValueError:
+            return fondo("blanco")
+        img = np.empty((H, W, 3), np.uint8)
+        img[:] = (b, g, r)
+    else:
         svg = f'<svg xmlns="http://www.w3.org/2000/svg" width="{W}" height="{H}">{_fondo_svg(tipo)}</svg>'
-        _FONDOS[tipo] = np.ascontiguousarray(svg_a_rgba(svg, W, H)[:, :, :3])
-    return _FONDOS[tipo]
+        img = svg_a_rgba(svg, W, H)[:, :, :3]
+    _FONDOS[clave] = np.ascontiguousarray(img)
+    return _FONDOS[clave]
+
+
+# ------------------------------------------------------------------ ambiente (17-10): partículas y luz
+
+PARTICULAS = ("lluvia", "nieve", "ceniza", "polvo", "hojas", "chispas", "burbujas")
+LUCES = ("dia", "noche", "atardecer", "tormenta")
+
+
+def _azar(n: int, semilla: int) -> np.ndarray:
+    return np.random.default_rng(semilla).random((n, 4))
+
+
+def particulas(cuadro: np.ndarray, tipo: str, t: float, semilla: int = 0) -> None:
+    """Lluvia, nieve, ceniza… dibujadas en el cuadro según el tiempo (sin estado: el mismo t da el mismo cuadro)."""
+    if tipo not in PARTICULAS:
+        return
+    aa = cv2.LINE_AA
+    if tipo == "lluvia":
+        r = _azar(110, semilla)
+        for x0, y0, v, k in r:
+            y = (y0 * (H + 200) + t * (1500 + 500 * v)) % (H + 200) - 100
+            x = (x0 * (W + 300) - (y + 100) * 0.25) % (W + 300) - 150
+            largo = 30 + 26 * k
+            cv2.line(cuadro, (int(x), int(y)), (int(x - largo * 0.25), int(y - largo)), (175, 150, 125), 3, aa)
+        return
+    if tipo in ("nieve", "ceniza", "polvo"):
+        n, vel, color, radio = {"nieve": (80, 90, (255, 255, 255), 7), "ceniza": (70, 60, (130, 130, 135), 5),
+                                "polvo": (60, 40, (150, 190, 215), 4)}[tipo]
+        r = _azar(n, semilla)
+        for x0, y0, v, k in r:
+            y = (y0 * (H + 40) + t * vel * (0.6 + v)) % (H + 40) - 20
+            x = (x0 * W + 40 * math.sin(t * (0.5 + v) + k * 6.28) + (t * 25 if tipo == "polvo" else 0)) % W
+            rr = int(radio * (0.6 + k))
+            cv2.circle(cuadro, (int(x), int(y)), rr, color, -1, aa)
+            if tipo == "nieve":
+                cv2.circle(cuadro, (int(x), int(y)), rr, (215, 210, 205), 1, aa)
+        return
+    if tipo == "hojas":
+        r = _azar(16, semilla)
+        for x0, y0, v, k in r:
+            y = (y0 * (H + 80) + t * (70 + 50 * v)) % (H + 80) - 40
+            x = (x0 * W + 90 * math.sin(t * (0.7 + v) + k * 6.28)) % W
+            color = ((110, 175, 120), (90, 160, 230), (80, 130, 200))[int(k * 3) % 3]
+            cv2.ellipse(cuadro, (int(x), int(y)), (16, 8), (t * 90 * (v - 0.5) + k * 360) % 360, 0, 360, color, -1, aa)
+        return
+    if tipo == "chispas":
+        r = _azar(40, semilla)
+        for x0, y0, v, k in r:
+            y = H - ((y0 * (H + 40) + t * (120 + 120 * v)) % (H + 40))
+            x = (x0 * W + 30 * math.sin(t * 2 + k * 6.28)) % W
+            cv2.circle(cuadro, (int(x), int(y)), int(3 + 4 * k), (70, 150, 250), -1, aa)
+        return
+    r = _azar(26, semilla)                               # burbujas
+    for x0, y0, v, k in r:
+        y = H - ((y0 * (H + 60) + t * (90 + 80 * v)) % (H + 60)) + 30
+        x = (x0 * W + 25 * math.sin(t * 1.5 + k * 6.28)) % W
+        cv2.circle(cuadro, (int(x), int(y)), int(8 + 14 * k), (225, 200, 170), 3, aa)
+
+
+def luz(cuadro: np.ndarray, tipo: str, t: float) -> np.ndarray:
+    """Tinte del fondo: noche azulada, atardecer cálido, tormenta gris con algún relámpago."""
+    if tipo == "noche":
+        return (cuadro.astype(np.float32) * (0.82, 0.72, 0.66)).astype(np.uint8)
+    if tipo == "atardecer":
+        return (cuadro.astype(np.float32) * (0.86, 0.93, 1.0) + (0, 6, 18)).clip(0, 255).astype(np.uint8)
+    if tipo == "tormenta":
+        f = (cuadro.astype(np.float32) * 0.8).astype(np.uint8)
+        fase = t % 5.3
+        if fase < 0.08 or 0.16 < fase < 0.22:            # relámpago: dos destellos cortos cada ~5 s
+            return cv2.addWeighted(f, 0.4, np.full_like(f, 255), 0.6, 0)
+        return f
+    return cuadro
 
 
 # ------------------------------------------------------------------ pegar una pieza
@@ -117,16 +207,13 @@ def _deriva(datos: dict, esc: dict, t: float) -> float:
     return 1 + d * (p if k % 2 else 1 - p)
 
 
-def cuadro_en(datos: dict, t: float) -> np.ndarray:
-    esc = next((e for e in datos["escenas"] if e["inicio"] <= t < e["fin"]), datos["escenas"][-1])
-    cuadro = fondo(esc.get("fondo", "blanco")).copy()
-    for el in esc["elementos"]:                       # en el orden del JSON: el último queda encima
-        a = estado_en(el, t, esc["fin"])
-        if not a.visible or a.escala <= 0.01:
-            continue
-        base = escala_maxima(el)
-        img, ancla = sprite(el["pieza"], a.estado, base)
-        _pegar(cuadro, img, ancla, a.x, a.y, a.escala / base, a.giro)
+SIN_SOMBRA = ("imagen", "texto", "titulo_tema", "flecha", "corchete", "circulo_rojo", "x_roja", "chulo",
+              "lineas_movimiento", "ondas", "lluvia", "nieve", "viento", "vapor", "zzz", "rayo", "estrellas")
+PARALLAX_FONDO = 0.4      # el fondo sigue el 40 % del zoom de cámara: se siente la profundidad
+PANEO = 22                # px que el fondo se desliza de lado durante una escena (el personaje no)
+
+
+def _camara(datos: dict, esc: dict, t: float) -> tuple[float, float, float, float, float]:
     dx, dy = temblor_pantalla(esc.get("temblor", []), t)
     z, fx, fy = empujon_camara(esc.get("empujon", []), t)
     zd = _deriva(datos, esc, t)
@@ -134,7 +221,48 @@ def cuadro_en(datos: dict, t: float) -> np.ndarray:
         fx, fy = (fx * (z - 1) + 960 * (zd - 1)) / max(1e-6, (z - 1) + (zd - 1)), \
                  (fy * (z - 1) + 540 * (zd - 1)) / max(1e-6, (z - 1) + (zd - 1))
         z = z * zd
-    if abs(dx) > 0.3 or abs(dy) > 0.3 or z > 1.0005:
+    return z, fx, fy, dx, dy
+
+
+def _fondo_con_ambiente(datos: dict, esc: dict, t: float, camara=None) -> np.ndarray:
+    """El fondo de la escena; con profundidad, se mueve menos que lo de adelante y se desliza de lado."""
+    base = fondo(esc.get("fondo", "blanco"))
+    amb = esc.get("ambiente") or {}
+    if camara is not None:
+        z, fx, fy, dx, dy = camara
+        p = (t - esc["inicio"]) / max(0.1, esc["fin"] - esc["inicio"])
+        lado = (1 if int(esc.get("id", 0)) % 2 else -1) * PANEO * (min(1.0, max(0.0, p)) - 0.5) * 2
+        zb = max(1 + (z - 1) * PARALLAX_FONDO, 1 + (PANEO + 8) * 2 / W)
+        m = np.array([[zb, 0, fx - zb * fx + dx * 0.5 + lado], [0, zb, fy - zb * fy + dy * 0.5]], np.float32)
+        cuadro = cv2.warpAffine(base, m, (W, H), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_REPLICATE)
+    else:
+        cuadro = base.copy()
+    if amb.get("luz") in LUCES:
+        cuadro = luz(cuadro, amb["luz"], t)
+    if amb.get("particulas"):
+        particulas(cuadro, amb["particulas"], t, int(esc.get("id", 0)))
+    return cuadro
+
+
+def cuadro_en(datos: dict, t: float) -> np.ndarray:
+    video = datos.get("video", {})
+    fijar_estilo(bool(video.get("trazo_limpio")))
+    sombras = bool(video.get("sombras"))
+    esc = next((e for e in datos["escenas"] if e["inicio"] <= t < e["fin"]), datos["escenas"][-1])
+    z, fx, fy, dx, dy = _camara(datos, esc, t)
+    profundidad = bool(video.get("parallax")) and esc.get("tipo") != "cuadricula"
+    cuadro = _fondo_con_ambiente(datos, esc, t, (z, fx, fy, dx, dy) if profundidad else None)
+    for el in esc["elementos"]:                       # en el orden del JSON: el último queda encima
+        a = estado_en(el, t, esc["fin"])
+        if not a.visible or a.escala <= 0.01:
+            continue
+        base = escala_maxima(el)
+        img, ancla = sprite(el["pieza"], a.estado, base, sombra=sombras and el["pieza"] not in SIN_SOMBRA)
+        if profundidad:                                # la cámara se aplica a cada pieza (el fondo ya va aparte)
+            _pegar(cuadro, img, ancla, fx + z * (a.x - fx) + dx, fy + z * (a.y - fy) + dy, a.escala / base * z, a.giro)
+        else:
+            _pegar(cuadro, img, ancla, a.x, a.y, a.escala / base, a.giro)
+    if not profundidad and (abs(dx) > 0.3 or abs(dy) > 0.3 or z > 1.0005):
         m = np.array([[z, 0, fx - z * fx + dx], [0, z, fy - z * fy + dy]], np.float32)
         cuadro = cv2.warpAffine(cuadro, m, (W, H), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_REPLICATE)
     return cuadro

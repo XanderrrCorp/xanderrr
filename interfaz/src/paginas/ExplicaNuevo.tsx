@@ -10,7 +10,7 @@ interface Video {
   guion_info: { avisos: string[] } | null; escenas: boolean; hojas: string[];
   escenas_info: { escenas: number; notas: string[] } | null; video: boolean; trabajo: Trabajo | null;
   costo_voz: { caracteres: number; cop: string } | null;
-  costo_ilustraciones: { imagenes: number; cop: string } | null;
+  costo_ilustraciones: { imagenes: number; fondos?: number; cop: string } | null;
   informe: { duracion: number; tiempo_total_s: number; costos: Record<'guion' | 'voz' | 'imagenes', { cop: string }>;
              video: string } | null;
 }
@@ -77,9 +77,9 @@ function Detalle({ slug }: { slug: string }) {
       </div>
 
       <h3>3. Video</h3>
-      <p className="pequeno">Voz de Peligro Tropical, tiempos con Whisper, música tranquila de tu biblioteca.
+      <p className="pequeno">Voz de Peligro Tropical, tiempos con Whisper, música tranquila de tu biblioteca, un lugar de fondo por tema (pintado por Google), lluvia, nieve o ceniza según el tema.
         {v.costo_voz && <> La voz cuesta unos <b>{v.costo_voz.cop}</b> ({v.costo_voz.caracteres} caracteres).</>}
-        {v.costo_ilustraciones && <> Ilustraciones de Google: {v.costo_ilustraciones.imagenes}, unos <b>{v.costo_ilustraciones.cop}</b>
+        {v.costo_ilustraciones && <> Imágenes de Google: {v.costo_ilustraciones.imagenes}{v.costo_ilustraciones.fondos ? ` (${v.costo_ilustraciones.fondos} son fondos de los temas)` : ''}, unos <b>{v.costo_ilustraciones.cop}</b>
           (lo que ya se dibujó no se vuelve a pagar).</>}</p>
       <button className="boton" disabled={ocupado || !v.escenas} onClick={() => accion('/video', { permiso: false })}>
         {v.video ? 'Volver a hacer el video' : 'Hacer el video'}</button>
@@ -123,7 +123,7 @@ export function ExplicaNuevo() {
           <textarea rows={4} value={datos} onChange={(e) => setDatos(e.target.value)} />
         </label>
         <p className="pequeno">Igual que Peligro Tropical: un botón y Xandart hace guion, escenas y video sola. Gasta la voz
-          (unos 125 COP) y las ilustraciones de Google (unos 2.000 COP), sin pasar tu tope.</p>
+          (unos 125 COP), las ilustraciones y los fondos de cada tema con Google (unos 3.500 COP), sin pasar tu tope.</p>
         <button className="boton" disabled={titulo.trim().length < 4} onClick={() => crear(true)}>
           Hacer el video completo</button>{' '}
         <button className="boton-borde pequeno" disabled={titulo.trim().length < 4} onClick={() => crear(false)}>

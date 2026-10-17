@@ -594,3 +594,88 @@ def test_ilustraciones_de_google_en_el_calvo(tmp_path):
     I.aplicar(tmp_path, {"escenas": [dict(escs[7], elementos=[])]}, Trabajo("t"),
               proveedor=ProveedorSimulado(ConfigCostos.cargar()))
     assert len((tmp_path / "logs" / "costos.jsonl").read_text().splitlines()) == pagadas  # no se vuelve a pagar
+
+
+def test_escenarios_nuevos_y_fondos_derivados():
+    import numpy as np
+
+    from estudio.calma import escenas as E
+    from estudio.calma import render as R
+
+    for f in ("playa", "volcan", "bosque", "selva", "oceano", "desierto", "montana_nieve", "tormenta", "ciudad",
+              "parque", "cielo"):
+        img = R.fondo(f)
+        assert img.shape == (1080, 1920, 3) and img.std() > 3                       # tiene dibujo, no es liso
+    lavado = R.fondo("lavado:volcan")
+    assert lavado.mean() > R.fondo("volcan").mean() + 20                             # mucho más pálido
+    assert tuple(R.fondo("color:#336699")[5, 5]) == (0x99, 0x66, 0x33)
+    datos = {"video": {"duracion": 2}, "escenas": [{"id": 1, "inicio": 0, "fin": 2, "fondo": "lavado:playa",
+                                                    "elementos": []}]}
+    assert not [a for a in E.revisar(datos) if "no existe" in a]
+    a, b = np.zeros((1080, 1920, 3), np.uint8), np.zeros((1080, 1920, 3), np.uint8)
+    R.particulas(a, "nieve", 1.0)
+    R.particulas(b, "nieve", 1.0)
+    assert a.any() and (a == b).all()                                                # mismo t, mismo cuadro
+
+
+def test_trazo_limpio_sombra_y_profundidad_solo_si_se_piden():
+    import numpy as np
+
+    from estudio.calma import render as R
+    from estudio.calma import trazo
+    from estudio.calma.raster import sprite
+
+    escena = {"id": 2, "tipo": "ilustracion", "inicio": 0.0, "fin": 3.0, "fondo": "bosque",
+              "ambiente": {"particulas": "hojas", "luz": "dia"},
+              "elementos": [{"id": "yo", "pieza": "personaje", "estado": {"pose": "de_pie"}, "posicion": [700, 990],
+                             "tamano": 1.15, "movimiento": []}]}
+    calma = R.cuadro_en({"video": {}, "escenas": [escena]}, 1.0)
+    assert trazo.factor_temblor() == 1.0                                             # Hazlo con Calma, igual
+    nuevo = R.cuadro_en({"video": {"trazo_limpio": True, "sombras": True, "parallax": True, "deriva": 0.04},
+                         "escenas": [escena]}, 1.0)
+    assert trazo.factor_temblor() == trazo.LIMPIO and np.abs(calma.astype(int) - nuevo.astype(int)).mean() > 1
+    s1, _ = sprite("personaje", {"pose": "de_pie"}, 1.0)
+    s2, _ = sprite("personaje", {"pose": "de_pie"}, 1.0, sombra=True)
+    assert s2.shape[0] > s1.shape[0] and s2[:, :, 3].astype(bool).sum() > s1[:, :, 3].astype(bool).sum()
+    trazo.fijar_estilo(False)
+
+
+def test_ambiente_de_cada_tema_en_el_calvo(tmp_path):
+    from estudio.config import ConfigCostos
+    from estudio.explica import ambiente as A
+    from estudio.explica import canal as C
+    from estudio.imagenes.proveedores import ProveedorSimulado
+    from estudio.pipeline import Trabajo
+
+    temas = [{"nombre": ["El", "volcán."], "escena": ["Estás cerca de la lava."]},
+             {"nombre": ["Piel", "de", "gallina."], "escena": ["Tienes frío."]}]
+
+    def escenas():
+        return {"escenas": [{"tipo": "cuadricula", "fondo": "blanco", "elementos": []},
+                            {"tipo": "ilustracion", "fondo": "blanco", "elementos": []},
+                            {"tipo": "codigo", "fondo": "blanco", "elementos": []},
+                            {"tipo": "cuadricula", "fondo": "blanco", "elementos": []},
+                            {"tipo": "ilustracion", "fondo": "bano", "elementos": []},
+                            {"tipo": "personaje", "fondo": "blanco", "elementos": []}]}
+
+    claude = lambda prompt, **_: ('{"temas": [{"n": 1, "escenario": "volcan", "particulas": "ceniza", "luz": "atardecer",'
+                                  ' "lugar": "un volcán"}, {"n": 2, "escenario": "no_existe", "particulas": "x"}]}', {})
+    sin_google = {**C.POR_DEFECTO, "fondos_google": False}
+    d = escenas()
+    amb = A.aplicar(tmp_path, d, temas, Trabajo("t"), ejecutar=claude, preset=sin_google)
+    assert amb[0]["escenario"] == "volcan" and amb[1]["escenario"] == "montana_nieve"   # inválido → por palabras
+    e = d["escenas"]
+    assert e[0]["fondo"] == "blanco" and "ambiente" not in e[0]                         # la cuadrícula, igual
+    assert e[1]["fondo"] == "volcan" and e[1]["ambiente"] == {"particulas": "ceniza", "luz": "atardecer"}
+    assert e[2]["fondo"] == "lavado:volcan" and "ambiente" not in e[2]                  # diagramas: pálido y quieto
+    assert e[4]["fondo"] == "bano" and e[5]["fondo"] == "montana_nieve"                 # el lugar que pidió la frase
+    assert A.por_palabras("Cómo sobrevivir a un tsunami")["escenario"] == "playa"
+    # pintados por Google (simulado): uno por tema, guardados, y no se vuelven a pagar
+    prov = ProveedorSimulado(ConfigCostos.cargar())
+    d = escenas()
+    A.aplicar(tmp_path, d, temas, Trabajo("t"), proveedor=prov, preset={**C.POR_DEFECTO, "fondos_google": True})
+    assert d["escenas"][1]["fondo"].startswith("archivo:") and d["escenas"][2]["fondo"].startswith("lavado:archivo:")
+    pagadas = len((tmp_path / "logs" / "costos.jsonl").read_text().splitlines())
+    A.aplicar(tmp_path, escenas(), temas, Trabajo("t"), proveedor=prov, preset={**C.POR_DEFECTO, "fondos_google": True})
+    assert len((tmp_path / "logs" / "costos.jsonl").read_text().splitlines()) == pagadas == 2
+    assert A.fondos_faltantes(tmp_path, 2) == 0

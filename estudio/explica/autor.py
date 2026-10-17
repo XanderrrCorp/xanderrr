@@ -189,7 +189,8 @@ REGLAS (las más importantes primero)
 - «fondo» (solo escenas ilustracion donde el personaje vive la situación en un lugar): {texto_fondos()}.
   Los dibujos del fondo son pálidos y grises; el piso queda en y≈940 (pies del personaje en y≈990 se ven bien).
   Si la escena es un objeto de cerca (mano, ojo, oreja…), deja «blanco». Si dos escenas seguidas pasan en el mismo
-  lugar, repite el mismo fondo.
+  lugar, repite el mismo fondo. Con «blanco», Xandart pone sola el lugar de fondo de todo el tema (y en las escenas
+  codigo ese lugar muy pálido): solo elige un fondo cuando la frase pasa en un lugar distinto.
 
 Devuelve SOLO un JSON:
 {{"icono": {{"pieza": ..., "estado": {{...}}}}  ← el dibujo del tema para su círculo en la cuadrícula,

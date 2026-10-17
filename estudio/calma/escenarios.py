@@ -217,3 +217,132 @@ def sol_cerca() -> str:
 ESCENARIOS.update({"luna": luna, "mercurio": mercurio, "venus": venus, "marte": marte, "nubes_gas": nubes_gas,
                    "nubes_hielo": nubes_hielo, "titan": titan, "pluton": pluton, "espacio": espacio,
                    "sol_cerca": sol_cerca})
+
+
+# ------------------------------------------------------------------ afuera (17-10, El Calvo Explica: el lugar de cada tema)
+
+def _nubes(semilla: str, color="#FFFFFF", filas=((300, 170, 1.0), (1500, 120, 0.8), (1080, 240, 0.55))) -> list[str]:
+    p = []
+    for i, (cx, cy, k) in enumerate(filas):
+        for j, (dx, dy, r) in enumerate(((-70, 10, 50), (-10, -20, 66), (60, 0, 54), (110, 18, 38))):
+            p.append(_f(elipse(cx + dx * k, cy + dy * k, r * k, r * k * 0.86, n=26), f"{semilla}/n{i}{j}", color, ancho=4))
+    return p
+
+
+def _pino(x, y, alto, s, color="#B7D3A8", tronco="#D6C2A5"):
+    return [_f(_rect(x - 12, y - 40, 24, 40), f"{s}/tr", tronco, ancho=4),
+            _f([(x - alto * 0.38, y - 30), (x, y - alto), (x + alto * 0.38, y - 30)], f"{s}/copa", color, ancho=4)]
+
+
+def _arbol(x, y, alto, s, color="#BFDDAE", tronco="#D6C2A5"):
+    return [_f(_rect(x - 16, y - alto * 0.5, 32, alto * 0.5), f"{s}/tr", tronco, ancho=4),
+            _f(elipse(x, y - alto * 0.68, alto * 0.36, alto * 0.3, n=28), f"{s}/copa", color, ancho=4)]
+
+
+def _horizonte(cielo: str, suelo: str, s: str, y: int = PISO_Y, ondas: bool = True) -> list[str]:
+    pts = [(-20, y + (14 if ondas else 0)), (600, y - (18 if ondas else 0)), (1200, y + (10 if ondas else 0)),
+           (W + 20, y - (8 if ondas else 0)), (W + 20, H + 20), (-20, H + 20)]
+    return [f'<rect width="{W}" height="{H}" fill="{cielo}"/>', _f(pts, f"{s}/suelo", suelo)]
+
+
+def cielo() -> str:
+    return "".join(_horizonte("#E3F1FA", "#D5E8C6", "cielo") + _nubes("cielo"))
+
+
+def parque() -> str:
+    p = _horizonte("#E3F1FA", "#D2E7C2", "parque") + _nubes("parque", filas=((420, 150, 0.8), (1450, 110, 0.7)))
+    p += _arbol(160, PISO_Y + 10, 430, "parque/a1") + _arbol(1760, PISO_Y + 5, 470, "parque/a2")
+    p += [_f(_rect(1380, 800, 260, 26), "parque/banca", "#E2CFAF", ancho=4),
+          _r([(1400, 826), (1400, 900)], "parque/p1", 4), _r([(1620, 826), (1620, 900)], "parque/p2", 4)]
+    return "".join(p)
+
+
+def bosque() -> str:
+    p = _horizonte("#E6F0E4", "#CFE0C0", "bosque")
+    for i, (x, h) in enumerate(((90, 520), (280, 420), (1620, 470), (1810, 560), (1440, 360))):
+        p += _pino(x, PISO_Y + 12, h, f"bosque/p{i}", ("#B2CFA2", "#A9C899", "#B9D6AA")[i % 3])
+    return "".join(p)
+
+
+def selva() -> str:
+    p = _horizonte("#E2F0DE", "#C4DDB0", "selva")
+    for i, (x, y, r) in enumerate(((60, 160, 230), (1860, 120, 260), (-20, 640, 200), (1940, 620, 220))):
+        p.append(_f(elipse(x, y, r, r * 0.7, n=30), f"selva/h{i}", ("#B4D4A0", "#A6CB92")[i % 2], ancho=4))
+    for i, x in enumerate((240, 1680)):
+        p.append(_r([(x, -10), (x + 30, 300), (x - 10, 620)], f"selva/liana{i}", 6, "#9DBD8A"))
+    return "".join(p)
+
+
+def playa() -> str:
+    p = [f'<rect width="{W}" height="{H}" fill="#E1F2FB"/>',
+         _f([(-20, 700), (W + 20, 690), (W + 20, 860), (-20, 870)], "playa/mar", "#BFE0EF"),
+         _f([(-20, 860), (700, 830), (1300, 860), (W + 20, 840), (W + 20, H + 20), (-20, H + 20)], "playa/arena", "#F4E6C4")]
+    for i, y in enumerate((740, 790)):
+        p.append(_r([(x, y + 10 * ((x // 120) % 2)) for x in range(-40, W + 120, 120)], f"playa/ola{i}", 4, "#A9D3E6"))
+    p += [f'<circle cx="1650" cy="200" r="90" fill="#FCEBB0"/>',
+          _r([(1780, 860), (1800, 600), (1830, 440)], "playa/palma", 10, "#D6C2A5")]
+    for i, (dx, dy) in enumerate(((-150, 40), (150, 30), (-90, 90), (110, 100))):
+        p.append(_r([(1830, 440), (1830 + dx * 0.5, 440 + dy * 0.2 - 30), (1830 + dx, 440 + dy)], f"playa/hoja{i}", 8, "#B4D4A0"))
+    return "".join(p)
+
+
+def oceano() -> str:
+    """Bajo el agua: azul pálido, rayos de luz y burbujas en las orillas."""
+    p = [f'<rect width="{W}" height="{H}" fill="#D6ECF5"/>']
+    for i, x in enumerate((300, 800, 1400)):
+        p.append(f'<path d="M{x},0 L{x + 160},0 L{x + 360},{H} L{x + 120},{H} Z" fill="#E4F3F9"/>')
+    p.append(_f([(-20, 980), (700, 960), (1300, 990), (W + 20, 970), (W + 20, H + 20), (-20, H + 20)], "oceano/fondo", "#EADFC2"))
+    for i, (x, y, r) in enumerate(((140, 400, 18), (180, 300, 11), (1760, 520, 16), (1720, 420, 10), (1790, 330, 7))):
+        p.append(_f(elipse(x, y, r, r, n=14), f"oceano/b{i}", "#E8F6FB", ancho=3))
+    for i, x in enumerate((120, 1800)):
+        p.append(_r([(x, 990), (x - 20, 860), (x + 15, 760), (x - 5, 660)], f"oceano/alga{i}", 9, "#A8CFA0"))
+    return "".join(p)
+
+
+def volcan() -> str:
+    p = _horizonte("#F6E6DA", "#D9C6B6", "volcan")
+    p.append(_f([(1080, PISO_Y + 10), (1380, 330), (1520, 330), (1880, PISO_Y + 10)], "volcan/cono", "#CDB5A2"))
+    p.append(_f([(1380, 330), (1420, 380), (1460, 350), (1520, 330)], "volcan/lava", "#F5B38F", ancho=4))
+    for i, (x, y, r) in enumerate(((1450, 240, 60), (1520, 160, 80), (1430, 90, 70))):
+        p.append(_f(elipse(x, y, r, r * 0.75, n=22), f"volcan/humo{i}", "#E4DCD6", ancho=4))
+    return "".join(p)
+
+
+def desierto() -> str:
+    p = [f'<rect width="{W}" height="{H}" fill="#FBF0DC"/>', f'<circle cx="1620" cy="210" r="110" fill="#FCE0A0"/>',
+         _f([(-20, 860), (500, 760), (1000, 880), (1500, 800), (W + 20, 880), (W + 20, H + 20), (-20, H + 20)],
+            "desierto/duna", "#F1DCB0")]
+    p += [_r([(220, 880), (220, 640)], "desierto/cactus", 30, "#BCD3A4"), _r([(220, 760), (170, 760), (170, 690)],
+                                                                           "desierto/brazo", 22, "#BCD3A4")]
+    return "".join(p)
+
+
+def montana_nieve() -> str:
+    p = _horizonte("#E7F0F7", "#F5F8FA", "nieve")
+    for i, (a, b, c, alto) in enumerate(((-100, 300, 700, 330), (500, 900, 1300, 260), (1200, 1600, 2050, 300))):
+        p.append(_f([(a, PISO_Y + 5), (b, alto), (c, PISO_Y + 5)], f"nieve/m{i}", "#D8E3EC"))
+        p.append(_f([(b - 70, alto + 90), (b, alto), (b + 70, alto + 90), (b + 20, alto + 70)], f"nieve/pico{i}", "#FFFFFF", ancho=4))
+    p += _pino(120, PISO_Y + 20, 300, "nieve/p1", "#C6D9CC") + _pino(1790, PISO_Y + 20, 340, "nieve/p2", "#C6D9CC")
+    return "".join(p)
+
+
+def tormenta() -> str:
+    p = _horizonte("#D9DEE6", "#C9D3C2", "tormenta")
+    p += _nubes("tormenta", "#C8CED8", ((300, 150, 1.4), (1000, 110, 1.2), (1650, 160, 1.5)))
+    return "".join(p)
+
+
+def ciudad() -> str:
+    p = [f'<rect width="{W}" height="{H}" fill="#E6EEF5"/>']
+    for i, (x, w, h) in enumerate(((0, 220, 520), (240, 180, 380), (1460, 200, 440), (1680, 260, 600))):
+        p.append(_f(_rect(x, PISO_Y - h, w, h), f"ciudad/e{i}", ("#DCE1E8", "#E3E0DA")[i % 2]))
+        for f in range(int(h // 110)):
+            for cx in range(x + 30, x + w - 50, 70):
+                p.append(_f(_rect(cx, PISO_Y - h + 40 + f * 110, 36, 50), f"ciudad/v{i}{f}{cx}", "#F4F6F9", ancho=3))
+    p.append(_f([(-20, PISO_Y), (W + 20, PISO_Y), (W + 20, H + 20), (-20, H + 20)], "ciudad/calle", "#D4D4D4"))
+    return "".join(p)
+
+
+ESCENARIOS.update({"cielo": cielo, "parque": parque, "bosque": bosque, "selva": selva, "playa": playa,
+                   "oceano": oceano, "volcan": volcan, "desierto": desierto, "montana_nieve": montana_nieve,
+                   "tormenta": tormenta, "ciudad": ciudad})

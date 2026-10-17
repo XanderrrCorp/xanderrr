@@ -58,6 +58,14 @@ POR_DEFECTO: dict[str, Any] = {
     "titulo": "TODAS las {x} explicadas en {n} minutos",
     "ritmo": 0.75,                  # animaciones un 25 % más cortas
     "deriva_camara": 0.04,          # cada escena se acerca o se aleja un 4 % mientras dura (nada queda quieto)
+    # (17-10) aspecto: el lugar de cada tema de fondo (explica/ambiente.py), pintado una vez por Google (≈120 COP por
+    # tema), partículas y luz, trazo limpio con sombra suave y profundidad (el fondo se mueve menos que el personaje)
+    "fondos_tema": True,
+    "fondos_google": True,
+    "particulas": True,
+    "trazo_limpio": True,
+    "sombras": True,
+    "parallax": True,
 }
 
 

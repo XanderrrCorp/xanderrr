@@ -158,19 +158,26 @@ def aplicar(c: Path, datos: dict, t, permiso: bool = False, proveedor=None) -> d
 
 
 def costo_estimado(c: Path, proveedor=None) -> dict | None:
-    """Cuánto costarían las ilustraciones marcadas de un video que aún no se han generado."""
+    """Cuánto costarían las ilustraciones marcadas y los fondos pintados (uno por tema) que aún no se han hecho."""
     ruta = c / "escenas.json"
     if not ruta.exists():
         return None
     import json
 
-    marcadas = [e for e in json.loads(ruta.read_text(encoding="utf-8"))["escenas"] if e.get("google")]
-    if not marcadas:
+    from .ambiente import fondos_faltantes, prompt_fondo
+
+    escenas = json.loads(ruta.read_text(encoding="utf-8"))["escenas"]
+    marcadas = [e for e in escenas if e.get("google")]
+    preset = C.cargar()
+    fondos = (fondos_faltantes(c, sum(1 for e in escenas if e.get("tipo") == "cuadricula"))
+              if preset.get("fondos_tema", True) and preset.get("fondos_google") else 0)
+    if not marcadas and not fondos:
         return None
     config = ConfigCostos.cargar()
     try:
         p = proveedor or proveedor_imagenes(config)
         usd = sum(p.estimar_usd(prompt(e["google"]["descripcion"]), []) for e in marcadas)
+        usd += fondos * p.estimar_usd(prompt_fondo("un lugar"), [])
     except Exception:  # noqa: BLE001 — sin proveedor configurado: no se puede estimar
-        return {"imagenes": len(marcadas), "cop": "?"}
-    return {"imagenes": len(marcadas), "cop": formato_cop(config.a_cop(usd))}
+        return {"imagenes": len(marcadas) + fondos, "fondos": fondos, "cop": "?"}
+    return {"imagenes": len(marcadas) + fondos, "fondos": fondos, "cop": formato_cop(config.a_cop(usd))}

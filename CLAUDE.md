@@ -105,6 +105,15 @@ Estado al 04-10-2026. El repositorio es PÚBLICO: nunca escribir claves, tokens 
   mitad era tira.quitar_fondo_liso (ImageDraw.floodfill en Python) → ahora numpy+cv2.floodFill (mismo recorte); y
   estela (desenfoque de movimiento) se calcula a mitad de tamaño si el rastro es largo. 20 s de video: 98 s → 33 s.
   Su config/render.json está en 60 cps (pedido suyo): bajar a 30 cps lo haría el doble de rápido otra vez.
+- El Calvo: ASPECTO NUEVO (17-10, el dueño eligió 2-6 de mis sugerencias: «no solo fondo blanco, no tan
+  matachinado»): explica/ambiente.py da a cada tema un lugar (Claude lo elige al hacer el video, gratis; respaldo por
+  palabras), partículas (lluvia, nieve, ceniza, polvo, hojas, chispas, burbujas) y luz (día, noche, atardecer,
+  tormenta con relámpago); el fondo se pinta UNA vez por tema con Google (preset fondos_google, ≈120 COP c/u,
+  caché en fondos/, respeta el tope; si frena, escenario por código). Ilustración/personaje: lugar completo;
+  código: «lavado:» (pálido); cuadrícula en blanco. 11 escenarios nuevos en calma/escenarios.py (playa, volcán,
+  bosque, selva, océano, desierto, montaña nevada, tormenta, ciudad, parque, cielo). Trazo limpio (trazo.fijar_estilo,
+  temblor ×0.3), sombra suave en las piezas (raster.con_sombra) y profundidad (fondo con 40 % del zoom y paneo de
+  lado; render.cuadro_en con video.parallax). Todo por banderas en datos["video"]: Hazlo con Calma no cambia.
 - Estrategia del dueño (16-10): foco en los 2 canales Tracy monetizados y Peligro Tropical; El Calvo en pausa.
 - Aquí (nube) la voz MiniMax sí funciona; Whisper no baja su modelo: vista previa con voz frase por frase.
 ## Pendiente

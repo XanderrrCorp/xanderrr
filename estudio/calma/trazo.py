@@ -18,6 +18,17 @@ CREMA = "#F7E6C4"
 
 LINEA = 7.0          # grosor del contorno en TODAS las piezas
 TEMBLOR = 1.5        # cuánto se aparta la línea del trazo perfecto
+# (17-10) El Calvo Explica pidió un trazo más limpio: el temblor se multiplica por esto (Hazlo con Calma queda en 1)
+_ESTILO = {"temblor": 1.0}
+LIMPIO = 0.3
+
+
+def fijar_estilo(limpio: bool = False) -> None:
+    _ESTILO["temblor"] = LIMPIO if limpio else 1.0
+
+
+def factor_temblor() -> float:
+    return _ESTILO["temblor"]
 
 
 def _remuestrear(puntos: list[tuple[float, float]], cerrado: bool, paso: float) -> list[tuple[float, float]]:
@@ -33,6 +44,7 @@ def _remuestrear(puntos: list[tuple[float, float]], cerrado: bool, paso: float) 
 
 def temblar(puntos, semilla: str, cerrado: bool = False, amplitud: float = TEMBLOR, paso: float = 6.0):
     """Mueve cada punto un poco sobre la normal con dos ondas lentas (como la mano con marcador)."""
+    amplitud *= _ESTILO["temblor"]
     rng = random.Random(semilla)
     f1, f2 = rng.uniform(0, 6.3), rng.uniform(0, 6.3)
     l1, l2 = rng.uniform(55, 85), rng.uniform(24, 36)

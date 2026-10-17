@@ -25,9 +25,11 @@ from .movimientos import TIPOS
 TIPOS_MOVIMIENTO = TIPOS
 from .piezas import PIEZAS
 
-FONDOS = ("blanco", "calle", "campo", "cuarto", "cuarto_noche", "bano", "sala", "cocina", "clase", "consultorio",
-          "piscina", "luna", "mercurio", "venus", "marte", "nubes_gas", "nubes_hielo", "titan", "pluton", "espacio",
-          "sol_cerca")
+from .escenarios import ESCENARIOS
+
+FONDOS = ("blanco", "calle", "campo", *ESCENARIOS)
+# (17-10) además: «lavado:<fondo>» (el mismo, muy pálido, para diagramas), «archivo:<png>» y «color:#rrggbb»
+PREFIJOS_FONDO = ("lavado:", "archivo:", "color:")
 MAX_EN_PANTALLA = 4
 MAX_SIN_CAMBIO_S = 2.0
 ADELANTO_CORTE_S = 0.08       # el corte de escena cae un pelín antes de la palabra (se siente a tiempo)
@@ -133,7 +135,7 @@ def revisar(datos: dict, max_sin_cambio: float = MAX_SIN_CAMBIO_S) -> list[str]:
     avisos = []
     momentos = []
     for esc in datos["escenas"]:
-        if esc.get("fondo", "blanco") not in FONDOS:
+        if esc.get("fondo", "blanco") not in FONDOS and not str(esc.get("fondo")).startswith(PREFIJOS_FONDO):
             avisos.append(f"escena {esc['id']}: fondo «{esc.get('fondo')}» no existe ({', '.join(FONDOS)})")
         momentos.append(esc["inicio"])
         for el in esc["elementos"]:

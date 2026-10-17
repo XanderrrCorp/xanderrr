@@ -143,6 +143,10 @@ FONDOS_ESCENA = {
     "nubes amarillas", "marte": "suelo rojo con rocas", "nubes_gas": "dentro de las nubes de Júpiter o Saturno (sin "
     "suelo)", "nubes_hielo": "dentro de las nubes de Urano o Neptuno (sin suelo)", "titan": "cielo naranja y un lago",
     "pluton": "llanura de hielo blanca", "espacio": "el espacio con estrellas", "sol_cerca": "muy cerca del Sol",
+    "cielo": "afuera de día (cielo con nubes y pasto)", "parque": "parque (árboles, banca)", "bosque": "bosque de pinos",
+    "selva": "selva (hojas grandes, lianas)", "playa": "playa (mar, arena, palmera)", "oceano": "bajo el agua del mar",
+    "volcan": "junto a un volcán humeante", "desierto": "desierto (dunas, cactus, sol)", "montana_nieve": "montañas "
+    "con nieve", "tormenta": "afuera con nubes de tormenta", "ciudad": "ciudad (edificios, calle)",
 }
 
 
