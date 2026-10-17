@@ -101,6 +101,10 @@ Estado al 04-10-2026. El repositorio es PÚBLICO: nunca escribir claves, tokens 
 - Primera persona (17-10, error que el dueño vio mucho en Peligro Tropical): en «pov_personaje» Google dibujaba al
   personaje dentro de la escena. Ahora no se manda su foto y el prompt lleva prompts.POV_SIN_PERSONAJE; lo ya pagado
   con la forma vieja se reconoce (Trabajo.antes) y no se vuelve a pedir; al regenerar sale corregida.
+- Velocidad de render (17-10, el dueño: «2 horas por video de Peligro Tropical»): el perfil mostró que casi la
+  mitad era tira.quitar_fondo_liso (ImageDraw.floodfill en Python) → ahora numpy+cv2.floodFill (mismo recorte); y
+  estela (desenfoque de movimiento) se calcula a mitad de tamaño si el rastro es largo. 20 s de video: 98 s → 33 s.
+  Su config/render.json está en 60 cps (pedido suyo): bajar a 30 cps lo haría el doble de rápido otra vez.
 - Estrategia del dueño (16-10): foco en los 2 canales Tracy monetizados y Peligro Tropical; El Calvo en pausa.
 - Aquí (nube) la voz MiniMax sí funciona; Whisper no baja su modelo: vista previa con voz frase por frase.
 ## Pendiente

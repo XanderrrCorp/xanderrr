@@ -44,8 +44,34 @@ def _fuente(t: TiraNiveles) -> ImageFont.FreeTypeFont | ImageFont.ImageFont:
 def quitar_fondo_liso(img: Image.Image, tolerancia: int = 38) -> Image.Image:
     """Recorte para sujetos generados sobre fondo liso (gris #808080 o blanco):
     se inunda desde los bordes el color del fondo. (rembg se usa solo en las
-    miniaturas: en el video sería lento, cientos de recortes por render.)"""
+    miniaturas: en el video sería lento, cientos de recortes por render.)
+
+    (17-10) Antes se usaba ImageDraw.floodfill, que va píxel por píxel en Python: era casi la MITAD del tiempo de
+    render de Peligro Tropical. Ahora la misma regla (suma de diferencias con el color del borde ≤ tolerancia,
+    vecinos en cruz) se hace con numpy + OpenCV: el mismo recorte, cientos de veces más rápido."""
     base = img.convert("RGB")
+    try:
+        import cv2
+    except ImportError:                            # sin OpenCV: la forma de antes
+        return _quitar_fondo_liso_lento(base, tolerancia)
+    a = np.asarray(base, np.int16)
+    h, w = a.shape[:2]
+    fondo = np.zeros((h, w), bool)
+    for x, y in [(0, 0), (w - 1, 0), (0, h - 1), (w - 1, h - 1), (w // 2, 0), (w // 2, h - 1), (0, h // 2), (w - 1, h // 2)]:
+        if fondo[y, x]:
+            continue
+        parecido = (np.abs(a - a[y, x]).sum(axis=2) <= tolerancia).astype(np.uint8)
+        mascara = np.zeros((h + 2, w + 2), np.uint8)
+        cv2.floodFill(parecido, mascara, (x, y), 2, 0, 0, 4)
+        fondo |= parecido == 2
+    alfa = Image.fromarray(np.where(fondo, 0, 255).astype("uint8"))
+    alfa = alfa.filter(ImageFilter.MinFilter(3)).filter(ImageFilter.GaussianBlur(1.2))
+    salida = base.convert("RGBA")
+    salida.putalpha(alfa)
+    return salida
+
+
+def _quitar_fondo_liso_lento(base: Image.Image, tolerancia: int) -> Image.Image:
     marca = (255, 0, 255)
     trabajo = base.copy()
     w, h = trabajo.size

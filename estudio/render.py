@@ -518,6 +518,12 @@ def estela(rgba: Image.Image, vx: float, vy: float) -> Image.Image:
     largo = int(min(120, math.hypot(vx, vy) * 0.5))
     if largo < 3 or _cv2 is None:
         return rgba
+    if largo >= 10:
+        # (17-10) un rastro largo borra el detalle: se calcula a la mitad del tamaño y se vuelve a agrandar
+        # (casi el mismo resultado, ~4 veces más rápido)
+        w, h = rgba.size
+        peq = estela(rgba.resize((max(1, w // 2), max(1, h // 2)), Image.Resampling.BILINEAR), vx / 2, vy / 2)
+        return peq.resize((w, h), Image.Resampling.BILINEAR)
     k = np.zeros((largo, largo), np.float32)
     c = (largo - 1) / 2
     ang = math.atan2(vy, vx)
