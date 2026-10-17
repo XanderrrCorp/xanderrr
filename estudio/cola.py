@@ -168,23 +168,11 @@ def _funcion(x: dict):
     from .proyecto import CarpetaProyecto
 
     if x["tipo"] == "explica":
-        import json
-
-        from .calma.flujo import Carpeta
-        from .explica import autor
         from .explica import flujo as F
+        from .explica.api import hacer_todo
 
         ce = F.carpeta_base() / "videos" / x["slug"]
-        meta = json.loads((ce / "video.json").read_text(encoding="utf-8"))
-
-        def explica(t):
-            if not (ce / "guion.txt").exists():
-                autor.escribir_guion(ce, meta["titulo"], int(meta.get("temas", 9)), meta.get("datos", ""), avisar=t.avisar)
-            if not (ce / "escenas.json").exists():
-                autor.armar_escenas(ce, avisar=t.avisar)
-            F.producir(Carpeta(ce), t, permiso=x["permiso"])
-
-        return "explica", explica
+        return "explica", lambda t: hacer_todo(ce, t, permiso=x["permiso"])
     c = CarpetaProyecto.abrir(x["slug"])
     if x["tipo"] == "tracy":
         from .tracy.flujo import producir

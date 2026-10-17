@@ -117,6 +117,6 @@ Estado al 04-10-2026. El repositorio es PÚBLICO: nunca escribir claves, tokens 
   y sacar la estructura del guion (sin copiar textos) antes de construir.
 - Editor (música, mover, cortar): en pausa por pedido del dueño; backend hecho, sin interfaz.
 - Prueba inestable: 1 de 3 corridas completas falló una prueba (no identificada) el 04-10; el dueño dijo no perseguirla aún.
-- El Calvo Explica: falta el botón para hacer el video completo en el PC (hoy /explica hace el tema 1), música
+- El Calvo Explica: (17-10) /explica tiene «Hacer el video completo» (guion→escenas→video sin parar, explica.api.hacer_todo, lo mismo que usa la cola) y «Hacer todo lo que falta» en cada video. Falta música
   tranquila (biblioteca), miniatura (personaje señalando la muñeca + «¿TÚ LO TIENES?») y título. Muestras de
   Google sin generar (botón en /explica).

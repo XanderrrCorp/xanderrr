@@ -49,6 +49,11 @@ function Detalle({ slug }: { slug: string }) {
       )}
       {error && <p className="error">{error}</p>}
 
+      {!v.video && (
+        <p><button className="boton" disabled={ocupado} onClick={() => accion('/todo', { permiso: false })}>
+          Hacer todo lo que falta (guion, escenas y video)</button></p>
+      )}
+
       <h3>1. Guion</h3>
       {v.guion == null ? <p className="tenue">Claude lo está escribiendo…</p> : (
         <>
@@ -96,10 +101,10 @@ export function ExplicaNuevo() {
   const [error, setError] = useState('');
   const cargar = useCallback(() => { api<typeof lista>('/api/explica/videos').then(setLista).catch(() => {}); }, []);
   useEffect(() => { cargar(); }, [cargar]);
-  const crear = async () => {
+  const crear = async (todo: boolean) => {
     setError('');
     try {
-      const v = await api<{ slug: string }>('/api/explica/videos', { cuerpo: { titulo, temas, datos } });
+      const v = await api<{ slug: string }>('/api/explica/videos', { cuerpo: { titulo, temas, datos, todo } });
       setElegido(v.slug); setTitulo(''); setDatos(''); cargar();
     } catch (e) { setError((e as Error).message); }
   };
@@ -117,7 +122,12 @@ export function ExplicaNuevo() {
         <label className="campo">Datos que quieres usar (opcional: tu lista de casos y datos; si la pones, Claude usa solo esos)
           <textarea rows={4} value={datos} onChange={(e) => setDatos(e.target.value)} />
         </label>
-        <button className="boton" disabled={titulo.trim().length < 4} onClick={crear}>Escribir el guion (gratis)</button>
+        <p className="pequeno">Igual que Peligro Tropical: un botón y Xandart hace guion, escenas y video sola. Gasta la voz
+          (unos 125 COP) y las ilustraciones de Google (unos 2.000 COP), sin pasar tu tope.</p>
+        <button className="boton" disabled={titulo.trim().length < 4} onClick={() => crear(true)}>
+          Hacer el video completo</button>{' '}
+        <button className="boton-borde pequeno" disabled={titulo.trim().length < 4} onClick={() => crear(false)}>
+          Solo el guion (para revisarlo)</button>
         {error && <p className="error">{error}</p>}
         {lista.length > 0 && (
           <div style={{ marginTop: 12 }}>

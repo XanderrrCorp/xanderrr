@@ -494,6 +494,11 @@ def test_pagina_de_videos_nuevos(tmp_path, monkeypatch):
     assert v["guion"].startswith("NOMBRE") and v["costo_voz"]["caracteres"] > 500
     assert cliente.post(f"/api/explica/videos/{v['slug']}/video", json={}).status_code == 400    # faltan escenas
     assert cliente.get("/api/explica/videos/../../etc").status_code == 404
+    lanzados = []
+    monkeypatch.setattr(pipeline, "lanzar", lambda slug, paso, f: lanzados.append(f))
+    v = cliente.post("/api/explica/videos", json={"titulo": "Todos los desastres", "temas": 6, "todo": True}).json()
+    assert v["slug"] == "todos-los-desastres" and len(lanzados) == 1           # un solo botón: todo seguido
+    assert cliente.post(f"/api/explica/videos/{v['slug']}/todo", json={}).status_code == 200
 
 
 def test_efectos_de_sonido_siguen_lo_que_pasa_y_se_frenan(tmp_path):

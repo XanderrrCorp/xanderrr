@@ -128,6 +128,7 @@ class NuevoVideo(BaseModel):
     titulo: str
     temas: int = 9
     datos: str = ""
+    todo: bool = False          # como Peligro Tropical: guion → escenas → video sin parar
 
 
 def _carpeta_video(slug: str):
@@ -193,6 +194,19 @@ def _lanzar(slug: str, funcion):
     return _estado_video(slug)
 
 
+def hacer_todo(ce, t, permiso: bool = False) -> None:
+    """Lo que falte del video, sin parar: guion (Claude) → escenas (Claude) → voz y video. Lo hecho no se repite."""
+    from ..calma.flujo import Carpeta
+    from . import autor
+
+    meta = json.loads((ce / "video.json").read_text(encoding="utf-8"))
+    if not (ce / "guion.txt").exists():
+        autor.escribir_guion(ce, meta["titulo"], int(meta.get("temas", 9)), meta.get("datos", ""), avisar=t.avisar)
+    if not (ce / "escenas.json").exists():
+        autor.armar_escenas(ce, avisar=t.avisar)
+    F.producir(Carpeta(ce), t, permiso=permiso)
+
+
 def crear_carpeta(titulo: str, temas: int, datos: str = ""):
     """Carpeta de un video nuevo de El Calvo Explica (también la usa la cola de la semana)."""
     from ..proyecto import slugificar
@@ -222,6 +236,8 @@ def nuevo_video(n: NuevoVideo):
     except ValueError as ex:
         raise HTTPException(400, str(ex)) from ex
     titulo = n.titulo.strip()
+    if n.todo:
+        return _lanzar(slug, lambda t: hacer_todo(c, t))
     return _lanzar(slug, lambda t: autor.escribir_guion(c, titulo, n.temas, n.datos, avisar=t.avisar))
 
 
@@ -268,6 +284,13 @@ def hacer(slug: str, p: Permiso = Permiso()):
     if not (c / "escenas.json").exists():
         raise HTTPException(400, "Primero arma las escenas")
     return _lanzar(slug, lambda t: F.producir(Carpeta(c), t, permiso=p.permiso))
+
+
+@rutas.post("/videos/{slug}/todo")
+def seguir_todo(slug: str, p: Permiso = Permiso()):
+    """Hace sola todo lo que le falte al video (guion, escenas y video)."""
+    c = _carpeta_video(slug)
+    return _lanzar(slug, lambda t: hacer_todo(c, t, permiso=p.permiso))
 
 
 @rutas.get("/videos/{slug}/hoja/{archivo}")
