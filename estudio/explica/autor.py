@@ -394,11 +394,16 @@ def armar_escenas(carpeta: Path, ejecutar=None, avisar=print, revisar: bool = Tr
                                 enumerate(temas)))
     cuad = [{"etiqueta": " ".join(t["nombre"]).rstrip("."), "icono": h["icono"]} for t, h in zip(temas, hechos)]
     escenas = []
+    candidatas = []                     # escenas de la historia que pueden ir con ilustración de Google
     for k, (t, h) in enumerate(zip(temas, hechos)):
         ws = " ".join(t["nombre"]).rstrip(".").split()
         rojo = max(ws, key=len).upper()
         escenas.append(cuadricula(cuad, k, ws[0], ws[-1], " ".join(ws), rojo))
         escenas += h["escenas"]
+        for (parte, frase), esc in zip(frases_del_tema(t), h["escenas"]):
+            if parte == "escena" and esc.get("tipo") == "ilustracion":
+                candidatas.append((esc, frase, " ".join(t["nombre"]).rstrip(".")))
+    marcar_google(candidatas)
     fin = escena_final(temas)
     if fin:
         escenas.append(fin)
@@ -411,6 +416,23 @@ def armar_escenas(carpeta: Path, ejecutar=None, avisar=print, revisar: bool = Tr
     escribir_json(carpeta / "escenas_info.json", {"temas": n, "escenas": len(escenas), "notas": notas})
     avisar(f"Escenas listas: {len(escenas)} ({len(notas)} nota(s))")
     return datos
+
+
+def marcar_google(candidatas: list[tuple[dict, str, str]], proporcion: float | None = None) -> int:
+    """Marca 1 de cada N escenas de la historia para dibujarlas con Google (repartidas en todo el video). La imagen
+    se paga al hacer el video (explica.ilustraciones.aplicar), no aquí."""
+    preset = C.cargar()
+    proporcion = float(preset.get("proporcion_google", 0)) if proporcion is None else proporcion
+    if proporcion <= 0 or not candidatas:
+        return 0
+    cada = max(1, round(1 / proporcion))
+    n = 0
+    for i, (esc, frase, nombre) in enumerate(candidatas):
+        if i % cada == cada // 2 and n < int(preset.get("max_ilustraciones", 60)):
+            esc["google"] = {"descripcion": f"Tema del video: «{nombre}». La voz dice: «{frase}». Dibuja al personaje "
+                                            "viviendo exactamente ese momento, en segunda persona (es el espectador)."}
+            n += 1
+    return n
 
 
 def estado_video(carpeta: Path) -> dict:

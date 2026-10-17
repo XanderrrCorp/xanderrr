@@ -103,3 +103,74 @@ def generar_muestras(t, permiso: bool = False, proveedor=None) -> list[str]:
 def estado_muestras() -> dict | None:
     r = carpeta() / "muestras.json"
     return leer_json(r) if r.exists() else None
+
+
+# ------------------------------------------------------------------ ilustraciones dentro de los videos (17-10)
+
+def aplicar(c: Path, datos: dict, t, permiso: bool = False, proveedor=None) -> dict:
+    """Dibuja con Google las escenas marcadas («google») y las cambia por esa imagen a pantalla completa (la cámara
+    sigue moviéndose). Lo ya generado no se vuelve a pagar. Si se llega al máximo de gasto o falla una imagen, esa
+    escena se queda con su versión por código: el video nunca se frena por esto."""
+    import hashlib
+
+    from ..costos import FrenoPresupuesto
+
+    marcadas = [e for e in datos["escenas"] if e.get("google")]
+    if not marcadas:
+        return {"hechas": 0, "por_codigo": 0}
+    config = ConfigCostos.cargar()
+    dir_i = c / "ilustraciones"
+    dir_i.mkdir(exist_ok=True)
+    ref = dir_i / "referencia_personaje.png"
+    if not ref.exists():
+        referencia(ref)
+    p, libro = None, LibroCostos(c, config)
+    hechas = por_codigo = 0
+    frenado = False
+    for k, esc in enumerate(marcadas):
+        texto = prompt(esc["google"]["descripcion"])
+        archivo = dir_i / f"escena_{hashlib.sha1(texto.encode()).hexdigest()[:12]}.png"
+        if not archivo.exists() and not frenado:
+            try:
+                p = p or proveedor or proveedor_imagenes(config)
+                t.avisar(f"Ilustración {k + 1} de {len(marcadas)} con Google…")
+                libro.autorizar(p.estimar_usd(texto, [ref]), permiso=permiso)
+                r = p.generar(texto, [ref])
+                libro.registrar(modulo=MODULO, proveedor=r.proveedor, modelo=r.modelo, unidades=r.uso.unidades(),
+                                costo_usd=r.uso.costo_usd, detalle=archivo.name)
+                Image.open(io.BytesIO(r.png)).convert("RGB").save(archivo)
+            except FrenoPresupuesto as ex:
+                frenado = True
+                t.avisar(f"  {ex} Las demás ilustraciones quedan por código.")
+            except Exception as ex:  # noqa: BLE001 — una imagen que falla no frena el video
+                t.avisar(f"  no se pudo dibujar una escena con Google ({str(ex)[:120]}): queda por código")
+        if archivo.exists():
+            esc["elementos"] = [{"id": "ilustracion", "pieza": "imagen", "estado": {"archivo": str(archivo), "ancho": 1920},
+                                 "posicion": [960, 540], "tamano": 1.0, "movimiento": [], "ya_estaba": True}]
+            esc["fondo"] = "blanco"
+            hechas += 1
+        else:
+            por_codigo += 1
+    gastado = sum(e.get("costo_usd", 0) for e in libro.entradas() if e.get("modulo") == MODULO)
+    t.avisar(f"Ilustraciones de Google: {hechas} (costo {formato_cop(config.a_cop(gastado))})"
+             + (f"; {por_codigo} quedaron por código" if por_codigo else ""))
+    return {"hechas": hechas, "por_codigo": por_codigo}
+
+
+def costo_estimado(c: Path, proveedor=None) -> dict | None:
+    """Cuánto costarían las ilustraciones marcadas de un video que aún no se han generado."""
+    ruta = c / "escenas.json"
+    if not ruta.exists():
+        return None
+    import json
+
+    marcadas = [e for e in json.loads(ruta.read_text(encoding="utf-8"))["escenas"] if e.get("google")]
+    if not marcadas:
+        return None
+    config = ConfigCostos.cargar()
+    try:
+        p = proveedor or proveedor_imagenes(config)
+        usd = sum(p.estimar_usd(prompt(e["google"]["descripcion"]), []) for e in marcadas)
+    except Exception:  # noqa: BLE001 — sin proveedor configurado: no se puede estimar
+        return {"imagenes": len(marcadas), "cop": "?"}
+    return {"imagenes": len(marcadas), "cop": formato_cop(config.a_cop(usd))}

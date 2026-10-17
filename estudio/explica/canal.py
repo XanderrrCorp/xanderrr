@@ -44,6 +44,9 @@ POR_DEFECTO: dict[str, Any] = {
     "cambio_cada_s": [2.0, 3.0],
     "ilustraciones_por_tema": [6, 7],
     "max_ilustraciones": 60,        # las que sobren pasan a escenas de código
+    # (17-10) parte de las escenas de la historia («Estás en…») que se dibujan con Google en vez de código
+    # (≈120 COP cada una; ~16 por video de 12 temas). 0 = todo por código
+    "proporcion_google": 0.2,
     "estilo_ilustracion": (
         "Ilustración simple de explicación: línea negra gruesa tipo marcador, ligeramente temblorosa, colores "
         "planos (negro, blanco, gris, amarillo, rojo, verde), fondo blanco liso, sin sombras ni degradados. "

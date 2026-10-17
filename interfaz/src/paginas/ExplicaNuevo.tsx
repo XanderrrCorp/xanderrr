@@ -10,6 +10,7 @@ interface Video {
   guion_info: { avisos: string[] } | null; escenas: boolean; hojas: string[];
   escenas_info: { escenas: number; notas: string[] } | null; video: boolean; trabajo: Trabajo | null;
   costo_voz: { caracteres: number; cop: string } | null;
+  costo_ilustraciones: { imagenes: number; cop: string } | null;
   informe: { duracion: number; tiempo_total_s: number; costos: Record<'guion' | 'voz' | 'imagenes', { cop: string }>;
              video: string } | null;
 }
@@ -72,7 +73,9 @@ function Detalle({ slug }: { slug: string }) {
 
       <h3>3. Video</h3>
       <p className="pequeno">Voz de Peligro Tropical, tiempos con Whisper, música tranquila de tu biblioteca.
-        {v.costo_voz && <> La voz cuesta unos <b>{v.costo_voz.cop}</b> ({v.costo_voz.caracteres} caracteres).</>}</p>
+        {v.costo_voz && <> La voz cuesta unos <b>{v.costo_voz.cop}</b> ({v.costo_voz.caracteres} caracteres).</>}
+        {v.costo_ilustraciones && <> Ilustraciones de Google: {v.costo_ilustraciones.imagenes}, unos <b>{v.costo_ilustraciones.cop}</b>
+          (lo que ya se dibujó no se vuelve a pagar).</>}</p>
       <button className="boton" disabled={ocupado || !v.escenas} onClick={() => accion('/video', { permiso: false })}>
         {v.video ? 'Volver a hacer el video' : 'Hacer el video'}</button>
       {v.video && <video src={`/api/explica/videos/${slug}/archivo?v=${version}`} controls

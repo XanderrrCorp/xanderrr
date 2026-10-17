@@ -61,6 +61,12 @@ def _costos(c: Carpeta, config: ConfigCostos) -> dict:
     return {k: {"usd": round(v, 4), "cop": formato_cop(config.a_cop(v))} for k, v in por.items()}
 
 
+def _proveedor_simulado(config):
+    from ..imagenes.proveedores import ProveedorSimulado
+
+    return ProveedorSimulado(config)
+
+
 def producir(c: Carpeta, t, permiso: bool = False, voz=None, transcriptor=None, proveedor: str | None = None) -> Path:
     from ..calma.musica import elegir
     from ..calma.render import render
@@ -104,6 +110,12 @@ def producir(c: Carpeta, t, permiso: bool = False, voz=None, transcriptor=None, 
 
     t.paso, t.progreso = "escenas", 0.3
     datos = json.loads((c.ruta / "escenas.json").read_text(encoding="utf-8"))
+    if any(e.get("google") for e in datos["escenas"]):
+        from .ilustraciones import aplicar
+
+        t.paso = "ilustraciones"
+        aplicar(c.ruta, datos, t, permiso=permiso,
+                proveedor=_proveedor_simulado(config) if proveedor == "simulado" else None)
     datos.setdefault("video", {}).update(ritmo=float(preset["ritmo"]), deriva=float(preset["deriva_camara"]))
     E.fijar_tiempos(datos, E.palabras_de(ors), float(ors["duracion"]) + 0.6)
     ritmo = E.revisar(datos, max_sin_cambio=float(preset["cambio_cada_s"][1]))

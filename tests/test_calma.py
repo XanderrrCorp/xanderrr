@@ -565,3 +565,27 @@ def test_piezas_y_fondos_del_espacio():
     for f in ("luna", "marte", "nubes_gas", "espacio", "sol_cerca"):
         assert f in ESCENARIOS and f in E.FONDOS and f in FONDOS_ESCENA
         assert fondo(f).std() > 1                      # no es un color plano
+
+
+def test_ilustraciones_de_google_en_el_calvo(tmp_path):
+    from pathlib import Path
+
+    from estudio.config import ConfigCostos
+    from estudio.explica import autor
+    from estudio.explica import ilustraciones as I
+    from estudio.imagenes.proveedores import ProveedorSimulado
+    from estudio.pipeline import Trabajo
+
+    escs = [{"tipo": "ilustracion", "elementos": [{"id": "a", "pieza": "texto"}]} for _ in range(10)]
+    n = autor.marcar_google([(e, f"Estás en la frase {i}.", "Hipo") for i, e in enumerate(escs)], proporcion=0.2)
+    assert n == 2 and [i for i, e in enumerate(escs) if e.get("google")] == [2, 7]      # repartidas, no seguidas
+    datos = {"escenas": escs}
+    r = I.aplicar(tmp_path, datos, Trabajo("t"), proveedor=ProveedorSimulado(ConfigCostos.cargar()))
+    assert r == {"hechas": 2, "por_codigo": 0}
+    el = escs[2]["elementos"][0]
+    assert el["pieza"] == "imagen" and Path(el["estado"]["archivo"]).exists()
+    assert escs[0]["elementos"][0]["pieza"] == "texto"                                  # las demás, por código
+    pagadas = len((tmp_path / "logs" / "costos.jsonl").read_text().splitlines())
+    I.aplicar(tmp_path, {"escenas": [dict(escs[7], elementos=[])]}, Trabajo("t"),
+              proveedor=ProveedorSimulado(ConfigCostos.cargar()))
+    assert len((tmp_path / "logs" / "costos.jsonl").read_text().splitlines()) == pagadas  # no se vuelve a pagar

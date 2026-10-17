@@ -145,7 +145,16 @@ def _estado_video(slug: str) -> dict:
     info = (c / "video.json")
     meta = json.loads(info.read_text(encoding="utf-8")) if info.exists() else {"titulo": slug}
     return {"slug": slug, **meta, **autor.estado_video(c), "trabajo": _trabajo(f"explica-{slug}"),
-            "costo_voz": _costo_voz(c)}
+            "costo_voz": _costo_voz(c), "costo_ilustraciones": _costo_ilustraciones(c)}
+
+
+def _costo_ilustraciones(c) -> dict | None:
+    from .ilustraciones import costo_estimado
+
+    try:
+        return costo_estimado(c)
+    except Exception:  # noqa: BLE001
+        return None
 
 
 def _costo_voz(c) -> dict | None:

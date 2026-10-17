@@ -94,6 +94,10 @@ Estado al 04-10-2026. El repositorio es PÚBLICO: nunca escribir claves, tokens 
   videos terminados, capas 2.5D, clips de Pexels sin uso y el video final guardado dos veces (ahora enlace duro:
   copiar_o_enlazar en las 4 entregas). Con permiso: copias de seguridad viejas (deja la última) y archivos de trabajo
   de videos terminados hace >30 días con su final a salvo en Videos (marca archivado.json). La cola limpia sola.
+- El Calvo: ILUSTRACIONES DE GOOGLE (17-10, pedido del dueño): autor.marcar_google marca 1 de cada 5 escenas de la
+  historia (preset proporcion_google 0.2); explica/ilustraciones.aplicar las dibuja al hacer el video (referencia del
+  personaje, caché por prompt, respeta el tope: si frena, quedan por código) y las pone a pantalla completa.
+  ≈120 COP c/u, ~2.000 COP por video de 12 temas. Solo videos nuevos (escenas armadas después de este cambio).
 - Estrategia del dueño (16-10): foco en los 2 canales Tracy monetizados y Peligro Tropical; El Calvo en pausa.
 - Aquí (nube) la voz MiniMax sí funciona; Whisper no baja su modelo: vista previa con voz frase por frase.
 ## Pendiente
