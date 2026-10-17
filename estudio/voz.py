@@ -39,7 +39,9 @@ class Grupo:
 
     @property
     def texto(self) -> str:
-        return " ".join(e.narracion.strip() for e in self.escenas)
+        from .llamados import quitar_etiquetas
+
+        return " ".join(quitar_etiquetas(e.narracion) for e in self.escenas)    # una etiqueta jamás se lee
 
 
 def agrupar(escenas: list[Escena]) -> list[Grupo]:

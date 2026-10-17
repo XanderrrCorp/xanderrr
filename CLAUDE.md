@@ -114,6 +114,16 @@ Estado al 04-10-2026. El repositorio es PÚBLICO: nunca escribir claves, tokens 
   bosque, selva, océano, desierto, montaña nevada, tormenta, ciudad, parque, cielo). Trazo limpio (trazo.fijar_estilo,
   temblor ×0.3), sombra suave en las piezas (raster.con_sombra) y profundidad (fondo con 40 % del zoom y paneo de
   lado; render.cuadro_en con video.parallax). Todo por banderas en datos["video"]: Hazlo con Calma no cambia.
+- LLAMADOS A COMENTAR (17-10, spec del dueño, Peligro Tropical): estudio/llamados.py. 5 llamados fijos en el guion
+  de escala (apuesta con 3 opciones —la correcta en posición 1/2/3 según el tema—, experiencia, debate, país,
+  cierre «¿Qué animal quieres en la próxima escala?»), máx. 85 palabras; Claude marca líneas con [COMENTA:tipo] y
+  Xandart las revisa (máx. 2 correcciones; si falla, guarda y avisa) y QUITA las etiquetas antes de guardar (además
+  voz.Grupo.texto y edicion.trozos_subtitulo las limpian). No hay escenas nuevas: esas frases reusan imagen.
+  llamados.json + comentario_fijado.txt (respuesta + pregunta del cierre, con emoji; la voz nunca dice emojis);
+  la página del video los muestra con «Copiar». Interruptor por canal en /canales (Canal.ajustes.llamados_comentar;
+  sin elegir: solo estilo enciclopedia_mascota). CUADRO DE COMENTARIO animado (pedido del dueño): direccion
+  «comentarios» → EDL efecto «comentario» (edicion._cuadros_comentario, pop + sfx «tecleo») → render_receta.comentario
+  (tarjeta tipo YouTube que se escribe sola con el EJEMPLO que da Claude, corazón al final).
 - Estrategia del dueño (16-10): foco en los 2 canales Tracy monetizados y Peligro Tropical; El Calvo en pausa.
 - Aquí (nube) la voz MiniMax sí funciona; Whisper no baja su modelo: vista previa con voz frase por frase.
 ## Pendiente

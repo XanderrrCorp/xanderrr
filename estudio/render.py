@@ -1529,6 +1529,19 @@ def _sfx(tipo: str, variante: int) -> np.ndarray:
             f0 = 3000 if k % 2 == 0 else 2200
             salida[i:i + n] += np.sin(2 * math.pi * f0 * np.arange(n) / SR) * np.exp(-np.arange(n) / SR * 300)
         return salida * 0.4
+    if tipo == "tecleo":
+        # teclado de celular: toques cortos y suaves, un poco irregulares
+        x = t(1.3)
+        salida = np.zeros(len(x))
+        momento = 0.0
+        while momento < 1.2:
+            i = int(momento * SR)
+            n = min(int(0.018 * SR), len(x) - i)
+            f0 = 1800 + rng.uniform(-300, 300)
+            salida[i:i + n] += np.sin(2 * math.pi * f0 * np.arange(n) / SR) * np.exp(-np.arange(n) / SR * 400) \
+                + rng.normal(0, 0.15, n) * np.exp(-np.arange(n) / SR * 600)
+            momento += rng.uniform(0.07, 0.13)
+        return salida * 0.35
     if tipo == "boing":
         # resorte gracioso: tono que sube y baja con vibrato
         x = t(0.55)
@@ -2231,7 +2244,7 @@ def _renderizar(carpeta: CarpetaProyecto, ffmpeg: str, destino: Path | None, des
             img = _poner_dato(img, ef["dato"], tt, c["fin"])
         if "rotulo_tiempo" in ef and not en_reaccion:
             img = _rotulo_tiempo(img, ef["rotulo_tiempo"], tt)
-        for nombre in ("veredicto", "pero_espera", "cta_like", "cta_suscribir"):
+        for nombre in ("veredicto", "pero_espera", "cta_like", "cta_suscribir", "comentario"):
             x = ef.get(nombre)
             if x and not en_reaccion and x["en"] <= tt < x["en"] + x["dur"]:
                 if nombre == "veredicto":
@@ -2240,6 +2253,8 @@ def _renderizar(carpeta: CarpetaProyecto, ffmpeg: str, destino: Path | None, des
                     img = RR.pero_espera(img, x, tt - x["en"], n)
                 elif nombre == "cta_like":
                     img = RR.cta_like(img, raiz, x, tt - x["en"])
+                elif nombre == "comentario":
+                    img = RR.comentario(img, x, tt - x["en"])
                 else:
                     img = RR.cta_suscribir(img, x, tt - x["en"])
         if vertical:

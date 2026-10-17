@@ -20,7 +20,10 @@ export interface Cuenta {
 }
 
 export interface Ref { id: string; clave: string; nombre: string }
-export interface Canal { id: string; clave: string; nombre: string; formato: Ref | null; videos: number }
+export interface Canal {
+  id: string; clave: string; nombre: string; formato: Ref | null; videos: number;
+  estilo?: Ref | null; ajustes?: Record<string, unknown>;
+}
 export interface Formato {
   id: string; clave: string; nombre: string; descripcion: string; publico: boolean;
   datos: { duraciones_min?: number[]; duracion_min?: number; idea_ejemplo?: string; relacion_aspecto?: string; formula?: string; estilo?: string };
@@ -49,6 +52,7 @@ export interface VideoDetalle {
   escenas: Escena[]; video: string | null; trabajo: (Trabajo & { segundos: number }) | null;
   estimacion_imagenes?: Estimacion; prueba: Prueba | null; puede_short?: boolean; vertical: boolean;
   divulgacion: boolean; guion: string | null; modo?: string;
+  llamados?: { comentario_fijado: string | null; avisos: string[]; lista: { tipo: string; seccion: string; texto: string }[] };
 }
 
 export interface Cotizacion {

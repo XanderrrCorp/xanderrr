@@ -929,6 +929,11 @@ def resumen(c: CarpetaProyecto) -> dict:
         datos["estimacion_imagenes"] = estimar_imagenes(c)
         if (c.ruta / "guion.md").exists():
             datos["guion"] = (c.ruta / "guion.md").read_text(encoding="utf-8")
+    if (c.ruta / "llamados.json").exists():          # llamados a comentar y comentario fijado (17-10)
+        info = leer_json(c.ruta / "llamados.json")
+        datos["llamados"] = {"comentario_fijado": info.get("comentario_fijado"), "avisos": info.get("avisos") or [],
+                             "lista": [{"tipo": x["tipo"], "seccion": x.get("seccion_nombre"), "texto": x["texto"]}
+                                       for x in info.get("llamados", [])]}
     if (c.ruta / "render" / "prueba.json").exists():
         datos["prueba"] = leer_json(c.ruta / "render" / "prueba.json")
     if (c.ruta / "render" / "final.mp4").exists():

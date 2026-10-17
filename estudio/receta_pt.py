@@ -140,7 +140,7 @@ def aplicar(clips: list, textos: list, subtitulos: list, sfx: list, escenas: lis
     def _hueco(desde: float, minimo: float) -> int | None:
         for i, c in enumerate(clips):
             if c["inicio"] >= desde and _libre(c) and c["fin"] - c["inicio"] >= minimo and nivel[i] is not None \
-                    and not any(x["efecto"] in ("veredicto", "pero_espera", "dato") for x in c["efectos"]):
+                    and not any(x["efecto"] in ("veredicto", "pero_espera", "dato", "comentario") for x in c["efectos"]):
                 return i
         return None
 

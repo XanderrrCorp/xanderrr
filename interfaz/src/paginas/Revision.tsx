@@ -165,10 +165,38 @@ export function Revision() {
         <section className="rev-tarjeta"><p className="tenue">El guion todavía no está. <button className="boton-borde pequeno" onClick={() => accion('guion')}>Escribir el guion</button></p></section>
       )}
 
+      {guionOk && v.llamados && <Llamados l={v.llamados} />}
       {guionOk && <GuionCompleto v={v} />}
       {guionOk && <Escenas v={v} conImagenes={imgOk} bloqueado={trabajando} slug={slug} alRegenerar={(id, inst) => accion(`escenas/${id}/regenerar`, { instruccion: inst })} />}
       <p className="tenue pequeno" style={{ marginTop: 24 }}>¿Algo no está aquí? <a href={paginaVieja(slug)}>Ábrelo en la página de siempre</a>.</p>
     </div>
+  );
+}
+
+const NOMBRE_LLAMADO: Record<string, string> = {
+  apuesta: 'Apuesta', experiencia: 'Experiencia personal', debate: 'Debate', pais: 'País', cierre: 'Cierre',
+};
+
+/** Los llamados a comentar del guion y el comentario fijado, listo para copiar en YouTube. */
+function Llamados({ l }: { l: NonNullable<VideoDetalle['llamados']> }) {
+  const [copiado, setCopiado] = useState(false);
+  const copiar = async () => {
+    if (!l.comentario_fijado) return;
+    try { await navigator.clipboard.writeText(l.comentario_fijado); setCopiado(true); window.setTimeout(() => setCopiado(false), 2000); }
+    catch { /* el texto se puede seleccionar a mano */ }
+  };
+  return (
+    <section className="rev-tarjeta">
+      <h2>Llamados a comentar</h2>
+      {l.avisos.length > 0 && <p className="rev-aviso">Ojo: {l.avisos.join(' · ')}</p>}
+      <ul className="pequeno">
+        {l.lista.map((x, i) => <li key={i}><b>{NOMBRE_LLAMADO[x.tipo] ?? x.tipo}</b> ({x.seccion}): {x.texto}</li>)}
+      </ul>
+      {l.comentario_fijado && (
+        <p><b>Comentario fijado:</b> {l.comentario_fijado}{' '}
+          <button className="boton-borde pequeno" onClick={copiar}>{copiado ? 'Copiado' : 'Copiar'}</button></p>
+      )}
+    </section>
   );
 }
 

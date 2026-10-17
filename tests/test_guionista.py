@@ -77,7 +77,10 @@ def test_a_escenas(estilo):
     assert "## Gancho" in md
 
 
-def test_escribir_guion_en_dos_pasos_y_reintenta(tmp_path, estilo):
+def test_escribir_guion_en_dos_pasos_y_reintenta(tmp_path, estilo, monkeypatch):
+    from estudio import llamados
+
+    monkeypatch.setattr(llamados, "activos", lambda canal, estilo_id: False)   # aquí no se prueban los llamados
     datos = _datos()
     historias = ["esto no es una historia", _historia_texto(datos)]
     llamadas = []
@@ -231,3 +234,135 @@ def test_demasiados_niveles_explica_el_maximo():
     lineas += ["SECCION: Gancho", "Hola.", "SECCION: Nivel 1 · Bicho 1", "Uno.", "SECCION: Cierre", "Chao."]
     with pytest.raises(ValueError, match="16 niveles y el máximo es 8"):
         leer_historia("\n".join(lineas))
+
+
+# ------------------------------------------------------------------ llamados a comentar (17-10)
+
+def _con_llamados(datos, sin=(), fijado=True):
+    """La historia con los 5 llamados etiquetados (menos los de `sin`)."""
+    texto = _historia_texto(datos).splitlines()
+    extra = {"Gancho": ["[COMENTA:apuesta] Antes de seguir, escribe cuál crees que es el último de la lista:",
+                        "[COMENTA:apuesta] ¿bicho dos, Bicho 4 o bicho uno? Al final vemos quién acertó."],
+             "Nivel 1 · Bicho 1": ["[COMENTA:experiencia] Si alguna vez te picó uno, escribe sobreviviente."],
+             "Nivel 2 · Bicho 2": ["[COMENTA:pais] Escribe desde qué país nos ves y te digo cuál vive cerca de ti."],
+             "Nivel 3 · Bicho 3": ["[COMENTA:debate] Sé que muchos no van a estar de acuerdo: ¿tú dónde lo pondrías?"],
+             "Cierre": ["[COMENTA:cierre] ¿Qué animal quieres en la próxima escala? El más pedido sale en el siguiente."]}
+    salida, seccion = [], None
+    for linea in texto:
+        if linea.startswith("SECCION: "):
+            if seccion:
+                salida += [x for x in extra.get(seccion, []) if x.split("]")[0][9:] not in sin]
+            seccion = linea[9:]
+        salida.append(linea)
+        if linea.startswith("TITULO") and fijado:
+            salida.append("COMENTARIO_FIJADO: El número 4 era el Bicho 4 🐞 ¿Acertaste?")
+    salida += [x for x in extra.get(seccion, []) if x.split("]")[0][9:] not in sin]
+    return "\n".join(salida)
+
+
+def _claude_llamados(datos, historias, llamadas):
+    def falso(prompt, **kw):
+        llamadas.append(prompt)
+        if "Sección «" not in prompt:
+            if "AJUSTA EL LARGO" in prompt:
+                return prompt.rsplit("\n\n", 1)[-1], {}
+            return historias.pop(0), {}
+        numeradas = prompt.split("numeradas:", 1)[1].split("Para CADA", 1)[0].strip().splitlines()
+        return json.dumps({"escenas": [{"n": i + 1, "intencion": "explicacion", "intensidad": 3, "accion": "generar",
+                                        "tipo": "diagrama_fondo_blanco", "descripcion": "a bug"}
+                                       for i in range(len(numeradas))]}), {}
+    return falso
+
+
+def test_llamados_a_comentar_en_el_guion(tmp_path, estilo, monkeypatch):
+    from estudio import llamados as L
+    from estudio.edicion import trozos_subtitulo
+    from estudio.voz import Grupo
+
+    monkeypatch.setattr(L, "activos", lambda canal, estilo_id: True)
+    datos = _datos()
+    llamadas = []
+    historias = [_con_llamados(datos, sin=("pais",)), _con_llamados(datos)]     # el primero olvida el del país
+    escribir_guion(Encargo("bichos"), estilo, tmp_path, "animales-peligrosos",
+                   ejecutar=_claude_llamados(datos, historias, llamadas), avisar=lambda _: None)
+    assert "LLAMADOS A COMENTAR" in llamadas[0] and "COMENTARIO_FIJADO" in llamadas[0]
+    assert sum("CORRIGE LOS LLAMADOS" in p for p in llamadas) == 1 and "falta el llamado «pais»" in llamadas[1]
+    info = json.loads((tmp_path / "llamados.json").read_text(encoding="utf-8"))
+    assert [x["tipo"] for x in info["llamados"]] == ["apuesta", "apuesta", "experiencia", "pais", "debate", "cierre"]
+    assert info["avisos"] == [] and info["palabras"] <= L.MAX_PALABRAS
+    fijado = (tmp_path / "comentario_fijado.txt").read_text(encoding="utf-8")
+    assert "Bicho 4 🐞 ¿Acertaste?" in fijado and "próxima escala" in fijado          # respuesta + pregunta del cierre
+    doc = json.loads((tmp_path / "escenas.json").read_text(encoding="utf-8"))
+    narr = [e["narracion"] for e in doc["escenas"]]
+    assert not any("COMENTA" in n or "COMENTARIO_FIJADO" in n for n in narr)       # nunca llegan a la voz
+    assert len(doc["niveles"]) == 4                                                # siguen siendo los mismos niveles
+    pais = next(e for e in doc["escenas"] if e["narracion"].startswith("Escribe desde qué país"))
+    assert pais["visual"]["accion"] == "reusar"                                     # sin imagen nueva
+    com = json.loads((tmp_path / "direccion.json").read_text(encoding="utf-8"))["comentarios"]
+    assert com[str(pais["id"])] == {"tipo": "pais", "texto": "¡Desde Colombia!", "grupo": "pais"}
+    assert sorted(x["tipo"] for x in com.values()) == ["apuesta", "apuesta", "cierre", "debate", "experiencia", "pais"]
+    # defensa extra: aunque una etiqueta se colara, la voz y los subtítulos no la ven
+    from estudio.esquemas import Escena
+
+    e = Escena.model_validate({**doc["escenas"][0], "narracion": "[COMENTA:pais] Escribe tu país."})
+    assert Grupo([e]).texto == "Escribe tu país."
+    assert "COMENTA" not in " ".join(trozos_subtitulo("[COMENTA:cierre] ¿Qué animal quieres?"))
+
+
+def test_llamados_maximo_dos_reintentos_y_aviso(tmp_path, estilo, monkeypatch):
+    from estudio import llamados as L
+
+    monkeypatch.setattr(L, "activos", lambda canal, estilo_id: True)
+    datos = _datos()
+    llamadas = []
+    malo = _con_llamados(datos, sin=("debate",), fijado=False)
+    escribir_guion(Encargo("bichos"), estilo, tmp_path, "animales-peligrosos",
+                   ejecutar=_claude_llamados(datos, [malo, malo, malo], llamadas), avisar=lambda _: None)
+    assert sum("CORRIGE LOS LLAMADOS" in p for p in llamadas) == 2                   # 2 reintentos y se guarda
+    info = json.loads((tmp_path / "llamados.json").read_text(encoding="utf-8"))
+    assert info["avisos"] == ["falta el llamado «debate»"]
+    assert info["comentario_fijado"].startswith("El número 4 era Bicho 4") and "próxima escala" in info["comentario_fijado"]
+
+
+def test_llamados_reglas_sueltas(estilo):
+    from estudio import llamados as L
+
+    posiciones = {L.posicion_correcta(f"tema {i}") for i in range(30)}
+    assert posiciones == {1, 2, 3}                                                  # la correcta no va siempre igual
+    p = instruccion(Encargo("bichos"), estilo, llamados=True)
+    assert f"{L.ORDINALES[L.posicion_correcta('bichos')]} posición" in p
+    assert "LLAMADOS" not in instruccion(Encargo("bichos"), estilo)
+    largo = {"secciones": [("Gancho", ["[COMENTA:apuesta] " + "palabra " * 90])], "niveles": []}
+    assert any("máximo es 85" in x for x in L.problemas(largo))
+    assert L.activos(None, "enciclopedia_mascota") and not L.activos(None, "paradoja_sapiens")
+
+
+def test_cuadro_de_comentario_en_la_edicion():
+    from types import SimpleNamespace
+
+    from estudio import llamados as L
+    from estudio.edicion import _cuadros_comentario
+    from estudio.render_receta import comentario
+    from PIL import Image
+
+    _, fijado, ejemplos = L.separar_fijado("TITULO: x\nEJEMPLO: apuesta | Yo digo que es la anaconda\nCOMENTARIO_FIJADO: y")
+    assert ejemplos == {"apuesta": "Yo digo que es la anaconda"} and fijado == "y"
+    escenas = [SimpleNamespace(id=i) for i in range(1, 5)]
+    clips = [{"inicio": i * 1.0, "fin": i * 1.0 + 1.0, "efectos": []} for i in range(4)]
+    sfx = []
+    sonidos = lambda lista, tipo, t, idx, razon, **_: lista.append({"tipo": tipo, "inicio": t, "clip": idx})
+    import estudio.edicion as ed
+
+    viejo = ed._sfx
+    ed._sfx = sonidos
+    try:
+        _cuadros_comentario({"2": {"tipo": "apuesta", "texto": "Yo digo", "grupo": "apuesta"},
+                             "3": {"tipo": "apuesta", "texto": "Yo digo", "grupo": "apuesta"}}, escenas, clips, sfx, 4.0)
+    finally:
+        ed._sfx = viejo
+    con = [i for i, c in enumerate(clips) if any(x["efecto"] == "comentario" for x in c["efectos"])]
+    assert con == [1, 2, 3]                                   # un solo cuadro para las 2 frases (y dura ≥ 2,6 s)
+    assert [x["tipo"] for x in sfx] == ["pop", "tecleo"]
+    ef = clips[1]["efectos"][0]
+    base = Image.new("RGB", (1920, 1080), (230, 220, 200))
+    assert comentario(base, ef, 1.5).tobytes() != base.tobytes()

@@ -43,7 +43,7 @@ EFECTOS = (
     "animacion",
     # (07-10) receta de Peligro Tropical: ambiente oscuro en niveles altos, veredicto de cada nivel, «PERO ESPERA»,
     # destello blanco al salir de la tira, temblor corto en golpes, llamados a la acción y cierre con la mascota
-    "ambiente_oscuro", "veredicto", "pero_espera", "destello_blanco", "temblor_corto", "cta_like", "cta_suscribir",
+    "ambiente_oscuro", "veredicto", "pero_espera", "destello_blanco", "temblor_corto", "cta_like", "cta_suscribir", "comentario",
     "final_personaje",
     # entradas del objeto al cortar (sale de abajo o de un lado con rebote) y vaivén suave mientras está
     "entrada_abajo", "entrada_lado", "vaiven",

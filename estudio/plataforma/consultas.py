@@ -65,6 +65,24 @@ def registrar_video(slug: str, titulo: str, carpeta: str, canal: str, minutos: f
         pass
 
 
+def ajuste_canal(clave_canal: str, ajuste: str):
+    """Un valor de Canal.ajustes del canal (por su clave) en el espacio actual; None si no lo eligió o no hay base."""
+    try:
+        from sqlalchemy import select
+
+        from . import contexto, db
+        from .modelos import Canal
+
+        esp = contexto.espacio_actual()
+        if not esp:
+            return None
+        with db.sesion() as s:
+            c = s.scalar(select(Canal).where(Canal.espacio_id == esp, Canal.clave == clave_canal))
+            return (c.ajustes or {}).get(ajuste) if c else None
+    except Exception:  # noqa: BLE001 — sin base: el valor por defecto de quien pregunta
+        return None
+
+
 def personaje_del_canal(clave_canal: str):
     """Carpeta del personaje hecho con el asistente que el canal tiene asignado, o None
     (los personajes que vienen del estilo, como la mascota de Peligro Tropical, siguen igual)."""

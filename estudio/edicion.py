@@ -50,8 +50,9 @@ VOLUMEN_CLASICO = {"barrido": 0.42, "golpe_grave": 0.9, "pop": 0.32, "zumbido": 
 VOLUMEN["camara"] = 0.3
 PRIORIDAD["camara"] = 3
 # (07-10) sonidos de la receta de Peligro Tropical (hechos por código si la biblioteca no los tiene)
-PRIORIDAD.update({"sello": 6, "campanita": 5, "tic_tac": 4, "boing": 3, "glitch": 3, "ding": 3})
-VOLUMEN.update({"sello": 0.45, "campanita": 0.3, "tic_tac": 0.28, "boing": 0.26, "glitch": 0.22, "ding": 0.26})
+PRIORIDAD.update({"sello": 6, "campanita": 5, "tic_tac": 4, "boing": 3, "glitch": 3, "ding": 3, "tecleo": 5})
+VOLUMEN.update({"sello": 0.45, "campanita": 0.3, "tic_tac": 0.28, "boing": 0.26, "glitch": 0.22, "ding": 0.26,
+                "tecleo": 0.3})
 # sonidos de relleno en los cortes de la clásica: dan vida sin tapar la voz (pedido del dueño)
 RELLENO_CLASICO = ("pop", "barrido", "camara")
 VARIANTES = 4
@@ -68,7 +69,9 @@ def trozos_subtitulo(texto: str, maximo: int = 4) -> list[str]:
     def debil(p: str) -> bool:
         return re.sub(r"[^\wáéíóúñü]", "", p.lower()) in DEBILES and not p.endswith((",", ".", "?", "!", ":", ";", "…"))
 
-    palabras = texto.split()
+    from .llamados import quitar_etiquetas
+
+    palabras = quitar_etiquetas(texto).split()
     trozos, actual = [], []
     for p in palabras:
         actual.append(p)
@@ -573,6 +576,29 @@ def _a_pantalla_completa(estilo: Estilo, modo: str, e, zonas, revelacion: int | 
 def _escala(en: float, dur: float, valor: int, nivel) -> dict:
     return {"efecto": "escala_peligro", "en": en, "dur": dur, "valor": int(valor), "nivel": nivel.numero,
             "villano": bool(nivel.villano)}
+
+
+COMENTARIO_MIN_S = 2.6       # el cuadro de comentario dura al menos esto (aunque la frase sea corta)
+
+
+def _cuadros_comentario(comentarios: dict, escenas: list, clips: list, sfx: list, total: float) -> None:
+    """(17-10) Cuando el narrador invita a comentar, sale un cuadro de comentario que se escribe solo con lo que
+    respondería un espectador. Las frases de un mismo llamado comparten un cuadro; va en cada clip que toca."""
+    grupos: dict[str, list[int]] = {}
+    for idx, e in enumerate(escenas):
+        c = comentarios.get(str(e.id))
+        if c:
+            grupos.setdefault(f"{c['grupo']}", []).append(idx)
+    for grupo, idxs in grupos.items():
+        c = comentarios[str(escenas[idxs[0]].id)]
+        en = round(clips[idxs[0]]["inicio"] + 0.15, 3)
+        fin = min(total, max(clips[idxs[-1]]["fin"], en + COMENTARIO_MIN_S))
+        ef = {"efecto": "comentario", "en": en, "dur": round(fin - en, 3), "texto": c["texto"], "tipo": c["tipo"]}
+        for k, clip in enumerate(clips):
+            if clip["inicio"] < fin and clip["fin"] > en:
+                clip["efectos"].append(dict(ef))
+        _sfx(sfx, "pop", en, idxs[0], f"Pop: sale el cuadro de comentario ({c['tipo']})")
+        _sfx(sfx, "tecleo", en + 0.35, idxs[0], "Tecleo: el comentario se escribe solo")
 
 
 def construir_edl(carpeta: CarpetaProyecto) -> dict:
@@ -1153,6 +1179,7 @@ def construir_edl(carpeta: CarpetaProyecto) -> dict:
         if not p.requiere_divulgacion_contenido_sintetico:
             p.requiere_divulgacion_contenido_sintetico = True
             carpeta.guardar(p)
+    _cuadros_comentario(direccion.get("comentarios") or {}, escenas, clips, sfx, total)
     if perfil.receta and esc.niveles:
         from .receta_pt import aplicar as receta
 

@@ -234,3 +234,95 @@ def subtitulo(sb: dict, tt: float) -> Image.Image:
             for k in [k for k in _CACHE if k[0] == "sub"][:200]:
                 _CACHE.pop(k, None)
     return _CACHE[clave]
+
+
+# ------------------------------------------------------------------ cuadro de comentario (17-10)
+
+COLOR_AVATAR = {"apuesta": (229, 57, 53), "experiencia": (251, 140, 0), "debate": (94, 53, 177),
+                "pais": (0, 137, 123), "cierre": (30, 136, 229)}
+ANCHO_COMENTARIO = 900
+
+
+def _fuente_comentario(tam: int):
+    from PIL import ImageFont
+
+    try:
+        return ImageFont.truetype(str(Path(__file__).parent / "fuentes" / "Fredoka-SemiBold.ttf"), tam)
+    except OSError:
+        return _r()._fuente(tam)
+
+
+def _tam_texto(texto: str, ancho: int) -> int:
+    d = ImageDraw.Draw(Image.new("RGBA", (1, 1)))
+    for tam in range(48, 29, -2):
+        if d.textlength(texto, font=_fuente_comentario(tam)) <= ancho:
+            return tam
+    return 30
+
+
+def _tarjeta_comentario(texto: str, visibles: int, tipo: str, cursor: bool, corazon: float) -> Image.Image:
+    """Un comentario como los de YouTube: avatar, nombre, el texto escribiéndose y el corazón al final."""
+    w, h = ANCHO_COMENTARIO, 210
+    m = 16                                                       # margen para la sombra
+    im = Image.new("RGBA", (w + 2 * m, h + 2 * m + 26), (0, 0, 0, 0))
+    sombra = Image.new("RGBA", im.size, (0, 0, 0, 0))
+    ImageDraw.Draw(sombra).rounded_rectangle((m + 4, m + 10, m + w + 4, m + h + 10), radius=34, fill=(0, 0, 0, 90))
+    im.alpha_composite(sombra.filter(ImageFilter.GaussianBlur(9)))
+    d = ImageDraw.Draw(im)
+    d.rounded_rectangle((m, m, m + w, m + h), radius=34, fill=(255, 255, 255, 255), outline=(30, 30, 30, 255), width=4)
+    d.polygon([(m + 70, m + h - 2), (m + 70, m + h + 30), (m + 120, m + h - 2)], fill=(255, 255, 255, 255))
+    d.line([(m + 70, m + h - 1), (m + 70, m + h + 30), (m + 120, m + h - 1)], fill=(30, 30, 30, 255), width=4)
+    # avatar con la inicial
+    cx, cy, r = m + 78, m + 78, 46
+    d.ellipse((cx - r, cy - r, cx + r, cy + r), fill=COLOR_AVATAR.get(tipo, (229, 57, 53)) + (255,))
+    f_av = _fuente_comentario(48)
+    d.text((cx, cy + 2), "T", font=f_av, fill=(255, 255, 255), anchor="mm")
+    # nombre y hace cuánto
+    x0 = m + 148
+    f_nom = _fuente_comentario(30)
+    d.text((x0, m + 30), "@tú", font=f_nom, fill=(20, 20, 20))
+    d.text((x0 + d.textlength("@tú", font=f_nom) + 16, m + 30), "hace un momento", font=f_nom, fill=(150, 150, 150))
+    # el texto que se escribe
+    tam = _tam_texto(texto, w - (x0 - m) - 40)
+    f = _fuente_comentario(tam)
+    parte = texto[:visibles]
+    d.text((x0, m + 82), parte, font=f, fill=(15, 15, 15))
+    if cursor:
+        xc = x0 + d.textlength(parte, font=f) + 4
+        d.rectangle((xc, m + 86, xc + 4, m + 86 + tam), fill=(30, 136, 229))
+    # pulgar, «Responder» y el corazón del creador cuando termina
+    f_pie = _fuente_comentario(28)
+    yb = m + h - 52
+    d.text((x0, yb), "Me gusta", font=f_pie, fill=(110, 110, 110))
+    d.text((x0 + 170, yb), "Responder", font=f_pie, fill=(110, 110, 110))
+    if corazon > 0:
+        k = 1 + 0.35 * math.sin(min(1.0, corazon) * math.pi)
+        hx, hy, hr = m + w - 70, m + h - 40, 18 * k
+        rojo = (229, 57, 53, 255)
+        d.ellipse((hx - hr, hy - hr, hx, hy), fill=rojo)
+        d.ellipse((hx, hy - hr, hx + hr, hy), fill=rojo)
+        d.polygon([(hx - hr, hy - hr / 2 + 2), (hx + hr, hy - hr / 2 + 2), (hx, hy + hr * 0.95)], fill=rojo)
+    return im
+
+
+def comentario(img: Image.Image, ef: dict, loc: float) -> Image.Image:
+    """Sale desde abajo con rebote, el comentario se escribe letra por letra, el corazón late y se va."""
+    texto = str(ef.get("texto") or "")
+    dur = float(ef["dur"])
+    escribir = min(max(0.6, 0.055 * len(texto)), max(0.6, dur - 1.2))
+    p = max(0.0, min(1.0, (loc - 0.4) / escribir))
+    visibles = int(round(len(texto) * p))
+    escrito = p >= 1
+    cursor = not escrito or int(loc * 3) % 2 == 0
+    corazon = max(0.0, (loc - 0.4 - escribir - 0.25) / 0.35) if escrito else 0.0
+    clave = ("com", texto, visibles, cursor, round(min(corazon, 1.0), 1), ef.get("tipo"))
+    if clave not in _CACHE:
+        _CACHE[clave] = _tarjeta_comentario(texto, visibles, ef.get("tipo", ""), cursor, min(corazon, 1.0))
+        if len(_CACHE) > 600:
+            for k in [k for k in _CACHE if k[0] == "com"][:300]:
+                _CACHE.pop(k, None)
+    t = _CACHE[clave]
+    entra = _rebote(loc, 0.4, 0.12)
+    sale = max(0.0, min(1.0, (dur - loc) / 0.3))
+    y = H - 330 + (1 - entra) * 420 + (1 - sale) * 420
+    return _pegar(img, t, 80 + t.width / 2, y, 0.85 + 0.15 * entra)

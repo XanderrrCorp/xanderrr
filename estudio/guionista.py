@@ -14,6 +14,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from . import claude_cli
+from . import llamados as L
 from .config import escribir_json, leer_json
 from .esquemas import INTENCIONES, EscenasV2, Estilo
 
@@ -49,7 +50,7 @@ def cargar_formula(clave: str = "escala_peligro") -> dict:
 
 
 def instruccion(encargo: Encargo, estilo: Estilo, niveles_fijos: list[dict] | None = None,
-                formula: dict | None = None, narrador: str | None = None) -> str:
+                formula: dict | None = None, narrador: str | None = None, llamados: bool = False) -> str:
     formula = formula or cargar_formula(encargo.formula or "escala_peligro")
     palabras = int(encargo.minutos * 60 * PALABRAS_POR_SEGUNDO)
     if not formula.get("usa_niveles", True):
@@ -71,10 +72,11 @@ Villano (el más peligroso, último nivel): {encargo.villano or "(elige el más 
 Duración: unos {encargo.minutos:g} minutos de voz = entre {int(palabras * 0.93)} y {int(palabras * 1.07)} palabras en total.
 {("Notas del dueño: " + encargo.notas) if encargo.notas else ""}
 
-{estructura}
+{estructura}{instruccion_llamados(encargo.tema) if llamados else ""}
 == FORMATO DE SALIDA (texto, no JSON) ==
 Responde SOLO con esto, sin nada antes ni después:
-TITULO: <título del video, gancho de YouTube>
+TITULO: <título del video, gancho de YouTube>{(chr(10) + "COMENTARIO_FIJADO: <el comentario fijado>" + chr(10)
+    + chr(10).join(f"EJEMPLO: {t} | <lo que escribiría un espectador>" for t in L.TIPOS)) if llamados else ""}
 NIVEL: 1 | <nombre del animal> | <english description of the animal for a card: species, colors, pose, magnified, whole body visible and centered> | no
 NIVEL: 2 | ... | ... | no
 (uno por nivel, en orden; en el último, el villano, pon «si» al final. MÁXIMO 8 niveles y mínimo 4: si el
@@ -88,6 +90,10 @@ SECCION: Nivel 1 · <nombre>
 ... (una SECCION por nivel)
 SECCION: Cierre
 <escenas del cierre>"""
+
+
+def instruccion_llamados(tema: str) -> str:
+    return L.instruccion(tema)
 
 
 def _instruccion_sin_niveles(encargo: Encargo, formula: dict, palabras: int, narrador: str | None) -> str:
@@ -505,12 +511,23 @@ def escribir_guion(encargo: Encargo, estilo: Estilo, carpeta: Path, canal: str,
     usa_niveles = cargar_formula(encargo.formula or "escala_peligro").get("usa_niveles", True)
     if not usa_niveles:
         niveles_fijos = None
-    prompt = instruccion(encargo, estilo, niveles_fijos)
+    con_llamados = usa_niveles and L.activos(canal, estilo.id)
+    prompt = instruccion(encargo, estilo, niveles_fijos, llamados=con_llamados)
+
+    def leer(texto_claude: str) -> dict:
+        cuerpo, fijado, ejemplos = L.separar_fijado(texto_claude)
+        h = leer_historia(cuerpo, usa_niveles)
+        if niveles_fijos:
+            _niveles_coinciden(h, niveles_fijos)
+        h["fijado"], h["ejemplos"] = fijado, ejemplos
+        return h
+
     error = ""
     borrador = carpeta / "_borrador_guion"
     borrador.mkdir(parents=True, exist_ok=True)
     historia = None
-    if (borrador / "historia.json").exists():            # se retoma lo ya escrito
+    retomada = (borrador / "historia.json").exists()
+    if retomada:                                         # se retoma lo ya escrito
         historia = leer_json(borrador / "historia.json")
         historia["secciones"] = [tuple(x) for x in historia["secciones"]]
         avisar("Retomando la historia ya escrita…")
@@ -521,9 +538,7 @@ def escribir_guion(encargo: Encargo, estilo: Estilo, carpeta: Path, canal: str,
                                 prompt + f"\n\n== CORRIGE ==\nTu respuesta anterior falló: {error}. "
                                          "Devuelve la historia completa en el formato pedido.", cwd=carpeta)
         try:
-            historia = leer_historia(texto, usa_niveles)
-            if niveles_fijos:
-                _niveles_coinciden(historia, niveles_fijos)
+            historia = leer(texto)
             break
         except ValueError as ex:
             error = str(ex)[:300]
@@ -532,10 +547,27 @@ def escribir_guion(encargo: Encargo, estilo: Estilo, carpeta: Path, canal: str,
         if historia is None:
             raise claude_cli.ErrorClaude(f"La historia no quedó válida tras tres intentos: {error}")
     sobre = locals().get("sobre") or {}
+    fallas_llamados: list[str] = []
+    if con_llamados and not retomada:
+        # máximo 2 correcciones; si sigue fallando, se guarda igual y se avisa qué faltó (nunca un bucle)
+        for intento in range(L.MAX_REINTENTOS):
+            fallas_llamados = L.problemas(historia)
+            if not fallas_llamados:
+                break
+            avisar(f"  llamados a comentar: corrigiendo ({'; '.join(fallas_llamados)[:160]})")
+            texto2, _ = ejecutar(prompt + L.correccion(fallas_llamados) + "\n\nTU HISTORIA ANTERIOR:\n" + texto,
+                                 cwd=carpeta)
+            try:
+                nueva = leer(texto2)
+            except ValueError:
+                continue
+            if len(L.problemas(nueva)) <= len(fallas_llamados):
+                historia, texto = nueva, texto2
+        fallas_llamados = L.problemas(historia)
     if niveles_fijos:
         # mismo tema que un video anterior: los niveles (y sus tarjetas ya hechas) se conservan
         historia["niveles"] = niveles_fijos
-    palabras = sum(len(x.split()) for _, ls in historia["secciones"] for x in ls)
+    palabras = sum(len(L.quitar_etiquetas(x).split()) for _, ls in historia["secciones"] for x in ls)
     objetivo = encargo.minutos * 60 * PALABRAS_POR_SEGUNDO
     avisar(f"Historia: {palabras} palabras (objetivo {int(objetivo)}).")
     if abs(palabras - objetivo) / objetivo > tolerancia:
@@ -544,19 +576,22 @@ def escribir_guion(encargo: Encargo, estilo: Estilo, carpeta: Path, canal: str,
         texto2, _ = ejecutar(prompt + f"\n\n== AJUSTA EL LARGO ==\nEsta es tu historia, con {palabras} palabras. Debe tener "
                                       f"entre {int(objetivo * 0.95)} y {int(objetivo * 1.05)}. "
                                       f"{'Alárgala con más datos concretos y escenas' if palabras < objetivo else 'Acórtala'} "
-                                      "sin cambiar la estructura ni los niveles, y devuélvela completa en el mismo formato.\n\n"
-                                      + texto, cwd=carpeta)
+                                      "sin cambiar la estructura ni los niveles, y devuélvela completa en el mismo formato"
+                                      + (" (con las etiquetas [COMENTA:…] y la línea COMENTARIO_FIJADO)"
+                                         if con_llamados else "") + ".\n\n" + texto, cwd=carpeta)
         try:
-            ajustada = leer_historia(texto2, usa_niveles)
+            ajustada = leer(texto2)
             if niveles_fijos:
-                _niveles_coinciden(ajustada, niveles_fijos)
                 ajustada["niveles"] = niveles_fijos
-            nuevas = sum(len(x.split()) for _, ls in ajustada["secciones"] for x in ls)
-            if abs(nuevas - objetivo) < abs(palabras - objetivo):
+            nuevas = sum(len(L.quitar_etiquetas(x).split()) for _, ls in ajustada["secciones"] for x in ls)
+            sin_romper = not con_llamados or len(L.problemas(ajustada)) <= len(fallas_llamados)
+            if abs(nuevas - objetivo) < abs(palabras - objetivo) and sin_romper:
                 historia, palabras = ajustada, nuevas
                 avisar(f"Historia ajustada: {palabras} palabras.")
         except ValueError:
             pass
+    if con_llamados and not retomada:
+        historia = _guardar_llamados(historia, fallas_llamados, carpeta, avisar)
     escribir_json(borrador / "historia.json", {**historia, "secciones": [list(x) for x in historia["secciones"]]})
     n = len(historia["secciones"])
     avisar(f"Historia lista ({sum(len(x[1]) for x in historia['secciones'])} escenas). Claude está dirigiendo "
@@ -567,6 +602,7 @@ def escribir_guion(encargo: Encargo, estilo: Estilo, carpeta: Path, canal: str,
             if guardada.exists():
                 return leer_json(guardada)
             hecha = _detalles(historia, k, estilo, carpeta, ejecutar_detalles, avisar, catalogo)
+            _llamados_sin_imagen(hecha, k, historia.get("llamados") or [])
             escribir_json(guardada, hecha)
             return hecha
 
@@ -574,11 +610,47 @@ def escribir_guion(encargo: Encargo, estilo: Estilo, carpeta: Path, canal: str,
     datos = {"titulo": historia["titulo"], "niveles": historia["niveles"], "escenas": [e for p in partes for e in p],
              "catalogo": catalogo or []}
     doc, direccion, md = a_escenas(datos, estilo, canal)
+    if historia.get("llamados"):                         # el cuadro de comentario animado (17-10)
+        direccion["comentarios"] = L.comentarios_en_pantalla(historia["llamados"], partes, historia.get("ejemplos") or {})
     escribir_json(carpeta / "escenas.json", doc)
     escribir_json(carpeta / "direccion.json", direccion)
     (carpeta / "guion.md").write_text(md, encoding="utf-8")
     return {"escenas": len(doc["escenas"]), "palabras": sum(len(e["narracion"].split()) for e in doc["escenas"]),
             "tokens": (sobre.get("usage") or {})}
+
+
+def _guardar_llamados(historia: dict, fallas: list[str], carpeta: Path, avisar) -> dict:
+    """Quita las etiquetas de la narración y guarda dónde quedó cada llamado y el comentario fijado."""
+    marcados = L.encontrar(historia)
+    limpia = L.limpiar(historia)
+    fijado = L.comentario_fijado(historia.get("fijado"), limpia)
+    limpia["llamados"] = [[x["seccion"], x["escena"], x["tipo"]] for x in marcados]
+    info = {"llamados": [{**x, "seccion_nombre": historia["secciones"][x["seccion"]][0]} for x in marcados],
+            "ejemplos": historia.get("ejemplos") or {},
+            "comentario_fijado": fijado, "avisos": fallas,
+            "palabras": sum(len(x["texto"].split()) for x in marcados)}
+    escribir_json(carpeta / "llamados.json", info)
+    (carpeta / "comentario_fijado.txt").write_text(fijado + "\n", encoding="utf-8")
+    if fallas:
+        avisar(f"Ojo, llamados a comentar: {'; '.join(fallas)} (el guion se guardó igual)")
+    else:
+        avisar(f"Llamados a comentar: los 5 ({info['palabras']} palabras). Comentario fijado listo.")
+    return limpia
+
+
+def _llamados_sin_imagen(escenas: list[dict], k: int, llamados: list) -> None:
+    """Las frases de los llamados no piden imagen nueva: reusan la de la escena anterior."""
+    for seccion, i, _ in llamados:
+        if seccion != k or i >= len(escenas):
+            continue
+        e = escenas[i]
+        if i == 0 and str(e.get("reusar", "")).startswith("nivel:"):
+            continue
+        # sin escena anterior en la sección, «—» no coincide con nada y se usa la última imagen propia anterior
+        e.update(accion="reusar", reusar="escena:" + (escenas[i - 1]["narracion"] if i else "—"),
+                 intencion="pregunta_al_espectador")
+        e.pop("tipo", None)
+        e.pop("descripcion", None)
 
 
 def ubicar_villano(carpeta: Path, ejecutar=claude_cli.ejecutar) -> dict:

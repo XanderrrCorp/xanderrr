@@ -87,6 +87,26 @@ def canales(q: Quien = Depends(usuario_actual), s: Session = Depends(sesion)):
              "videos": s.query(Video).filter(Video.canal_id == c.id).count()} for c in filas]
 
 
+AJUSTES_CANAL = {"llamados_comentar"}       # los que el dueño puede prender o apagar desde la página Canales
+
+
+class AjusteCanal(BaseModel):
+    clave: str
+    valor: bool
+
+
+@api.put("/canales/{canal_id}/ajustes")
+def cambiar_ajuste_canal(canal_id: str, a: AjusteCanal, q: Quien = Depends(usuario_actual), s: Session = Depends(sesion)):
+    if a.clave not in AJUSTES_CANAL:
+        raise HTTPException(400, "Ese ajuste no se puede cambiar aquí")
+    c = s.get(Canal, canal_id)
+    if c is None or c.espacio_id != q.espacio.id:
+        raise HTTPException(404, "No existe ese canal")
+    c.ajustes = {**(c.ajustes or {}), a.clave: a.valor}      # dict nuevo: así la base nota el cambio
+    s.commit()
+    return {"id": c.id, "ajustes": c.ajustes}
+
+
 @api.get("/recursos/{tipo}")
 def listar_recursos(tipo: str, buscar: str = "", q: Quien = Depends(usuario_actual), s: Session = Depends(sesion)):
     modelo = TIPOS.get(tipo)

@@ -99,3 +99,26 @@ def test_lista_de_videos_con_portada_y_estado(cli):
     c = pipeline.crear_video("Ranas venenosas", "", "", 9)
     v = cli.get("/api/v2/videos").json()
     assert v[0]["slug"] == c.ruta.name and v[0]["estado"] == "borrador" and v[0]["portada"] is None
+
+
+def test_llamados_a_comentar_se_prenden_por_canal(cli):
+    from estudio import llamados
+    from estudio.plataforma.cuentas import cuenta_local
+    from estudio.plataforma.modelos import Canal
+
+    cli.get("/api/v2/cuenta")
+    with db.sesion() as s:
+        _, esp = cuenta_local(s)
+        s.add(Canal(espacio_id=esp.id, clave="animales-peligrosos", nombre="Peligro Tropical"))
+        esp_id = esp.id
+    c = next(x for x in cli.get("/api/v2/canales").json() if x["clave"] == "animales-peligrosos")
+    assert cli.put(f"/api/v2/canales/{c['id']}/ajustes", json={"clave": "otra_cosa", "valor": True}).status_code == 400
+    r = cli.put(f"/api/v2/canales/{c['id']}/ajustes", json={"clave": "llamados_comentar", "valor": False}).json()
+    assert r["ajustes"]["llamados_comentar"] is False
+    from estudio.plataforma.contexto import usar_espacio
+
+    with usar_espacio(esp_id):
+        assert llamados.activos(c["clave"], "enciclopedia_mascota") is False        # el canal lo apagó
+        cli.put(f"/api/v2/canales/{c['id']}/ajustes", json={"clave": "llamados_comentar", "valor": True})
+        assert llamados.activos(c["clave"], "paradoja_sapiens") is True
+    assert cli.put("/api/v2/canales/no_existe/ajustes", json={"clave": "llamados_comentar", "valor": True}).status_code == 404
