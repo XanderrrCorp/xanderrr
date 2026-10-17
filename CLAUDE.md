@@ -132,6 +132,11 @@ Estado al 04-10-2026. El repositorio es PÚBLICO: nunca escribir claves, tokens 
   («[COMENTA:tipo|ejemplo] frase»: experiencia en el tema 2, debate a la mitad, cierre en FINAL); guion.leer quita
   la etiqueta (tema["comentarios"], no cuentan para el largo) y la escena lleva «comentario» → calma.render dibuja
   el mismo cuadro de Peligro Tropical (render_receta.comentario) + pop.
+- El Calvo, FOTOS REALISTAS (17-10, el dueño: «imágenes muy similares a lo que se necesita», ya advertido del
+  riesgo de copiar personajes con dueño y decidió seguir): en las escenas Claude puede poner «foto» (descripción fiel,
+  máx. 2 por tema, preset fotos/fotos_por_tema/max_fotos) → ilustraciones.aplicar la pide a Google como fotografía
+  realista SIN la referencia del personaje (≈120 COP, con freno) y la pone a pantalla completa; avisa marcar
+  contenido sintético al subir. Wikimedia Commons (gratis, con licencia) quedó propuesto, sin hacer.
 - Estrategia del dueño (16-10): foco en los 2 canales Tracy monetizados y Peligro Tropical; El Calvo en pausa.
 - Aquí (nube) la voz MiniMax sí funciona; Whisper no baja su modelo: vista previa con voz frase por frase.
 ## Pendiente

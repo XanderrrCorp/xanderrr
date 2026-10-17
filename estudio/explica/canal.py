@@ -65,6 +65,10 @@ POR_DEFECTO: dict[str, Any] = {
     "modelo_escenas": "sonnet",
     "pensamiento_escenas": 2000,
     "revision": "si_hace_falta",
+    # (17-10) fotos realistas con Google (≈120 COP c/u) en escenas de cosas reales que Claude marca; con freno
+    "fotos": True,
+    "fotos_por_tema": 2,
+    "max_fotos": 14,
     "llamados_comentar": True,      # (17-10) 3 llamados a comentar en el guion, con el cuadro de comentario animado
     "fondos_tema": True,
     "fondos_google": True,

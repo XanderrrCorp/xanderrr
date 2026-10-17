@@ -204,6 +204,11 @@ REGLAS (las más importantes primero)
 - Empujón de cámara («empujon»: [{{"palabra": "...", "foco": [x, y]}}]) en la palabra clave de la explicación y del bautizo.
 - «temblor» de pantalla ([{{"palabra": "..."}}]) solo en golpes o sustos.
 - Ilustra lo que dice la frase, no algo genérico. Pantalla limpia: mucho blanco.
+- «foto» (opcional, máximo 2 por tema): si la frase nombra algo REAL y concreto que se entiende mejor viéndolo de
+  verdad (un animal, un lugar, un objeto, un fenómeno, algo famoso de internet), pon «foto»: una descripción en
+  español, detallada y fiel, de cómo se ve exactamente (colores, forma, tamaño, lugar, encuadre). Esa escena sale
+  como fotografía realista a pantalla completa (tus elementos quedan de respaldo). Si es una idea o el personaje
+  viviendo algo, no pongas foto.
 - «fondo» (solo escenas ilustracion donde el personaje vive la situación en un lugar): {texto_fondos()}.
   Los dibujos del fondo son pálidos y grises; el piso queda en y≈940 (pies del personaje en y≈990 se ven bien).
   Si la escena es un objeto de cerca (mano, ojo, oreja…), deja «blanco». Si dos escenas seguidas pasan en el mismo
@@ -212,7 +217,7 @@ REGLAS (las más importantes primero)
 
 Devuelve SOLO un JSON:
 {{"icono": {{"pieza": ..., "estado": {{...}}}}  ← el dibujo del tema para su círculo en la cuadrícula,
- "escenas": [{{"tipo": ..., "fondo": "blanco", "elementos": [{{"id", "pieza", "estado", "posicion": [x, y], "tamano", "palabra",
+ "escenas": [{{"tipo": ..., "fondo": "blanco", "foto": null, "elementos": [{{"id", "pieza", "estado", "posicion": [x, y], "tamano", "palabra",
    "movimiento": [...], "retraso", "rotacion", "ya_estaba"}}], "temblor": [...], "empujon": [...]}}, ...]}}
 
 FRASES:
@@ -246,6 +251,8 @@ def limpiar_escena(crudo: dict, frase: str, tipo: str, fondo: str, notas: list[s
            "temblor": [m for m in crudo.get("temblor") or [] if _ancla_en(m.get("palabra", ""), frase)],
            "empujon": [m for m in crudo.get("empujon") or [] if _ancla_en(m.get("palabra", ""), frase)],
            "elementos": crudo.get("elementos") or []}
+    if isinstance(crudo.get("foto"), str) and len(crudo["foto"].strip()) > 8 and C.cargar().get("fotos", True):
+        esc["foto"] = {"descripcion": crudo["foto"].strip()[:500]}       # (17-10) foto realista con Google
     buenos = []
     for el in esc["elementos"]:
         if el.get("pieza") not in PIEZAS:
@@ -301,6 +308,8 @@ def validar(respuesta: dict, tema: dict) -> tuple[list[dict], dict, list[str]]:
     for (parte, frase), esc in zip(frases, escenas):
         tipo = esc.get("tipo") or TIPO_DE_PARTE[parte]
         salida.append(limpiar_escena(esc, frase, tipo, _fondo_valido(esc.get("fondo"), tipo), notas))
+    for e in [x for x in salida if x.get("foto")][int(C.cargar().get("fotos_por_tema", 2)):]:
+        e.pop("foto")                                            # máximo de fotos por tema (cuestan)
     icono = respuesta.get("icono") or {"pieza": "personaje", "estado": {"pose": "pensando", "gesto": "pensativo"}}
     if icono.get("pieza") not in PIEZAS:
         icono = {"pieza": "personaje", "estado": {"pose": "pensando", "gesto": "pensativo"}}
@@ -363,7 +372,8 @@ def motivos_revision(escenas: list[dict], notas: list[str]) -> list[str]:
     """Lo que el sistema ve mal sin gastar Claude: si no hay nada, el tema no se revisa con la imagen (17-10)."""
     motivos = [n for n in notas if not n.startswith("revisión")]
     for i, e in enumerate(escenas, 1):
-        if e.get("tipo") in ("ilustracion", "codigo") and len(e.get("elementos") or []) < 2 and not e.get("google"):
+        if e.get("tipo") in ("ilustracion", "codigo") and len(e.get("elementos") or []) < 2 \
+                and not e.get("google") and not e.get("foto"):
             motivos.append(f"la escena {i} se ve pobre ({len(e.get('elementos') or [])} elemento)")
         textos = [el for el in e.get("elementos") or [] if el.get("pieza") in ("texto", "titulo_tema", "rotulo")]
         if any(float(el.get("tamano", 1)) < 0.55 for el in textos):
@@ -488,7 +498,7 @@ def marcar_google(candidatas: list[tuple[dict, str, str]], proporcion: float | N
     cada = max(1, round(1 / proporcion))
     n = 0
     for i, (esc, frase, nombre) in enumerate(candidatas):
-        if i % cada == cada // 2 and n < int(preset.get("max_ilustraciones", 60)):
+        if i % cada == cada // 2 and n < int(preset.get("max_ilustraciones", 60)) and not esc.get("foto"):
             esc["google"] = {"descripcion": f"Tema del video: «{nombre}». La voz dice: «{frase}». Dibuja al personaje "
                                             "viviendo exactamente ese momento, en segunda persona (es el espectador)."}
             n += 1

@@ -116,7 +116,7 @@ def producir(c: Carpeta, t, permiso: bool = False, voz=None, transcriptor=None, 
 
     t.paso, t.progreso = "escenas", 0.3
     datos = json.loads((c.ruta / "escenas.json").read_text(encoding="utf-8"))
-    if any(e.get("google") for e in datos["escenas"]):
+    if any(e.get("google") or e.get("foto") for e in datos["escenas"]):
         from .ilustraciones import aplicar
 
         t.paso = "ilustraciones"

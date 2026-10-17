@@ -587,7 +587,7 @@ def test_ilustraciones_de_google_en_el_calvo(tmp_path):
     assert n == 2 and [i for i, e in enumerate(escs) if e.get("google")] == [2, 7]      # repartidas, no seguidas
     datos = {"escenas": escs}
     r = I.aplicar(tmp_path, datos, Trabajo("t"), proveedor=ProveedorSimulado(ConfigCostos.cargar()))
-    assert r == {"hechas": 2, "por_codigo": 0}
+    assert r == {"hechas": 2, "por_codigo": 0, "fotos_ia": False}
     el = escs[2]["elementos"][0]
     assert el["pieza"] == "imagen" and Path(el["estado"]["archivo"]).exists()
     assert escs[0]["elementos"][0]["pieza"] == "texto"                                  # las demás, por código
@@ -723,3 +723,27 @@ def test_llamados_a_comentar_en_el_calvo():
     sin = cuadro_en({"video": {}, "escenas": [dict(esc, comentario=None)]}, 1.5)
     con = cuadro_en({"video": {}, "escenas": [esc]}, 1.5)
     assert np.abs(sin.astype(int) - con.astype(int)).sum() > 0
+
+
+def test_fotos_realistas_en_el_calvo(tmp_path):
+    from estudio.config import ConfigCostos
+    from estudio.explica import autor
+    from estudio.explica import ilustraciones as I
+    from estudio.imagenes.proveedores import ProveedorSimulado
+    from estudio.pipeline import Trabajo
+
+    _, temas = _guion_corto(1)
+    frases = autor.frases_del_tema(temas[0])
+    crudas = [{"tipo": "ilustracion", "foto": "Un volcán activo echando lava naranja de noche, visto de lejos",
+               "elementos": [{"id": "a", "pieza": "texto", "estado": {"texto": "x"}}]} for _ in frases]
+    escenas, _, _ = autor.validar({"escenas": crudas}, temas[0])
+    con_foto = [e for e in escenas if e.get("foto")]
+    assert len(con_foto) == 2                                                     # máximo 2 por tema
+    pedidos = []
+    prov = ProveedorSimulado(ConfigCostos.cargar())
+    original = prov.generar
+    prov.generar = lambda texto, refs: (pedidos.append((texto, refs)), original(texto, refs))[1]
+    r = I.aplicar(tmp_path, {"escenas": escenas}, Trabajo("t"), proveedor=prov)
+    assert r["hechas"] == 2 and r["fotos_ia"]
+    assert all(t.startswith("Fotografía realista") and refs == [] for t, refs in pedidos)   # sin el personaje
+    assert con_foto[0]["elementos"][0]["pieza"] == "imagen"

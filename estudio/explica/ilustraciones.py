@@ -52,6 +52,19 @@ def referencia(destino: Path) -> Path:
     return destino
 
 
+def prompt_foto(descripcion: str) -> str:
+    return (f"Fotografía realista, nítida y bien iluminada, como de documental o de banco de fotos: {descripcion}\n\n"
+            "Lo más fiel posible a la descripción. Formato horizontal 16:9, el sujeto grande y centrado. Sin texto, "
+            "letras, marcas de agua ni logos sobre la imagen.")
+
+
+def _texto_de(esc: dict, preset: dict | None = None) -> tuple[str, bool]:
+    """(prompt, lleva el personaje de referencia) de una escena marcada."""
+    if esc.get("foto"):
+        return prompt_foto(esc["foto"]["descripcion"]), False
+    return prompt(esc["google"]["descripcion"], preset), True
+
+
 def prompt(descripcion: str, preset: dict | None = None) -> str:
     preset = preset or C.cargar()
     return (f"{preset['estilo_ilustracion']}\n\n{ACCESORIOS}\n\nEscena: {descripcion}\n\n"
@@ -115,7 +128,9 @@ def aplicar(c: Path, datos: dict, t, permiso: bool = False, proveedor=None) -> d
 
     from ..costos import FrenoPresupuesto
 
-    marcadas = [e for e in datos["escenas"] if e.get("google")]
+    preset = C.cargar()
+    fotos = [e for e in datos["escenas"] if e.get("foto")][:int(preset.get("max_fotos", 14))]
+    marcadas = [e for e in datos["escenas"] if e.get("google") and not e.get("foto")] + fotos
     if not marcadas:
         return {"hechas": 0, "por_codigo": 0}
     config = ConfigCostos.cargar()
@@ -128,14 +143,15 @@ def aplicar(c: Path, datos: dict, t, permiso: bool = False, proveedor=None) -> d
     hechas = por_codigo = 0
     frenado = False
     for k, esc in enumerate(marcadas):
-        texto = prompt(esc["google"]["descripcion"])
+        texto, con_ref = _texto_de(esc, preset)
+        refs = [ref] if con_ref else []
         archivo = dir_i / f"escena_{hashlib.sha1(texto.encode()).hexdigest()[:12]}.png"
         if not archivo.exists() and not frenado:
             try:
                 p = p or proveedor or proveedor_imagenes(config)
-                t.avisar(f"Ilustración {k + 1} de {len(marcadas)} con Google…")
-                libro.autorizar(p.estimar_usd(texto, [ref]), permiso=permiso)
-                r = p.generar(texto, [ref])
+                t.avisar(f"{'Foto' if esc.get('foto') else 'Ilustración'} {k + 1} de {len(marcadas)} con Google…")
+                libro.autorizar(p.estimar_usd(texto, refs), permiso=permiso)
+                r = p.generar(texto, refs)
                 libro.registrar(modulo=MODULO, proveedor=r.proveedor, modelo=r.modelo, unidades=r.uso.unidades(),
                                 costo_usd=r.uso.costo_usd, detalle=archivo.name)
                 Image.open(io.BytesIO(r.png)).convert("RGB").save(archivo)
@@ -152,9 +168,12 @@ def aplicar(c: Path, datos: dict, t, permiso: bool = False, proveedor=None) -> d
         else:
             por_codigo += 1
     gastado = sum(e.get("costo_usd", 0) for e in libro.entradas() if e.get("modulo") == MODULO)
-    t.avisar(f"Ilustraciones de Google: {hechas} (costo {formato_cop(config.a_cop(gastado))})"
-             + (f"; {por_codigo} quedaron por código" if por_codigo else ""))
-    return {"hechas": hechas, "por_codigo": por_codigo}
+    con_fotos = any(e.get("foto") and e["elementos"] and e["elementos"][0].get("pieza") == "imagen" for e in fotos)
+    t.avisar(f"Ilustraciones y fotos de Google: {hechas} (costo {formato_cop(config.a_cop(gastado))})"
+             + (f"; {por_codigo} quedaron por código" if por_codigo else "")
+             + (". Este video lleva fotos hechas con IA: al subirlo marca «Contenido alterado o sintético: Sí»."
+                if con_fotos else ""))
+    return {"hechas": hechas, "por_codigo": por_codigo, "fotos_ia": con_fotos}
 
 
 def costo_estimado(c: Path, proveedor=None) -> dict | None:
@@ -167,8 +186,9 @@ def costo_estimado(c: Path, proveedor=None) -> dict | None:
     from .ambiente import fondos_faltantes, prompt_fondo
 
     escenas = json.loads(ruta.read_text(encoding="utf-8"))["escenas"]
-    marcadas = [e for e in escenas if e.get("google")]
     preset = C.cargar()
+    marcadas = [e for e in escenas if e.get("google") and not e.get("foto")] + \
+        [e for e in escenas if e.get("foto")][:int(preset.get("max_fotos", 14))]
     fondos = (fondos_faltantes(c, sum(1 for e in escenas if e.get("tipo") == "cuadricula"))
               if preset.get("fondos_tema", True) and preset.get("fondos_google") else 0)
     if not marcadas and not fondos:
@@ -176,7 +196,7 @@ def costo_estimado(c: Path, proveedor=None) -> dict | None:
     config = ConfigCostos.cargar()
     try:
         p = proveedor or proveedor_imagenes(config)
-        usd = sum(p.estimar_usd(prompt(e["google"]["descripcion"]), []) for e in marcadas)
+        usd = sum(p.estimar_usd(_texto_de(e, preset)[0], []) for e in marcadas)
         usd += fondos * p.estimar_usd(prompt_fondo("un lugar"), [])
     except Exception:  # noqa: BLE001 — sin proveedor configurado: no se puede estimar
         return {"imagenes": len(marcadas) + fondos, "fondos": fondos, "cop": "?"}
