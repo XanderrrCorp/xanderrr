@@ -104,6 +104,70 @@ POSES: dict[str, dict] = {
         "pierna_atras": [(-16, -96), (-24, -8)], "pierna_frente": [(16, -96), (24, -8)],
         "dedo": True,
     },
+    # ---- (17-10) más poses para El Calvo Explica, pedido del dueño ----
+    "brazos_cruzados": {               # serio, esperando o «no me convence»
+        "cadera": (0, -190), "cuello": (0, -322), "hombro": (0, -300),
+        "brazo_atras": [(-38, -232), (44, -252)], "brazo_frente": [(46, -228), (-30, -250)],
+        "pierna_atras": [(-20, -96), (-30, -8)], "pierna_frente": [(20, -96), (30, -8)],
+    },
+    "saludando": {                     # la mano abierta en alto, hola o adiós
+        "cadera": (0, -190), "cuello": (0, -322), "hombro": (0, -300),
+        "brazo_atras": [(-40, -240), (-50, -168)], "brazo_frente": [(84, -334), (104, -432)],
+        "pierna_atras": [(-16, -96), (-24, -8)], "pierna_frente": [(16, -96), (24, -8)],
+        "mano_abierta": True, "caja_grande": True,
+    },
+    "celebrando": {                    # los dos brazos arriba en V
+        "cadera": (0, -190), "cuello": (0, -322), "hombro": (0, -300),
+        "brazo_atras": [(-122, -330), (-176, -424)], "brazo_frente": [(122, -330), (176, -424)],
+        "pierna_atras": [(-26, -96), (-40, -8)], "pierna_frente": [(26, -96), (40, -8)],
+        "caja_grande": True,
+    },
+    "saltando": {                      # en el aire, rodillas dobladas y brazos arriba (los pies no tocan el piso)
+        "cadera": (0, -270), "cuello": (0, -402), "hombro": (0, -380),
+        "brazo_atras": [(-122, -410), (-176, -504)], "brazo_frente": [(122, -410), (176, -504)],
+        "pierna_atras": [(-40, -200), (-30, -110)], "pierna_frente": [(36, -196), (52, -112)],
+        "suelo": False, "caja_grande": True,
+    },
+    "manos_cabeza": {                  # las dos manos en la cabeza: «¡no puede ser!», desesperado
+        "cadera": (0, -190), "cuello": (0, -322), "hombro": (0, -300),
+        "brazo_atras": [(-146, -392), (-86, -480)], "brazo_frente": [(146, -392), (86, -480)],
+        "pierna_atras": [(-20, -96), (-30, -8)], "pierna_frente": [(20, -96), (30, -8)],
+        "mano_encima": True, "caja_grande": True,
+    },
+    "tapandose": {                     # se tapa los ojos con la mano (asco, miedo, «no quiero ver»)
+        "cadera": (0, -190), "cuello": (-6, -322), "hombro": (-5, -300),
+        "brazo_atras": [(-40, -240), (-50, -168)], "brazo_frente": [(84, -320), (36, -412)],
+        "pierna_atras": [(-20, -96), (-30, -8)], "pierna_frente": [(14, -96), (20, -8)],
+        "mano_encima": True,
+    },
+    "mano_boca": {                     # la mano en la boca: «¡ups!», sorpresa o secreto
+        "cadera": (0, -190), "cuello": (0, -322), "hombro": (0, -300),
+        "brazo_atras": [(-40, -240), (-50, -168)], "brazo_frente": [(76, -290), (30, -360)],
+        "pierna_atras": [(-16, -96), (-24, -8)], "pierna_frente": [(16, -96), (24, -8)],
+        "mano_encima": True,
+    },
+    "caminando": {                     # paso tranquilo hacia la derecha
+        "cadera": (0, -190), "cuello": (10, -322), "hombro": (9, -300),
+        "brazo_atras": [(26, -238), (52, -178)], "brazo_frente": [(-24, -240), (-40, -176)],
+        "pierna_atras": [(-22, -98), (-56, -8)], "pierna_frente": [(32, -100), (58, -8)],
+    },
+    "cansado": {                       # encorvado, los brazos colgando
+        "cadera": (0, -184), "cuello": (22, -300), "hombro": (20, -280),
+        "brazo_atras": [(-14, -214), (-10, -140)], "brazo_frente": [(40, -210), (46, -138)],
+        "pierna_atras": [(-14, -92), (-26, -8)], "pierna_frente": [(18, -92), (26, -8)],
+    },
+    "empujando": {                     # inclinado hacia delante, las dos manos empujando algo a la derecha
+        "cadera": (0, -184), "cuello": (58, -304), "hombro": (54, -284),
+        "brazo_atras": [(110, -284), (168, -300)], "brazo_frente": [(120, -268), (180, -282)],
+        "pierna_atras": [(-36, -98), (-82, -8)], "pierna_frente": [(30, -100), (34, -8)],
+        "mano_abierta": True, "caja_grande": True,
+    },
+    "cayendo": {                       # se va de espaldas, brazos y piernas sueltos (caricatura, sin golpes)
+        "cadera": (0, -230), "cuello": (-70, -350), "hombro": (-62, -330),
+        "brazo_atras": [(-140, -350), (-190, -420)], "brazo_frente": [(10, -380), (60, -440)],
+        "pierna_atras": [(50, -260), (120, -300)], "pierna_frente": [(70, -210), (140, -230)],
+        "suelo": False, "caja_grande": True,
+    },
 }
 POSES["acostado"] = {**POSES["de_pie"], "acostado": True}    # en la cama: solo la cabeza en la almohada
 

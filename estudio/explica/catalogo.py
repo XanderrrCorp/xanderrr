@@ -18,7 +18,10 @@ CATALOGO: dict[str, str] = {
                  "Poses útiles: tablero (señala hacia arriba a la derecha), senalando_contento (señala a la derecha), "
                  "pensando, confundido (con signos ?), hombros, sorprendido, aliviado, idea (con bombillo), rechazo, "
                  "asustado (brazos arriba; también sirve para colgarse de una rama), corriendo, sentado, acostado (en "
-                 "una cama, la pieza ya trae la cama). Extra: «casco»: true = casco de astronauta; ojos «x» = desmayado "
+                 "una cama, la pieza ya trae la cama), brazos_cruzados (serio), saludando (hola/adiós), celebrando "
+                 "(brazos en V), saltando (en el aire), manos_cabeza («¡no puede ser!»), tapandose (se tapa los ojos), "
+                 "mano_boca («¡ups!»), caminando, cansado (encorvado), empujando (algo a su derecha), cayendo (de "
+                 "espaldas, caricatura). Varía las poses: no repitas la misma en escenas seguidas. Extra: «casco»: true = casco de astronauta; ojos «x» = desmayado "
                  "(caricatura, para «mueres» o «pierdes el conocimiento»; sin sangre ni heridas).",
     "vecino": "Otra persona igual al Calvo pero gris y sin mochila. Mismo estado que personaje. Ancla en los pies.",
     "gente": "Tres personas grises (un grupo, «todo el mundo»). Ancla abajo al centro, tamaño 1.0, y≈900-980.",

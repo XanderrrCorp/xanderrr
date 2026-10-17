@@ -482,6 +482,18 @@ def rehacer_guion(slug: str):
     return _lanzar(slug, "guion", lambda t: pipeline.paso_guion(c, t))
 
 
+@app.post("/api/videos/{slug}/revisar")
+def revisar_video(slug: str):
+    """(17-10) Claude mira 24 cuadros del video terminado y avisa de errores antes de subirlo (con modelo liviano)."""
+    from . import claude_cli, revision_video
+
+    c = _proyecto(slug)
+    if not (c.ruta / "render" / "final.mp4").exists():
+        raise HTTPException(400, "Primero haz el video")
+    liviano = lambda prompt, **k: claude_cli.ejecutar(prompt, modelo="sonnet", pensamiento=2000, **k)  # noqa: E731
+    return _lanzar(slug, "revision", lambda t: revision_video.revisar(c, ejecutar=liviano, avisar=t.avisar))
+
+
 class Texto(BaseModel):
     narracion: str = Field(min_length=1)
 

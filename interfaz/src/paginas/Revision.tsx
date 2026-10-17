@@ -121,7 +121,18 @@ export function Revision() {
             {v.puede_short && <button className="boton-borde" onClick={() => {
               if (window.confirm('Claude escribe un short vertical de unos 40 s con el nivel del villano, usando las mismas imágenes (solo se paga la voz, unos pocos pesos). ¿Lo hago?')) accion('short');
             }}>Sacar un short vertical</button>}
+            <button className="boton-borde" onClick={() => {
+              if (window.confirm('Claude mira 24 cuadros del video y te avisa si ve errores (personaje dentro de una escena en primera persona, textos cortados, imágenes que no cuadran…). No cuesta pesos; gasta un poco de tu plan de Claude. ¿Lo reviso?')) accion('revisar');
+            }}>{v.revision_video ? 'Revisar otra vez' : 'Revisar antes de subir'}</button>
           </div>
+          {v.revision_video && (
+            <div className={v.revision_video.problemas.length ? 'rev-aviso' : ''}>
+              <p><b>Revisión:</b> {v.revision_video.resumen || (v.revision_video.problemas.length ? '' : 'Todo bien.')}</p>
+              {v.revision_video.problemas.length > 0 && <ul className="pequeno">
+                {v.revision_video.problemas.map((x, i) => <li key={i}><b>{x.minuto}</b>{x.gravedad === 'alta' ? ' (importante)' : ''}: {x.que}</li>)}
+              </ul>}
+            </div>
+          )}
           {v.divulgacion && <p className="rev-aviso">Este video tiene al presentador hecho con IA. Al subirlo a YouTube, en «Detalles», marca <b>«Contenido alterado o sintético: Sí»</b>. No afecta la monetización.</p>}
         </section>
       )}

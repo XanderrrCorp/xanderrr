@@ -68,6 +68,8 @@ def personaje(e: dict) -> Dibujo:
                 f'fill="none" stroke="{BLANCO}" stroke-width="9" stroke-linecap="round"/>')
     if P.POSES[pose].get("acostado"):
         return Dibujo(svg, (-320, -300, 670, 350))
+    if P.POSES[pose].get("caja_grande"):
+        return Dibujo(svg, (-260, -660, 520, 690))
     if any(P.POSES[pose].get(k) for k in ("bombillo", "signos", "mano_abierta")) or pose == "senalando_contento":
         return Dibujo(svg, (-240, -600, 480, 630))
     return Dibujo(svg, (-190, -560, 380, 590))

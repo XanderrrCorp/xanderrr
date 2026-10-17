@@ -52,6 +52,7 @@ export interface VideoDetalle {
   escenas: Escena[]; video: string | null; trabajo: (Trabajo & { segundos: number }) | null;
   estimacion_imagenes?: Estimacion; prueba: Prueba | null; puede_short?: boolean; vertical: boolean;
   divulgacion: boolean; guion: string | null; modo?: string;
+  revision_video?: { resumen: string; problemas: { cuadro: number; minuto: string; que: string; gravedad: string }[] };
   llamados?: { comentario_fijado: string | null; avisos: string[]; lista: { tipo: string; seccion: string; texto: string }[] };
 }
 

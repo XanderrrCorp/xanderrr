@@ -137,6 +137,15 @@ Estado al 04-10-2026. El repositorio es PÚBLICO: nunca escribir claves, tokens 
   máx. 2 por tema, preset fotos/fotos_por_tema/max_fotos) → ilustraciones.aplicar la pide a Google como fotografía
   realista SIN la referencia del personaje (≈120 COP, con freno) y la pone a pantalla completa; avisa marcar
   contenido sintético al subir. Wikimedia Commons (gratis, con licencia) quedó propuesto, sin hacer.
+- (17-10) REVISAR ANTES DE SUBIR: estudio/revision_video.py + POST /api/videos/{slug}/revisar (botón en la página
+  del video terminado): hoja de 24 cuadros del final.mp4 con el minuto y lo que dice la voz → Claude (sonnet, con
+  Read) lista errores visibles (POV con personaje, textos cortados, imagen que no cuadra, villano antes de tiempo…)
+  → render/revision.json. Solo con el botón (gasta plan de Claude). Calvo: 11 POSES NUEVAS en calma/personaje.py
+  (brazos_cruzados, saludando, celebrando, saltando, manos_cabeza, tapandose, mano_boca, caminando, cansado,
+  empujando, cayendo; «caja_grande» en piezas.personaje), con su cara en canal.GESTO_POR_POSE y en el catálogo.
+- REPO PRIVADO (17-10): el dueño lo pidió. OJO: instalar/*.bat y *.ps1 bajan el código de GitHub SIN clave; si se
+  vuelve privado dejan de funcionar. Cambiar el instalador para usar una clave guardada en su PC fue bloqueado por
+  el clasificador de permisos: decidir con el dueño antes de volverlo privado.
 - Estrategia del dueño (16-10): foco en los 2 canales Tracy monetizados y Peligro Tropical; El Calvo en pausa.
 - Aquí (nube) la voz MiniMax sí funciona; Whisper no baja su modelo: vista previa con voz frase por frase.
 ## Pendiente

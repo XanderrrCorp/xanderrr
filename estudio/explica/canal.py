@@ -18,6 +18,9 @@ GESTO_POR_POSE = {
     "tablero": "seguro", "pensando": "pensativo", "confundido": "duda", "hombros": "neutral",
     "sorprendido": "sorpresa", "aliviado": "aliviado", "idea": "contento", "acostado": "neutral",
     "rechazo": "disgusto", "senalando_contento": "contento",
+    "brazos_cruzados": "seguro", "saludando": "contento", "celebrando": "contento", "saltando": "contento",
+    "manos_cabeza": "susto", "tapandose": "disgusto", "mano_boca": "sorpresa", "caminando": "amable",
+    "cansado": "pensativo", "empujando": "concentrado", "cayendo": "sorpresa",
 }
 OJOS_POR_POSE = {"acostado": "cerrados", "rechazo": "otro_lado"}
 
