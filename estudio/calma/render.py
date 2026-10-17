@@ -265,7 +265,20 @@ def cuadro_en(datos: dict, t: float) -> np.ndarray:
     if not profundidad and (abs(dx) > 0.3 or abs(dy) > 0.3 or z > 1.0005):
         m = np.array([[z, 0, fx - z * fx + dx], [0, z, fy - z * fy + dy]], np.float32)
         cuadro = cv2.warpAffine(cuadro, m, (W, H), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_REPLICATE)
+    if esc.get("comentario"):
+        cuadro = _comentario(cuadro, esc, t)
     return cuadro
+
+
+def _comentario(cuadro: np.ndarray, esc: dict, t: float) -> np.ndarray:
+    """(17-10) El cuadro de comentario que se escribe solo (el mismo de Peligro Tropical), encima de todo."""
+    from PIL import Image
+
+    from ..render_receta import comentario
+
+    ef = {**esc["comentario"], "dur": max(0.5, esc["fin"] - esc["inicio"])}
+    img = comentario(Image.fromarray(cuadro[:, :, ::-1]), ef, t - esc["inicio"])
+    return np.ascontiguousarray(np.asarray(img)[:, :, ::-1])
 
 
 def codificar_args(ffmpeg: str) -> list[str]:

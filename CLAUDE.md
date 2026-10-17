@@ -124,6 +124,14 @@ Estado al 04-10-2026. El repositorio es PÚBLICO: nunca escribir claves, tokens 
   sin elegir: solo estilo enciclopedia_mascota). CUADRO DE COMENTARIO animado (pedido del dueño): direccion
   «comentarios» → EDL efecto «comentario» (edicion._cuadros_comentario, pop + sfx «tecleo») → render_receta.comentario
   (tarjeta tipo YouTube que se escribe sola con el EJEMPLO que da Claude, corazón al final).
+- El Calvo, MENOS PLAN DE CLAUDE (17-10, el dueño iba al 66 % de su límite): escenas y revisión con modelo
+  «sonnet» y 2000 de razonamiento (preset modelo_escenas / pensamiento_escenas; el guion sigue con el completo);
+  revisión con imagen solo si autor.motivos_revision ve algo (notas, escena pobre, texto chiquito; preset
+  revision "si_hace_falta" | "siempre"); cada tema armado queda en revision/tema_XX.json con huella de sus frases y
+  se retoma sin llamar a Claude («Volver a armar» lo borra). LLAMADOS en El Calvo: 3 en el guion
+  («[COMENTA:tipo|ejemplo] frase»: experiencia en el tema 2, debate a la mitad, cierre en FINAL); guion.leer quita
+  la etiqueta (tema["comentarios"], no cuentan para el largo) y la escena lleva «comentario» → calma.render dibuja
+  el mismo cuadro de Peligro Tropical (render_receta.comentario) + pop.
 - Estrategia del dueño (16-10): foco en los 2 canales Tracy monetizados y Peligro Tropical; El Calvo en pausa.
 - Aquí (nube) la voz MiniMax sí funciona; Whisper no baja su modelo: vista previa con voz frase por frase.
 ## Pendiente

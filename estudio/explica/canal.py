@@ -60,6 +60,12 @@ POR_DEFECTO: dict[str, Any] = {
     "deriva_camara": 0.04,          # cada escena se acerca o se aleja un 4 % mientras dura (nada queda quieto)
     # (17-10) aspecto: el lugar de cada tema de fondo (explica/ambiente.py), pintado una vez por Google (≈120 COP por
     # tema), partículas y luz, trazo limpio con sombra suave y profundidad (el fondo se mueve menos que el personaje)
+    # (17-10) gasto del plan de Claude: escenas y revisión con un modelo más liviano (el guion, con el completo) y la
+    # revisión con imagen solo en los temas donde el sistema ve algo raro ("siempre" para revisarlos todos)
+    "modelo_escenas": "sonnet",
+    "pensamiento_escenas": 2000,
+    "revision": "si_hace_falta",
+    "llamados_comentar": True,      # (17-10) 3 llamados a comentar en el guion, con el cuadro de comentario animado
     "fondos_tema": True,
     "fondos_google": True,
     "particulas": True,

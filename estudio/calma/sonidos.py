@@ -85,6 +85,8 @@ def eventos(datos: dict) -> list[tuple[float, str, float]]:
     for esc in datos["escenas"]:
         if esc.get("tipo") == "cuadricula":
             ev.append((esc["inicio"], "swoosh", 0.35))
+        if esc.get("comentario"):                    # sale el cuadro de comentario
+            ev.append((esc["inicio"], "pop", 0))
         for m in esc.get("temblor", []):
             ev.append((float(m.get("t", esc["inicio"])), "golpe", 0))
         for m in esc.get("empujon", []):

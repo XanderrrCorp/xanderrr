@@ -273,6 +273,9 @@ def armar(slug: str):
     c = _carpeta_video(slug)
     if not (c / "guion.txt").exists():
         raise HTTPException(400, "Primero el guion")
+    if (c / "escenas.json").exists():           # «Volver a armar»: de verdad desde cero, sin lo guardado por tema
+        for viejo in (c / "revision").glob("tema_*.json"):
+            viejo.unlink()
     return _lanzar(slug, lambda t: autor.armar_escenas(c, avisar=t.avisar))
 
 

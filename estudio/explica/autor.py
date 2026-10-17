@@ -29,12 +29,16 @@ TIPO_DE_PARTE = {"escena": "ilustracion", "bautizo": "personaje", "explicacion":
 W, H = 1920, 1080
 
 
-def _claude(ejecutar, prompt: str, cwd: Path, herramientas: list[str] | None = None) -> str:
+def _claude(ejecutar, prompt: str, cwd: Path, herramientas: list[str] | None = None, liviano: bool = False) -> str:
+    """`liviano` (escenas y revisión): el modelo y el razonamiento del preset (17-10: gasta mucho menos del plan
+    del dueño; el guion sigue con el modelo completo)."""
     if ejecutar is None:
         from .. import claude_cli
 
-        texto, _ = claude_cli.ejecutar(prompt, cwd=cwd, herramientas=herramientas, pensamiento=4000,
-                                       tiempo_max_s=900)
+        preset = C.cargar()
+        texto, _ = claude_cli.ejecutar(prompt, cwd=cwd, herramientas=herramientas, tiempo_max_s=900,
+                                       modelo=preset.get("modelo_escenas") if liviano else None,
+                                       pensamiento=int(preset.get("pensamiento_escenas", 2000)) if liviano else 4000)
         return texto
     texto, _ = ejecutar(prompt, cwd=cwd, herramientas=herramientas)
     return texto
@@ -43,6 +47,19 @@ def _claude(ejecutar, prompt: str, cwd: Path, herramientas: list[str] | None = N
 # ------------------------------------------------------------------ 1. guion
 
 EJEMPLO_TEMA = (EJEMPLOS / "sacudida.txt").read_text(encoding="utf-8") if (EJEMPLOS / "sacudida.txt").exists() else ""
+
+
+def _instruccion_comentarios(n: int) -> str:
+    medio = max(1, n // 2)
+    return f"""- LLAMADOS A COMENTAR (obligatorios, tono natural, sin sonar a anuncio). Escribe cada uno en su propio renglón
+  empezando con su etiqueta: [COMENTA:tipo|lo que escribiría un espectador, máximo 40 letras, sin emojis]. La
+  etiqueta no se lee en voz alta (el sistema la quita) y esa frase no cuenta para el largo de la parte.
+  1. En el CIERRE del tema 2: si el espectador también lo tiene o le ha pasado, que lo escriba con una palabra
+     corta. Ej.: «[COMENTA:experiencia|YO LO TENGO] Si tú también lo tienes, escribe yo lo tengo en los comentarios.»
+  2. En el CIERRE del tema {medio + 1}: una pregunta para opinar, sobre el orden o la sorpresa, nunca sobre los hechos.
+     Ej.: «[COMENTA:debate|El de la muñeca, sin duda] ¿Cuál de estos te sorprendió más? Te leo.»
+  3. Como última frase del FINAL: «[COMENTA:cierre|¡Uno de los sueños!] ¿Qué tema quieres en el próximo video?
+     El más pedido sale pronto.»"""
 
 
 def _prompt_guion(titulo: str, n: int, datos: str, preset: dict) -> str:
@@ -54,6 +71,7 @@ ESTRUCTURA DEL VIDEO
 - No hay introducción: la primera palabra del video es el nombre del primer tema. Sin transiciones entre temas.
 - Orden: el tema más llamativo primero; el segundo más fuerte de último; los más flojos en el medio.
 - Al final, un bloque FINAL de 5 segundos: «Y ahora ya sabes un poco más sobre <tema del video>. Si te gustó, suscríbete.»
+{_instruccion_comentarios(n) if preset.get("llamados_comentar", True) else ""}
 
 MOLDE DE CADA TEMA ({preset['palabras_tema'][0]} a {preset['palabras_tema'][1]} palabras)
 1. NOMBRE ({p['nombre'][0]} a {p['nombre'][1]} palabras), solo el nombre con punto. Si el nombre técnico es raro, el cotidiano.
@@ -335,15 +353,39 @@ Si todo está bien responde SOLO {{"ok": true}}. Si no, responde SOLO el JSON co
 """
 
 
+def _huella(tema: dict) -> str:
+    import hashlib
+
+    return hashlib.sha1(json.dumps(frases_del_tema(tema), ensure_ascii=False).encode()).hexdigest()[:12]
+
+
+def motivos_revision(escenas: list[dict], notas: list[str]) -> list[str]:
+    """Lo que el sistema ve mal sin gastar Claude: si no hay nada, el tema no se revisa con la imagen (17-10)."""
+    motivos = [n for n in notas if not n.startswith("revisión")]
+    for i, e in enumerate(escenas, 1):
+        if e.get("tipo") in ("ilustracion", "codigo") and len(e.get("elementos") or []) < 2 and not e.get("google"):
+            motivos.append(f"la escena {i} se ve pobre ({len(e.get('elementos') or [])} elemento)")
+        textos = [el for el in e.get("elementos") or [] if el.get("pieza") in ("texto", "titulo_tema", "rotulo")]
+        if any(float(el.get("tamano", 1)) < 0.55 for el in textos):
+            motivos.append(f"en la escena {i} un texto quedó muy chiquito")
+    return motivos
+
+
 def armar_tema(tema: dict, k: int, n: int, carpeta: Path, ejecutar=None, avisar=print, revisar: bool = True) -> dict:
     from ..claude_cli import extraer_json
 
     nombre = " ".join(tema["nombre"])
+    hecho = carpeta / "revision" / f"tema_{k + 1:02d}.json"
+    if hecho.exists():                      # si se cortó a mitad, lo ya armado no se vuelve a pedir a Claude
+        previo = leer_json(hecho)
+        if previo.get("nombre") == nombre and previo.get("frases") == _huella(tema):
+            avisar(f"  tema {k + 1}: ya estaba armado")
+            return {"icono": previo["icono"], "escenas": previo["escenas"], "notas": previo["notas"]}
     ultimo_error = ""
     for intento in range(3):
         prompt = _prompt_escenas(tema, k, n) + (f"\n\nOJO, tu respuesta anterior falló: {ultimo_error}" if ultimo_error else "")
         try:
-            respuesta = extraer_json(_claude(ejecutar, prompt, carpeta))
+            respuesta = extraer_json(_claude(ejecutar, prompt, carpeta, liviano=True))
             escenas, icono, notas = validar(respuesta, tema)
             break
         except (ValueError, json.JSONDecodeError) as ex:
@@ -352,18 +394,22 @@ def armar_tema(tema: dict, k: int, n: int, carpeta: Path, ejecutar=None, avisar=
     else:
         raise RuntimeError(f"No se pudieron armar las escenas de «{nombre}»: {ultimo_error}")
     hoja = hoja_de_cuadros(escenas, tema, carpeta / "revision" / f"tema_{k + 1:02d}.png")
-    if revisar:
-        avisar(f"  tema {k + 1}: Claude está revisando su hoja de cuadros…")
+    motivos = motivos_revision(escenas, notas) if C.cargar().get("revision") == "si_hace_falta" else ["siempre"]
+    if revisar and motivos:
+        avisar(f"  tema {k + 1}: Claude está revisando su hoja de cuadros ({'; '.join(motivos)[:120]})…")
         try:
-            r = extraer_json(_claude(ejecutar, _prompt_revision(tema, escenas, str(hoja.relative_to(carpeta))),
-                                     carpeta, herramientas=["Read"]))
+            r = extraer_json(_claude(ejecutar, _prompt_revision(tema, escenas, str(hoja.relative_to(carpeta)))
+                                     + ("" if motivos == ["siempre"] else
+                                        "\nOJO en especial con esto que vio el sistema:\n- " + "\n- ".join(motivos)),
+                                     carpeta, herramientas=["Read"], liviano=True))
             if not r.get("ok") and r.get("escenas"):
                 escenas, _, notas2 = validar({"escenas": r["escenas"], "icono": icono}, tema)
                 notas += notas2
                 hoja = hoja_de_cuadros(escenas, tema, carpeta / "revision" / f"tema_{k + 1:02d}.png")
         except (ValueError, json.JSONDecodeError) as ex:     # la revisión es una mejora: si falla, queda lo de antes
             notas.append(f"revisión sin cambios: {ex}")
-    escribir_json(carpeta / "revision" / f"tema_{k + 1:02d}.json", {"icono": icono, "escenas": escenas, "notas": notas})
+    escribir_json(carpeta / "revision" / f"tema_{k + 1:02d}.json",
+                  {"nombre": nombre, "frases": _huella(tema), "icono": icono, "escenas": escenas, "notas": notas})
     avisar(f"  tema {k + 1} listo: {nombre}")
     return {"icono": icono, "escenas": escenas, "notas": notas}
 
@@ -401,12 +447,14 @@ def armar_escenas(carpeta: Path, ejecutar=None, avisar=print, revisar: bool = Tr
         rojo = max(ws, key=len).upper()
         escenas.append(cuadricula(cuad, k, ws[0], ws[-1], " ".join(ws), rojo))
         escenas += h["escenas"]
+        _marcar_comentarios(t, zip([f for _, f in frases_del_tema(t)], h["escenas"]))
         for (parte, frase), esc in zip(frases_del_tema(t), h["escenas"]):
             if parte == "escena" and esc.get("tipo") == "ilustracion":
                 candidatas.append((esc, frase, " ".join(t["nombre"]).rstrip(".")))
     marcar_google(candidatas)
     fin = escena_final(temas)
     if fin:
+        _marcar_comentarios(temas[-1], [(f, fin) for f in temas[-1].get("final", [])])
         escenas.append(fin)
     for i, e in enumerate(escenas, 1):
         e["id"] = i
@@ -417,6 +465,17 @@ def armar_escenas(carpeta: Path, ejecutar=None, avisar=print, revisar: bool = Tr
     escribir_json(carpeta / "escenas_info.json", {"temas": n, "escenas": len(escenas), "notas": notas})
     avisar(f"Escenas listas: {len(escenas)} ({len(notas)} nota(s))")
     return datos
+
+
+def _marcar_comentarios(tema: dict, pares) -> None:
+    """La escena de un llamado a comentar lleva el cuadro de comentario animado (calma.render lo dibuja)."""
+    from ..llamados import EJEMPLOS_POR_DEFECTO
+
+    por_frase = {c["frase"]: c for c in tema.get("comentarios", [])}
+    for frase, esc in pares:
+        c = por_frase.get(frase)
+        if c:
+            esc["comentario"] = {"tipo": c["tipo"], "texto": c["texto"] or EJEMPLOS_POR_DEFECTO.get(c["tipo"], "¡Yo!")}
 
 
 def marcar_google(candidatas: list[tuple[dict, str, str]], proporcion: float | None = None) -> int:

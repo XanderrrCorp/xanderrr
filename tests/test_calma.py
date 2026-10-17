@@ -446,9 +446,10 @@ def test_autor_escribe_el_guion_y_separa_las_dudas(tmp_path):
     assert "DUDAS" not in (tmp_path / "guion.txt").read_text(encoding="utf-8")
 
 
-def test_autor_arma_las_escenas_y_las_revisa_mirando(tmp_path):
+def test_autor_arma_las_escenas_y_las_revisa_mirando(tmp_path, monkeypatch):
     from estudio.explica import autor
 
+    monkeypatch.setattr(autor, "motivos_revision", lambda escenas, notas: ["algo raro"])   # hay algo que revisar
     texto, temas = _guion_corto(2)
     (tmp_path / "guion.txt").write_text(texto, encoding="utf-8")
     falso, llamadas = _claude_falso(texto)
@@ -679,3 +680,46 @@ def test_ambiente_de_cada_tema_en_el_calvo(tmp_path):
     A.aplicar(tmp_path, escenas(), temas, Trabajo("t"), proveedor=prov, preset={**C.POR_DEFECTO, "fondos_google": True})
     assert len((tmp_path / "logs" / "costos.jsonl").read_text().splitlines()) == pagadas == 2
     assert A.fondos_faltantes(tmp_path, 2) == 0
+
+
+def test_el_calvo_gasta_menos_claude(tmp_path):
+    """(17-10) Sin nada raro no se revisa con la imagen, y lo ya armado no se vuelve a pedir."""
+    from estudio.explica import autor
+
+    texto, temas = _guion_corto(2)
+    (tmp_path / "guion.txt").write_text(texto, encoding="utf-8")
+    falso, llamadas = _claude_falso(texto)
+    autor.armar_escenas(tmp_path, ejecutar=falso, avisar=lambda *_: None, a_la_vez=1)
+    revisiones = sum(1 for _, h in llamadas if h == ["Read"])
+    armadas = len(llamadas) - revisiones
+    assert armadas == 2
+    autor.armar_escenas(tmp_path, ejecutar=falso, avisar=lambda *_: None, a_la_vez=1)
+    assert len(llamadas) - sum(1 for _, h in llamadas if h == ["Read"]) == 2      # retomado: ninguna llamada nueva
+    assert autor.motivos_revision([{"tipo": "codigo", "elementos": [{"pieza": "texto"}]}], [])
+    assert autor.motivos_revision([{"tipo": "codigo", "elementos": [{"pieza": "texto"}, {"pieza": "flecha"}]}], []) == []
+
+
+def test_llamados_a_comentar_en_el_calvo():
+    import numpy as np
+
+    from estudio.calma.render import cuadro_en
+    from estudio.explica import autor
+    from estudio.explica import canal as C
+    from estudio.explica import guion as G
+
+    assert "[COMENTA:experiencia|" in autor._prompt_guion("Partes", 9, "", C.POR_DEFECTO)
+    texto, _ = _guion_corto(1)
+    lineas = texto.splitlines()
+    i = lineas.index("CIERRE") + 1
+    lineas.insert(i + 1, "[COMENTA:experiencia|YO LO TENGO] Si tú también lo tienes, escribe yo lo tengo en los comentarios.")
+    temas = G.leer("\n".join(lineas))
+    assert temas[0]["comentarios"] == [{"tipo": "experiencia", "texto": "YO LO TENGO",
+                                        "frase": "Si tú también lo tienes, escribe yo lo tengo en los comentarios."}]
+    assert "COMENTA" not in G.texto_para_voz(temas)                                  # la voz no lo lee
+    assert not [a for a in G.revisar(temas) if "CIERRE" in a]                        # no cuenta para el largo
+    esc = {"id": 1, "inicio": 0.0, "fin": 3.0, "fondo": "blanco", "elementos": []}
+    autor._marcar_comentarios(temas[0], [(temas[0]["comentarios"][0]["frase"], esc)])
+    assert esc["comentario"] == {"tipo": "experiencia", "texto": "YO LO TENGO"}
+    sin = cuadro_en({"video": {}, "escenas": [dict(esc, comentario=None)]}, 1.5)
+    con = cuadro_en({"video": {}, "escenas": [esc]}, 1.5)
+    assert np.abs(sin.astype(int) - con.astype(int)).sum() > 0

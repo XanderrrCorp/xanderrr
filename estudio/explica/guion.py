@@ -36,6 +36,11 @@ PROHIBIDAS = ["en este video", "quédate hasta el final", "quedate hasta el fina
               "hola a todos", "bienvenidos", "suscríbete", "vosotros", "primero,", "segundo,", "tercero,"]
 
 
+# (17-10) llamados a comentar: «[COMENTA:tipo|lo que escribiría el espectador] frase». La etiqueta se quita al leer
+# (la voz nunca la dice) y queda en tema["comentarios"]; esas frases no cuentan para el largo de la parte.
+COMENTA = re.compile(r"^\[\s*COMENTA\s*:\s*([a-záéíóúñ_]+)\s*(?:\|\s*([^\]]*))?\]\s*", re.I)
+
+
 def leer(texto: str) -> list[dict]:
     """Lista de temas: {"nombre": [...], "escena": [...], ...} con una frase por elemento."""
     temas: list[dict] = []
@@ -59,6 +64,11 @@ def leer(texto: str) -> list[dict]:
             continue
         if actual is None or parte is None:
             raise ValueError(f"texto fuera de un tema: «{r[:60]}» (cada tema empieza con NOMBRE)")
+        m = COMENTA.match(r)
+        if m:
+            r = r[m.end():].strip()
+            actual.setdefault("comentarios", []).append({"tipo": m.group(1).lower(), "frase": r,
+                                                         "texto": (m.group(2) or "").strip()[:42]})
         actual.setdefault(parte, []).append(r)
     return temas
 
@@ -80,14 +90,15 @@ def revisar(temas: list[dict], preset: dict | None = None, video_completo: bool 
     usos: dict[str, int] = {}
     for i, t in enumerate(temas, 1):
         nombre = " ".join(t["nombre"]) or f"tema {i}"
+        llamados = {c["frase"] for c in t.get("comentarios", [])}
         for parte in PARTES:
             lo, hi = rangos[parte]
-            n = palabras(t[parte])
+            n = palabras([f for f in t[parte] if f not in llamados])
             if not t[parte]:
                 avisos.append(f"{nombre}: falta la parte {parte.upper()}")
             elif not lo <= n <= hi:
                 avisos.append(f"{nombre}: {parte.upper()} tiene {n} palabras (debe tener {lo} a {hi})")
-        total = sum(palabras(t[x]) for x in PARTES)
+        total = sum(palabras([f for f in t[x] if f not in llamados]) for x in PARTES)
         lo, hi = p["palabras_tema"]
         if not lo <= total <= hi:
             avisos.append(f"{nombre}: el tema tiene {total} palabras (debe tener {lo} a {hi})")
