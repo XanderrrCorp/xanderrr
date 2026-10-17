@@ -38,6 +38,7 @@ class Trabajo:
     referencias: list[Path]
     destino: Path
     quitar_fondo: bool
+    antes: "Trabajo | None" = None   # cómo se pedía antes de un arreglo: si ya se pagó así, no se vuelve a pagar
 
 
 @dataclass
@@ -70,6 +71,11 @@ def _misma_de_antes(t: Trabajo, modelo: str, previo: dict) -> bool:
 
     from .arreglos import prompt_anterior
 
+    try:
+        if t.antes is not None and t.destino.exists() and _huella(t.antes, modelo) == previo.get("huella"):
+            return True
+    except OSError:                      # falta una referencia de las de antes: se pide de nuevo
+        pass
     antes = prompt_anterior(t.prompt)
     return antes is not None and _huella(replace(t, prompt=antes), modelo) == previo.get("huella")
 
@@ -199,10 +205,18 @@ def generar_imagenes(carpeta: CarpetaProyecto, *, primeras: int | None = None, i
         refs = [r for r in e.visual.referencias if r in assets]
         if asset_personaje and prompts.usa_personaje(e, estilo) and asset_personaje.id not in refs:
             refs.append(asset_personaje.id)
-        trabajos.append(Trabajo(f"escena:{e.id}", prompts.prompt_de_escena(e, estilo, personaje),
-                                [carpeta.ruta / assets[r].archivo for r in refs],
-                                carpeta.ruta / (e.visual.archivo or f"imagenes/escena_{e.id:03d}.png"),
-                                e.visual.quitar_fondo))
+        destino = carpeta.ruta / (e.visual.archivo or f"imagenes/escena_{e.id:03d}.png")
+        texto = prompts.prompt_de_escena(e, estilo, personaje)
+        antes = None
+        if prompts.es_pov(e, estilo):
+            # primera persona: sin la foto del personaje y con la prohibición de dibujarlo. Las imágenes ya pagadas
+            # con la forma de antes no se vuelven a pedir (`antes`); al regenerar una, sale ya corregida
+            antes = Trabajo(f"escena:{e.id}", texto, [carpeta.ruta / assets[r].archivo for r in refs], destino,
+                            e.visual.quitar_fondo)
+            refs = [r for r in refs if not (asset_personaje and r == asset_personaje.id)]
+            texto = texto.rstrip() + " " + prompts.POV_SIN_PERSONAJE
+        trabajos.append(Trabajo(f"escena:{e.id}", texto, [carpeta.ruta / assets[r].archivo for r in refs],
+                                destino, e.visual.quitar_fondo, antes))
 
     tope = tope_llamadas(esc, config, reintentos)
     llamadas_previas = sum(1 for x in libro.entradas() if x["modulo"] == MODULO)

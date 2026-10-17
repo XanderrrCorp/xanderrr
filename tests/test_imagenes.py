@@ -404,3 +404,26 @@ def test_las_que_google_dejo_esperando_tienen_otra_vuelta_al_final(proyecto, con
     monkeypatch.setattr("estudio.imagenes.generador.dormir", dormir)
     r = generar_imagenes(proyecto, primeras=3, proveedor=prov, config=config, avisar=silencio)
     assert r.fallidas == {} and r.generadas and 60.0 in esperas
+
+
+def test_primera_persona_sin_el_personaje_y_sin_volver_a_pagar(proyecto, config):
+    """(17-10) En «pov_personaje» Google dibujaba al personaje dentro de la escena: ya no se manda su foto y se le
+    prohíbe aparecer. Las imágenes ya pagadas con la forma de antes no se vuelven a pedir."""
+    from dataclasses import replace
+
+    from estudio.imagenes import generador as G
+
+    esc = proyecto.cargar_escenas()
+    esc.escenas[3].visual.tipo = "pov_personaje"                  # la escena 4 (antes con la mascota)
+    proyecto.guardar_escenas(esc)
+    prov = ProveedorSimulado(config)
+    generar_imagenes(proyecto, primeras=10, proveedor=prov, config=config, avisar=silencio)
+    m = json.loads((proyecto.ruta / "imagenes" / "manifiesto.json").read_text(encoding="utf-8"))
+    assert m["escena:4"]["referencias"] == [] and "must NOT appear" in m["escena:4"]["prompt"]
+    # simula una imagen pagada antes del arreglo: el manifiesto tiene la huella de la forma vieja
+    estilo = cargar_estilo(proyecto.cargar().estilo)
+    viejo = prompts.prompt_de_escena(proyecto.cargar_escenas().escenas[3], estilo, "PERSONAJE")
+    t_viejo = G.Trabajo("escena:4", viejo, [proyecto.ruta / "assets" / "mascota_base.png"],
+                        proyecto.ruta / m["escena:4"]["archivo"], False)
+    nuevo = replace(t_viejo, prompt=viejo + " " + prompts.POV_SIN_PERSONAJE, referencias=[], antes=t_viejo)
+    assert G._misma_de_antes(nuevo, prov.modelo, {"huella": G._huella(t_viejo, prov.modelo)})

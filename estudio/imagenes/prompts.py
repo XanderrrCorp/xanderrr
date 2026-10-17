@@ -85,6 +85,20 @@ PERSONA_NORMAL = ("Any human body part is an ordinary real person with natural s
                   "shiny plates on the human.")
 
 
+# (17-10) en las escenas en primera persona Google dibujaba al personaje DENTRO de la escena (flotando en el agua,
+# con el disfraz…) porque recibía su foto de referencia y la descripción de su cara. En primera persona el
+# personaje es quien mira: no se manda su foto y se le prohíbe aparecer.
+POV_SIN_PERSONAJE = ("IMPORTANT: this is a first-person view. The character himself must NOT appear anywhere in the "
+                     "picture: no head, no face, no hat, no full body, no back view, no reflection and no costume or "
+                     "hoodie version of him. The ONLY parts of him that can be seen are his own hands, sleeves and "
+                     "knees at the bottom edge of the frame. No other cartoon character in the scene.")
+
+
+def es_pov(escena: Escena, estilo: Estilo) -> bool:
+    tipo = estilo.tipo(escena.visual.tipo) if escena.visual.tipo else None
+    return bool(tipo) and ("pov" in tipo.id.lower() or "first-person" in tipo.plantilla_prompt.lower())
+
+
 def usa_personaje(escena: Escena, estilo: Estilo) -> bool:
     tipo = estilo.tipo(escena.visual.tipo)
     return bool(tipo) and "personaje" in variables_de(tipo.plantilla_prompt)

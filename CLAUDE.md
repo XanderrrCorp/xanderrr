@@ -98,6 +98,9 @@ Estado al 04-10-2026. El repositorio es PÚBLICO: nunca escribir claves, tokens 
   historia (preset proporcion_google 0.2); explica/ilustraciones.aplicar las dibuja al hacer el video (referencia del
   personaje, caché por prompt, respeta el tope: si frena, quedan por código) y las pone a pantalla completa.
   ≈120 COP c/u, ~2.000 COP por video de 12 temas. Solo videos nuevos (escenas armadas después de este cambio).
+- Primera persona (17-10, error que el dueño vio mucho en Peligro Tropical): en «pov_personaje» Google dibujaba al
+  personaje dentro de la escena. Ahora no se manda su foto y el prompt lleva prompts.POV_SIN_PERSONAJE; lo ya pagado
+  con la forma vieja se reconoce (Trabajo.antes) y no se vuelve a pedir; al regenerar sale corregida.
 - Estrategia del dueño (16-10): foco en los 2 canales Tracy monetizados y Peligro Tropical; El Calvo en pausa.
 - Aquí (nube) la voz MiniMax sí funciona; Whisper no baja su modelo: vista previa con voz frase por frase.
 ## Pendiente
