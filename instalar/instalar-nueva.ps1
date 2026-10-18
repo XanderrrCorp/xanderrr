@@ -63,7 +63,18 @@ Write-Host '   listo'
 Paso '2/5 Descargando Xandart'
 $tmp = Join-Path $env:TEMP ('xandart-' + [guid]::NewGuid())
 New-Item -ItemType Directory -Force $tmp | Out-Null
-Invoke-WebRequest $Zip -OutFile "$tmp\xandart.zip"
+# (18-10) en algunos PC Invoke-WebRequest se queda quieto: primero curl.exe (viene con Windows), que muestra el
+# avance y reintenta; si no hay, el de siempre. Si el dueño bajo el zip a mano, se usa ese.
+$aMano = Join-Path $env:USERPROFILE 'Downloads\xanderrr-claude-xandart-saas.zip'
+if ((Test-Path $aMano) -and ((Get-Item $aMano).LastWriteTime -gt (Get-Date).AddDays(-1))) {
+    Write-Host "   usando el que bajaste: $aMano"
+    Copy-Item $aMano "$tmp\xandart.zip"
+} elseif (Get-Command curl.exe -ErrorAction SilentlyContinue) {
+    & curl.exe -L --fail --retry 4 --retry-delay 3 --connect-timeout 30 -o "$tmp\xandart.zip" $Zip
+    if ($LASTEXITCODE -ne 0) { throw 'No se pudo bajar Xandart (revisa tu internet y corre de nuevo).' }
+} else {
+    Invoke-WebRequest $Zip -OutFile "$tmp\xandart.zip" -TimeoutSec 600
+}
 Expand-Archive "$tmp\xandart.zip" -DestinationPath $tmp -Force
 $fuente = Get-ChildItem $tmp -Directory | Select-Object -First 1
 New-Item -ItemType Directory -Force $Destino | Out-Null
