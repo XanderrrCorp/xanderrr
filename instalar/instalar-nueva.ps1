@@ -28,6 +28,30 @@ function RefrescarPath {
 
 Write-Host '  XANDART NUEVA (en pruebas, al lado de la de siempre)' -ForegroundColor Magenta
 
+# (18-10) un clic dentro de la ventana clasica de Windows PAUSA el programa hasta presionar una tecla: se apaga eso
+try {
+    Add-Type -Namespace Xandart -Name Consola -MemberDefinition @'
+[DllImport("kernel32.dll")] public static extern System.IntPtr GetStdHandle(int h);
+[DllImport("kernel32.dll")] public static extern bool GetConsoleMode(System.IntPtr h, out uint m);
+[DllImport("kernel32.dll")] public static extern bool SetConsoleMode(System.IntPtr h, uint m);
+'@
+    $hIn = [Xandart.Consola]::GetStdHandle(-10)
+    $modo = 0
+    if ([Xandart.Consola]::GetConsoleMode($hIn, [ref]$modo)) {
+        [void][Xandart.Consola]::SetConsoleMode($hIn, ($modo -band (-bnot 0x40)) -bor 0x80)
+    }
+} catch { }
+
+# (18-10) si Xandart Nueva esta abierta, sus archivos estan en uso y la copia se quedaba esperando para siempre
+$abierta = $false
+try { $abierta = [bool](Get-NetTCPConnection -LocalPort 8031 -State Listen -ErrorAction SilentlyContinue) } catch { }
+if ($abierta) {
+    Write-Host ''
+    Write-Host '  Xandart Nueva esta abierta. Cierra su ventana negra (si no hay ningun video haciendose)' -ForegroundColor Yellow
+    Write-Host '  y vuelve a darle doble clic a "Instalar Xandart Nueva".' -ForegroundColor Yellow
+    throw 'Cierra Xandart Nueva antes de instalar.'
+}
+
 # ---------------------------------------------------------------- 0. espacio
 $unidad = Get-PSDrive ($env:LOCALAPPDATA.Substring(0, 1))
 $libreGb = [math]::Round($unidad.Free / 1GB, 1)
@@ -75,11 +99,18 @@ if ((Test-Path $aMano) -and ((Get-Item $aMano).LastWriteTime -gt (Get-Date).AddD
 } else {
     Invoke-WebRequest $Zip -OutFile "$tmp\xandart.zip" -TimeoutSec 600
 }
-Expand-Archive "$tmp\xandart.zip" -DestinationPath $tmp -Force
+Write-Host '   descomprimiendo...'
+if (Get-Command tar.exe -ErrorAction SilentlyContinue) {            # mucho mas rapido que Expand-Archive
+    & tar.exe -xf "$tmp\xandart.zip" -C $tmp
+    if ($LASTEXITCODE -ne 0) { Expand-Archive "$tmp\xandart.zip" -DestinationPath $tmp -Force }
+} else {
+    Expand-Archive "$tmp\xandart.zip" -DestinationPath $tmp -Force
+}
 $fuente = Get-ChildItem $tmp -Directory | Select-Object -First 1
+Write-Host '   copiando...'
 New-Item -ItemType Directory -Force $Destino | Out-Null
 # copia encima sin borrar: .env (claves), proyectos y logs se conservan
-robocopy $fuente.FullName $Destino /E /NFL /NDL /NJH /NJS /NP /XD .venv proyectos logs | Out-Null
+robocopy $fuente.FullName $Destino /E /R:2 /W:2 /NFL /NDL /NJH /NJS /NP /XD .venv proyectos logs | Out-Null
 if ($LASTEXITCODE -ge 8) { throw "No se pudo copiar Xandart a $Destino" }
 Remove-Item $tmp -Recurse -Force -ErrorAction SilentlyContinue
 Write-Host "   listo: $Destino"
