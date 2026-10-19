@@ -15,7 +15,7 @@ import shutil
 import sys
 from pathlib import Path
 
-DATOS = Path(__file__).parent / "datos"
+DATOS = Path(__file__).parent / "recursos"
 
 # nombres de Natural Earth que en español latino se dicen distinto
 NOMBRES = {"USA": "Estados Unidos", "GBR": "Reino Unido", "RUS": "Rusia", "KOR": "Corea del Sur",

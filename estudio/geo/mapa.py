@@ -1,6 +1,6 @@
 """Mapas dibujados por código (18-10, pedido del dueño): las IA de imagen dibujan mal fronteras y banderas, así que en
 las escenas de mapa NO se usa ninguna IA. Fronteras de Natural Earth (dominio público) y banderas de flag-icons (MIT),
-en estudio/geo/datos (ver preparar.py).
+en estudio/geo/recursos (ver preparar.py).
 
 Proyección Miller (el mundo se ve «normal», sin los polos gigantes). Una «vista» es un rectángulo 16:9 en coordenadas
 proyectadas: (cx, cy, ancho). Todo se dibuja con Pillow a doble tamaño y se reduce (bordes suaves).
@@ -18,7 +18,7 @@ import numpy as np
 from PIL import Image, ImageDraw, ImageFilter
 
 W, H = 1920, 1080
-DATOS = Path(__file__).parent / "datos"
+DATOS = Path(__file__).parent / "recursos"
 OCEANO = (191, 227, 242)
 TIERRA = (237, 230, 214)
 BORDE = (74, 74, 74)

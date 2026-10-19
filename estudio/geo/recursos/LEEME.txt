@@ -1,0 +1,10 @@
+Datos de los mapas por código de Xandart (los arma estudio/geo/preparar.py una sola vez).
+
+paises.json
+  Fronteras de Natural Earth, "Admin 0 - Countries" escala 1:50m (naturalearthdata.com).
+  Licencia: dominio público. Fuente: github.com/nvkelso/natural-earth-vector (geojson/ne_50m_admin_0_countries.geojson).
+  Nombres en español: campo NAME_ES de Natural Earth (con unos pocos ajustes en preparar.py, p. ej. «Estados Unidos»).
+
+banderas/*.svg
+  flag-icons de Panayiotis Lipiridis (github.com/lipis/flag-icons), versión 7.2.3.
+  Licencia MIT: ver banderas/LICENSE-flag-icons.txt.

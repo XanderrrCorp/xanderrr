@@ -147,7 +147,7 @@ Estado al 04-10-2026. El repositorio es PÚBLICO: nunca escribir claves, tokens 
   vuelve privado dejan de funcionar. Cambiar el instalador para usar una clave guardada en su PC fue bloqueado por
   el clasificador de permisos: decidir con el dueño antes de volverlo privado.
 - MAPAS POR CÓDIGO (18-10, spec del dueño «Parte A»): estudio/geo/ (mapa.py = datos Natural Earth 1:50m dominio
-  público + banderas flag-icons MIT en geo/datos, proyección Miller, vistas, dibujo con Pillow; escena.py = escena
+  público + banderas flag-icons MIT en geo/recursos, proyección Miller, vistas, dibujo con Pillow; escena.py = escena
   «mapa»: highlight/arrow/zoom_region/compare, colores de sentimiento, país base (COL) con su bandera y borde
   blanco, marcador/HUD (barra AMIGOS vs CON PROBLEMAS, 4 categorías con pop, tarjeta del país con bandera, estado y
   2 líneas de historia, región, anterior), El Calvo por código reaccionando (POSES happy→senalando_contento…)).
