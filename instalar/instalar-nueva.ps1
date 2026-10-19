@@ -110,8 +110,10 @@ $fuente = Get-ChildItem $tmp -Directory | Select-Object -First 1
 Write-Host '   copiando...'
 New-Item -ItemType Directory -Force $Destino | Out-Null
 # copia encima sin borrar: .env (claves), proyectos y logs se conservan
-robocopy $fuente.FullName $Destino /E /R:2 /W:2 /NFL /NDL /NJH /NJS /NP /XD .venv proyectos logs | Out-Null
+# (19-10) sin CLAUDE.md: son notas de desarrollo; si quedan en la carpeta, Claude las lee en CADA pedido de Xandart
+robocopy $fuente.FullName $Destino /E /R:2 /W:2 /NFL /NDL /NJH /NJS /NP /XD .venv proyectos logs /XF CLAUDE.md | Out-Null
 if ($LASTEXITCODE -ge 8) { throw "No se pudo copiar Xandart a $Destino" }
+Remove-Item (Join-Path $Destino 'CLAUDE.md') -Force -ErrorAction SilentlyContinue
 Remove-Item $tmp -Recurse -Force -ErrorAction SilentlyContinue
 Write-Host "   listo: $Destino"
 

@@ -366,3 +366,27 @@ def test_cuadro_de_comentario_en_la_edicion():
     ef = clips[1]["efectos"][0]
     base = Image.new("RGB", (1920, 1080), (230, 220, 200))
     assert comentario(base, ef, 1.5).tobytes() != base.tobytes()
+
+
+def test_cli_va_liviano_y_vuelve_a_lo_de_siempre_si_no_entiende(monkeypatch):
+    """(19-10) Sin las instrucciones de programador (mucho menos plan del dueño); con un Claude viejo, como siempre."""
+    monkeypatch.setattr(claude_cli, "ejecutable", lambda: "claude")
+    monkeypatch.setitem(claude_cli._LIVIANO, "ok", True)
+    cmds = []
+
+    class Bien:
+        returncode, stderr = 0, ""
+        stdout = json.dumps({"result": "listo"})
+
+    class Viejo:
+        returncode, stdout, stderr = 1, "", "error: unknown option '--tools'"
+
+    def lanzar(cmd, **kw):
+        cmds.append(cmd)
+        return Viejo() if "--tools" in cmd else Bien()
+
+    assert claude_cli.ejecutar("hola", herramientas=["Read"], lanzar=lanzar)[0] == "listo"
+    assert "--system-prompt" in cmds[0] and cmds[0][cmds[0].index("--tools") + 1] == "Read"
+    assert "--system-prompt" not in cmds[1] and claude_cli._LIVIANO["ok"] is False
+    claude_cli.ejecutar("otra", lanzar=lanzar)
+    assert len(cmds) == 3 and "--tools" not in cmds[2]                 # ya no se vuelve a intentar

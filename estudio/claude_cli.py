@@ -16,6 +16,11 @@ from pathlib import Path
 
 PAGO_POR_USO = ("ANTHROPIC_API_KEY", "ANTHROPIC_AUTH_TOKEN", "ANTHROPIC_BASE_URL",
                 "CLAUDE_CODE_USE_BEDROCK", "CLAUDE_CODE_USE_VERTEX")
+# (19-10) Xandart no necesita las instrucciones de programador de Claude Code (~30.000 tokens por pedido del plan
+# del dueño): va con un sistema corto y solo las herramientas que pide. Probado: «OK» pasó de ~32.000 a ~1.500 tokens.
+SISTEMA_CORTO = ("Eres el asistente de Xandart, una herramienta que hace videos de YouTube en español. Responde "
+                 "exactamente en el formato que pide cada mensaje. Usa una herramienta solo si el mensaje lo pide.")
+_LIVIANO = {"ok": True}       # si el Claude instalado no entiende las opciones nuevas, vuelve a la forma de siempre
 SIN_VENTANA = {"creationflags": getattr(subprocess, "CREATE_NO_WINDOW", 0x08000000)} if os.name == "nt" else {}
 
 
@@ -57,13 +62,15 @@ def ejecutar(prompt: str, *, cwd: Path | None = None, herramientas: list[str] | 
     exe = ejecutable()
     if not exe:
         raise SinSesion("No encuentro el programa de Claude (Claude Code). Vuelve a correr el instalador de Xandart.")
-    cmd = [exe, "-p", prompt, "--output-format", "json"]
+    base = [exe, "-p", prompt, "--output-format", "json"]
     if modelo:
-        cmd += ["--model", modelo]
+        base += ["--model", modelo]
     if herramientas:
-        cmd += ["--allowedTools", ",".join(herramientas)]
+        base += ["--allowedTools", ",".join(herramientas)]
     else:
-        cmd += ["--disallowedTools", "Bash,Write,Edit,WebFetch,WebSearch,Task"]
+        base += ["--disallowedTools", "Bash,Write,Edit,WebFetch,WebSearch,Task"]
+    liviano = base + ["--system-prompt", SISTEMA_CORTO, "--tools", ",".join(herramientas) if herramientas else ""]
+    cmd = liviano if _LIVIANO["ok"] else base
     entorno = {k: v for k, v in os.environ.items() if k not in PAGO_POR_USO}
     if pensamiento is not None:
         entorno["MAX_THINKING_TOKENS"] = str(int(pensamiento))
@@ -72,6 +79,13 @@ def ejecutar(prompt: str, *, cwd: Path | None = None, herramientas: list[str] | 
                    encoding="utf-8", timeout=tiempo_max_s, **SIN_VENTANA)
     except subprocess.TimeoutExpired as ex:
         raise ErrorClaude(f"Claude tardó más de {tiempo_max_s // 60} minutos y se detuvo.") from ex
+    if cmd is liviano and r.returncode != 0 and _opcion_desconocida(r.stderr or r.stdout or ""):
+        _LIVIANO["ok"] = False                  # Claude viejo: se repite como siempre (y ya no se vuelve a intentar)
+        try:
+            r = lanzar(base, cwd=str(cwd) if cwd else None, env=entorno, capture_output=True, text=True,
+                       encoding="utf-8", timeout=tiempo_max_s, **SIN_VENTANA)
+        except subprocess.TimeoutExpired as ex:
+            raise ErrorClaude(f"Claude tardó más de {tiempo_max_s // 60} minutos y se detuvo.") from ex
     salida = (r.stdout or "").strip()
     try:
         sobre = json.loads(salida[salida.find("{"):]) if "{" in salida else {}
@@ -86,6 +100,11 @@ def ejecutar(prompt: str, *, cwd: Path | None = None, herramientas: list[str] | 
             raise SinSesion("Claude no tiene sesión iniciada. Abre «Iniciar sesión en Claude» desde Xandart.")
         raise ErrorClaude(f"Claude devolvió un error: {detalle}")
     return texto, sobre
+
+
+def _opcion_desconocida(texto: str) -> bool:
+    t = texto.lower()
+    return "unknown option" in t or "unknown argument" in t or "unrecognized" in t
 
 
 def extraer_json(texto: str):
