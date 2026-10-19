@@ -120,7 +120,7 @@ def estado_muestras() -> dict | None:
 
 # ------------------------------------------------------------------ ilustraciones dentro de los videos (17-10)
 
-def aplicar(c: Path, datos: dict, t, permiso: bool = False, proveedor=None) -> dict:
+def aplicar(c: Path, datos: dict, t, permiso: bool = False, proveedor=None, pexels=None, ejecutar=None) -> dict:
     """Dibuja con Google las escenas marcadas («google») y las cambia por esa imagen a pantalla completa (la cámara
     sigue moviéndose). Lo ya generado no se vuelve a pagar. Si se llega al máximo de gasto o falla una imagen, esa
     escena se queda con su versión por código: el video nunca se frena por esto."""
@@ -142,10 +142,23 @@ def aplicar(c: Path, datos: dict, t, permiso: bool = False, proveedor=None) -> d
     p, libro = None, LibroCostos(c, config)
     hechas = por_codigo = 0
     frenado = False
+    reales: dict = {}
+    if any(e["foto"].get("busqueda") for e in fotos) and preset.get("fotos_pexels", True):
+        from . import fotos_pexels                     # (19-10) primero fotos REALES de Pexels (gratis)
+
+        import requests
+
+        reales = fotos_pexels.buscar(c, fotos, t, sesion=pexels or requests, ejecutar=ejecutar)
+    con_ia = False
     for k, esc in enumerate(marcadas):
         texto, con_ref = _texto_de(esc, preset)
         refs = [ref] if con_ref else []
         archivo = dir_i / f"escena_{hashlib.sha1(texto.encode()).hexdigest()[:12]}.png"
+        real = reales.get(fotos_pexels_clave(esc)) if esc.get("foto") else None
+        if real is not None:
+            archivo = real
+        elif esc.get("foto"):
+            con_ia = True
         if not archivo.exists() and not frenado:
             try:
                 p = p or proveedor or proveedor_imagenes(config)
@@ -168,12 +181,19 @@ def aplicar(c: Path, datos: dict, t, permiso: bool = False, proveedor=None) -> d
         else:
             por_codigo += 1
     gastado = sum(e.get("costo_usd", 0) for e in libro.entradas() if e.get("modulo") == MODULO)
-    con_fotos = any(e.get("foto") and e["elementos"] and e["elementos"][0].get("pieza") == "imagen" for e in fotos)
+    con_fotos = con_ia and any(e.get("foto") and e["elementos"] and e["elementos"][0].get("pieza") == "imagen"
+                               and "pexels_" not in str(e["elementos"][0]["estado"].get("archivo")) for e in fotos)
     t.avisar(f"Ilustraciones y fotos de Google: {hechas} (costo {formato_cop(config.a_cop(gastado))})"
              + (f"; {por_codigo} quedaron por código" if por_codigo else "")
              + (". Este video lleva fotos hechas con IA: al subirlo marca «Contenido alterado o sintético: Sí»."
                 if con_fotos else ""))
     return {"hechas": hechas, "por_codigo": por_codigo, "fotos_ia": con_fotos}
+
+
+def fotos_pexels_clave(esc: dict) -> str:
+    from .fotos_pexels import _clave
+
+    return _clave(esc)
 
 
 def costo_estimado(c: Path, proveedor=None) -> dict | None:

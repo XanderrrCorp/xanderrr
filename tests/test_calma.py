@@ -773,3 +773,66 @@ def test_una_palabra_mal_oida_no_corre_el_video():
     n = E.asegurar_movimiento(datos)
     assert n >= 1 and e3["elementos"][0]["pieza"] == "personaje"        # escena vacía: el Calvo pensando
     assert any(m.get("fuerza") == 0.045 for m in e3.get("empujon", []))   # la última es larga: empujones suaves
+
+
+def test_el_calvo_usa_pexels_antes_que_google(tmp_path, monkeypatch):
+    """(19-10) Foto real de Pexels si Claude aprueba una; si no, Google. Una sola revisión para todas."""
+    import io as _io
+
+    from PIL import Image
+
+    from estudio import stock
+    from estudio.config import ConfigCostos
+    from estudio.explica import ilustraciones as I
+    from estudio.imagenes.proveedores import ProveedorSimulado
+    from estudio.pipeline import Trabajo
+
+    monkeypatch.setattr(stock, "_cabeceras", lambda: {})
+    png = _io.BytesIO()
+    Image.new("RGB", (64, 40), (10, 120, 30)).save(png, "PNG")
+
+    class Resp:
+        status_code = 200
+
+        def __init__(self, datos=None):
+            self.datos, self.content = datos, png.getvalue()
+
+        def json(self):
+            return self.datos
+
+        def raise_for_status(self):
+            pass
+
+    class Sesion:
+        def get(self, url, params=None, **k):
+            if "v1/search" in url:
+                q = params["query"]
+                return Resp({"photos": [{"id": hash(q) % 1000 + i, "url": f"https://pexels.com/{q}/{i}",
+                                         "photographer": "Ana", "photographer_url": "",
+                                         "src": {"medium": "m", "large": "l"}, "alt": q} for i in range(3)]})
+            if "videos" in url:
+                return Resp({"videos": []})
+            return Resp()
+
+    preguntas = []
+
+    def claude(prompt, **k):
+        preguntas.append(prompt)
+        return '{"escena 1": 2, "escena 2": null}', {}
+
+    escs = [{"tipo": "ilustracion", "foto": {"descripcion": "Un volcán activo de noche con lava", "busqueda": "volcano lava"},
+             "elementos": []},
+            {"tipo": "ilustracion", "foto": {"descripcion": "Un pulpo azul en un arrecife", "busqueda": "blue octopus"},
+             "elementos": []}]
+    prov = ProveedorSimulado(ConfigCostos.cargar())
+    pedidos = []
+    original = prov.generar
+    prov.generar = lambda texto, refs: (pedidos.append(texto), original(texto, refs))[1]
+    r = I.aplicar(tmp_path, {"escenas": escs}, Trabajo("t"), proveedor=prov, pexels=Sesion(), ejecutar=claude)
+    assert len(preguntas) == 1 and r["hechas"] == 2
+    assert "pexels_" in escs[0]["elementos"][0]["estado"]["archivo"]           # la real, gratis
+    assert len(pedidos) == 1 and "pulpo" in pedidos[0]                          # solo la otra va a Google
+    assert "Ana" in (tmp_path / "ilustraciones" / "creditos_pexels.txt").read_text(encoding="utf-8")
+    I.aplicar(tmp_path, {"escenas": [dict(e, elementos=[]) for e in escs]}, Trabajo("t"), proveedor=prov,
+              pexels=Sesion(), ejecutar=claude)
+    assert len(preguntas) == 1                                                  # lo decidido no se vuelve a preguntar

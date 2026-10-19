@@ -161,6 +161,13 @@ Estado al 04-10-2026. El repositorio es PÚBLICO: nunca escribir claves, tokens 
   calma.escenas._buscar la hallaba minutos después y corría TODAS las escenas siguientes. Ahora _buscar_cerca
   (ventana de 40 palabras; si no está, entra con el corte) y explica.flujo llama E.asegurar_movimiento (lo
   primero entra con el corte, escena vacía → el Calvo pensando, >2,5 s sin cambio → empujón suave de cámara).
+- (19-10) MENOS PLAN DE CLAUDE en TODO Xandart: claude_cli.ejecutar va con --system-prompt corto (SISTEMA_CORTO) y
+  --tools (solo las pedidas): «OK» pasó de ~32.000 a ~1.500 tokens; si el CLI no entiende las opciones, vuelve solo a
+  la forma de siempre (_LIVIANO). El instalador ya no copia CLAUDE.md (Claude lo leía en CADA pedido: las carpetas de
+  proyectos están dentro de la instalación). Esta sesión de chat también se volvió enorme: recomendado abrir otra.
+- (19-10) El Calvo usa PEXELS: escenas «foto» llevan {descripcion, busqueda}; explica/fotos_pexels.buscar trae 4
+  candidatas por foto, UNA hoja de contacto y UNA revisión de Claude (sonnet) para todas; lo aprobado va gratis
+  (créditos en ilustraciones/creditos_pexels.txt), lo demás lo pinta Google. Decisiones en ilustraciones/pexels.json.
 - Estrategia del dueño (16-10): foco en los 2 canales Tracy monetizados y Peligro Tropical; El Calvo en pausa.
 - Aquí (nube) la voz MiniMax sí funciona; Whisper no baja su modelo: vista previa con voz frase por frase.
 ## Pendiente

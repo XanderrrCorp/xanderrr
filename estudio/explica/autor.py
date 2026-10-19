@@ -226,7 +226,8 @@ codigo (la explicación: diagramas con íconos, flechas, corchetes y óvalos roj
 - «temblor» de pantalla ([{{"palabra": "..."}}]) solo en golpes o sustos.
 - Ilustra lo que dice la frase, no algo genérico. Pantalla limpia: mucho blanco.
 - «foto» (opcional, máximo 2 por tema): si la frase nombra algo REAL y concreto que se entiende mejor viéndolo de
-  verdad (un animal, un lugar, un objeto, un fenómeno, algo famoso de internet), pon «foto»: una descripción en
+  verdad (un animal, un lugar, un objeto, un fenómeno, algo famoso de internet), pon «foto»: {{"descripcion": "<en
+  español, detallada>", "busqueda": "<2 a 4 palabras en inglés para un banco de fotos>"}}; la descripción va en
   español, detallada y fiel, de cómo se ve exactamente (colores, forma, tamaño, lugar, encuadre). Esa escena sale
   como fotografía realista a pantalla completa (tus elementos quedan de respaldo). Si es una idea o el personaje
   viviendo algo, no pongas foto.
@@ -272,8 +273,14 @@ def limpiar_escena(crudo: dict, frase: str, tipo: str, fondo: str, notas: list[s
            "temblor": [m for m in crudo.get("temblor") or [] if _ancla_en(m.get("palabra", ""), frase)],
            "empujon": [m for m in crudo.get("empujon") or [] if _ancla_en(m.get("palabra", ""), frase)],
            "elementos": crudo.get("elementos") or []}
-    if isinstance(crudo.get("foto"), str) and len(crudo["foto"].strip()) > 8 and C.cargar().get("fotos", True):
-        esc["foto"] = {"descripcion": crudo["foto"].strip()[:500]}       # (17-10) foto realista con Google
+    foto = crudo.get("foto")
+    if isinstance(foto, dict):
+        foto_desc, foto_busq = str(foto.get("descripcion") or ""), str(foto.get("busqueda") or "").strip()[:60]
+    else:
+        foto_desc, foto_busq = str(foto or ""), ""
+    if len(foto_desc.strip()) > 8 and C.cargar().get("fotos", True):
+        # (17-10) foto realista; (19-10) primero se busca real en Pexels con «busqueda», si no la pinta Google
+        esc["foto"] = {"descripcion": foto_desc.strip()[:500], **({"busqueda": foto_busq} if foto_busq else {})}
     buenos = []
     for el in esc["elementos"]:
         if el.get("pieza") not in PIEZAS:

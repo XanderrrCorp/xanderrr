@@ -70,6 +70,7 @@ POR_DEFECTO: dict[str, Any] = {
     "revision": "si_hace_falta",
     # (17-10) fotos realistas con Google (≈120 COP c/u) en escenas de cosas reales que Claude marca; con freno
     "fotos": True,
+    "fotos_pexels": True,          # (19-10) primero foto REAL de Pexels (gratis); si no hay una buena, Google
     "fotos_por_tema": 2,
     "max_fotos": 14,
     "llamados_comentar": True,      # (17-10) 3 llamados a comentar en el guion, con el cuadro de comentario animado
