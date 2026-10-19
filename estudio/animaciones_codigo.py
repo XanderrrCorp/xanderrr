@@ -46,7 +46,18 @@ def candidatas(esc) -> list:
     return salida
 
 
-def _prompt(cands: list, n: int, niveles: list) -> str:
+MAPA_PT = """
+MODO MAPA (este video habla de países): si la frase dice DÓNDE vive el animal o habla de un país concreto, en vez de
+«elementos» devuelve «mapa»: {"map_action": "highlight|arrow|zoom_region|compare", "focus_country": "<ISO-3, ej.
+AUS>", "origin_country": "<ISO-3, solo arrow y compare>", "sentiment": "very_friendly|normal|complicated|tension"
+(aquí: normal = vive ahí sin problema, complicated = es un problema allá, tension = es una plaga o muy peligroso),
+"region": "<NORTEAMÉRICA|CENTROAMÉRICA Y CARIBE|SUDAMÉRICA|EUROPA|ASIA|ÁFRICA|OCEANÍA|MEDIO ORIENTE>",
+"label_text": "<nombre en mayúsculas>", "timeline": [] }. El mapa y las banderas se dibujan por código con
+fronteras reales: nunca uses la pieza «mapa» para un país concreto si puedes usar esto.
+"""
+
+
+def _prompt(cands: list, n: int, niveles: list, modo_mapa: bool = False) -> str:
     from .explica.catalogo import MOVIMIENTOS, texto_catalogo
 
     catalogo = "\n".join(x for x in texto_catalogo().splitlines()
@@ -85,8 +96,9 @@ REGLAS
   algo peligroso → «advertencia».
 - Sin sangre ni heridas; nada de consejos de salud.
 
+{MAPA_PT if modo_mapa else ""}
 Devuelve SOLO un JSON:
-{{"animaciones": [{{"escena": <id>, "elementos": [{{"id", "pieza", "estado", "posicion": [x, y], "tamano",
+{{"animaciones": [{{"escena": <id>, "mapa": null, "elementos": [{{"id", "pieza", "estado", "posicion": [x, y], "tamano",
   "palabra", "movimiento": [...], "retraso", "rotacion"}}], "temblor": [...], "empujon": [...]}}, ...]}}
 """
 
@@ -116,7 +128,7 @@ def disenar(carpeta, ejecutar=None, avisar=print, proporcion: float | None = Non
     notas: list[str] = []
     ultimo_error = ""
     for intento in range(3):
-        prompt = _prompt(cands, n, esc.niveles) + (f"\n\nOJO, tu respuesta anterior falló: {ultimo_error}"
+        prompt = _prompt(cands, n, esc.niveles, bool(getattr(p, "modo_mapa", False))) + (f"\n\nOJO, tu respuesta anterior falló: {ultimo_error}"
                                                    if ultimo_error else "")
         try:
             respuesta = extraer_json(_claude(ejecutar, prompt, carpeta.ruta))
@@ -132,6 +144,17 @@ def disenar(carpeta, ejecutar=None, avisar=print, proporcion: float | None = Non
     disenos: dict[str, dict] = {}
     for a in elegidas[:n]:
         e = por_id[int(a["escena"])]
+        if a.get("mapa") and getattr(p, "modo_mapa", False):
+            from .geo.escena import validar as validar_mapa
+
+            m, nota = validar_mapa({**a["mapa"], "calvo_position": "none"}, getattr(p, "pais_base", "COL"))
+            if m:                          # mapa real por código (sin el Calvo: este canal tiene su mascota)
+                disenos[str(e.id)] = {"narracion": e.narracion,
+                                      "escena": {"tipo": "mapa", "palabra_inicio": " ".join(e.narracion.split()[:2]),
+                                                 "fondo": "blanco", "mapa": m, "elementos": [], "temblor": [],
+                                                 "empujon": []}}
+                continue
+            notas.append(nota)
         crudo = {**a, "elementos": [x for x in a.get("elementos") or [] if x.get("pieza") not in PIEZAS_FUERA]}
         for x in crudo["elementos"]:
             if x.get("pieza") == "imagen" and (x.get("estado") or {}).get("asset") not in assets:
@@ -192,10 +215,22 @@ def _datos_de(diseno: dict, inicio_voz: float, fin_voz: float, dur: float, raiz:
     escena["elementos"] = [x for x in escena["elementos"] if x.get("estado") is not None]
     preset = C.completar(None)
     datos = {"video": {"ancho": 1920, "alto": 1080, "fps": 30, "ritmo": float(preset["ritmo"]),
-                       "deriva": float(preset["deriva_camara"])},
+                       "deriva": float(preset["deriva_camara"]),
+                       **({"_mapas_listos": True} if escena.get("tipo") == "mapa" else {})},
              "escenas": [{**escena, "inicio": 0.0}]}
     E.fijar_tiempos(datos, _palabras(diseno["narracion"], inicio_voz, fin_voz), dur)
     return datos
+
+
+def _marcador_mapas(disenos: dict, escenas: list, pais_base: str) -> None:
+    """Los mapas se dibujan uno por uno: el marcador de países (cuántos amigos, cuántos con problemas…) se calcula
+    antes con todos los mapas del video en orden."""
+    from .geo.escena import preparar
+
+    mapas = [disenos[str(e.id)]["escena"] for e in escenas
+             if str(e.id) in disenos and disenos[str(e.id)]["escena"].get("tipo") == "mapa"]
+    if mapas:
+        preparar({"video": {"pais_base": pais_base}, "escenas": mapas})
 
 
 def renderizar(carpeta, ffmpeg: str, avisar=print) -> int:
@@ -228,6 +263,7 @@ def renderizar(carpeta, ffmpeg: str, avisar=print) -> int:
     assets = {a.id: a.archivo for a in esc.assets}
     direccion = leer_json(direccion_ruta) if direccion_ruta.exists() else {}
     hechas = {}
+    _marcador_mapas(disenos, escenas, getattr(p, "pais_base", "COL"))
     for i, e in enumerate(escenas):
         d = disenos.get(str(e.id))
         if not d:

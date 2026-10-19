@@ -16,6 +16,7 @@ export function CajaIdea({ creado }: { creado: (slug: string) => void }) {
   const [modo, setModo] = useState<'auto' | 'personalizado'>('auto');
   const [idea, setIdea] = useState('');
   const [disfraz, setDisfraz] = useState(false);
+  const [modoMapa, setModoMapa] = useState(false);
   const [cot, setCot] = useState<Cotizacion | null>(null);
   const [enviando, setEnviando] = useState(false);
   const [error, setError] = useState('');
@@ -35,7 +36,7 @@ export function CajaIdea({ creado }: { creado: (slug: string) => void }) {
     if (idea.trim().length < 3) { setError('Escribe la idea del video (por ejemplo, el tema y el giro).'); return; }
     setEnviando(true); setError('');
     try {
-      const v = await api<VideoDetalle>('/api/videos', { cuerpo: { tema: idea.trim(), minutos, canal: canal || null, disfraz, formula: f?.datos.formula || null, estilo: f?.datos.estilo || null } });
+      const v = await api<VideoDetalle>('/api/videos', { cuerpo: { tema: idea.trim(), minutos, canal: canal || null, disfraz, modo_mapa: modoMapa, formula: f?.datos.formula || null, estilo: f?.datos.estilo || null } });
       setIdea('');
       if (modo === 'personalizado') ir(`/videos/${v.slug}`);
       else creado(v.slug);
@@ -81,6 +82,10 @@ export function CajaIdea({ creado }: { creado: (slug: string) => void }) {
         onKeyDown={(e) => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) crear(); }} />
       {error && <p className="error">{error}</p>}
       <div className="caja-pie">
+        <label className="casilla" title="Videos de países: los mapas y las banderas salen reales, dibujados por código (sin pagar imágenes), con un marcador de países.">
+          <input type="checkbox" checked={modoMapa} onChange={(e) => setModoMapa(e.target.checked)} />
+          Modo mapa
+        </label>
         <label className="casilla" title="Una imagen extra (≈ $0.07): la mascota con un hoodie del animal del video. Solo en las escenas nuevas; las reacciones guardadas salen sin disfraz.">
           <input type="checkbox" checked={disfraz} onChange={(e) => setDisfraz(e.target.checked)} />
           Mascota disfrazada del animal

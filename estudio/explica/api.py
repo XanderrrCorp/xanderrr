@@ -129,6 +129,8 @@ class NuevoVideo(BaseModel):
     temas: int = 9
     datos: str = ""
     todo: bool = False          # como Peligro Tropical: guion → escenas → video sin parar
+    modo_mapa: bool = False     # (18-10) videos de países: escenas de mapa por código (apagado por defecto)
+    pais_base: str = "COL"
 
 
 def _carpeta_video(slug: str):
@@ -207,7 +209,7 @@ def hacer_todo(ce, t, permiso: bool = False) -> None:
     F.producir(Carpeta(ce), t, permiso=permiso)
 
 
-def crear_carpeta(titulo: str, temas: int, datos: str = ""):
+def crear_carpeta(titulo: str, temas: int, datos: str = "", modo_mapa: bool = False, pais_base: str = "COL"):
     """Carpeta de un video nuevo de El Calvo Explica (también la usa la cola de la semana)."""
     from ..proyecto import slugificar
 
@@ -222,8 +224,12 @@ def crear_carpeta(titulo: str, temas: int, datos: str = ""):
         slug, k = f"{base}-{k}", k + 1
     c = F.carpeta_base() / "videos" / slug
     c.mkdir(parents=True)
-    (c / "video.json").write_text(json.dumps({"titulo": titulo, "temas": temas, "datos": datos}, ensure_ascii=False),
-                                  encoding="utf-8")
+    meta = {"titulo": titulo, "temas": temas, "datos": datos}
+    if modo_mapa:
+        from ..geo.mapa import codigo
+
+        meta.update(modo_mapa=True, pais_base=codigo(pais_base) or "COL")
+    (c / "video.json").write_text(json.dumps(meta, ensure_ascii=False), encoding="utf-8")
     return slug, c
 
 
@@ -232,7 +238,7 @@ def nuevo_video(n: NuevoVideo):
     from . import autor
 
     try:
-        slug, c = crear_carpeta(n.titulo, n.temas, n.datos)
+        slug, c = crear_carpeta(n.titulo, n.temas, n.datos, n.modo_mapa, n.pais_base)
     except ValueError as ex:
         raise HTTPException(400, str(ex)) from ex
     titulo = n.titulo.strip()

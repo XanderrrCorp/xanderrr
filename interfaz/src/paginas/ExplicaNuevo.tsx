@@ -97,6 +97,7 @@ export function ExplicaNuevo() {
   const [titulo, setTitulo] = useState('');
   const [temas, setTemas] = useState(9);
   const [datos, setDatos] = useState('');
+  const [modoMapa, setModoMapa] = useState(false);
   const [elegido, setElegido] = useState<string | null>(null);
   const [error, setError] = useState('');
   const cargar = useCallback(() => { api<typeof lista>('/api/explica/videos').then(setLista).catch(() => {}); }, []);
@@ -104,7 +105,7 @@ export function ExplicaNuevo() {
   const crear = async (todo: boolean) => {
     setError('');
     try {
-      const v = await api<{ slug: string }>('/api/explica/videos', { cuerpo: { titulo, temas, datos, todo } });
+      const v = await api<{ slug: string }>('/api/explica/videos', { cuerpo: { titulo, temas, datos, todo, modo_mapa: modoMapa } });
       setElegido(v.slug); setTitulo(''); setDatos(''); cargar();
     } catch (e) { setError((e as Error).message); }
   };
@@ -121,6 +122,10 @@ export function ExplicaNuevo() {
         </label>
         <label className="campo">Datos que quieres usar (opcional: tu lista de casos y datos; si la pones, Claude usa solo esos)
           <textarea rows={4} value={datos} onChange={(e) => setDatos(e.target.value)} />
+        </label>
+        <label className="pequeno" style={{ display: 'block', margin: '8px 0' }}>
+          <input type="checkbox" checked={modoMapa} onChange={(e) => setModoMapa(e.target.checked)} /> <b>Modo mapa</b> (videos
+          de países: mapas y banderas reales dibujados por código, con marcador; Colombia siempre resaltada)
         </label>
         <p className="pequeno">Igual que Peligro Tropical: un botón y Xandart hace guion, escenas y video sola. Gasta la voz
           (unos 125 COP), las ilustraciones y los fondos de cada tema con Google (unos 3.500 COP), sin pasar tu tope.</p>

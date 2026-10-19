@@ -425,12 +425,13 @@ class Nuevo(BaseModel):
     disfraz: bool = False           # mascota con hoodie del animal del tema (una imagen extra)
     formula: str | None = None      # estructura del guion del formato elegido (None = escala de peligro)
     estilo: str | None = None       # estilo visual del formato (None = el del canal)
+    modo_mapa: bool = False         # (18-10) videos de países: mapas reales por código
 
 
 @app.post("/api/videos")
 def nuevo(n: Nuevo):
     c = pipeline.crear_video(n.tema, n.giro, n.villano, n.minutos, n.notas, canal=n.canal or None, disfraz=n.disfraz,
-                             formula=n.formula or None, estilo_id=n.estilo or None)
+                             formula=n.formula or None, estilo_id=n.estilo or None, modo_mapa=n.modo_mapa)
     pipeline.lanzar(c.ruta.name, "guion", lambda t: pipeline.paso_guion(c, t))
     return pipeline.resumen(c)
 

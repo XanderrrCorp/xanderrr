@@ -656,6 +656,9 @@ class Proyecto(Modelo):
     disfraz_tema: str | None = None
     # «generated» = imágenes generadas (stickman, mascota…); «stock» = modo Tracy (clip base + stock)
     visual_mode: Literal["generated", "stock"] = "generated"
+    # (18-10) videos de países: las animaciones por código pueden ser mapas reales (fronteras y banderas por código)
+    modo_mapa: bool = False
+    pais_base: str = "COL"
 
     @model_validator(mode="after")
     def _pasos_completos(self) -> "Proyecto":

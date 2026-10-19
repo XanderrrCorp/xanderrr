@@ -188,7 +188,7 @@ def aplicar(c: Path, datos: dict, temas: list[dict], t, permiso: bool = False, p
         if esc.get("tipo") == "cuadricula":
             k = min(k + 1, len(ambientes) - 1)
             continue
-        if k < 0 or _es_imagen_completa(esc):
+        if k < 0 or _es_imagen_completa(esc) or esc.get("tipo") == "mapa":       # el mapa trae su propio fondo
             continue
         a = ambientes[k]
         lugar = f"archivo:{pintados[k]}" if k in pintados else a["escenario"]

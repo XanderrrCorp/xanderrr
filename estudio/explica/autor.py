@@ -178,7 +178,28 @@ def frases_del_tema(tema: dict) -> list[tuple[str, str]]:
     return [(p, f) for p in ("escena", "bautizo", "explicacion", "cierre") for f in tema[p]]
 
 
-def _prompt_escenas(tema: dict, k: int, n: int) -> str:
+MAPA_PROMPT = """
+MODO MAPA (este video es de países): además de los tipos de arriba existe el tipo «mapa», dibujado por código con
+fronteras y banderas reales (NUNCA dibujes mapas ni banderas con piezas). Úsalo cuando la frase trata sobre un país
+concreto, la relación entre dos países o un lugar del mundo. Una escena mapa lleva, además de «elementos» de respaldo
+(una ilustración normal por si el país no existe en el mapa):
+"tipo": "mapa", "mapa": {{"map_action": "highlight|arrow|zoom_region|compare", "focus_country": "<ISO-3 en
+mayúsculas, ej. MEX>", "origin_country": "<ISO-3, solo en arrow y compare>", "sentiment": "very_friendly|normal|
+complicated|tension", "region": "NORTEAMÉRICA|CENTROAMÉRICA Y CARIBE|SUDAMÉRICA|EUROPA|ASIA|ÁFRICA|OCEANÍA|MEDIO
+ORIENTE", "label_text": "<nombre en mayúsculas>", "status_tag": "MEJORANDO|ESTABLE|EMPEORANDO|HISTÓRICO",
+"timeline": [{{"year": "2008", "text": "<máx. 50 letras, copiado del guion>"}}] (máximo 2), "calvo_pose":
+"happy|worried|scared|angry|thinking|shocked" (feliz con los amigos, nervioso con los complicados, asustado o
+enojado con los de tensión), "calvo_position": "left|right"}}.
+- highlight: el país late y sale su bandera (la PRIMERA vez que aparece un país, siempre highlight).
+- arrow: flecha de origin_country a focus_country. compare: las dos banderas con VS.
+- zoom_region: la cámara va del mundo a la región (al cambiar de región).
+- El país base del video es {base}: cuando la relación es «con {base}», origin_country es {base_iso}.
+- Máximo 4 escenas mapa seguidas: intercala ilustraciones del Calvo viviendo lo que se narra.
+- Las fechas y frases de timeline salen literal del guion (no inventes datos).
+"""
+
+
+def _prompt_escenas(tema: dict, k: int, n: int, mapa: dict | None = None) -> str:
     frases = frases_del_tema(tema)
     lista = "\n".join(f"{i + 1}. [{TIPO_DE_PARTE[p]}] {f}" for i, (p, f) in enumerate(frases))
     return f"""Eres el animador del canal «El Calvo Explica». Video 1920x1080, fondo blanco, todo dibujado por código con
@@ -193,7 +214,7 @@ objeto de cerca), personaje (bautizo: el Calvo con pose «tablero» a la izquier
 (1180,480) tamaño 1.45 con el nombre encima en «titulo_tema» y un texto rojo; cierre: el Calvo reaccionando),
 codigo (la explicación: diagramas con íconos, flechas, corchetes y óvalos rojos, textos con palabras clave en rojo).
 
-REGLAS (las más importantes primero)
+{_bloque_mapa(mapa)}REGLAS (las más importantes primero)
 - Cada elemento entra con «palabra»: una palabra (o dos seguidas) que la voz dice EN ESA FRASE, escrita igual.
 - Algo nuevo aparece o cambia cada 1,5 segundos como máximo (la voz dice ~3,5 palabras por segundo): en frases largas
   agrega elementos o movimientos (cambiar_pose, temblor, dibujar) en palabras del medio y del final.
@@ -297,7 +318,31 @@ def limpiar_escena(crudo: dict, frase: str, tipo: str, fondo: str, notas: list[s
     return esc
 
 
-def validar(respuesta: dict, tema: dict) -> tuple[list[dict], dict, list[str]]:
+def _bloque_mapa(mapa: dict | None) -> str:
+    if not mapa:
+        return ""
+    from ..geo import mapa as M
+
+    base = M.codigo(mapa.get("pais_base") or "COL") or "COL"
+    return MAPA_PROMPT.format(base=M.nombre(base), base_iso=base) + "\n"
+
+
+def _escena_mapa(esc: dict, frase: str, mapa: dict | None, notas: list[str]) -> dict | None:
+    """(18-10) Una escena «mapa» validada; None si el modo mapa está apagado o el país no existe (va de ilustración)."""
+    if not mapa:
+        return None
+    from ..geo.escena import validar as validar_mapa
+
+    m, nota = validar_mapa(esc.get("mapa") or esc, mapa.get("pais_base") or "COL")
+    if m is None:
+        notas.append(nota)
+        return None
+    ws = frase.split()
+    return {"tipo": "mapa", "palabra_inicio": " ".join(ws[:2]), "fondo": "blanco", "mapa": m, "elementos": [],
+            "temblor": [], "empujon": []}
+
+
+def validar(respuesta: dict, tema: dict, mapa: dict | None = None) -> tuple[list[dict], dict, list[str]]:
     """Revisa y arregla lo que Claude devolvió. Devuelve (escenas, icono, notas)."""
     frases = frases_del_tema(tema)
     escenas = list(respuesta.get("escenas") or [])
@@ -307,6 +352,13 @@ def validar(respuesta: dict, tema: dict) -> tuple[list[dict], dict, list[str]]:
     salida = []
     for (parte, frase), esc in zip(frases, escenas):
         tipo = esc.get("tipo") or TIPO_DE_PARTE[parte]
+        if tipo == "mapa":
+            respaldo = limpiar_escena(esc, frase, "ilustracion", _fondo_valido(esc.get("fondo"), "ilustracion"), notas)
+            m = _escena_mapa(esc, frase, mapa, notas)
+            if m:
+                m["respaldo"] = respaldo                 # por si las reglas de mezcla la cambian a ilustración
+            salida.append(m or respaldo)
+            continue
         salida.append(limpiar_escena(esc, frase, tipo, _fondo_valido(esc.get("fondo"), tipo), notas))
     for e in [x for x in salida if x.get("foto")][int(C.cargar().get("fotos_por_tema", 2)):]:
         e.pop("foto")                                            # máximo de fotos por tema (cuestan)
@@ -362,10 +414,10 @@ Si todo está bien responde SOLO {{"ok": true}}. Si no, responde SOLO el JSON co
 """
 
 
-def _huella(tema: dict) -> str:
+def _huella(tema: dict, mapa: dict | None = None) -> str:
     import hashlib
 
-    return hashlib.sha1(json.dumps(frases_del_tema(tema), ensure_ascii=False).encode()).hexdigest()[:12]
+    return hashlib.sha1(json.dumps([frases_del_tema(tema), mapa], ensure_ascii=False).encode()).hexdigest()[:12]
 
 
 def motivos_revision(escenas: list[dict], notas: list[str]) -> list[str]:
@@ -381,22 +433,23 @@ def motivos_revision(escenas: list[dict], notas: list[str]) -> list[str]:
     return motivos
 
 
-def armar_tema(tema: dict, k: int, n: int, carpeta: Path, ejecutar=None, avisar=print, revisar: bool = True) -> dict:
+def armar_tema(tema: dict, k: int, n: int, carpeta: Path, ejecutar=None, avisar=print, revisar: bool = True,
+               mapa: dict | None = None) -> dict:
     from ..claude_cli import extraer_json
 
     nombre = " ".join(tema["nombre"])
     hecho = carpeta / "revision" / f"tema_{k + 1:02d}.json"
     if hecho.exists():                      # si se cortó a mitad, lo ya armado no se vuelve a pedir a Claude
         previo = leer_json(hecho)
-        if previo.get("nombre") == nombre and previo.get("frases") == _huella(tema):
+        if previo.get("nombre") == nombre and previo.get("frases") == _huella(tema, mapa):
             avisar(f"  tema {k + 1}: ya estaba armado")
             return {"icono": previo["icono"], "escenas": previo["escenas"], "notas": previo["notas"]}
     ultimo_error = ""
     for intento in range(3):
-        prompt = _prompt_escenas(tema, k, n) + (f"\n\nOJO, tu respuesta anterior falló: {ultimo_error}" if ultimo_error else "")
+        prompt = _prompt_escenas(tema, k, n, mapa) + (f"\n\nOJO, tu respuesta anterior falló: {ultimo_error}" if ultimo_error else "")
         try:
             respuesta = extraer_json(_claude(ejecutar, prompt, carpeta, liviano=True))
-            escenas, icono, notas = validar(respuesta, tema)
+            escenas, icono, notas = validar(respuesta, tema, mapa)
             break
         except (ValueError, json.JSONDecodeError) as ex:
             ultimo_error = str(ex)
@@ -419,7 +472,7 @@ def armar_tema(tema: dict, k: int, n: int, carpeta: Path, ejecutar=None, avisar=
         except (ValueError, json.JSONDecodeError) as ex:     # la revisión es una mejora: si falla, queda lo de antes
             notas.append(f"revisión sin cambios: {ex}")
     escribir_json(carpeta / "revision" / f"tema_{k + 1:02d}.json",
-                  {"nombre": nombre, "frases": _huella(tema), "icono": icono, "escenas": escenas, "notas": notas})
+                  {"nombre": nombre, "frases": _huella(tema, mapa), "icono": icono, "escenas": escenas, "notas": notas})
     avisar(f"  tema {k + 1} listo: {nombre}")
     return {"icono": icono, "escenas": escenas, "notas": notas}
 
@@ -445,9 +498,11 @@ def armar_escenas(carpeta: Path, ejecutar=None, avisar=print, revisar: bool = Tr
     """Escenas de todo el video (escenas.json) a partir de guion.txt."""
     temas = G.leer((carpeta / "guion.txt").read_text(encoding="utf-8"))
     n = len(temas)
+    meta = leer_json(carpeta / "video.json") if (carpeta / "video.json").exists() else {}
+    mapa = {"pais_base": meta.get("pais_base") or "COL"} if meta.get("modo_mapa") else None   # apagado por defecto
     avisar(f"Armando las escenas de {n} temas con Claude ({a_la_vez} a la vez)…")
     with ThreadPoolExecutor(max_workers=max(1, a_la_vez)) as grupo:
-        hechos = list(grupo.map(lambda kt: armar_tema(kt[1], kt[0], n, carpeta, ejecutar, avisar, revisar),
+        hechos = list(grupo.map(lambda kt: armar_tema(kt[1], kt[0], n, carpeta, ejecutar, avisar, revisar, mapa),
                                 enumerate(temas)))
     cuad = [{"etiqueta": " ".join(t["nombre"]).rstrip("."), "icono": h["icono"]} for t, h in zip(temas, hechos)]
     escenas = []
@@ -468,7 +523,10 @@ def armar_escenas(carpeta: Path, ejecutar=None, avisar=print, revisar: bool = Tr
         escenas.append(fin)
     for i, e in enumerate(escenas, 1):
         e["id"] = i
-    datos = {"video": {"ancho": W, "alto": H, "fps": 30}, "escenas": escenas}
+    if mapa:
+        reglas_mapa(escenas)
+    datos = {"video": {"ancho": W, "alto": H, "fps": 30, **({"pais_base": mapa["pais_base"]} if mapa else {})},
+             "escenas": escenas}
     E.fijar_tiempos(json.loads(json.dumps(datos)), *E.tiempos_estimados(G.texto_para_voz(temas), 3.6))   # comprobación
     escribir_json(carpeta / "escenas.json", datos)
     notas = [x for h in hechos for x in h["notas"]]
@@ -486,6 +544,32 @@ def _marcar_comentarios(tema: dict, pares) -> None:
         c = por_frase.get(frase)
         if c:
             esc["comentario"] = {"tipo": c["tipo"], "texto": c["texto"] or EJEMPLOS_POR_DEFECTO.get(c["tipo"], "¡Yo!")}
+
+
+MAX_MAPAS_SEGUIDOS = 4
+
+
+def reglas_mapa(escenas: list[dict]) -> None:
+    """Reglas de mezcla del modo mapa: la primera vez que sale un país late y saca su bandera (highlight, o el zoom a su
+    región, que también la saca), y nunca más de 4 mapas
+    seguidos (el quinto vuelve a su ilustración de respaldo)."""
+    vistos: set[str] = set()
+    seguidos = 0
+    for i, e in enumerate(escenas):
+        if e.get("tipo") != "mapa":
+            seguidos = 0 if e.get("tipo") != "cuadricula" else seguidos
+            continue
+        if seguidos >= MAX_MAPAS_SEGUIDOS and e.get("respaldo"):
+            escenas[i] = e["respaldo"]
+            seguidos = 0
+            continue
+        seguidos += 1
+        m = e["mapa"]
+        if m["pais"] not in vistos and m["accion"] == "arrow":
+            m["accion"] = "highlight"
+        vistos.add(m["pais"])
+        if m.get("origen"):
+            vistos.add(m["origen"])
 
 
 def marcar_google(candidatas: list[tuple[dict, str, str]], proporcion: float | None = None) -> int:

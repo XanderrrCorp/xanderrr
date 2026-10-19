@@ -87,6 +87,15 @@ def eventos(datos: dict) -> list[tuple[float, str, float]]:
             ev.append((esc["inicio"], "swoosh", 0.35))
         if esc.get("comentario"):                    # sale el cuadro de comentario
             ev.append((esc["inicio"], "pop", 0))
+        if esc.get("tipo") == "mapa":                # (18-10) zoom con swoosh, flecha que se dibuja, país que entra
+            acc = esc["mapa"].get("accion")
+            listo = esc["inicio"] + (1.2 if acc == "zoom_region" else 0)
+            if acc == "zoom_region":
+                ev.append((esc["inicio"], "swoosh", 1.0))
+            if acc == "arrow":
+                ev.append((listo, "rayon", 0.8))
+            ev.append((listo + 0.5, "pop", 0))
+            ev.append((esc["inicio"] + 0.1, "swoosh_suave", 0.4))
         for m in esc.get("temblor", []):
             ev.append((float(m.get("t", esc["inicio"])), "golpe", 0))
         for m in esc.get("empujon", []):

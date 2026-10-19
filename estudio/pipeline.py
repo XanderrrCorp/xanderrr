@@ -128,7 +128,7 @@ def _canal_y_estilo(canal: str | None, estilo_id: str | None) -> tuple[str, str]
 
 def crear_video(tema: str, giro: str, villano: str, minutos: float, notas: str = "",
                 canal: str | None = None, estilo_id: str | None = None, disfraz: bool = False,
-                formula: str | None = None) -> CarpetaProyecto:
+                formula: str | None = None, modo_mapa: bool = False) -> CarpetaProyecto:
     canal, estilo_id = _canal_y_estilo(canal, estilo_id)
     base = slugificar(tema)[:40] or "video"
     slug, n = base, 2
@@ -141,6 +141,7 @@ def crear_video(tema: str, giro: str, villano: str, minutos: float, notas: str =
     p.notas = [f"giro: {giro}", f"villano: {villano}", f"notas: {notas}"]
     p.disfraz_mascota = bool(disfraz)
     p.formula = formula or None
+    p.modo_mapa = bool(modo_mapa)
     c.guardar(p)
     _copiar_mascota(c, estilo_id)
     from .plataforma.consultas import personaje_del_canal, registrar_video

@@ -138,6 +138,11 @@ def revisar(datos: dict, max_sin_cambio: float = MAX_SIN_CAMBIO_S) -> list[str]:
         if esc.get("fondo", "blanco") not in FONDOS and not str(esc.get("fondo")).startswith(PREFIJOS_FONDO):
             avisos.append(f"escena {esc['id']}: fondo «{esc.get('fondo')}» no existe ({', '.join(FONDOS)})")
         momentos.append(esc["inicio"])
+        if esc.get("tipo") == "mapa":                # (18-10) el mapa nunca está quieto: cámara, pulso y marcador
+            k = esc["inicio"]
+            while k < esc["fin"]:
+                momentos.append(k)
+                k += 1.0
         for el in esc["elementos"]:
             if el["pieza"] not in PIEZAS:
                 avisos.append(f"escena {esc['id']}: la pieza «{el['pieza']}» no existe")

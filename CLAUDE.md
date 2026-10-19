@@ -146,6 +146,17 @@ Estado al 04-10-2026. El repositorio es PÚBLICO: nunca escribir claves, tokens 
 - REPO PRIVADO (17-10): el dueño lo pidió. OJO: instalar/*.bat y *.ps1 bajan el código de GitHub SIN clave; si se
   vuelve privado dejan de funcionar. Cambiar el instalador para usar una clave guardada en su PC fue bloqueado por
   el clasificador de permisos: decidir con el dueño antes de volverlo privado.
+- MAPAS POR CÓDIGO (18-10, spec del dueño «Parte A»): estudio/geo/ (mapa.py = datos Natural Earth 1:50m dominio
+  público + banderas flag-icons MIT en geo/datos, proyección Miller, vistas, dibujo con Pillow; escena.py = escena
+  «mapa»: highlight/arrow/zoom_region/compare, colores de sentimiento, país base (COL) con su bandera y borde
+  blanco, marcador/HUD (barra AMIGOS vs CON PROBLEMAS, 4 categorías con pop, tarjeta del país con bandera, estado y
+  2 líneas de historia, región, anterior), El Calvo por código reaccionando (POSES happy→senalando_contento…)).
+  calma.render.cuadro_en dibuja tipo «mapa» (~0,06 s/cuadro). «Modo mapa» por video, APAGADO por defecto:
+  El Calvo → video.json modo_mapa/pais_base (checkbox en /explica) → autor añade MAPA_PROMPT, valida países
+  (si no existe: ilustración de respaldo + nota) y reglas_mapa (1.ª vez highlight, máx. 4 seguidos). Peligro
+  Tropical → Proyecto.modo_mapa (casilla «Modo mapa» al crear) → animaciones_codigo puede devolver «mapa» (sin el
+  Calvo); _marcador_mapas calcula el marcador del video. Nunca se pide un mapa o bandera a la IA. Regresión: con el
+  modo apagado los cuadros son idénticos (huella comparada).
 - Estrategia del dueño (16-10): foco en los 2 canales Tracy monetizados y Peligro Tropical; El Calvo en pausa.
 - Aquí (nube) la voz MiniMax sí funciona; Whisper no baja su modelo: vista previa con voz frase por frase.
 ## Pendiente

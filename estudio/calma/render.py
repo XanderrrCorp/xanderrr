@@ -249,6 +249,11 @@ def cuadro_en(datos: dict, t: float) -> np.ndarray:
     fijar_estilo(bool(video.get("trazo_limpio")))
     sombras = bool(video.get("sombras"))
     esc = next((e for e in datos["escenas"] if e["inicio"] <= t < e["fin"]), datos["escenas"][-1])
+    if esc.get("tipo") == "mapa":                       # (18-10) mapa por código, con su marcador y El Calvo
+        from ..geo.escena import cuadro as cuadro_mapa
+
+        cuadro = cuadro_mapa(datos, esc, t)
+        return _comentario(cuadro, esc, t) if esc.get("comentario") else cuadro
     z, fx, fy, dx, dy = _camara(datos, esc, t)
     profundidad = bool(video.get("parallax")) and esc.get("tipo") != "cuadricula"
     cuadro = _fondo_con_ambiente(datos, esc, t, (z, fx, fy, dx, dy) if profundidad else None)

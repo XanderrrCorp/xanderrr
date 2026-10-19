@@ -97,7 +97,8 @@ def agregar_explica(ideas: list[dict], permiso: bool, temas: int = 9, etiqueta: 
         tema = (i.get("tema") or "").strip()
         if len(tema) < 4:
             continue
-        slug, _ = crear_carpeta(tema, int(i.get("temas") or temas), (i.get("notas") or "").strip())
+        slug, _ = crear_carpeta(tema, int(i.get("temas") or temas), (i.get("notas") or "").strip(),
+                                bool(i.get("modo_mapa")), i.get("pais_base") or "COL")
         nuevos.append(_item("explica", slug, tema, permiso, etiqueta or "El Calvo Explica", trabajo=f"explica-{slug}"))
     return _encolar(nuevos)
 
