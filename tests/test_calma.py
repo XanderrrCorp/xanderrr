@@ -80,9 +80,15 @@ def test_revisar_avisa_si_algo_tarda_mucho():
     assert any("no aparece ni cambia nada" in x for x in E.revisar(datos))
 
 
-def test_palabra_que_no_esta_da_error_claro():
+def test_palabra_que_no_esta_entra_con_el_corte():
+    """(19-10) Antes se frenaba todo el video; ahora ese elemento entra con el corte y el resto sigue igual.
+    La escena cuya primera palabra no existe sí da error claro."""
     datos, texto = _ejemplo()
     datos["escenas"][0]["elementos"][0]["palabra"] = "elefante"
+    E.fijar_tiempos(datos, *E.tiempos_estimados(texto))
+    assert datos["escenas"][0]["elementos"][0]["entra"] == datos["escenas"][0]["inicio"]
+    datos, texto = _ejemplo()
+    datos["escenas"][1]["palabra_inicio"] = "elefante"
     with pytest.raises(ValueError, match="elefante"):
         E.fijar_tiempos(datos, *E.tiempos_estimados(texto))
 
@@ -747,3 +753,23 @@ def test_fotos_realistas_en_el_calvo(tmp_path):
     assert r["hechas"] == 2 and r["fotos_ia"]
     assert all(t.startswith("Fotografía realista") and refs == [] for t, refs in pedidos)   # sin el personaje
     assert con_foto[0]["elementos"][0]["pieza"] == "imagen"
+
+
+def test_una_palabra_mal_oida_no_corre_el_video():
+    """(19-10) Si Whisper oyó distinto la palabra de un elemento, no se busca minutos después (eso corría todas las
+    escenas siguientes y dejaba una escena con el fondo solo mientras la voz seguía)."""
+    from estudio.calma import escenas as E
+
+    texto = " ".join(f"frase{i} uno dos tres cuatro" for i in range(40)) + " gato al final del video"
+    palabras, dur = E.tiempos_estimados(texto, 3.3)
+    datos = {"video": {}, "escenas": [
+        {"id": 1, "palabra_inicio": "frase0 uno", "elementos": [{"id": "a", "pieza": "texto", "palabra": "gato"}]},
+        {"id": 2, "palabra_inicio": "frase1 uno", "elementos": [{"id": "b", "pieza": "texto", "palabra": "dos"}]},
+        {"id": 3, "palabra_inicio": "frase2 uno", "elementos": []}]}
+    E.fijar_tiempos(datos, palabras, dur)
+    e1, e2, e3 = datos["escenas"]
+    assert e1["elementos"][0]["entra"] == e1["inicio"]                 # «gato» no está cerca: entra con el corte
+    assert e2["inicio"] < 3 and e3["inicio"] < 5                       # las escenas siguientes no se corren
+    n = E.asegurar_movimiento(datos)
+    assert n >= 1 and e3["elementos"][0]["pieza"] == "personaje"        # escena vacía: el Calvo pensando
+    assert any(m.get("fuerza") == 0.045 for m in e3.get("empujon", []))   # la última es larga: empujones suaves

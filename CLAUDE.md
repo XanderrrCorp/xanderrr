@@ -157,6 +157,10 @@ Estado al 04-10-2026. El repositorio es PÚBLICO: nunca escribir claves, tokens 
   Tropical → Proyecto.modo_mapa (casilla «Modo mapa» al crear) → animaciones_codigo puede devolver «mapa» (sin el
   Calvo); _marcador_mapas calcula el marcador del video. Nunca se pide un mapa o bandera a la IA. Regresión: con el
   modo apagado los cuadros son idénticos (huella comparada).
+- (19-10) BUG «fondo solo mientras la voz habla» (El Calvo): si Whisper oía distinto la palabra de un elemento,
+  calma.escenas._buscar la hallaba minutos después y corría TODAS las escenas siguientes. Ahora _buscar_cerca
+  (ventana de 40 palabras; si no está, entra con el corte) y explica.flujo llama E.asegurar_movimiento (lo
+  primero entra con el corte, escena vacía → el Calvo pensando, >2,5 s sin cambio → empujón suave de cámara).
 - Estrategia del dueño (16-10): foco en los 2 canales Tracy monetizados y Peligro Tropical; El Calvo en pausa.
 - Aquí (nube) la voz MiniMax sí funciona; Whisper no baja su modelo: vista previa con voz frase por frase.
 ## Pendiente

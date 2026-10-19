@@ -134,6 +134,9 @@ def producir(c: Carpeta, t, permiso: bool = False, voz=None, transcriptor=None, 
                                          trazo_limpio=bool(preset.get("trazo_limpio")),
                                          sombras=bool(preset.get("sombras")), parallax=bool(preset.get("parallax")))
     E.fijar_tiempos(datos, E.palabras_de(ors), float(ors["duracion"]) + 0.6)
+    arreglos = E.asegurar_movimiento(datos)          # nunca una escena vacía ni quieta mientras habla la voz
+    if arreglos:
+        t.avisar(f"  ritmo: {arreglos} momento(s) quieto(s) arreglados")
     ritmo = E.revisar(datos, max_sin_cambio=float(preset["cambio_cada_s"][1]))
     for a in ritmo:
         t.avisar(f"  ritmo: {a}")

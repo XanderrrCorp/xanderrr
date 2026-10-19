@@ -56,6 +56,23 @@ def _buscar(palabras: list[dict], ancla: str, desde: int) -> int:
     raise ValueError(f"no encontré «{ancla}» en la narración (después de «{palabras[desde - 1]['p'] if desde else ''}»)")
 
 
+VENTANA_PALABRAS = 40      # (19-10) una palabra de un elemento se busca solo cerca de su escena (~12 s de voz)
+
+
+def _buscar_cerca(palabras: list[dict], ancla: str, desde: int, ventana: int = VENTANA_PALABRAS) -> int | None:
+    """Como _buscar, pero solo en las `ventana` palabras siguientes. Si la voz no la dijo ahí (Whisper la oyó
+    distinto), None: antes se encontraba la misma palabra minutos después y eso corría TODAS las escenas siguientes
+    (una escena quedaba con el fondo solo mientras la voz seguía)."""
+    objetivo = [normalizar(x) for x in ancla.split() if normalizar(x)]
+    if not objetivo:
+        return None
+    hasta = min(len(palabras) - len(objetivo) + 1, desde + ventana)
+    for i in range(desde, hasta):
+        if all(palabras[i + k]["n"] == objetivo[k] for k in range(len(objetivo))):
+            return i
+    return None
+
+
 def fijar_tiempos(datos: dict, palabras: list[dict], duracion: float) -> dict:
     """Escribe «inicio»/«fin» de cada escena y «entra»/«t» de cada elemento y movimiento a partir de sus
     palabras. Cada escena se busca después de la anterior; dentro de una escena, cada palabra se busca desde
@@ -86,25 +103,30 @@ def fijar_tiempos(datos: dict, palabras: list[dict], duracion: float) -> dict:
         base, mas_lejos = cursor, cursor
         for m in esc.get("temblor", []) + esc.get("empujon", []):
             if m.get("palabra"):
-                m["t"] = palabras[_buscar(palabras, m["palabra"], base)]["inicio"]
+                i = _buscar_cerca(palabras, m["palabra"], base)
+                m["t"] = palabras[i]["inicio"] if i is not None else esc.get("inicio", 0.0) + 0.5
         for el in esc["elementos"]:
             cursor = base
-            if el.get("palabra"):
-                i = _buscar(palabras, el["palabra"], base)
+            i = _buscar_cerca(palabras, el["palabra"], base) if el.get("palabra") else None
+            if i is not None:
                 mas_lejos = max(mas_lejos, i)
+                cursor = i
                 el["entra"] = round(palabras[i]["inicio"] + float(el.get("retraso", 0)), 3)
-            elif "entra" not in el:
-                el["entra"] = esc.get("inicio", 0.0)
+            elif "entra" not in el or el.get("palabra"):
+                el["entra"] = esc.get("inicio", 0.0)        # la voz no dijo esa palabra cerca: entra con el corte
             movs = el.get("movimiento") or []
             for m in movs if isinstance(movs, list) else []:
                 if isinstance(m, dict) and m.get("palabra"):
-                    m["t"] = round(palabras[_buscar(palabras, m["palabra"], cursor)]["inicio"]
+                    j = _buscar_cerca(palabras, m["palabra"], cursor)
+                    m["t"] = round((palabras[j]["inicio"] if j is not None else el["entra"] + 0.4)
                                    + float(m.get("retraso", 0)), 3)
                 if isinstance(m, dict) and m.get("tipo") == "deslizar" and m.get("sale"):
                     # se va de la pantalla: deja de contar cuando termina de salir
                     el["sale"] = round(float(m.get("t", el["entra"])) + float(m.get("duracion", 0.55)), 3)
             if el.get("sale_palabra"):
-                el["sale"] = palabras[_buscar(palabras, el["sale_palabra"], cursor)]["inicio"]
+                j = _buscar_cerca(palabras, el["sale_palabra"], cursor)
+                if j is not None:
+                    el["sale"] = palabras[j]["inicio"]
         cursor = mas_lejos
     for k, esc in enumerate(escenas):
         esc["fin"] = escenas[k + 1]["inicio"] if k + 1 < len(escenas) else round(duracion, 3)
@@ -119,6 +141,40 @@ def fijar_tiempos(datos: dict, palabras: list[dict], duracion: float) -> dict:
                     m["t"] = round(esc["inicio"] + float(m["t_rel"]), 3)
     datos.setdefault("video", {})["duracion"] = round(duracion, 3)
     return datos
+
+
+QUIETO_MAX_S = 2.5
+
+
+def asegurar_movimiento(datos: dict, quieto_max: float = QUIETO_MAX_S) -> int:
+    """(19-10) Red de seguridad: ninguna escena empieza vacía (lo primero entra con el corte) y nunca pasan más de
+    `quieto_max` segundos sin que algo cambie (se agrega un empujón suave de cámara). Devuelve cuántos arreglos."""
+    arreglos = 0
+    for esc in datos["escenas"]:
+        if esc.get("tipo") in ("mapa", "cuadricula"):
+            continue
+        if not esc["elementos"]:                     # escena vacía: al menos el Calvo pensando
+            esc["elementos"].append({"id": "relleno", "pieza": "personaje", "estado": {"pose": "pensando"},
+                                     "posicion": [640, 990], "tamano": 1.15, "movimiento": ["aparecer"],
+                                     "entra": round(esc["inicio"] + 0.1, 3)})
+            arreglos += 1
+        els = [e for e in esc["elementos"] if "entra" in e]
+        if els and min(e["entra"] for e in els) > esc["inicio"] + 0.6:
+            min(els, key=lambda e: e["entra"])["entra"] = round(esc["inicio"] + 0.1, 3)
+            arreglos += 1
+        momentos = sorted({esc["inicio"], esc["fin"]} | {e["entra"] for e in els}
+                          | {float(m["t"]) for m in esc.get("temblor", []) + esc.get("empujon", []) if "t" in m}
+                          | {float(m["t"]) for e in els for m in (e.get("movimiento") or [])
+                             if isinstance(m, dict) and "t" in m})
+        for a, b in zip(momentos, momentos[1:]):
+            t = a + quieto_max * 0.6
+            while b - a > quieto_max and t < b - 0.8:
+                foco = [960 + (240 if arreglos % 2 else -240), 520]
+                esc.setdefault("empujon", []).append({"t": round(t, 3), "foco": foco, "fuerza": 0.045,
+                                                      "duracion": 1.3})
+                arreglos += 1
+                a, t = t, t + quieto_max * 0.8
+    return arreglos
 
 
 def recortar(datos: dict, hasta: float) -> dict:
