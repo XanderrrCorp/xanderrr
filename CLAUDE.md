@@ -177,6 +177,16 @@ Estado al 04-10-2026. El repositorio es PÚBLICO: nunca escribir claves, tokens 
   (stock.preparar_stock y por temas) y en El Calvo (explica/fotos_pexels, también sin clave de Pexels). Créditos
   (obligatorios en CC BY) se muestran para copiar en la página del video (PT: «Créditos de las fotos reales»;
   El Calvo: en la página del video). Commons está bloqueado en la nube: probado solo con respuestas simuladas.
+- (20-10) GOOGLE CLOUD COMPLETO + LOTES (el dueño: 1 imagen cada 20 s; la clave de API = modo exprés, cupo bajo
+  y fijo; la página de cuotas no mostraba nada que subir). imagenes/google_cloud.py: archivo de cuenta de servicio
+  (credenciales_google.json en la raíz de la instalación, gitignored; Ajustes → «Subir archivo .json», prueba gratis
+  con countTokens; dependencia google-auth). ProveedorVertex usa projects/{p}/locations/global con token; si Google
+  lo rechaza (401/403) vuelve a la clave. imagenes/lotes.py: con «Imágenes por lotes» (XANDART_IMAGENES_LOTES=1)
+  generador._por_lotes manda TODAS las escenas que faltan en un batchPredictionJob (depósito xandart-lotes-{p},
+  borrado a 7 días; global → us-central1), espera (sondeo 60 s, máx. 26 h; reanudable con imagenes/lote.json), guarda
+  en imagenes/lote/ y ConLote las entrega a mitad de precio; lo que no llega va normal. Los assets van normal antes.
+  NO probado contra Google real (en la nube no hay acceso): faltan la prueba del dueño y confirmar que su modelo
+  acepta lotes. El dueño prefiere quedarse en Cloud por sus créditos (~700.000 COP); AI Studio quedó descartado.
 - Estrategia del dueño (16-10): foco en los 2 canales Tracy monetizados y Peligro Tropical; El Calvo en pausa.
 - Aquí (nube) la voz MiniMax sí funciona; Whisper no baja su modelo: vista previa con voz frase por frase.
 ## Pendiente

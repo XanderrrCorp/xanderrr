@@ -394,7 +394,34 @@ function abrirAjustes() {
   $('#e-gemini').textContent = c.gemini ? 'guardada' : 'falta (opcional)';
   $('#e-claude').textContent = ESTADO && ESTADO.claude ? 'instalado' : 'no instalado';
   api('/api/proveedor-imagenes').then(r => { $('#proveedor-img').value = r.proveedor; }).catch(() => {});
+  api('/api/google-cuenta').then(pintarCuentaGoogle).catch(() => {});
   $('#ajustes').showModal();
+}
+function pintarCuentaGoogle(r, detalle) {
+  $('#e-gcuenta').textContent = detalle || (r.conectada ? `conectada (proyecto ${r.proyecto})` : 'sin conectar (opcional)');
+  $('#b-gcuenta-quitar').style.display = r.conectada ? '' : 'none';
+  $('#c-lotes').checked = !!r.lotes;
+  $('#c-lotes').disabled = !r.conectada;
+}
+async function subirCuentaGoogle(input) {
+  const f = input.files[0];
+  input.value = '';
+  if (!f) return;
+  $('#e-gcuenta').textContent = 'probando…';
+  const datos = new FormData();
+  datos.append('archivo', f);
+  const r = await fetch('/api/google-cuenta', { method: 'POST', body: datos });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) { $('#e-gcuenta').textContent = '✗ ' + (j.detail || `Error ${r.status}`); return; }
+  pintarCuentaGoogle(j, (j.prueba.ok ? '✓ ' : '✗ ') + j.prueba.detalle);
+}
+async function quitarCuentaGoogle() {
+  if (!confirm('¿Quitar el archivo de Google Cloud? Las imágenes vuelven a hacerse con la clave de siempre.')) return;
+  pintarCuentaGoogle(await api('/api/google-cuenta', { method: 'DELETE' }));
+}
+async function elegirLotes(activo) {
+  try { pintarCuentaGoogle(await api('/api/imagenes-lotes', { method: 'POST', cuerpo: { activo } })); }
+  catch (e) { alert(e.message); pintarCuentaGoogle(await api('/api/google-cuenta')); }
 }
 async function elegirProveedorImagenes(p) {
   try { const r = await api('/api/proveedor-imagenes', { method: 'POST', cuerpo: { proveedor: p } }); $('#proveedor-img').value = r.proveedor; }

@@ -7,7 +7,8 @@ dependencies = ["pydantic>=2.6", "pillow>=10", "requests>=2.31", "numpy>=1.24", 
                 "fastapi>=0.110", "uvicorn>=0.29", "python-multipart>=0.0.9",
                 "sqlalchemy>=2.0", "alembic>=1.13",
                 "opencv-python-headless>=4.8",   # zoom y escalado de cada cuadro del render, rápido
-                "resvg-py>=0.5"]                 # Hazlo con Calma: dibuja las piezas SVG (sin Node ni navegador)
+                "resvg-py>=0.5",                 # Hazlo con Calma: dibuja las piezas SVG (sin Node ni navegador)
+                "google-auth>=2.20"]             # imágenes: cuenta de servicio de Google Cloud y lotes (20-10)
 
 # rembg (quitar fondos de las miniaturas) es opcional y pesado: el instalador lo intenta
 # aparte y, si no está, se usa el recorte por color de fondo

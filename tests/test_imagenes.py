@@ -155,6 +155,10 @@ class _Resp:
     def json(self):
         return self._d
 
+    def raise_for_status(self):
+        if self.status_code >= 400:
+            raise RuntimeError(self.status_code)
+
 
 class _Sesion:
     def __init__(self, respuestas):
@@ -434,3 +438,220 @@ def test_primera_persona_sin_el_personaje_y_sin_volver_a_pagar(proyecto, config)
                         proyecto.ruta / m["escena:4"]["archivo"], False)
     nuevo = replace(t_viejo, prompt=viejo + " " + prompts.POV_SIN_PERSONAJE, referencias=[], antes=t_viejo)
     assert G._misma_de_antes(nuevo, prov.modelo, {"huella": G._huella(t_viejo, prov.modelo)})
+
+
+# ------------------------------------------------------------------ (20-10) cuenta de servicio y lotes
+
+def _cuenta(monkeypatch, tmp_path):
+    """Archivo de cuenta de servicio falso (sin firmar nada: el token se simula)."""
+    from estudio.imagenes import google_cloud
+
+    monkeypatch.setattr(google_cloud, "ruta", lambda: tmp_path / "credenciales_google.json")
+    google_cloud.guardar(json.dumps({"type": "service_account", "project_id": "mi-proyecto", "private_key": "x",
+                                     "client_email": "xandart@mi-proyecto.iam.gserviceaccount.com"}))
+    monkeypatch.setattr(google_cloud, "token", lambda: "token-falso")
+    return google_cloud
+
+
+def _respuesta_imagen(tokens_salida=1120):
+    return {"candidates": [{"content": {"parts": [{"inlineData": {"data": _png()}}]}}],
+            "usageMetadata": {"promptTokenCount": 100, "candidatesTokenCount": tokens_salida}}
+
+
+def test_cuenta_de_servicio_valida_el_archivo(monkeypatch, tmp_path):
+    gc = _cuenta(monkeypatch, tmp_path)
+    assert gc.estado() == {"conectada": True, "proyecto": "mi-proyecto",
+                           "cuenta": "xandart@mi-proyecto.iam.gserviceaccount.com"}
+    for malo in ("no es json", json.dumps({"type": "authorized_user"}), json.dumps(["x"])):
+        with pytest.raises(ValueError):
+            gc.guardar(malo)
+    assert gc.leer()["project_id"] == "mi-proyecto"           # lo malo no pisa lo que ya servía
+    gc.borrar()
+    assert gc.estado()["conectada"] is False
+
+
+def test_con_cuenta_de_servicio_entra_como_proyecto(config, monkeypatch, tmp_path):
+    """Con el archivo: URL del proyecto y token, sin la clave en la URL. Si Google lo rechaza, sigue con la clave."""
+    from estudio.imagenes import proveedores as pv
+
+    _cuenta(monkeypatch, tmp_path)
+    monkeypatch.setenv("GEMINI_API_KEY", "clave-prueba")
+    pedidos, codigos = [], [200, 403, 200, 200]
+
+    class R:
+        headers = {}
+
+        def __init__(self, codigo):
+            self.status_code, self.text = codigo, "x"
+
+        def json(self):
+            return _respuesta_imagen()
+
+    class S:
+        def post(self, url, params=None, headers=None, data=None, timeout=None):
+            pedidos.append((url, params, headers))
+            return R(codigos.pop(0))
+
+    p = pv.crear_proveedor(config, {"proveedor": "vertex", "opciones": {"vertex": {"modelo": "gemini-3.1-flash-image-preview"}}})
+    p.sesion = S()
+    p.generar("un búho", [])
+    url, params, cab = pedidos[0]
+    assert url == ("https://aiplatform.googleapis.com/v1/projects/mi-proyecto/locations/global/publishers/google/"
+                   "models/gemini-3.1-flash-image-preview:generateContent")
+    assert cab["Authorization"] == "Bearer token-falso" and not params
+    p.generar("un búho", [])                                  # 403 con la cuenta → la clave de siempre
+    assert pedidos[2][1] == {"key": "clave-prueba"}
+    p.generar("un búho", [])
+    assert pedidos[3][1] == {"key": "clave-prueba"}           # ya no vuelve a intentar con la cuenta
+
+
+def test_cuenta_de_servicio_sin_clave_de_api(config, monkeypatch, tmp_path):
+    from estudio.imagenes import proveedores as pv
+
+    _cuenta(monkeypatch, tmp_path)
+    monkeypatch.delenv("GEMINI_API_KEY", raising=False)
+    monkeypatch.setattr(pv, "clave_api", lambda n: None)
+    p = pv.crear_proveedor(config, {"proveedor": "vertex", "opciones": {"vertex": {"modelo": "gemini-3.1-flash-image-preview"}}})
+    assert p.cuenta and p.clave is None
+
+
+class _Google:
+    """Google Cloud de mentira para los lotes: depósito, subida, trabajo y salida."""
+
+    def __init__(self, estados=("JOB_STATE_RUNNING", "JOB_STATE_SUCCEEDED"), crear_falla=False, sin_imagen=0):
+        self.estados, self.crear_falla, self.sin_imagen = list(estados), crear_falla, sin_imagen
+        self.creados, self.subido, self.generate = 0, b"", 0
+
+    def get(self, url, params=None, headers=None, timeout=None):
+        assert headers["Authorization"] == "Bearer token-falso"
+        if url.endswith("/b/xandart-lotes-mi-proyecto"):
+            return _Resp(404, {})
+        if "batchPredictionJobs/77" in url:
+            estado = self.estados.pop(0) if len(self.estados) > 1 else self.estados[0]
+            return _Resp(200, {"state": estado, "outputInfo": {"gcsOutputDirectory": "gs://xandart-lotes-mi-proyecto/s/p1"}})
+        if url.endswith("/b/xandart-lotes-mi-proyecto/o"):
+            assert params["prefix"] == "s/p1"
+            return _Resp(200, {"items": [{"name": "s/p1/predictions.jsonl"}, {"name": "s/p1/errores.txt"}]})
+        if "predictions.jsonl" in url:
+            lineas = []
+            for k, linea in enumerate(self.subido.decode().splitlines()):
+                peticion = json.loads(linea)["request"]
+                lineas.append(json.dumps({"request": peticion, "status": "",
+                                          "response": {"candidates": []} if k < self.sin_imagen
+                                          else _respuesta_imagen()}))
+            r = _Resp(200, {})
+            r.text = "\n".join(lineas)
+            return r
+        raise AssertionError(url)
+
+    def post(self, url, params=None, headers=None, json=None, data=None, timeout=None):
+        if url.endswith("/storage/v1/b"):
+            assert json["lifecycle"]["rule"][0]["condition"]["age"] == 7     # no se acumula almacenamiento
+            return _Resp(200, {})
+        if "/upload/" in url:
+            self.subido = data
+            return _Resp(200, {})
+        if url.endswith("/batchPredictionJobs"):
+            self.creados += 1
+            if self.crear_falla:
+                return _Resp(400, {"error": "el modelo no acepta lotes"})
+            assert json["model"].startswith("publishers/google/models/")
+            return _Resp(200, {"name": "projects/mi-proyecto/locations/global/batchPredictionJobs/77"})
+        self.generate += 1
+        raise AssertionError(f"no debía generar una por una: {url}")
+
+
+def _lotes_listos(monkeypatch, tmp_path, config):
+    from estudio.imagenes import lotes, proveedores as pv
+
+    _cuenta(monkeypatch, tmp_path)
+    monkeypatch.setattr(lotes, "activado", lambda: True)
+    monkeypatch.setattr(lotes, "dormir", lambda s: None)
+    monkeypatch.setenv("GEMINI_API_KEY", "clave-prueba")
+    return lotes, pv
+
+
+def test_imagenes_por_lotes_mitad_de_precio_y_sin_llamadas_sueltas(proyecto, config, monkeypatch, tmp_path):
+    lotes, pv = _lotes_listos(monkeypatch, tmp_path, config)
+    google = _Google()
+    original = lotes.hacer
+    monkeypatch.setattr(lotes, "hacer", lambda *a, **k: original(*a, **{**k, "sesion": google}))
+    sim = ProveedorSimulado(config)
+    prov = pv.crear_proveedor(config, {"proveedor": "vertex", "opciones": {"vertex": {"modelo": "simulado"}}})
+    prov.generar = sim.generar                       # el personaje (asset) va de la forma normal, uno por uno
+    avisos = []
+    r = generar_imagenes(proyecto, primeras=10, proveedor=prov, config=config, avisar=avisos.append)
+    assert r.fallidas == {} and len(r.generadas) == 6
+    assert sim.llamadas == 1 and google.creados == 1          # 1 asset suelto + 5 escenas en UN lote
+    assert len(google.subido.decode().splitlines()) == 5
+    entradas = [e for e in proyecto.libro(config).entradas() if e["detalle"].startswith("escena:")]
+    normal = sim.tarifa.costo(100, 1120)
+    assert all(e["costo_usd"] == pytest.approx(normal * lotes.DESCUENTO) for e in entradas)
+    assert any("por lotes" in a for a in avisos)
+    assert not list((proyecto.ruta / "imagenes" / "lote").glob("*.png"))   # cada una se usó una vez
+
+
+def test_lote_se_retoma_sin_mandarlo_otra_vez(proyecto, config, monkeypatch, tmp_path):
+    """Si Xandart se cierra esperando, al volver sigue esperando el MISMO lote."""
+    lotes, pv = _lotes_listos(monkeypatch, tmp_path, config)
+    sim = ProveedorSimulado(config)
+    prov = pv.crear_proveedor(config, {"proveedor": "vertex", "opciones": {"vertex": {"modelo": "simulado"}}})
+    prov.generar = sim.generar
+    google = _Google(estados=("JOB_STATE_RUNNING",))
+    original = lotes.hacer
+
+    class Cerrado(Exception):
+        pass
+
+    def cerrar(s):
+        raise Cerrado()
+
+    monkeypatch.setattr(lotes, "dormir", cerrar)
+    monkeypatch.setattr(lotes, "hacer", lambda *a, **k: original(*a, **{**k, "sesion": google}))
+    with pytest.raises(Cerrado):
+        generar_imagenes(proyecto, primeras=10, proveedor=prov, config=config, avisar=silencio)
+    assert google.creados == 1
+    google.estados = ["JOB_STATE_SUCCEEDED"]
+    monkeypatch.setattr(lotes, "dormir", lambda s: None)
+    avisos = []
+    r = generar_imagenes(proyecto, primeras=10, proveedor=prov, config=config, avisar=avisos.append)
+    assert google.creados == 1 and len(r.generadas) == 5      # el personaje ya estaba
+    assert any("Sigo esperando el lote" in a for a in avisos)
+
+
+def test_si_google_no_acepta_el_lote_sigue_normal(proyecto, config, monkeypatch, tmp_path):
+    lotes, pv = _lotes_listos(monkeypatch, tmp_path, config)
+    sim = ProveedorSimulado(config)
+    prov = pv.crear_proveedor(config, {"proveedor": "vertex", "opciones": {"vertex": {"modelo": "simulado"}}})
+    prov.generar = sim.generar
+    google = _Google(crear_falla=True)
+    original = lotes.hacer
+    monkeypatch.setattr(lotes, "hacer", lambda *a, **k: original(*a, **{**k, "sesion": google}))
+    avisos = []
+    r = generar_imagenes(proyecto, primeras=10, proveedor=prov, config=config, avisar=avisos.append)
+    assert google.creados == 2                                # global y us-central1
+    assert r.fallidas == {} and sim.llamadas == 6             # todo de la forma normal
+    assert any("Por lotes no se pudo" in a for a in avisos)
+
+
+def test_lo_que_no_llega_en_el_lote_se_hace_normal(proyecto, config, monkeypatch, tmp_path):
+    lotes, pv = _lotes_listos(monkeypatch, tmp_path, config)
+    sim = ProveedorSimulado(config)
+    prov = pv.crear_proveedor(config, {"proveedor": "vertex", "opciones": {"vertex": {"modelo": "simulado"}}})
+    prov.generar = sim.generar
+    google = _Google(sin_imagen=1)
+    original = lotes.hacer
+    monkeypatch.setattr(lotes, "hacer", lambda *a, **k: original(*a, **{**k, "sesion": google}))
+    r = generar_imagenes(proyecto, primeras=10, proveedor=prov, config=config, avisar=silencio)
+    assert r.fallidas == {} and len(r.generadas) == 6
+    assert sim.llamadas == 2                                  # el personaje + la que el lote no trajo
+
+
+def test_lotes_apagado_no_cambia_nada(proyecto, config, monkeypatch, tmp_path):
+    from estudio.imagenes import lotes
+
+    _cuenta(monkeypatch, tmp_path)
+    monkeypatch.setattr(lotes, "activado", lambda: False)
+    prov = ProveedorSimulado(config)
+    r = generar_imagenes(proyecto, primeras=10, proveedor=prov, config=config, avisar=silencio)
+    assert prov.llamadas == 6 and not (proyecto.ruta / "imagenes" / "lote.json").exists() and len(r.generadas) == 6

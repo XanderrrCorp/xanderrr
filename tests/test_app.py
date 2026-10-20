@@ -1,4 +1,6 @@
 """La página local: estado, crear un video (sin gastar) y seguridad de rutas."""
+import json
+
 import pytest
 
 pytest.importorskip("fastapi")
@@ -85,3 +87,19 @@ def test_version_para_reemplazar_un_xandart_viejo(cliente):
 
     assert cliente.get("/api/version").json()["version"] == modulo.VERSION
     assert cliente.get("/").headers["cache-control"].startswith("no-store")
+
+
+def test_ajustes_cuenta_de_google(cliente, tmp_path, monkeypatch):
+    """(20-10) Subir el archivo de la cuenta de servicio: lo que no sirve se rechaza con una explicación."""
+    from estudio.imagenes import google_cloud
+
+    monkeypatch.setattr(google_cloud, "ruta", lambda: tmp_path / "credenciales_google.json")
+    assert cliente.get("/api/google-cuenta").json()["conectada"] is False
+    r = cliente.post("/api/google-cuenta", files={"archivo": ("x.json", b'{"type": "authorized_user"}')})
+    assert r.status_code == 400 and "cuenta de servicio" in r.json()["detail"]
+    assert cliente.post("/api/imagenes-lotes", json={"activo": True}).status_code == 400   # sin archivo, no
+    monkeypatch.setattr(google_cloud, "probar", lambda modelo: {"ok": True, "detalle": "funciona"})
+    bueno = json.dumps({"type": "service_account", "project_id": "p1", "private_key": "k", "client_email": "c@p1"})
+    r = cliente.post("/api/google-cuenta", files={"archivo": ("cuenta.json", bueno.encode())}).json()
+    assert r["conectada"] and r["proyecto"] == "p1" and r["prueba"]["ok"]
+    assert cliente.delete("/api/google-cuenta").json()["conectada"] is False

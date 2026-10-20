@@ -143,7 +143,10 @@ class ProveedorGemini:
                                  limite=r.status_code == 429)
         if r.status_code >= 400:
             raise ErrorProveedor(f"HTTP {r.status_code}: {r.text[:300]}", reintentable=False)
-        datos = r.json()
+        return self.desde_respuesta(r.json())
+
+    def desde_respuesta(self, datos: dict) -> ResultadoImagen:
+        """La imagen y el uso de una respuesta de generateContent (también las que vienen de un lote)."""
         uso = self._uso(datos)
         for cand in datos.get("candidates") or []:
             for parte in (cand.get("content") or {}).get("parts") or []:
@@ -158,14 +161,54 @@ class ProveedorGemini:
 
 class ProveedorVertex(ProveedorGemini):
     """Gemini en Google Cloud (Agent Platform) con clave de API. Mismo cuerpo y respuesta que la API de
-    Gemini; cambia la dirección y que la clave va en la URL."""
+    Gemini; cambia la dirección y que la clave va en la URL.
+
+    (20-10) Si está el archivo de la cuenta de servicio (google_cloud.py), entra como proyecto normal, con más cupo
+    que la clave; si Google no lo acepta, sigue con la clave de siempre."""
 
     nombre = "vertex"
 
+    def __init__(self, config: ConfigCostos, modelo: str, relacion_aspecto: str = "16:9",
+                 tiempo_max_s: float = 120, variable_clave: str = "GEMINI_API_KEY", sesion=None):
+        from . import google_cloud
+
+        self.cuenta = google_cloud.leer() is not None
+        try:
+            super().__init__(config, modelo, relacion_aspecto, tiempo_max_s, variable_clave, sesion)
+        except ErrorProveedor:
+            if not self.cuenta:
+                raise
+            import requests
+
+            self.modelo, self.aspecto, self.tiempo_max_s = modelo, relacion_aspecto, tiempo_max_s
+            self.tarifa = _Tarifa(config, modelo)
+            self.clave = None
+            self.sesion = sesion or requests.Session()
+
     def generar(self, prompt: str, referencias: list[Path]) -> ResultadoImagen:
+        cuerpo = json.dumps(self._cuerpo(prompt, referencias))
+        if self.cuenta:
+            import requests
+
+            from . import google_cloud
+
+            try:
+                r = self.sesion.post(google_cloud.url_modelo(self.modelo, "generateContent"),
+                                     headers=google_cloud.cabeceras(), data=cuerpo, timeout=self.tiempo_max_s)
+                if r.status_code not in (401, 403) or not self.clave:
+                    return self._respuesta(r)
+            except ErrorProveedor:
+                raise
+            except requests.RequestException as ex:
+                raise ErrorProveedor(f"sin conexión con Google: {ex}", reintentable=True) from ex
+            except Exception as ex:  # noqa: BLE001 — archivo rechazado (clave revocada, reloj del PC mal…)
+                if not self.clave:
+                    raise ErrorProveedor(f"la cuenta de servicio de Google no funcionó: {ex}",
+                                         reintentable=False) from ex
+            self.cuenta = False                 # no sirvió: de aquí en adelante, la clave de siempre
         r = self.sesion.post(VERTEX_URL.format(modelo=self.modelo, accion="generateContent"),
                              params={"key": self.clave}, headers={"Content-Type": "application/json"},
-                             data=json.dumps(self._cuerpo(prompt, referencias)), timeout=self.tiempo_max_s)
+                             data=cuerpo, timeout=self.tiempo_max_s)
         return self._respuesta(r)
 
     def _respuesta(self, r) -> ResultadoImagen:

@@ -51,6 +51,13 @@
       <option value="gemini">Google AI Studio</option>
     </select>
   </label>
+  <label>Conexión completa con Google Cloud (más cupo de imágenes; usa tus créditos)</label>
+  <div class="fila"><span id="e-gcuenta" class="estado"></span>
+    <input id="f-gcuenta" type="file" accept=".json,application/json" style="display:none" onchange="subirCuentaGoogle(this)">
+    <button class="mini" onclick="document.getElementById('f-gcuenta').click()">Subir archivo .json</button>
+    <button class="mini" id="b-gcuenta-quitar" onclick="quitarCuentaGoogle()" style="display:none">Quitar</button></div>
+  <label><input id="c-lotes" type="checkbox" onchange="elegirLotes(this.checked)">
+    Imágenes por lotes: mitad de precio y sin el límite por minuto, pero Google las entrega cuando puede (minutos u horas)</label>
   <label>Claude (escribe el guion con tu suscripción)</label>
   <div class="fila"><span id="e-claude" class="estado"></span>
     <button class="mini" onclick="sesionClaude()">Iniciar sesión</button>

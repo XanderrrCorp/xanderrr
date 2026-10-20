@@ -324,6 +324,52 @@ def elegir_proveedor_imagenes(p: ProveedorImagenes):
     return ver_proveedor_imagenes()
 
 
+# (20-10) conexión completa con Google Cloud (archivo de cuenta de servicio) e imágenes por lotes
+@app.get("/api/google-cuenta")
+def ver_google_cuenta():
+    from .imagenes import google_cloud, lotes
+
+    return {**google_cloud.estado(), "lotes": lotes.activado()}
+
+
+@app.post("/api/google-cuenta")
+async def subir_google_cuenta(archivo: UploadFile = File(...)):
+    from .config import leer_config
+    from .imagenes import google_cloud
+
+    try:
+        google_cloud.guardar(await archivo.read())
+    except ValueError as ex:
+        raise HTTPException(400, str(ex)) from ex
+    ajustes = leer_config("proveedores.json")["imagenes"]
+    modelo = clave_api("XANDART_MODELO_IMAGEN_GOOGLE") or ajustes["opciones"]["vertex"]["modelo"]
+    return {**ver_google_cuenta(), "prueba": google_cloud.probar(modelo)}
+
+
+@app.delete("/api/google-cuenta")
+def quitar_google_cuenta():
+    from .imagenes import google_cloud
+
+    google_cloud.borrar()
+    return ver_google_cuenta()
+
+
+class Lotes(BaseModel):
+    activo: bool
+
+
+@app.post("/api/imagenes-lotes")
+def elegir_lotes(p: Lotes):
+    from .imagenes import google_cloud
+
+    if p.activo and not google_cloud.leer():
+        raise HTTPException(400, "Primero sube el archivo de la cuenta de servicio de Google")
+    valores = _leer_env()
+    valores["XANDART_IMAGENES_LOTES"] = "1" if p.activo else "0"
+    (RAIZ / ".env").write_text("".join(f"{k}={v}\n" for k, v in valores.items()), encoding="utf-8")
+    return ver_google_cuenta()
+
+
 class Prueba_clave(BaseModel):
     clave: str | None = None     # la que está escrita en Ajustes (aún sin guardar)
 

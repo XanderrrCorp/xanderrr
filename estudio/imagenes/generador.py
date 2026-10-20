@@ -374,6 +374,8 @@ def generar_imagenes(carpeta: CarpetaProyecto, *, primeras: int | None = None, i
     for t in [t for t in trabajos if t.clave.startswith("asset:")]:
         hacer(t)
     escenas = [t for t in trabajos if not t.clave.startswith("asset:")]
+    proveedor = _por_lotes(carpeta, proveedor, escenas, manifiesto, libro, reporte, permiso,
+                           tope - llamadas_previas, avisar)
     hilos = max(1, int(ajustes.get("en_paralelo", 3)))
     if hilos == 1 or len(escenas) < 2:
         for t in escenas:
@@ -394,6 +396,41 @@ def generar_imagenes(carpeta: CarpetaProyecto, *, primeras: int | None = None, i
             reporte.fallidas.pop(t.clave, None)
             hacer(t)
     return reporte
+
+
+def _por_lotes(carpeta: CarpetaProyecto, proveedor, escenas: list[Trabajo], manifiesto: dict, libro, reporte: Reporte,
+               permiso: bool, llamadas_libres: int, avisar) -> Proveedor:
+    """(20-10) Con «imágenes por lotes» en Ajustes, las escenas que faltan van a Google en un solo pedido (mitad de
+    precio, sin el límite por minuto). Devuelve el proveedor que entrega lo que llegó en el lote; lo que no, se hace
+    de la forma normal. Respeta el tope de gasto y el de llamadas igual que el camino normal."""
+    from . import lotes
+
+    if not lotes.disponible(proveedor) or reporte.frenado:
+        return proveedor
+    con_lote = lotes.ConLote(proveedor, carpeta.ruta)
+
+    def falta(t: Trabajo) -> bool:
+        previo = manifiesto.get(t.clave)
+        if not t.destino.exists() or not previo:
+            return True
+        return previo.get("huella") != _huella(t, proveedor.modelo) and not _misma_de_antes(t, proveedor.modelo, previo)
+
+    pendientes = [t for t in escenas if falta(t) and all(r.exists() for r in t.referencias)
+                  and not con_lote.tiene(t.prompt)]
+    if len(pendientes) < 2:
+        return con_lote
+    if not permiso and len(pendientes) > llamadas_libres:
+        return con_lote                       # el camino normal frena y pide permiso, como siempre
+    try:
+        libro.autorizar(sum(con_lote.estimar_usd(t.prompt, t.referencias) for t in pendientes) * lotes.DESCUENTO,
+                        permiso=permiso)
+        lotes.hacer(carpeta.ruta, proveedor, [(t.prompt, t.referencias) for t in pendientes], avisar,
+                    nombre=carpeta.ruta.name)
+    except FrenoPresupuesto:
+        pass                                  # el camino normal frena y avisa, como siempre
+    except lotes.LoteNoDisponible as ex:
+        avisar(f"Por lotes no se pudo ({ex}): sigo de la forma normal")
+    return con_lote
 
 
 @dataclass
