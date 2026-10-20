@@ -168,6 +168,10 @@ Estado al 04-10-2026. El repositorio es PÚBLICO: nunca escribir claves, tokens 
 - (19-10) El Calvo usa PEXELS: escenas «foto» llevan {descripcion, busqueda}; explica/fotos_pexels.buscar trae 4
   candidatas por foto, UNA hoja de contacto y UNA revisión de Claude (sonnet) para todas; lo aprobado va gratis
   (créditos en ilustraciones/creditos_pexels.txt), lo demás lo pinta Google. Decisiones en ilustraciones/pexels.json.
+- (20-10) IMÁGENES MÁS RÁPIDAS con el límite de Google (el dueño: 121 min y no terminaban): generador.py ya no
+  espera cada vez más por imagen (10→90 s, 8 veces); un ritmo compartido (turno/intervalo) sube ×1,5 con cada 429
+  (máx. 20 s, pausa fija de 15 s, un solo aviso) y baja ×0,93 con cada éxito. Lo de fondo: pedir más cuota en
+  Google Cloud (se le explicó al dueño cómo).
 - Estrategia del dueño (16-10): foco en los 2 canales Tracy monetizados y Peligro Tropical; El Calvo en pausa.
 - Aquí (nube) la voz MiniMax sí funciona; Whisper no baja su modelo: vista previa con voz frase por frase.
 ## Pendiente

@@ -135,7 +135,13 @@ ESPERAS_LIMITE = 8
 ESPERA_LIMITE_S = 10.0
 ESPERA_LIMITE_MAX_S = 90.0
 dormir = time.sleep
+reloj = time.monotonic
 VUELTAS_LIMITE = 2          # vueltas extra al final para las que Google dejó esperando
+# (20-10) ritmo que se adapta: en vez de que cada imagen espere cada vez más (hasta 90 s, 8 veces) y los hilos choquen
+# otra vez con el límite, todas las llamadas se reparten con un intervalo que sube un poco con cada «más despacio»
+# y baja solo cuando Google responde bien. Así se va al ritmo que Google sí acepta, sin pausas largas.
+INTERVALO_MIN_S, INTERVALO_MAX_S = 0.0, 20.0
+ESPERA_LIMITE_FIJA_S = 15.0
 PAUSA_VUELTA_S = 60.0
 
 
@@ -222,6 +228,16 @@ def generar_imagenes(carpeta: CarpetaProyecto, *, primeras: int | None = None, i
     llamadas_previas = sum(1 for x in libro.entradas() if x["modulo"] == MODULO)
     candado = threading.RLock()        # manifiesto, libro y reporte se tocan desde varios hilos
     pausa = {"hasta": 0.0}             # si Google pide ir más despacio, todos los hilos esperan
+    ritmo = {"intervalo": INTERVALO_MIN_S, "proxima": 0.0}   # separación entre llamadas, aprendida sobre la marcha
+
+    def turno() -> None:
+        """Espera su turno: las llamadas salen separadas por el intervalo aprendido."""
+        with candado:
+            ahora = reloj()
+            sale = max(ahora, ritmo["proxima"], pausa["hasta"])
+            ritmo["proxima"] = sale + ritmo["intervalo"]
+        if sale > ahora:
+            dormir(sale - ahora)
     en_vuelo = {"usd": 0.0}            # lo que cuestan las llamadas que están en camino (aún sin registrar)
 
     def guardar_manifiesto():
@@ -278,9 +294,7 @@ def generar_imagenes(carpeta: CarpetaProyecto, *, primeras: int | None = None, i
                     break
                 reporte.llamadas += 1
                 en_vuelo["usd"] += estimado
-            falta = pausa["hasta"] - time.monotonic()
-            if falta > 0:
-                dormir(falta)
+            turno()
             try:
                 res = proveedor.generar(t.prompt, t.referencias)
             except ErrorProveedor as ex:
@@ -296,14 +310,17 @@ def generar_imagenes(carpeta: CarpetaProyecto, *, primeras: int | None = None, i
                 if ex.limite and esperas < ESPERAS_LIMITE:
                     # Google limita cuántas imágenes por minuto: no cobró, así que se espera y se repite
                     # sin gastar un reintento ni una llamada del tope
-                    espera = min(ESPERA_LIMITE_MAX_S, ESPERA_LIMITE_S * 2 ** esperas)
                     esperas += 1
                     with candado:
                         reporte.llamadas -= 1
-                        pausa["hasta"] = max(pausa["hasta"], time.monotonic() + espera)
+                        ritmo["intervalo"] = min(INTERVALO_MAX_S, max(2.0, ritmo["intervalo"] * 1.5))
+                        nueva = reloj() + ESPERA_LIMITE_FIJA_S
+                        aviso = nueva > pausa["hasta"] + 1          # un solo aviso por tanda, no uno por hilo
+                        pausa["hasta"] = max(pausa["hasta"], nueva)
                     intento -= 1
-                    avisar(f"  {t.clave}: Google pide ir más despacio; espero {espera:.0f} s y sigo")
-                    dormir(espera)
+                    if aviso:
+                        avisar(f"  Google pide ir más despacio: sigo al ritmo de 1 imagen cada "
+                               f"{max(1.0, ritmo['intervalo']):.0f} s")
                     continue
                 avisar(f"  {t.clave}: intento {intento + 1} falló ({ex})")
                 if not ex.reintentable:
@@ -311,6 +328,7 @@ def generar_imagenes(carpeta: CarpetaProyecto, *, primeras: int | None = None, i
                 continue
             with candado:
                 en_vuelo["usd"] -= estimado
+                ritmo["intervalo"] = max(INTERVALO_MIN_S, ritmo["intervalo"] * 0.93)   # va bien: un poco más rápido
                 libro.registrar(modulo=MODULO, proveedor=res.proveedor, modelo=res.modelo,
                                 unidades={**res.uso.unidades(), "referencias": len(t.referencias)},
                                 costo_usd=res.uso.costo_usd, detalle=f"{t.clave} intento {intento + 1}")
