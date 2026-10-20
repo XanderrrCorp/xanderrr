@@ -43,13 +43,24 @@ try {
 } catch { }
 
 # (18-10) si Xandart Nueva esta abierta, sus archivos estan en uso y la copia se quedaba esperando para siempre
-$abierta = $false
-try { $abierta = [bool](Get-NetTCPConnection -LocalPort 8031 -State Listen -ErrorAction SilentlyContinue) } catch { }
-if ($abierta) {
+# (20-10) a veces queda abierta escondida (sin ventana): se dice cual es y se ofrece cerrarla aqui mismo
+$conexiones = @()
+try { $conexiones = @(Get-NetTCPConnection -LocalPort 8031 -State Listen -ErrorAction SilentlyContinue) } catch { }
+if ($conexiones.Count -gt 0) {
+    $ids = @($conexiones | ForEach-Object { $_.OwningProcess } | Sort-Object -Unique)
+    $nombres = @($ids | ForEach-Object { (Get-Process -Id $_ -ErrorAction SilentlyContinue).ProcessName }) -join ', '
     Write-Host ''
-    Write-Host '  Xandart Nueva esta abierta. Cierra su ventana negra (si no hay ningun video haciendose)' -ForegroundColor Yellow
-    Write-Host '  y vuelve a darle doble clic a "Instalar Xandart Nueva".' -ForegroundColor Yellow
-    throw 'Cierra Xandart Nueva antes de instalar.'
+    Write-Host "  Xandart Nueva sigue abierta, aunque no veas su ventana (programa: $nombres)." -ForegroundColor Yellow
+    Write-Host '  Si NO hay ningun video haciendose, escribe S y presiona Enter para cerrarla.' -ForegroundColor Yellow
+    Write-Host '  Si hay un video haciendose, solo presiona Enter y espera a que termine.' -ForegroundColor Yellow
+    $resp = Read-Host '  '
+    if ($resp.Trim().ToUpper() -ne 'S') { throw 'Cierra Xandart Nueva antes de instalar.' }
+    foreach ($id in $ids) { Stop-Process -Id $id -Force -ErrorAction SilentlyContinue }
+    # sus ayudantes (render, cola) tambien tienen archivos abiertos
+    Get-Process -Name python*, ffmpeg* -ErrorAction SilentlyContinue |
+        Where-Object { $_.Path -like '*XandartNueva*' } | Stop-Process -Force -ErrorAction SilentlyContinue
+    Start-Sleep -Seconds 3
+    Write-Host '  Listo, cerrada. Sigo con la instalacion...' -ForegroundColor Green
 }
 
 # ---------------------------------------------------------------- 0. espacio
