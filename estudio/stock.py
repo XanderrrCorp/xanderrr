@@ -1,4 +1,5 @@
-"""Fotos y videos REALES de los animales, de Pexels (gratis, Licencia de Pexels).
+"""Fotos y videos REALES de los animales, de Pexels (gratis, Licencia de Pexels) y, desde el 20-10, también fotos
+de Wikimedia Commons (wikimedia.py: licencias libres, con crédito) en la misma hoja de contacto.
 
 1. Claude da, por cada nivel, cómo buscar al animal en inglés (nombre común y científico).
 2. Se buscan fotos y videos en Pexels y se arma una hoja de contacto numerada por nivel.
@@ -21,7 +22,7 @@ from pathlib import Path
 
 import requests
 
-from . import claude_cli
+from . import claude_cli, wikimedia
 from .config import clave_api, escribir_json, leer_json
 
 API_FOTOS = "https://api.pexels.com/v1/search"
@@ -196,7 +197,7 @@ def preparar_stock(carpeta: Path, ejecutar=claude_cli.ejecutar, avisar=print, se
         if not consulta:
             continue
         avisar(f"Buscando fotos y videos reales de «{n['nombre']}» ({consulta})…")
-        candidatos = buscar(consulta, sesion)
+        candidatos = buscar(consulta, sesion) + wikimedia.buscar(consulta, sesion)   # (20-10) + Wikimedia Commons
         aprobados = {}
         if candidatos:
             hoja = _hoja(candidatos, carpeta / "assets" / "stock" / f"hoja_nivel_{n['numero']}.png", sesion)
@@ -215,7 +216,8 @@ def preparar_stock(carpeta: Path, ejecutar=claude_cli.ejecutar, avisar=print, se
             indice["archivos"].append({
                 "archivo": destino.relative_to(carpeta).as_posix(), "tipo": c["tipo"], "nivel": n["numero"],
                 "especie": n["nombre"], "busqueda": consulta, "url_origen": c["url_origen"], "autor": c["autor"],
-                "autor_url": c["autor_url"], "pexels_id": c["pexels_id"], "licencia": LICENCIA,
+                "autor_url": c["autor_url"], "pexels_id": c["pexels_id"], "licencia": c.get("licencia", LICENCIA),
+                "fuente": c.get("fuente", "pexels"),
                 "verificado": True, "razon": razon, "duracion": c.get("duracion")})
         if not any(cuenta.values()) and recrear_faltantes:
             (carpeta / "assets" / "stock").mkdir(parents=True, exist_ok=True)
@@ -246,7 +248,7 @@ def _stock_por_temas(carpeta: Path, indice: dict, ruta: Path, ejecutar, avisar, 
     _cabeceras()
     for k, tema in enumerate(temas, 1):
         avisar(f"Buscando fotos y videos reales de «{tema}» ({k} de {len(temas)})…")
-        candidatos = buscar(tema, sesion)
+        candidatos = buscar(tema, sesion) + wikimedia.buscar(tema, sesion)
         aprobados = {}
         if candidatos:
             hoja = _hoja(candidatos, carpeta / "assets" / "stock" / f"hoja_tema_{len(revisados) + k}.png", sesion)
@@ -265,7 +267,8 @@ def _stock_por_temas(carpeta: Path, indice: dict, ruta: Path, ejecutar, avisar, 
             indice["archivos"].append({
                 "archivo": destino.relative_to(carpeta).as_posix(), "tipo": c["tipo"], "tema": tema, "nivel": None,
                 "especie": tema, "busqueda": tema, "url_origen": c["url_origen"], "autor": c["autor"],
-                "autor_url": c["autor_url"], "pexels_id": c["pexels_id"], "licencia": LICENCIA,
+                "autor_url": c["autor_url"], "pexels_id": c["pexels_id"], "licencia": c.get("licencia", LICENCIA),
+                "fuente": c.get("fuente", "pexels"),
                 "verificado": True, "razon": razon, "duracion": c.get("duracion")})
         indice["temas_revisados"].append(tema)
         escribir_json(ruta, indice)
@@ -273,12 +276,12 @@ def _stock_por_temas(carpeta: Path, indice: dict, ruta: Path, ejecutar, avisar, 
 
 
 def creditos(carpeta: Path) -> str:
-    """Créditos opcionales para la descripción (Pexels no los exige, pero se agradecen)."""
+    """Créditos para la descripción (Pexels no los exige; las fotos de Wikimedia con CC BY sí)."""
     ruta = carpeta / "assets" / "stock" / "stock.json"
     lineas = set()
     if ruta.exists():
         usados = [a for a in leer_json(ruta)["archivos"] if not a.get("sintetica")]
-        lineas |= {f"{a['tipo'].capitalize()} de {a['autor']} en Pexels: {a['url_origen']}" for a in usados}
+        lineas |= {wikimedia.credito(a) for a in usados}
     direccion = carpeta / "direccion.json"
     if direccion.exists():
         lineas |= {f"Foto de {f['autor']} en Pexels: {f['origen']}"

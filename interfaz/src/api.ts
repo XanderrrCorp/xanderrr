@@ -54,6 +54,7 @@ export interface VideoDetalle {
   divulgacion: boolean; guion: string | null; modo?: string;
   revision_video?: { resumen: string; problemas: { cuadro: number; minuto: string; que: string; gravedad: string }[] };
   llamados?: { comentario_fijado: string | null; avisos: string[]; lista: { tipo: string; seccion: string; texto: string }[] };
+  creditos_fotos?: string | null;
 }
 
 export interface Cotizacion {

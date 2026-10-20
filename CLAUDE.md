@@ -172,6 +172,11 @@ Estado al 04-10-2026. El repositorio es PÚBLICO: nunca escribir claves, tokens 
   espera cada vez más por imagen (10→90 s, 8 veces); un ritmo compartido (turno/intervalo) sube ×1,5 con cada 429
   (máx. 20 s, pausa fija de 15 s, un solo aviso) y baja ×0,93 con cada éxito. Lo de fondo: pedir más cuota en
   Google Cloud (se le explicó al dueño cómo).
+- (20-10) WIKIMEDIA COMMONS (el dueño: «Pexels me falla mucho»): estudio/wikimedia.py (gratis, sin clave; solo
+  dominio público/CC0/CC BY/CC BY-SA, fotos ≥800 px) suma candidatas a la MISMA hoja de contacto en Peligro Tropical
+  (stock.preparar_stock y por temas) y en El Calvo (explica/fotos_pexels, también sin clave de Pexels). Créditos
+  (obligatorios en CC BY) se muestran para copiar en la página del video (PT: «Créditos de las fotos reales»;
+  El Calvo: en la página del video). Commons está bloqueado en la nube: probado solo con respuestas simuladas.
 - Estrategia del dueño (16-10): foco en los 2 canales Tracy monetizados y Peligro Tropical; El Calvo en pausa.
 - Aquí (nube) la voz MiniMax sí funciona; Whisper no baja su modelo: vista previa con voz frase por frase.
 ## Pendiente

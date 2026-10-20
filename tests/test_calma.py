@@ -836,3 +836,53 @@ def test_el_calvo_usa_pexels_antes_que_google(tmp_path, monkeypatch):
     I.aplicar(tmp_path, {"escenas": [dict(e, elementos=[]) for e in escs]}, Trabajo("t"), proveedor=prov,
               pexels=Sesion(), ejecutar=claude)
     assert len(preguntas) == 1                                                  # lo decidido no se vuelve a preguntar
+
+
+def test_el_calvo_tambien_busca_en_wikimedia(tmp_path, monkeypatch):
+    """(20-10) Sin clave de Pexels (o si Pexels no tiene), la foto real puede salir de Wikimedia Commons."""
+    import io as _io
+
+    from PIL import Image
+
+    from estudio import stock, wikimedia
+    from estudio.config import ConfigCostos
+    from estudio.explica import ilustraciones as I
+    from estudio.imagenes.proveedores import ProveedorSimulado
+    from estudio.pipeline import Trabajo
+
+    def sin_clave():
+        raise stock.SinClavePexels("falta la clave")
+
+    monkeypatch.setattr(stock, "_cabeceras", sin_clave)
+    png = _io.BytesIO()
+    Image.new("RGB", (64, 40), (10, 120, 30)).save(png, "PNG")
+
+    class Resp:
+        status_code = 200
+
+        def __init__(self, datos=None):
+            self.datos, self.content = datos, png.getvalue()
+
+        def json(self):
+            return self.datos
+
+        def raise_for_status(self):
+            pass
+
+    class Sesion:
+        def get(self, url, params=None, **k):
+            if url == wikimedia.API:
+                return Resp({"query": {"pages": {"55": {"pageid": 55, "index": 1, "imageinfo": [{
+                    "thumburl": "https://upload.wikimedia.org/t/1920px-Iris.jpg", "descriptionurl": "https://commons/Iris",
+                    "width": 3000, "mime": "image/jpeg",
+                    "extmetadata": {"LicenseShortName": {"value": "CC BY-SA 4.0"}, "Artist": {"value": "Eva"}}}]}}}})
+            return Resp()
+
+    escs = [{"tipo": "ilustracion", "foto": {"descripcion": "Un ojo humano de cerca", "busqueda": "human eye iris"},
+             "elementos": []}]
+    r = I.aplicar(tmp_path, {"escenas": escs}, Trabajo("t"), proveedor=ProveedorSimulado(ConfigCostos.cargar()),
+                  pexels=Sesion(), ejecutar=lambda prompt, **k: ('{"escena 1": 1}', {}))
+    assert r["hechas"] == 1 and not r["fotos_ia"]                       # real: no lleva aviso de contenido sintético
+    assert "wikimedia_55" in escs[0]["elementos"][0]["estado"]["archivo"]
+    creditos = (tmp_path / "ilustraciones" / "creditos_pexels.txt").read_text(encoding="utf-8")
+    assert "Eva" in creditos and "CC BY-SA 4.0" in creditos

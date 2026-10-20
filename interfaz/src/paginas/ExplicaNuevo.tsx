@@ -11,6 +11,7 @@ interface Video {
   escenas_info: { escenas: number; notas: string[] } | null; video: boolean; trabajo: Trabajo | null;
   costo_voz: { caracteres: number; cop: string } | null;
   costo_ilustraciones: { imagenes: number; fondos?: number; cop: string } | null;
+  creditos_fotos?: string | null;
   informe: { duracion: number; tiempo_total_s: number; costos: Record<'guion' | 'voz' | 'imagenes', { cop: string }>;
              video: string } | null;
 }
@@ -88,6 +89,8 @@ function Detalle({ slug }: { slug: string }) {
       {v.informe && <p className="pequeno">Duración {Math.round(v.informe.duracion / 60 * 10) / 10} min · costo: guion{' '}
         {v.informe.costos.guion.cop}, voz {v.informe.costos.voz.cop}, imágenes {v.informe.costos.imagenes.cop} ·
         guardado en {v.informe.video}</p>}
+      {v.creditos_fotos && <details><summary><b>Créditos de las fotos reales</b> (pégalos en la descripción del video)</summary>
+        <pre className="pequeno" style={{ whiteSpace: 'pre-wrap' }}>{v.creditos_fotos}</pre></details>}
     </section>
   );
 }

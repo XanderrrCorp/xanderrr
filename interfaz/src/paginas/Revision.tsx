@@ -177,6 +177,7 @@ export function Revision() {
       )}
 
       {guionOk && v.llamados && <Llamados l={v.llamados} />}
+      {v.creditos_fotos && <CreditosFotos texto={v.creditos_fotos} />}
       {guionOk && <GuionCompleto v={v} />}
       {guionOk && <Escenas v={v} conImagenes={imgOk} bloqueado={trabajando} slug={slug} alRegenerar={(id, inst) => accion(`escenas/${id}/regenerar`, { instruccion: inst })} />}
       <p className="tenue pequeno" style={{ marginTop: 24 }}>¿Algo no está aquí? <a href={paginaVieja(slug)}>Ábrelo en la página de siempre</a>.</p>
@@ -207,6 +208,23 @@ function Llamados({ l }: { l: NonNullable<VideoDetalle['llamados']> }) {
         <p><b>Comentario fijado:</b> {l.comentario_fijado}{' '}
           <button className="boton-borde pequeno" onClick={copiar}>{copiado ? 'Copiado' : 'Copiar'}</button></p>
       )}
+    </section>
+  );
+}
+
+/** Créditos de las fotos reales (Pexels y Wikimedia Commons), para pegarlos en la descripción de YouTube. */
+function CreditosFotos({ texto }: { texto: string }) {
+  const [copiado, setCopiado] = useState(false);
+  const copiar = async () => {
+    try { await navigator.clipboard.writeText(texto); setCopiado(true); window.setTimeout(() => setCopiado(false), 2000); }
+    catch { /* el texto se puede seleccionar a mano */ }
+  };
+  return (
+    <section className="rev-tarjeta">
+      <h2>Créditos de las fotos reales</h2>
+      <p className="tenue pequeno">Pégalos en la descripción del video (las fotos de Wikimedia lo piden).{' '}
+        <button className="boton-borde pequeno" onClick={copiar}>{copiado ? 'Copiado' : 'Copiar'}</button></p>
+      <pre className="pequeno" style={{ whiteSpace: 'pre-wrap' }}>{texto}</pre>
     </section>
   );
 }

@@ -1,5 +1,6 @@
 """Fotos REALES de Pexels para las escenas «foto» de El Calvo Explica (19-10, pedido del dueño: «usa Pexels cuando
 sea necesario»). Gratis (Licencia de Pexels). Va antes que Google: solo lo que Pexels no tenga se pinta con IA.
+Desde el 20-10 también Wikimedia Commons (..wikimedia: licencias libres, con crédito) en la misma hoja.
 
 Por cada foto que pide una escena se traen hasta 4 candidatas; todas van en UNA hoja de contacto numerada y Claude
 (modelo liviano) la mira UNA sola vez y elige, por escena, la que muestra exactamente lo que dice la voz, o ninguna.
@@ -13,10 +14,11 @@ from pathlib import Path
 
 import requests
 
-from .. import claude_cli
+from .. import claude_cli, wikimedia
 from ..config import escribir_json, leer_json
 
 POR_FOTO = 4
+POR_FOTO_WIKIMEDIA = 4         # (20-10) Pexels falla en cosas específicas: Commons suma candidatas a la misma hoja
 
 
 def _clave(esc: dict) -> str:
@@ -41,17 +43,20 @@ def buscar(c: Path, fotos: list[dict], t, sesion=requests, ejecutar=None) -> dic
     pendientes = [e for e in fotos if e["foto"].get("busqueda") and _clave(e) not in guardado]
     if not pendientes:
         return salida
-    t.avisar(f"Buscando {len(pendientes)} foto(s) reales en Pexels…")
+    t.avisar(f"Buscando {len(pendientes)} foto(s) reales en Pexels y Wikimedia Commons…")
     candidatos, grupos = [], []
+    con_pexels = True
     for e in pendientes:
-        try:
-            fotos_e = [x for x in buscar_pexels(e["foto"]["busqueda"], sesion) if x["tipo"] == "foto"][:POR_FOTO]
-        except SinClavePexels:
-            t.avisar("  sin clave de Pexels: esas fotos se pintan con Google")
-            return salida
-        except Exception as ex:  # noqa: BLE001
-            t.avisar(f"  Pexels no respondió ({str(ex)[:80]})")
-            fotos_e = []
+        fotos_e = []
+        if con_pexels:
+            try:
+                fotos_e = [x for x in buscar_pexels(e["foto"]["busqueda"], sesion) if x["tipo"] == "foto"][:POR_FOTO]
+            except SinClavePexels:
+                t.avisar("  sin clave de Pexels: solo se busca en Wikimedia Commons")
+                con_pexels = False
+            except Exception as ex:  # noqa: BLE001
+                t.avisar(f"  Pexels no respondió ({str(ex)[:80]})")
+        fotos_e += wikimedia.buscar(e["foto"]["busqueda"], sesion, POR_FOTO_WIKIMEDIA)   # (20-10)
         grupos.append((e, list(range(len(candidatos) + 1, len(candidatos) + 1 + len(fotos_e)))))
         candidatos += fotos_e
     elegidas: dict[str, int] = {}
@@ -85,16 +90,17 @@ def buscar(c: Path, fotos: list[dict], t, sesion=requests, ejecutar=None) -> dic
             from PIL import Image
 
             im = Image.open(io.BytesIO(sesion.get(cand["descarga"], timeout=60).content)).convert("RGB")
-            nombre = f"pexels_{cand['pexels_id']}.jpg"
+            nombre = (f"wikimedia_{cand['wikimedia_id']}.jpg" if cand.get("fuente") == "wikimedia"
+                      else f"pexels_{cand['pexels_id']}.jpg")
             im.save(d / nombre, quality=92)
             guardado[k] = nombre
             salida[k] = d / nombre
-            creditos.append(f"Foto de {cand['autor']} en Pexels: {cand['url_origen']}")
+            creditos.append(wikimedia.credito(cand))
         except Exception as ex:  # noqa: BLE001
             t.avisar(f"  no se pudo bajar una foto de Pexels ({str(ex)[:80]})")
     escribir_json(guardado_ruta, guardado)
     if creditos:
         with open(d / "creditos_pexels.txt", "a", encoding="utf-8") as f:
             f.write("\n".join(creditos) + "\n")
-    t.avisar(f"Fotos reales de Pexels: {len(elegidas)} de {len(pendientes)} (gratis)")
+    t.avisar(f"Fotos reales de Pexels y Wikimedia: {len(elegidas)} de {len(pendientes)} (gratis)")
     return salida

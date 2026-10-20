@@ -147,8 +147,11 @@ def _estado_video(slug: str) -> dict:
         raise HTTPException(404, "No existe ese video")
     info = (c / "video.json")
     meta = json.loads(info.read_text(encoding="utf-8")) if info.exists() else {"titulo": slug}
+    creditos = c / "ilustraciones" / "creditos_pexels.txt"     # (20-10) fotos reales: Pexels y Wikimedia
     return {"slug": slug, **meta, **autor.estado_video(c), "trabajo": _trabajo(f"explica-{slug}"),
-            "costo_voz": _costo_voz(c), "costo_ilustraciones": _costo_ilustraciones(c)}
+            "costo_voz": _costo_voz(c), "costo_ilustraciones": _costo_ilustraciones(c),
+            "creditos_fotos": "\n".join(dict.fromkeys(creditos.read_text(encoding="utf-8").split("\n"))).strip() or None
+            if creditos.exists() else None}
 
 
 def _costo_ilustraciones(c) -> dict | None:

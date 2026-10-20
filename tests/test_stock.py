@@ -217,3 +217,64 @@ def test_fondo_del_lugar_se_baja_una_vez_y_va_en_los_creditos(tmp_path, monkeypa
     assert (tmp_path / f["archivo"]).exists() and f["origen"].startswith("https://www.pexels.com/")
     assert stock.fondos_de_lugar(tmp_path, sesion=s, avisar=lambda _: None) == 0      # ya estaba
     assert "Foto de Ana en Pexels" in stock.creditos(tmp_path)
+
+
+def _commons(*paginas):
+    """Respuesta de la API de Wikimedia Commons con (pageid, licencia, ancho, mime)."""
+    return Resp({"query": {"pages": {str(pid): {
+        "pageid": pid, "index": k, "title": f"File:F{pid}.jpg", "imageinfo": [{
+            "thumburl": f"https://upload.wikimedia.org/thumb/a/F{pid}.jpg/1920px-F{pid}.jpg",
+            "url": f"https://upload.wikimedia.org/a/F{pid}.jpg", "descriptionurl": f"https://commons.wikimedia.org/wiki/File:F{pid}.jpg",
+            "width": ancho, "mime": mime, "extmetadata": {
+                "LicenseShortName": {"value": lic}, "Artist": {"value": f'<a href="x">Autor {pid}</a>'}}}]}
+        for k, (pid, lic, ancho, mime) in enumerate(paginas)}}})
+
+
+def test_wikimedia_solo_licencias_libres_y_fotos_grandes():
+    """(20-10) Commons: solo dominio público, CC0, CC BY y CC BY-SA; fotos de verdad (no chiquitas ni SVG)."""
+    from estudio import wikimedia
+
+    class S:
+        def get(self, url, params=None, headers=None, timeout=None):
+            assert url == wikimedia.API and "Xandart" in headers["User-Agent"] and "filetype:bitmap" in params["gsrsearch"]
+            return _commons((1, "CC BY-SA 4.0", 3000, "image/jpeg"), (2, "CC BY-NC 2.0", 3000, "image/jpeg"),
+                            (3, "Public domain", 400, "image/jpeg"), (4, "CC0", 2000, "image/tiff"),
+                            (5, "Public domain", 2000, "image/png"), (6, "Fair use", 2000, "image/jpeg"))
+
+    fotos = wikimedia.buscar("Dendrobates tinctorius", S())
+    assert [f["wikimedia_id"] for f in fotos] == [1, 5]
+    assert fotos[0]["autor"] == "Autor 1" and fotos[0]["miniatura"].endswith("/330px-F1.jpg")
+    assert "CC BY-SA 4.0" in fotos[0]["licencia"] and "Autor 1" in wikimedia.credito(fotos[0])
+
+    class Caida:
+        def get(self, *a, **k):
+            raise ConnectionError("sin internet")
+
+    assert wikimedia.buscar("x", Caida()) == []                          # si Commons falla, el video sigue
+
+
+def test_peligro_tropical_suma_fotos_de_wikimedia(tmp_path, monkeypatch):
+    """(20-10) Las fotos de Commons entran en la misma hoja; la aprobada se guarda con su licencia y su crédito."""
+    from estudio import wikimedia
+
+    monkeypatch.setenv("PEXELS_API_KEY", "clave-prueba")
+    (tmp_path / "escenas.json").write_text(json.dumps({"niveles": [{"numero": 1, "nombre": "Rana dardo azul",
+                                                                     "asset": "a", "villano": False}]}), "utf-8")
+
+    class S(SesionFalsa):
+        def get(self, url, params=None, headers=None, timeout=None):
+            if url == wikimedia.API:
+                self.pedidos.append(url)
+                return _commons((77, "CC BY 3.0", 2500, "image/jpeg"))
+            return super().get(url, params, headers, timeout)
+
+    def claude(prompt, cwd=None, herramientas=None):
+        if "búsqueda" in prompt:
+            return '{"1": "blue poison dart frog"}', {}
+        assert "5 candidatos" in prompt                                  # 3 fotos + 1 video de Pexels + 1 de Commons
+        return '{"aprobados": [{"numero": 5, "razon": "la rana correcta"}]}', {}
+
+    idx = stock.preparar_stock(tmp_path, ejecutar=claude, avisar=lambda *_: None, sesion=S(), recrear_faltantes=False)
+    (foto,) = idx["archivos"]
+    assert foto["fuente"] == "wikimedia" and "CC BY 3.0" in foto["licencia"] and (tmp_path / foto["archivo"]).exists()
+    assert "Autor 77" in stock.creditos(tmp_path) and "commons.wikimedia.org" in stock.creditos(tmp_path)

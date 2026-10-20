@@ -182,7 +182,8 @@ def aplicar(c: Path, datos: dict, t, permiso: bool = False, proveedor=None, pexe
             por_codigo += 1
     gastado = sum(e.get("costo_usd", 0) for e in libro.entradas() if e.get("modulo") == MODULO)
     con_fotos = con_ia and any(e.get("foto") and e["elementos"] and e["elementos"][0].get("pieza") == "imagen"
-                               and "pexels_" not in str(e["elementos"][0]["estado"].get("archivo")) for e in fotos)
+                               and Path(str(e["elementos"][0]["estado"].get("archivo"))).name.startswith("escena_")
+                               for e in fotos)
     t.avisar(f"Ilustraciones y fotos de Google: {hechas} (costo {formato_cop(config.a_cop(gastado))})"
              + (f"; {por_codigo} quedaron por código" if por_codigo else "")
              + (". Este video lleva fotos hechas con IA: al subirlo marca «Contenido alterado o sintético: Sí»."

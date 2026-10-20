@@ -937,6 +937,10 @@ def resumen(c: CarpetaProyecto) -> dict:
         datos["llamados"] = {"comentario_fijado": info.get("comentario_fijado"), "avisos": info.get("avisos") or [],
                              "lista": [{"tipo": x["tipo"], "seccion": x.get("seccion_nombre"), "texto": x["texto"]}
                                        for x in info.get("llamados", [])]}
+    if (c.ruta / "assets" / "stock" / "stock.json").exists():   # (20-10) créditos de fotos reales (Wikimedia los exige)
+        from .stock import creditos
+
+        datos["creditos_fotos"] = creditos(c.ruta) or None
     if (c.ruta / "render" / "prueba.json").exists():
         datos["prueba"] = leer_json(c.ruta / "render" / "prueba.json")
     if (c.ruta / "render" / "final.mp4").exists():
