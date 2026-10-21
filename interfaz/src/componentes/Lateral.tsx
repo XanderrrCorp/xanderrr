@@ -58,14 +58,15 @@ export function Lateral({ cuenta }: { cuenta: Cuenta | null }) {
         <span className="crece" />
         <Enlace i={{ nombre: 'Planes y créditos', icono: 'planes', ir: '/planes' }} />
         <Enlace i={{ nombre: 'Historial de créditos', icono: 'videos', ir: '/creditos' }} />
+        {cuenta?.usuario.admin && <Enlace i={{ nombre: 'Cuentas beta', icono: 'personajes', ir: '/cuentas' }} />}
         {cuenta?.usuario.admin && <Enlace i={{ nombre: 'Admin', icono: 'admin', ir: '/admin', fuera: true }} />}
         <Enlace i={{ nombre: 'Liberar espacio', icono: 'proyectos', ir: '/espacio' }} />
         <Enlace i={{ nombre: 'Ajustes', icono: 'ajustes', ir: paginaVieja(), fuera: true }} />
         {cuenta && (
-          <div className="lat-cuenta">
+          <NavLink to="/cuenta" className="lat-cuenta" title="Mi cuenta: cambiar contraseña o cerrar sesión">
             <span className="avatar">{nombre.slice(0, 1).toUpperCase()}</span>
             <div><b title={cuenta.usuario.email}>{nombre}</b><span className="tenue pequeno">{ROL[cuenta.usuario.rol] ?? cuenta.usuario.rol}</span></div>
-          </div>
+          </NavLink>
         )}
       </nav>
       {abierto && <button className="lat-fondo" aria-label="Cerrar menú" onClick={() => setAbierto(false)} />}

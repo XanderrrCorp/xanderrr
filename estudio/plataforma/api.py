@@ -1,7 +1,6 @@
 """API v2 de la plataforma: cuenta, canales, recursos, créditos, precios y administración.
 
-Quién hace la petición lo decide `usuario_actual`: en modo local es siempre el dueño; cuando
-exista el inicio de sesión (Fase 2 en adelante) solo cambia esa función.
+Quién hace la petición lo decide `usuario_actual`: quien entró con su correo y contraseña (acceso.py).
 """
 from __future__ import annotations
 
@@ -13,7 +12,7 @@ from sqlalchemy.orm import Session
 
 from . import creditos as cr
 from . import db, precios, proveedores, recursos
-from .cuentas import SinPermiso, cuenta_local, es_admin, es_owner
+from .cuentas import SinPermiso, es_admin, es_owner
 from .modelos import (Ajuste, Canal, Espacio, Estilo, Formato, FormulaGuion, Movimiento, Paquete, PerfilEdicion,
                       Personaje, Plan, PlantillaMiniatura, Precio, Usuario, Video, Voz)
 
@@ -39,8 +38,17 @@ class Quien:
 
 
 def usuario_actual(s: Session = Depends(sesion)) -> Quien:
-    u, e = cuenta_local(s)
-    return Quien(u, e)
+    """Quien entró (lo deja la puerta de acceso.py). Sin sesión no se llega aquí: la puerta ya respondió 401."""
+    from .acceso import conectado
+    from .cuentas import espacio_de
+
+    c = conectado()
+    if c is None:
+        raise HTTPException(401, "Inicia sesión para continuar.")
+    u = s.get(Usuario, c.usuario_id)
+    if u is None:
+        raise HTTPException(401, "Inicia sesión para continuar.")
+    return Quien(u, espacio_de(s, u))
 
 
 def solo_admin(q: Quien = Depends(usuario_actual)) -> Quien:

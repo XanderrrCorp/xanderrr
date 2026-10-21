@@ -11,11 +11,33 @@ rutas = APIRouter(prefix="/api/cola")
 _RECUPERADA = {"si": False}
 
 
-@rutas.get("")
-def ver():
+def _recuperar() -> None:
     if not _RECUPERADA["si"]:                 # la primera vez que se abre Xandart: sigue lo que quedó pendiente
         _RECUPERADA["si"] = True
         cola.recuperar()
+
+
+def recuperar_al_abrir() -> None:
+    """(Paso B) Al abrir Xandart, sin esperar a la página: la cola no depende de haber iniciado sesión. Corre en el
+    espacio del dueño (la cola es suya), cuando termine de prepararse."""
+    import threading
+
+    def seguir():
+        from .plataforma import contexto, local
+
+        try:
+            espacio = local.espacio(True)
+        except Exception:  # noqa: BLE001 — si la plataforma no se preparó, la cola corre como siempre
+            espacio = None
+        with contexto.usar_espacio(espacio):
+            _recuperar()
+
+    threading.Thread(target=seguir, daemon=True, name="cola-al-abrir").start()
+
+
+@rutas.get("")
+def ver():
+    _recuperar()
     return cola.estado()
 
 

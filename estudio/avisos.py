@@ -7,6 +7,7 @@ carpeta Videos/Xandart (las 4 entregas copian ahí el final).
 from __future__ import annotations
 
 import json
+import os
 import threading
 import time
 import uuid
@@ -100,7 +101,9 @@ def _correo(a: dict, para: str | None = None) -> None:
 
             destino = para or correo.para_avisos(_email_dueno())
             if destino:
-                correo.enviar(destino, a["titulo"], f"{a['texto']}\n\nÁbrelo en Xandart: http://localhost:8031{a['enlace'] or '/app'}")
+                # (Paso B) 127.0.0.1 y no «localhost»: el navegador guarda la sesión por nombre y pediría entrar otra vez
+                pagina = f"http://127.0.0.1:{os.environ.get('XANDART_PUERTO', '8031')}{a['enlace'] or '/app'}"
+                correo.enviar(destino, a["titulo"], f"{a['texto']}\n\nÁbrelo en Xandart: {pagina}")
         except Exception:  # noqa: BLE001 — sin internet o sin correo: el aviso igual queda en la app
             pass
     threading.Thread(target=enviar, daemon=True).start()

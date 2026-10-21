@@ -12,6 +12,8 @@ export async function api<T = unknown>(ruta: string, opciones: { metodo?: string
     throw new Error('No hay conexión con Xandart. Revisa que su ventana negra siga abierta y vuelve a intentarlo.');
   }
   const datos = await r.json().catch(() => ({}));
+  // (Paso B) la sesión venció o la cerraron desde otro lado: la página vuelve a la pantalla de entrar
+  if (r.status === 401 && !ruta.startsWith('/api/v2/entrar')) window.dispatchEvent(new Event('xandart:sin-sesion'));
   if (!r.ok) {
     const m = humano(r.status, (datos as { detail?: unknown }).detail);
     ultimoError.texto = `${ruta} → ${r.status}: ${m}`;      // va solo en «Reportar problema»
@@ -37,6 +39,16 @@ export function humano(estado: number, detalle?: unknown): string {
 }
 
 export const miles = (n: number) => Math.round(n).toLocaleString('es-CO');
+
+export interface UsuarioSesion { id: string; email: string; nombre: string; rol: string; admin: boolean }
+export interface Sesion {
+  conectado: boolean; usuario?: UsuarioSesion; cambiar_clave?: boolean; preparando?: boolean;
+  crear_clave_dueno?: boolean; correo_dueno?: string | null;
+}
+export interface CuentaBeta extends UsuarioSesion {
+  bloqueado: boolean; clave_temporal: boolean; creado: string | null; ultima_actividad: string | null;
+  clave_temporal_texto?: string;
+}
 
 export interface Cuenta {
   gasto_mes_usd: number;

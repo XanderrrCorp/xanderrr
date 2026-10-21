@@ -42,8 +42,8 @@ app = FastAPI(title="Xandart")
 
 
 class EspacioDeLaPeticion:
-    """Cada petición corre dentro del espacio de trabajo de quien la hace. En modo local
-    es siempre el del dueño (su instalación ya migrada a datos)."""
+    """Cada petición corre dentro del espacio de trabajo de quien la hace: el dueño, en el de su instalación ya
+    migrada a datos; cualquier otra cuenta, en el suyo."""
 
     def __init__(self, siguiente):
         self.siguiente = siguiente
@@ -53,19 +53,30 @@ class EspacioDeLaPeticion:
             return await self.siguiente(scope, receive, send)
         from starlette.concurrency import run_in_threadpool
 
-        from .plataforma import contexto, local
+        from .plataforma import acceso, contexto, local
+        from .plataforma.modelos import ROL_OWNER
 
-        espacio = await run_in_threadpool(local.espacio, False)   # no espera la copia: mientras, modo de siempre
+        quien = acceso.conectado()
+        if quien is not None and quien.rol != ROL_OWNER:
+            espacio = quien.espacio_id
+        else:       # el dueño (o una ruta libre): no espera la copia; mientras, modo de siempre
+            espacio = await run_in_threadpool(local.espacio, False)
         with contexto.usar_espacio(espacio):
             await self.siguiente(scope, receive, send)
 
 
 app.add_middleware(EspacioDeLaPeticion)
+from .plataforma.acceso import PuertaDeEntrada  # noqa: E402
+
+app.add_middleware(PuertaDeEntrada)    # (Paso B) va por fuera: primero se sabe quién es, después su espacio
 
 from .plataforma.api import api as api_v2  # noqa: E402 — la API de la plataforma (cuenta, créditos, admin)
 from .plataforma.api_personajes import rutas as api_personajes  # noqa: E402 — asistente de personaje
 
+from .plataforma.api_acceso import rutas as api_acceso  # noqa: E402 — entrar, salir y cuentas beta
+
 app.include_router(api_v2)
+app.include_router(api_acceso)
 app.include_router(api_personajes)
 from .tracy.api import rutas as api_tracy  # noqa: E402 — modo Tracy (guion pegado → video stock + seminario)
 
@@ -1278,6 +1289,9 @@ def main():
     from .plataforma import local
 
     local.preparar(esperar=False)  # copia de seguridad y migración en segundo plano (la primera vez tarda)
+    from .cola_api import recuperar_al_abrir
+
+    recuperar_al_abrir()           # la cola sigue sola aunque nadie abra la página ni haya iniciado sesión
     if "--sin-navegador" not in sys.argv:
         import threading
 

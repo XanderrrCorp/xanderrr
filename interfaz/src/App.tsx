@@ -1,6 +1,6 @@
 import { lazy, Suspense, useEffect, useState } from 'react';
-import { Route, Routes } from 'react-router-dom';
-import { api, type Cuenta, type EstadoLocal } from './api';
+import { Navigate, Route, Routes, useNavigate, useSearchParams } from 'react-router-dom';
+import { api, type Cuenta, type EstadoLocal, type Sesion } from './api';
 import { Barra } from './componentes/Barra';
 import { Lateral } from './componentes/Lateral';
 import { Canales } from './paginas/Canales';
@@ -23,6 +23,8 @@ import { CanalNuevo } from './paginas/CanalNuevo';
 import { Creditos } from './paginas/Creditos';
 import { AvisoRespaldo } from './componentes/Respaldo';
 import { Esqueleto } from './componentes/Estados';
+import { Entrar, Preparando } from './paginas/Entrar';
+import { Cuentas, MiCuenta } from './paginas/MiCuenta';
 
 // tus módulos privados van en archivos aparte: solo se descargan cuando tú los abres (nada de su texto va en la página
 // que recibe cualquier usuario); en el Paso C el servidor además solo se los entrega al dueño
@@ -32,7 +34,40 @@ const Calma = lazy(() => import('./paginas/Calma').then((m) => ({ default: m.Cal
 const Explica = lazy(() => import('./paginas/Explica').then((m) => ({ default: m.Explica })));
 const Cola = lazy(() => import('./paginas/Cola').then((m) => ({ default: m.Cola })));
 
+// (Paso B) Primero se mira si hay sesión: sin sesión solo se ve la pantalla de entrar (nada de datos).
 export function App() {
+  const [sesion, setSesion] = useState<Sesion | null>(null);
+  const [params] = useSearchParams();
+  const ir = useNavigate();
+  useEffect(() => {
+    let espera: number | undefined;
+    const mirar = () => api<Sesion>('/api/v2/sesion').then((s) => {
+      setSesion(s);
+      if (s.preparando) espera = window.setTimeout(mirar, 3000);
+    }).catch(() => { espera = window.setTimeout(mirar, 3000); });
+    mirar();
+    const sinSesion = () => setSesion({ conectado: false });
+    window.addEventListener('xandart:sin-sesion', sinSesion);
+    return () => { window.clearTimeout(espera); window.removeEventListener('xandart:sin-sesion', sinSesion); };
+  }, []);
+
+  if (!sesion) return null;
+  if (sesion.preparando) return <Preparando />;
+  if (!sesion.conectado || sesion.cambiar_clave) {
+    return <Entrar sesion={sesion} listo={(s) => {
+      if (s.cambiar_clave) { setSesion(s); return; }
+      // vuelve a donde iba: una página vieja (/, /admin) se abre fuera de esta aplicación
+      const volver = params.get('volver') ?? '';
+      if (volver.startsWith('/') && !volver.startsWith('//') && !volver.startsWith('/app')) { window.location.href = volver; return; }
+      setSesion(s);
+      const dentro = volver.startsWith('/app') ? volver.slice(4) || '/' : '/';
+      ir(dentro, { replace: true });
+    }} />;
+  }
+  return <Marco />;
+}
+
+function Marco() {
   const [cuenta, setCuenta] = useState<Cuenta | null>(null);
   const [prep, setPrep] = useState<EstadoLocal | null>(null);
   useEffect(() => {
@@ -95,6 +130,9 @@ export function App() {
             <Route path="/creditos" element={<Creditos />} />
             <Route path="/formatos" element={<Formatos />} />
             <Route path="/planes" element={<Planes />} />
+            <Route path="/entrar" element={<Navigate to="/" replace />} />
+            <Route path="/cuenta" element={<MiCuenta cuenta={cuenta} />} />
+            <Route path="/cuentas" element={<Cuentas />} />
             <Route path="/pronto/:que" element={<Pronto />} />
             <Route path="*" element={<Pronto />} />
           </Routes>

@@ -212,6 +212,9 @@ New-Item -ItemType Directory -Force $menu | Out-Null
 Acceso "$escritorio\Xandart Nueva.lnk" "$Venv\Scripts\pythonw.exe" '-m estudio.app' 'Abre la Xandart nueva (en pruebas)'
 Acceso "$menu\Xandart Nueva.lnk" "$Venv\Scripts\pythonw.exe" '-m estudio.app' 'Abre la Xandart nueva (en pruebas)'
 Acceso "$menu\Actualizar Xandart Nueva.lnk" 'powershell.exe' "-NoProfile -ExecutionPolicy Bypass -File `"$Destino\instalar\instalar-nueva.ps1`"" 'Baja la ultima version de la Xandart nueva'
+# (Paso B) si olvidas tu contrasena de Xandart: la cambias aqui mismo, sin correo
+$restablecer = 'Restablecer mi contrase' + [char]0x00F1 + 'a de Xandart Nueva'
+Acceso "$menu\$restablecer.lnk" "$Destino\instalar\Restablecer mi contrasena.bat" '' 'Pone una contrasena nueva a tu cuenta de Xandart (sin correo)'
 Write-Host '   listo: "Xandart Nueva" en el escritorio (la de siempre sigue igual)'
 
 Write-Host "`nXandart Nueva quedo instalada. Se abre en tu navegador..." -ForegroundColor Green

@@ -276,6 +276,28 @@ Estado al 04-10-2026. El repositorio es PÚBLICO: nunca escribir claves, tokens 
   voz_del_canal ignora «voz_principal» (la de proveedores.json sigue mandando, igual que antes).
   /espacio muestra «Tus proyectos, del más pesado al más liviano» (limpieza.proyectos_por_peso): SOLO mirar; se borra
   únicamente lo que el dueño diga.
+  PASO B (22-10, LOGIN, aprobado con estas decisiones del dueño: él también entra con contraseña en su PC con
+  «Recordarme» 30 días; las cuentas beta las crea él a mano con contraseña temporal, sin registro abierto):
+  plataforma/acceso.py = contraseñas scrypt con sal (stdlib; «temporal:» delante = obliga a cambiarla), galleta
+  firmada xandart_sesion (HttpOnly, SameSite=Strict; secreto en datos/secreto_sesion.key, nunca en el repo; lleva
+  huella de la contraseña → cambiarla cierra las demás sesiones), 5 fallos = 15 min de espera, y PuertaDeEntrada
+  (middleware por FUERA de EspacioDeLaPeticion): sin sesión las API dan 401 y las páginas viejas (/, /admin,
+  /archivos) llevan a /app/entrar?volver=…; libres solo /app (archivos de la página), /web, /api/version,
+  /api/v2/sesion|entrar|salir|crear-clave-dueno, /api/apagar SIN cabecera Origin (lo usa el acceso directo) y,
+  mientras db.PREPARANDO, estado-local y respaldo. Petición con Origin de otro sitio que cambia algo → 403.
+  plataforma/api_acceso.py: /sesion, /entrar, /salir, /crear-clave-dueno (primera vez, solo desde_este_pc: cliente
+  127.0.0.1 y sin cabeceras de túnel/proxy), /cambiar-clave, /admin/usuarios (crear beta con temporal + bienvenida,
+  bloqueo, clave-temporal nueva; la cuenta owner no se toca desde ahí). api.usuario_actual ya lee la sesión
+  (acceso.conectado()); EspacioDeLaPeticion: owner → espacio de la instalación (igual que antes), otros → el suyo.
+  SIN migración nueva (si hiciera falta una, db.preparar ya usa la copia liviana). Recuperar la contraseña del dueño
+  sin correo: estudio/restablecer_clave.py (la pide 2 veces en la ventana negra) vía instalar/«Restablecer mi
+  contrasena.bat» + acceso directo «Restablecer mi contraseña de Xandart Nueva» en el menú Inicio → Xandart.
+  Los trabajos NO dependen de la sesión: cola_api.recuperar_al_abrir() sigue la cola al abrir Xandart (antes
+  esperaba a que la página pidiera /api/cola). Pruebas: conftest.entrar_como_dueno (acceso.EN_PRUEBAS, solo por
+  código, nunca por .env) deja las pruebas de siempre como el dueño; tests/test_acceso.py prueba la puerta real.
+  Interfaz: paginas/Entrar.tsx (crear / entrar / cambiar temporal), MiCuenta.tsx (/cuenta: cambiar contraseña y
+  salir; /cuentas: cuentas beta, la temporal se muestra UNA vez con «Copiar»); api.ts lanza «xandart:sin-sesion»
+  ante un 401 y App vuelve a la pantalla de entrar. Correo de avisos con 127.0.0.1 (no localhost: otra galleta).
 ## Pendiente
 - Preguntas sin responder del dueño: ¿en qué canal notó la voz lenta? (Peligro Tropical está en 1.3 en
   config/proveedores.json; Tracy en 1.0 por pedido suyo). ¿En qué momento sale «la tira de animales» sin sentido?

@@ -36,3 +36,16 @@ def sin_espacio_fijo():
     contexto.fijar_espacio(None)
     yield
     contexto.fijar_espacio(None)
+
+
+@pytest.fixture(autouse=True)
+def entrar_como_dueno():
+    """(Paso B) Las pruebas de siempre llaman a la página como el dueño ya conectado; las del inicio de sesión
+    (test_acceso.py) apagan esto para probar la puerta de verdad."""
+    from estudio.plataforma import acceso
+
+    acceso.EN_PRUEBAS["como_dueno"] = True
+    acceso.olvidar_sesiones()
+    yield
+    acceso.EN_PRUEBAS["como_dueno"] = False
+    acceso.olvidar_sesiones()

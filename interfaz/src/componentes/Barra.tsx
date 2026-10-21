@@ -9,7 +9,7 @@ const TITULOS: [RegExp, string][] = [
   [/^\/videos/, 'Proyectos'], [/^\/personajes/, 'Personajes'], [/^\/estilos/, 'Estilos'], [/^\/miniaturas/, 'Miniaturas'],
   [/^\/media/, 'Media'], [/^\/canales/, 'Canales'], [/^\/formatos/, 'Inspire'], [/^\/planes/, 'Planes y créditos'], [/^\/creditos/, 'Historial de créditos'],
   [/^\/(cola|tracy|explica|calma)/, 'Tu estudio'],
-  [/^\/espacio/, 'Liberar espacio'],
+  [/^\/espacio/, 'Liberar espacio'], [/^\/cuenta$/, 'Mi cuenta'], [/^\/cuentas/, 'Cuentas beta'],
 ];
 
 // Barra de arriba: dónde estás y los créditos siempre a la vista, con el botón para recargar.
