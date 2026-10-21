@@ -189,6 +189,20 @@ Estado al 04-10-2026. El repositorio es PÚBLICO: nunca escribir claves, tokens 
   acepta lotes. El dueño prefiere quedarse en Cloud por sus créditos (~700.000 COP); AI Studio quedó descartado.
 - Estrategia del dueño (16-10): foco en los 2 canales Tracy monetizados y Peligro Tropical; El Calvo en pausa.
 - Aquí (nube) la voz MiniMax sí funciona; Whisper no baja su modelo: vista previa con voz frase por frase.
+- (21-10) BETA CERRADA / SaaS (spec larga del dueño: roles, permisos, aislamiento, lista negra, costos, admin).
+  Decisiones del dueño: TODO en su PC por ahora (nada de servidor hasta que él lo apruebe, al final, con proveedor y
+  costo); OWNER sigue con su suscripción de Claude (claude_cli), BETA con ANTHROPIC_API_KEY en .env (sin clave: BETA no
+  genera guiones, mensaje claro); imágenes siguen en Google con costo real por imagen; Buscanichos/replicar por
+  link/clonar voz/TTS solo/modo HD NO existen en este repo: solo permisos y lista negra listos. Orden: A (hecho) →
+  R (rediseño React; PRIMERO mostrarle propuesta de paleta, tipografía y pantallas y esperar su visto bueno) →
+  B login → C permisos por ruta (todo cerrado por defecto: ruta sin regla = solo OWNER) → D aislamiento y enlaces
+  firmados → E catálogo genérico (sin copiar sus prompts) → F permisos por usuario → G lista negra → H costos y
+  límites → I admin → J seguridad y entrega.
+  PASO A (21-10): migración 0005 (roles ceo→owner, cliente→beta, + admin; usuarios.bloqueado/clave_hash/
+  ultima_actividad; visibilidad privado|publico en recursos y canales; tablas permisos_usuario, lista_negra (con
+  @codigodelexito22) y costos_llamada). db.preparar hace copia COMPLETA (no solo la base) antes de cualquier
+  migración pendiente: Documentos/Xandart copias/<fecha>_antes_de_migrar_0005, anotada en
+  datos/ultima_copia_migracion.json. Constantes ROL_OWNER/ROL_ADMIN/ROL_BETA en plataforma/modelos.py.
 ## Pendiente
 - Preguntas sin responder del dueño: ¿en qué canal notó la voz lenta? (Peligro Tropical está en 1.3 en
   config/proveedores.json; Tracy en 1.0 por pedido suyo). ¿En qué momento sale «la tira de animales» sin sentido?

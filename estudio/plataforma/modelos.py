@@ -30,19 +30,30 @@ class ConFechas:
 
 # ------------------------------------------------------------------ cuentas
 
+# (21-10) roles: owner = el dueño de Xandart (todo, a costo real); admin = administra usuarios y créditos
+# pero no ve lo privado del dueño; beta = miembro de la comunidad (solo lo habilitado). Antes: ceo / cliente.
+ROL_OWNER, ROL_ADMIN, ROL_BETA = "owner", "admin", "beta"
+ROLES = (ROL_OWNER, ROL_ADMIN, ROL_BETA)
+PRIVADO, PUBLICO = "privado", "publico"
+
+
 class Usuario(ConFechas, Base):
     __tablename__ = "usuarios"
     id: Mapped[str] = mapped_column(String(32), primary_key=True, default=nuevo_id)
     email: Mapped[str] = mapped_column(String(254), unique=True)
     nombre: Mapped[str] = mapped_column(String(120), default="")
-    # ceo: dueño de Xandart (paga a costo real y ve la administración); cliente: usuario normal
-    rol: Mapped[str] = mapped_column(String(20), default="cliente")
+    rol: Mapped[str] = mapped_column(String(20), default=ROL_BETA)
     # «a costo»: se le cobra el costo real del proveedor, sin margen (la cuenta del dueño)
     a_costo: Mapped[bool] = mapped_column(Boolean, default=False)
     # preparado para login: proveedor externo (google…) e identificador; hoy vacío
     proveedor_login: Mapped[str | None] = mapped_column(String(30), nullable=True)
     id_externo: Mapped[str | None] = mapped_column(String(120), nullable=True)
     activo: Mapped[bool] = mapped_column(Boolean, default=True)
+    # (21-10) bloqueado desde la administración: no entra ni lanza trabajos
+    bloqueado: Mapped[bool] = mapped_column(Boolean, default=False)
+    # contraseña (hash con sal; nunca en claro) para el inicio de sesión de la beta
+    clave_hash: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    ultima_actividad: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
 
 class Espacio(ConFechas, Base):
@@ -82,6 +93,9 @@ class Recurso(ConFechas):
     # de dónde salió (duplicado de otro recurso, creado con un asistente, migrado…)
     origen: Mapped[dict] = mapped_column(JSON, default=dict)
     archivado: Mapped[bool] = mapped_column(Boolean, default=False)
+    # (21-10) privado: solo su espacio lo ve; publico: catálogo (sin espacio). Los prompts, character locks y
+    # plantillas de lo privado nunca salen hacia otro usuario
+    visibilidad: Mapped[str] = mapped_column(String(12), default=PRIVADO)
 
     @property
     def publico(self) -> bool:
@@ -151,6 +165,7 @@ class Canal(ConFechas, Base):
     # duración objetivo, segundos por escena, presentador, logo… (lo que el asistente de canal pide)
     ajustes: Mapped[dict] = mapped_column(JSON, default=dict)
     archivado: Mapped[bool] = mapped_column(Boolean, default=False)
+    visibilidad: Mapped[str] = mapped_column(String(12), default=PRIVADO)
 
 
 class Video(ConFechas, Base):
@@ -308,3 +323,45 @@ class Ajuste(Base):
     __tablename__ = "ajustes"
     clave: Mapped[str] = mapped_column(String(60), primary_key=True)
     valor: Mapped[dict] = mapped_column(JSON)
+
+
+# ------------------------------------------------------------------ (21-10) permisos, lista negra y costos
+
+class PermisoUsuario(Base):
+    """Permiso activado o desactivado a mano para un usuario (si no hay fila, vale el del rol)."""
+    __tablename__ = "permisos_usuario"
+    __table_args__ = (UniqueConstraint("usuario_id", "permiso"),)
+    id: Mapped[str] = mapped_column(String(32), primary_key=True, default=nuevo_id)
+    usuario_id: Mapped[str] = mapped_column(ForeignKey("usuarios.id", ondelete="CASCADE"), index=True)
+    permiso: Mapped[str] = mapped_column(String(40))
+    activo: Mapped[bool] = mapped_column(Boolean)
+    creado: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=ahora)
+
+
+class ListaNegra(Base):
+    """Canales y videos que no se pueden usar como referencia en «replicar por link» (salvo el dueño)."""
+    __tablename__ = "lista_negra"
+    __table_args__ = (UniqueConstraint("tipo", "valor"),)
+    id: Mapped[str] = mapped_column(String(32), primary_key=True, default=nuevo_id)
+    tipo: Mapped[str] = mapped_column(String(10))            # canal | video
+    valor: Mapped[str] = mapped_column(String(200))          # @handle, id de canal (UC…) o id de video, normalizado
+    nota: Mapped[str] = mapped_column(Text, default="")
+    creado: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=ahora)
+
+
+class CostoLlamada(Base):
+    """Costo REAL de cada llamada a un proveedor (Claude, MiniMax, Google…), por usuario y por trabajo."""
+    __tablename__ = "costos_llamada"
+    id: Mapped[str] = mapped_column(String(32), primary_key=True, default=nuevo_id)
+    usuario_id: Mapped[str | None] = mapped_column(ForeignKey("usuarios.id", ondelete="SET NULL"), nullable=True,
+                                                   index=True)
+    espacio_id: Mapped[str | None] = mapped_column(ForeignKey("espacios.id", ondelete="SET NULL"), nullable=True,
+                                                   index=True)
+    video_id: Mapped[str | None] = mapped_column(ForeignKey("videos.id", ondelete="SET NULL"), nullable=True)
+    trabajo: Mapped[str] = mapped_column(String(120), default="")      # slug del video o nombre del trabajo
+    proveedor: Mapped[str] = mapped_column(String(30))                 # anthropic | claude_suscripcion | minimax | google
+    modelo: Mapped[str] = mapped_column(String(80), default="")
+    accion: Mapped[str] = mapped_column(String(60), default="")         # guion | imagen | voz | miniatura…
+    unidades: Mapped[dict] = mapped_column(JSON, default=dict)
+    costo_usd: Mapped[float] = mapped_column(Float, default=0.0)
+    creado: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=ahora, index=True)

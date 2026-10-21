@@ -88,20 +88,29 @@ def preparar() -> None:
         cfg = Config()
         cfg.set_main_option("script_location", str(Path(__file__).with_name("migraciones")))
         cfg.set_main_option("sqlalchemy.url", direccion)
-        if _pendiente(cfg, direccion):
-            # regla del dueño: antes de cambiar la estructura de una base con datos, copia de seguridad
+        pendiente = _pendiente(cfg, direccion)
+        if pendiente:
+            # regla del dueño: antes de cambiar la estructura de una base con datos, copia de seguridad COMPLETA
+            # (base, proyectos, biblioteca, estilos, canales…). Si la copia falla, no se migra.
+            import json
+
             from .copias import hacer_copia
 
-            hacer_copia("antes_de_actualizar_la_base", solo_base=True)
+            info = hacer_copia(f"antes_de_migrar_{pendiente}")
+            (carpeta_datos() / "ultima_copia_migracion.json").write_text(
+                json.dumps({"carpeta": info["carpeta"], "fecha": info["fecha"], "migracion": pendiente,
+                            "total_bytes": info["total_bytes"]}, ensure_ascii=False, indent=2), encoding="utf-8")
         command.upgrade(cfg, "head")
         _PREPARADAS.add(direccion)
 
 
-def _pendiente(cfg, direccion: str) -> bool:
-    """True si la base ya tiene datos y le falta alguna migración (una base nueva no necesita copia)."""
+def _pendiente(cfg, direccion: str) -> str | None:
+    """La migración a la que se va a pasar (p. ej. «0005») si la base ya tiene datos y le falta alguna; None si
+    está al día o es nueva (una base nueva no necesita copia)."""
     from alembic.runtime.migration import MigrationContext
     from alembic.script import ScriptDirectory
 
     with motor().connect() as c:
         actual = MigrationContext.configure(c).get_current_revision()
-    return actual is not None and actual != ScriptDirectory.from_config(cfg).get_current_head()
+    destino = ScriptDirectory.from_config(cfg).get_current_head()
+    return destino if actual is not None and actual != destino else None

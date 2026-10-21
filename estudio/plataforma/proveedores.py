@@ -14,7 +14,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from . import correo, precios
-from .modelos import Ajuste, Usuario, Video
+from .modelos import ROL_OWNER, Ajuste, Usuario, Video
 
 CLAVE = "saldos_proveedores"
 
@@ -78,7 +78,7 @@ def revisar_y_avisar(s: Session) -> list[str]:
     bajos = [e for e in estado(s) if e["bajo"] and not e["avisado"]]
     if not bajos:
         return []
-    ceo = s.scalar(select(Usuario).where(Usuario.rol == "ceo").order_by(Usuario.creado))
+    ceo = s.scalar(select(Usuario).where(Usuario.rol == ROL_OWNER).order_by(Usuario.creado))
     for e in bajos:
         texto = (f"El saldo estimado de {e['proveedor']} es {e['estimado_usd']:.2f} USD "
                  f"(anotaste {e['anotado_usd']:.2f} USD el {e['fecha'][:10]} y desde entonces se gastaron "

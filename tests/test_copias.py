@@ -88,8 +88,9 @@ def test_actualizar_una_base_con_datos_hace_copia_primero(tmp_path, monkeypatch)
     db._PREPARADAS.discard(db.url())
     db.preparar()
     hechas = copias.listar()
-    assert len(hechas) == 1 and hechas[0]["motivo"] == "antes_de_actualizar_la_base"
-    assert list(hechas[0]["partes"]) == ["base_de_datos"]
+    # (21-10) la copia es COMPLETA (base + proyectos y demás carpetas), no solo la base
+    assert len(hechas) == 1 and hechas[0]["motivo"].startswith("antes_de_migrar_")
+    assert "base_de_datos" in hechas[0]["partes"]
 
 
 def test_la_copia_se_repite_si_cambia_la_carpeta_de_videos(tmp_path, monkeypatch):

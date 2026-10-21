@@ -17,13 +17,14 @@ from sqlalchemy.orm import Session
 from ..config import RAIZ, leer_config, leer_json, ruta_proyectos
 from . import almacen, contexto, db, precios
 from .cuentas import cuenta_local
-from .modelos import (Ajuste, Canal, Estilo, Formato, FormulaGuion, PerfilEdicion, Personaje,
+from .modelos import (PRIVADO, PUBLICO, Ajuste, Canal, Estilo, Formato, FormulaGuion, PerfilEdicion, Personaje,
                       PlantillaMiniatura, Video, Voz)
 
 
 def _upsert(s: Session, modelo, espacio_id: str | None, clave: str, **campos):
     r = s.scalar(select(modelo).where(modelo.espacio_id.is_(None) if espacio_id is None
                                       else modelo.espacio_id == espacio_id, modelo.clave == clave))
+    campos.setdefault("visibilidad", PUBLICO if espacio_id is None else PRIVADO)   # lo del dueño: privado
     if r is None:
         r = modelo(espacio_id=espacio_id, clave=clave, **campos)
         s.add(r)

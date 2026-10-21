@@ -24,7 +24,7 @@ def test_la_base_se_crea_con_migraciones(s):
 
 def test_cuenta_local_del_dueno(s):
     u, e = cuenta_local(s)
-    assert u.rol == "ceo" and u.a_costo and e.dueno_id == u.id
+    assert u.rol == "owner" and u.a_costo and e.dueno_id == u.id
     u2, e2 = cuenta_local(s)
     assert (u2.id, e2.id) == (u.id, e.id)             # siempre la misma
 
@@ -111,3 +111,51 @@ def test_cuenta_del_dueno_desde_dos_hilos_a_la_vez():
     assert errores == [] and len(set(ids)) == 1
     with db.sesion() as s:
         assert s.query(Usuario).count() == 1
+
+
+def test_migracion_0005_respaldo_completo_y_nada_se_pierde(tmp_path, monkeypatch):
+    """(21-10) Una base con datos en 0004: antes de migrar se hace la copia COMPLETA (base + proyectos) y la
+    migración solo agrega: roles traducidos, todo lo del dueño privado, catálogo público, lista negra inicial."""
+    import json
+
+    import sqlalchemy as sa
+    from alembic import command
+    from alembic.config import Config
+    from pathlib import Path
+
+    proyecto = tmp_path / "proyectos" / "mi-video"
+    proyecto.mkdir(parents=True)
+    (proyecto / "guion.md").write_text("hola", encoding="utf-8")
+    db.motor()                                          # crea la carpeta de datos
+    cfg = Config()
+    cfg.set_main_option("script_location", str(Path(db.__file__).with_name("migraciones")))
+    cfg.set_main_option("sqlalchemy.url", db.url())
+    command.upgrade(cfg, "0004")
+    with db.motor().begin() as c:
+        c.execute(sa.text("INSERT INTO usuarios (id, email, nombre, rol, a_costo, activo, creado, actualizado) VALUES "
+                          "('u1', 'yo@x', 'Yo', 'ceo', 1, 1, '2026-01-01', '2026-01-01'), "
+                          "('u2', 'otro@x', 'Otro', 'cliente', 0, 1, '2026-01-01', '2026-01-01')"))
+        c.execute(sa.text("INSERT INTO espacios (id, nombre, dueno_id, moneda_vista, numero_registro, onboarding_hecho, "
+                          "creado, actualizado) VALUES ('e1', 'Xandart', 'u1', 'USD', 1, 1, '2026-01-01', '2026-01-01')"))
+        for id_, esp in (("s1", "'e1'"), ("s2", "NULL")):
+            c.execute(sa.text(f"INSERT INTO estilos (id, espacio_id, clave, nombre, descripcion, datos, origen, archivado, "
+                              f"creado, actualizado) VALUES ('{id_}', {esp}, 'k{id_}', 'N', '', '{{}}', '{{}}', 0, "
+                              "'2026-01-01', '2026-01-01')"))
+        c.execute(sa.text("INSERT INTO canales (id, espacio_id, clave, nombre, idioma, ajustes, archivado, creado, "
+                          "actualizado) VALUES ('c1', 'e1', 'tracy', 'Tracy', 'es', '{}', 0, '2026-01-01', '2026-01-01')"))
+    db._PREPARADAS.clear()
+    db.preparar()
+    info = json.loads((db.carpeta_datos() / "ultima_copia_migracion.json").read_text(encoding="utf-8"))
+    copia = Path(info["carpeta"])
+    assert info["migracion"] == "0005" and copia.parent == tmp_path / "copias"
+    assert (copia / "proyectos" / "mi-video" / "guion.md").exists()            # completa: también los proyectos
+    assert (copia / "datos" / "xandart.db").exists()
+    with db.motor().connect() as c:
+        roles = dict(c.execute(sa.text("SELECT email, rol FROM usuarios")).all())
+        vis = dict(c.execute(sa.text("SELECT id, visibilidad FROM estilos")).all())
+        canal = c.execute(sa.text("SELECT visibilidad FROM canales WHERE id = 'c1'")).scalar()
+        negra = c.execute(sa.text("SELECT valor FROM lista_negra")).scalars().all()
+        n_usuarios = c.execute(sa.text("SELECT count(*) FROM usuarios")).scalar()
+    assert roles == {"yo@x": "owner", "otro@x": "beta"} and n_usuarios == 2
+    assert vis == {"s1": "privado", "s2": "publico"} and canal == "privado"
+    assert negra == ["@codigodelexito22"]
