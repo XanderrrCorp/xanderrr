@@ -122,3 +122,27 @@ def test_llamados_a_comentar_se_prenden_por_canal(cli):
         cli.put(f"/api/v2/canales/{c['id']}/ajustes", json={"clave": "llamados_comentar", "valor": True})
         assert llamados.activos(c["clave"], "paradoja_sapiens") is True
     assert cli.put("/api/v2/canales/no_existe/ajustes", json={"clave": "llamados_comentar", "valor": True}).status_code == 404
+
+
+def test_asistente_de_canal_crea_canal_privado_con_su_estilo_y_voz(cli):
+    """(21-10) Nombre → voz → estilo → personaje: el canal nace privado y sus videos usan su estilo y su voz."""
+    from estudio.plataforma import consultas, contexto
+    from estudio.plataforma.cuentas import cuenta_local
+    from estudio.plataforma.modelos import Canal, Estilo, Voz
+
+    db.preparar()
+    with db.sesion() as s:
+        _, e = cuenta_local(s)
+        est = Estilo(espacio_id=e.id, clave="mi_estilo", nombre="Mi estilo", datos={})
+        voz = Voz(espacio_id=e.id, clave="mi_voz", nombre="Mi voz", datos={"voz_id": "voz-x", "velocidad": 1.1})
+        s.add_all([est, voz]); s.flush()
+        ids, esp = (est.id, voz.id), e.id
+    r = cli.post("/api/v2/canales", json={"nombre": "Animales al límite", "estilo_id": ids[0], "voz_id": ids[1]})
+    assert r.status_code == 200
+    with db.sesion() as s:
+        c = s.get(Canal, r.json()["id"])
+        assert c.visibilidad == "privado" and c.espacio_id == esp
+    with contexto.usar_espacio(esp):
+        assert consultas.estilo_del_canal(r.json()["clave"]) == "mi_estilo"
+        assert consultas.voz_del_canal(r.json()["clave"]) == {"voz_id": "voz-x", "velocidad": 1.1}
+    assert cli.post("/api/v2/canales", json={"nombre": "X", "estilo_id": "no-existe"}).status_code in (404, 422)

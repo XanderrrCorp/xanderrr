@@ -16,6 +16,33 @@ Estado al 04-10-2026. El repositorio es PÚBLICO: nunca escribir claves, tokens 
 - Advertir (una vez, sin sermón) cuando algo arriesga el canal: caras o nombres de personas reales, contenido
   reutilizado, música sin licencia.
 
+## Visión de producto Xandart (21-10, del dueño: aplicar en R y en B a J, y en todo chat nuevo)
+- Usuarios BETA: miembros de su comunidad que empiezan en YouTube, NO técnicos (no saben qué es capa, batch, TTS,
+  group size ni character lock). Quieren poner su idea y tener un video listo para subir. El OWNER conserva todas las
+  funciones avanzadas y sus módulos privados.
+- Principios OBLIGATORIOS en toda pantalla nueva o rediseñada:
+  1. Un solo camino principal: idea → guion → video → miniatura y SEO → descargar (desde Inicio, sin perderse).
+  2. Modo simple por defecto (duración, voz, estilo, segundos por escena, calidad ya decididos); lo técnico en
+     «Opciones avanzadas».
+  3. Cero lenguaje técnico para BETA: «Calidad: Normal / Alta», «Voz», «Tu personaje», «Duración».
+  4. Ver antes de pagar: costo en créditos junto a cada botón que gasta (componente interfaz/src/componentes/Costo.tsx).
+  5. Nada se pierde: guardado automático, salir y volver a un proyecto, deshacer en el editor.
+  6. Errores humanos: qué pasó en palabras simples, «Reintentar», créditos devueltos solos (api.humano, ErrorAmable).
+  7. Español por defecto (inglés en la interfaz más adelante).
+- Protección de sus fórmulas: para BETA, guion/SEO/miniaturas con fórmulas GENÉRICAS de buenas prácticas de YouTube
+  escritas desde cero; NUNCA sus prompts privados (estructura de Tracy, plantillas de miniatura, CTA de productos,
+  prompts de sus canales).
+- OLA 1 (beta, prioridad alta; antes de programar: tabla existe / a medias / no existe y esperar aprobación):
+  onboarding guiado (de qué es el canal, idioma, tipo de video → sugerir voz/estilo/personaje → primer video de
+  prueba), video de prueba gratis con créditos de bienvenida, guion desde un tema o pegado, revisión del guion con
+  duración y costo antes de producir, aviso en la app y por correo al terminar (cola visible), storyboard en vivo
+  (hecho en R), editor básico de escenas (regenerar con palabras, cambiar texto/duración, «Reintentar esta escena»),
+  subtítulos con 3-4 estilos editables, miniatura con 2-3 opciones, paquete SEO (título, descripción, tags), descarga
+  completa (video, miniatura, SRT, SEO; 16:9 y 9:16), historial de créditos claro, ayuda por pantalla + «Reportar
+  problema» con la información del error.
+- OLA 2 (NO programar todavía): generador de ideas y títulos, Shorts automáticos de los mejores momentos, música de
+  fondo con volumen automático bajo la voz, galería de ejemplos por estilo, mini tutoriales en video.
+
 ## Ramas y forma de entregar
 - Desarrollo: `claude/xandart-saas` (la «versión nueva» que instala). Producción: `claude/new-session-uq98jd`: NO tocar.
 - Antes de cada commit: `python -m pytest -q tests` (≈4 min, todo en verde). Si algo falla, no guardar.
@@ -203,6 +230,15 @@ Estado al 04-10-2026. El repositorio es PÚBLICO: nunca escribir claves, tokens 
   @codigodelexito22) y costos_llamada). db.preparar hace copia COMPLETA (no solo la base) antes de cualquier
   migración pendiente: Documentos/Xandart copias/<fecha>_antes_de_migrar_0005, anotada en
   datos/ultima_copia_migracion.json. Constantes ROL_OWNER/ROL_ADMIN/ROL_BETA en plataforma/modelos.py.
+  PASO R (21-10, rediseño React, acento LIMA con texto oscuro en botones): tokens en interfaz/src/estilos.css (nombres
+  viejos --violeta/--rosa/--degradado apuntan al acento; :where() da estilo base a controles sin clase), letras
+  Geist + Bricolage Grotesque (@fontsource-variable, dentro del bundle), lucide-react (Icono.tsx traduce los nombres
+  de siempre). Menú Home/Create/Assets/Inspire (+ «Tu estudio» solo owner: Cola, Tracy, El Calvo, Calma); barra de
+  abajo en celular. Pantallas nuevas: Producir (/producir, /producir/video, /producir/:slug con storyboard grande, % y
+  tiempo estimado: EnMarcha.progresoTotal), CanalNuevo (4 pasos; POST /api/v2/canales; el estilo y la voz del canal
+  ahora se usan: consultas.estilo_del_canal / voz_del_canal), PersonajeDetalle (asistente que ya existía sin pantalla),
+  Estilos, Miniaturas, Media; Estados.tsx (vacío, esqueleto, girando, error) y Costo.tsx junto a cada botón que gasta.
+  Para revisar a ojo: scratchpad demo/lanzar.py (puerto 8099, imágenes simuladas) + capturas con Playwright.
 ## Pendiente
 - Preguntas sin responder del dueño: ¿en qué canal notó la voz lenta? (Peligro Tropical está en 1.3 en
   config/proveedores.json; Tracy en 1.0 por pedido suyo). ¿En qué momento sale «la tira de animales» sin sentido?

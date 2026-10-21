@@ -123,6 +123,10 @@ def _canal_y_estilo(canal: str | None, estilo_id: str | None) -> tuple[str, str]
 
     por_defecto = canal_por_defecto() or (CANAL_POR_DEFECTO, ESTILO_POR_DEFECTO)
     canal = canal or por_defecto[0]
+    if not estilo_id and canal != por_defecto[0]:
+        from .plataforma.consultas import estilo_del_canal       # (21-10) el estilo que el canal tiene elegido
+
+        estilo_id = estilo_del_canal(canal)
     return canal, estilo_id or (por_defecto[1] if canal == por_defecto[0] else "") or ESTILO_POR_DEFECTO
 
 

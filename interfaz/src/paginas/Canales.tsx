@@ -1,10 +1,13 @@
 import { useEffect, useState } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
 import { api, type Canal } from '../api';
+import { Esqueleto } from '../componentes/Estados';
 import { Icono } from '../componentes/Icono';
 
 export function Canales() {
   const [canales, setCanales] = useState<Canal[] | null>(null);
   const [error, setError] = useState('');
+  const [buscar] = useSearchParams();
   useEffect(() => { api<Canal[]>('/api/v2/canales').then(setCanales).catch(() => setCanales([])); }, []);
   // llamados a comentar en el guion: si el canal no lo eligió, viene prendido solo en el estilo de Peligro Tropical
   const llamados = (c: Canal) => (typeof c.ajustes?.llamados_comentar === 'boolean'
@@ -19,9 +22,12 @@ export function Canales() {
   };
   return (
     <div className="pagina">
-      <div className="seccion-cab"><h1>Canales</h1></div>
+      <div className="seccion-cab" style={{ marginTop: 0 }}><h1>Canales</h1>
+        <Link to="/canales/nuevo" className="boton-primario"><Icono nombre="chispa" tam={16} />Nuevo canal</Link></div>
+      {buscar.get('nuevo') && <p className="ok-texto">Tu canal quedó listo. Ya lo puedes elegir al crear un video.</p>}
       <p className="tenue">Cada canal guarda su formato, estilo, personaje, voz y plantilla de miniatura.</p>
       {error && <p className="error">{error}</p>}
+      {canales === null && <Esqueleto tarjetas={3} />}
       <div className="rejilla-canales">
         {(canales ?? []).map((c) => (
           <article key={c.id} className="tarjeta-canal">
@@ -32,9 +38,7 @@ export function Canales() {
               </label></div>
           </article>
         ))}
-        <article className="tarjeta-canal nuevo" title="Llega con el asistente de canal">
-          <Icono nombre="canal" /> Nuevo canal <em>pronto</em>
-        </article>
+        <Link to="/canales/nuevo" className="tarjeta-canal nuevo"><Icono nombre="canal" /> Crear un canal en 4 pasos</Link>
       </div>
     </div>
   );

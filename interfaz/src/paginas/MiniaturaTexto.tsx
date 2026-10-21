@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api, archivo } from '../api';
 import { Icono } from '../componentes/Icono';
+import { Costo } from '../componentes/Costo';
 
 // Plantilla «texto_izquierda_retrato_derecha»: Claude propone una opción por fórmula, cada una se arma
 // como miniatura con el fondo de este video y se elige la mejor. Editar el texto no cambia el fondo.
@@ -76,6 +77,7 @@ export function MiniaturaTexto({ slug }: { slug: string }) {
           <p>Claude escribe 4 textos (gratis, va por tu suscripción) y se arman con un fondo distinto al del video anterior
             {m.config.fuente_fondos === 'generar' ? ` (fondo nuevo generado ≈ ${m.precio_fondo_usd} USD)` : ' (rotado de la carpeta del canal: gratis)'}.</p>
           <button className="boton-primario" onClick={() => accion('/producir')}><Icono nombre="miniatura" tam={18} /> Producir opciones</button>
+          <Costo accion="miniatura" />
         </section>
       )}
 

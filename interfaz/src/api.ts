@@ -1,13 +1,31 @@
 // Llamadas a Xandart. Un error trae el mensaje que manda el servidor (ya en español).
 export async function api<T = unknown>(ruta: string, opciones: { metodo?: string; cuerpo?: unknown } = {}): Promise<T> {
-  const r = await fetch(ruta, {
-    method: opciones.metodo ?? (opciones.cuerpo !== undefined ? 'POST' : 'GET'),
-    headers: { 'Content-Type': 'application/json' },
-    body: opciones.cuerpo !== undefined ? JSON.stringify(opciones.cuerpo) : undefined,
-  });
+  let r: Response;
+  try {
+    r = await fetch(ruta, {
+      method: opciones.metodo ?? (opciones.cuerpo !== undefined ? 'POST' : 'GET'),
+      headers: { 'Content-Type': 'application/json' },
+      body: opciones.cuerpo !== undefined ? JSON.stringify(opciones.cuerpo) : undefined,
+    });
+  } catch {
+    throw new Error('No hay conexión con Xandart. Revisa que su ventana negra siga abierta y vuelve a intentarlo.');
+  }
   const datos = await r.json().catch(() => ({}));
-  if (!r.ok) throw new Error((datos as { detail?: string }).detail || `Error ${r.status}`);
+  if (!r.ok) throw new Error(humano(r.status, (datos as { detail?: unknown }).detail));
   return datos as T;
+}
+
+/** Errores en palabras normales: el servidor ya los manda en español; lo técnico se traduce aquí. */
+export function humano(estado: number, detalle?: unknown): string {
+  const texto = typeof detalle === 'string' ? detalle : '';
+  if (/HTTP 429|RESOURCE_EXHAUSTED|demasiadas/i.test(texto) || estado === 429)
+    return 'El servicio está muy ocupado en este momento. Espera un par de minutos y vuelve a intentarlo; no se te cobró.';
+  if (texto && !/Traceback|Exception|Error\(|errno|\{\s*"/.test(texto)) return texto;
+  if (estado === 404) return 'No encontramos eso. Puede que se haya movido o borrado.';
+  if (estado === 403) return 'No tienes permiso para hacer esto.';
+  if (estado === 402) return 'No tienes créditos suficientes para esto.';
+  if (estado >= 500) return 'Algo falló de nuestro lado. Vuelve a intentarlo; si se repite, avísanos.';
+  return 'No se pudo completar. Revisa los datos y vuelve a intentarlo.';
 }
 
 export const miles = (n: number) => Math.round(n).toLocaleString('es-CO');

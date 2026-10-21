@@ -160,7 +160,12 @@ def pausa_despues(actual: Escena, siguiente: Escena | None) -> float:
 def generar_voz(carpeta: CarpetaProyecto, ffmpeg: str, voz=None, config: ConfigCostos | None = None,
                 permiso: bool = False, avisar=print) -> dict:
     config = config or ConfigCostos.cargar()
-    voz = voz or VozMiniMax(config, leer_config("proveedores.json")["voz"])
+    if voz is None:
+        ajustes = dict(leer_config("proveedores.json")["voz"])
+        from .plataforma.consultas import voz_del_canal
+
+        ajustes.update(voz_del_canal(carpeta.cargar().canal) or {})   # (21-10) la voz elegida para el canal
+        voz = VozMiniMax(config, ajustes)
     esc = carpeta.cargar_escenas()
     libro = carpeta.libro(config)
     dir_audio = carpeta.ruta / "audio" / "grupos"

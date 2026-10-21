@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Link, Navigate, useNavigate, useParams } from 'react-router-dom';
 import { api, archivo, paginaVieja, type Escena, type VideoDetalle } from '../api';
 import { Icono } from '../componentes/Icono';
+import { Costo } from '../componentes/Costo';
 
 // Revisión de un video en proceso: guion → imágenes → video. Mismas acciones que la página de
 // siempre, con el diseño nuevo. Nada gasta sin decir cuánto antes, y pasar el máximo pide permiso.
@@ -121,6 +122,7 @@ export function Revision() {
             {v.puede_short && <button className="boton-borde" onClick={() => {
               if (window.confirm('Claude escribe un short vertical de unos 40 s con el nivel del villano, usando las mismas imágenes (solo se paga la voz, unos pocos pesos). ¿Lo hago?')) accion('short');
             }}>Sacar un short vertical</button>}
+            {v.puede_short && <Costo accion="short" />}
             <button className="boton-borde" onClick={() => {
               if (window.confirm('Claude mira 24 cuadros del video y te avisa si ve errores (personaje dentro de una escena en primera persona, textos cortados, imágenes que no cuadran…). No cuesta pesos; gasta un poco de tu plan de Claude. ¿Lo reviso?')) accion('revisar');
             }}>{v.revision_video ? 'Revisar otra vez' : 'Revisar antes de subir'}</button>
@@ -162,11 +164,12 @@ export function Revision() {
           <h2>Revisa las imágenes</h2>
           <p className="tenue">Si alguna no te gusta, dale «Regenerar». Cuando todo esté bien, haz el video.</p>
           <div className="fila-botones">
-            <div className="alternar" role="group" aria-label="Fluidez">
-              <button className={fps === 60 ? 'sel' : ''} onClick={() => elegirFps(60)}>60 cps</button>
-              <button className={fps === 30 ? 'sel' : ''} onClick={() => elegirFps(30)}>30 cps (rápido)</button>
+            <div className="alternar" role="group" aria-label="Calidad" title="Alta: movimiento más suave, tarda más. Normal: el doble de rápido.">
+              <button className={fps === 60 ? 'sel' : ''} onClick={() => elegirFps(60)}>Calidad alta</button>
+              <button className={fps === 30 ? 'sel' : ''} onClick={() => elegirFps(30)}>Normal (más rápido)</button>
             </div>
             <button className="boton-primario" onClick={() => accion('video', { fps })}><Icono nombre="videos" tam={18} /> Hacer el video</button>
+            <Costo accion="video_minuto" cantidad={v.minutos} />
             {e.faltan > 0 && <button className="boton-borde" onClick={aprobar}>Completar imágenes que faltan ({e.faltan})</button>}
           </div>
         </section>
@@ -286,6 +289,7 @@ function Escenas({ v, conImagenes, bloqueado, slug, alRegenerar }: {
   const version = Date.now() % 100000;
   return (
     <div className="rev-escenas">
+      {conImagenes && !bloqueado && <p className="tenue pequeno">Regenerar una escena: <Costo accion="imagen_regenerada" /></p>}
       {grupos.map((g, k) => (
         <section key={k}>
           <h3 className="rev-seccion">{g.seccion}</h3>

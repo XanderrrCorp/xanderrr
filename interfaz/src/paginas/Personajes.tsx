@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { api } from '../api';
 import { Icono } from '../componentes/Icono';
+import { Esqueleto, Vacio } from '../componentes/Estados';
 
 // Tus personajes y el primer paso del asistente: describirlo (o subir una referencia).
 
@@ -15,7 +16,7 @@ export const PASOS_PERSONAJE: Record<string, string> = {
 export const imagenPersonaje = (id: string, archivo: string, v = 0) =>
   `/api/v2/personajes/${id}/archivos/${archivo.includes('/') ? archivo : `referencia/${archivo}`}${v ? `?v=${v}` : ''}`;
 
-export function Personajes() {
+export function Personajes({ nuevo = false }: { nuevo?: boolean }) {
   const ir = useNavigate();
   const [filas, setFilas] = useState<FilaPersonaje[] | null>(null);
   const [estilos, setEstilos] = useState<EstiloFila[]>([]);
@@ -26,6 +27,8 @@ export function Personajes() {
   const [ref, setRef] = useState<File | null>(null);
   const [enviando, setEnviando] = useState(false);
   const [error, setError] = useState('');
+  const caja = useRef<HTMLElement>(null);
+  useEffect(() => { if (nuevo) caja.current?.scrollIntoView({ behavior: 'smooth' }); }, [nuevo]);
 
   useEffect(() => {
     api<FilaPersonaje[]>('/api/v2/personajes').then(setFilas).catch(() => setFilas([]));
@@ -50,10 +53,10 @@ export function Personajes() {
 
   return (
     <div className="pagina">
-      <div className="seccion-cab"><h1>Personajes</h1></div>
+      <div className="seccion-cab" style={{ marginTop: 0 }}><h1>Personajes</h1></div>
       <p className="tenue">Un personaje fijo sale igual en todos los videos del canal: se dibuja una vez, se afina y queda con su hoja de referencia.</p>
 
-      <section className="caja-idea personaje-nuevo">
+      <section className="caja-idea personaje-nuevo" ref={caja}>
         <h2>Nuevo personaje</h2>
         <div className="caja-fila">
           <label className="campo crece">Nombre<input value={nombre} maxLength={60} onChange={(e) => setNombre(e.target.value)} placeholder="Ej.: Sapiens" /></label>
@@ -79,8 +82,11 @@ export function Personajes() {
         </div>
       </section>
 
-      <div className="rejilla-personajes">
-        {(filas ?? []).map((p) => {
+      <h2 className="sub">Tus personajes</h2>
+      {filas === null ? <Esqueleto tarjetas={3} /> : filas.length === 0 ? (
+        <Vacio icono="personajes" titulo="Aún no tienes personajes" texto="Describe el primero arriba: se dibuja, eliges el que más te gusta y queda fijo." />
+      ) : <div className="rejilla-personajes">
+        {filas.map((p) => {
           const tarjeta = (
             <>
               <div className="pj-img">{p.imagen ? <img src={imagenPersonaje(p.id, p.imagen)} alt="" /> : <Icono nombre="personaje" tam={34} />}</div>
@@ -92,7 +98,7 @@ export function Personajes() {
             ? <Link key={p.id} to={`/personajes/${p.id}`} className="tarjeta-personaje">{tarjeta}</Link>
             : <article key={p.id} className="tarjeta-personaje">{tarjeta}</article>;
         })}
-      </div>
+      </div>}
     </div>
   );
 }

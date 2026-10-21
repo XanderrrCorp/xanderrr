@@ -104,3 +104,48 @@ def personaje_del_canal(clave_canal: str):
             return ruta if (ruta / "personaje.json").exists() else None
     except Exception:  # noqa: BLE001 — sin base, el video usa el personaje del estilo
         return None
+
+
+def _canal(clave_canal: str):
+    from sqlalchemy import select
+
+    from . import contexto
+    from .modelos import Canal
+
+    esp = contexto.espacio_actual()
+    return (lambda s: s.scalar(select(Canal).where(Canal.espacio_id == esp, Canal.clave == clave_canal))) if esp else None
+
+
+def estilo_del_canal(clave_canal: str) -> str | None:
+    """(21-10) Clave del estilo que el canal tiene elegido (el asistente de canal lo guarda), o None."""
+    try:
+        from . import db
+        from .modelos import Estilo
+
+        buscar = _canal(clave_canal)
+        if buscar is None:
+            return None
+        with db.sesion() as s:
+            c = buscar(s)
+            est = s.get(Estilo, c.estilo_id) if c and c.estilo_id else None
+            return est.clave if est else None
+    except Exception:  # noqa: BLE001
+        return None
+
+
+def voz_del_canal(clave_canal: str) -> dict | None:
+    """(21-10) Voz elegida para el canal ({voz_id, velocidad…} de la tabla de voces), o None = la de siempre."""
+    try:
+        from . import db
+        from .modelos import Voz
+
+        buscar = _canal(clave_canal)
+        if buscar is None:
+            return None
+        with db.sesion() as s:
+            c = buscar(s)
+            v = s.get(Voz, c.voz_id) if c and c.voz_id else None
+            datos = dict(v.datos or {}) if v else {}
+            return {k: datos[k] for k in ("voz_id", "velocidad", "modelo", "idioma") if datos.get(k)} or None
+    except Exception:  # noqa: BLE001
+        return None

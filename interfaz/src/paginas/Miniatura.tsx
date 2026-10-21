@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { api, archivo } from '../api';
 import { Icono } from '../componentes/Icono';
+import { Costo } from '../componentes/Costo';
 import { LAYOUT_TEXTO, MiniaturaTexto } from './MiniaturaTexto';
 
 // Miniatura de formato escala (2x3): Claude la planifica, se dibuja cada animal por separado y
@@ -117,6 +118,7 @@ export function Miniatura() {
             <button className="boton-primario" onClick={() => { if (window.confirm(`${m.estimacion.texto}\n\n¿Producir la miniatura?`)) accion('/producir'); }}>
               <Icono nombre="miniatura" tam={18} /> Producir miniatura
             </button>
+            <Costo accion="miniatura" />
           </div>
         </section>
       )}

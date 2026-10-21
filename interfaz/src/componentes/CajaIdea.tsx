@@ -1,19 +1,22 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api, miles, type Canal, type Cotizacion, type Formato, type VideoDetalle } from '../api';
+import { Zap } from 'lucide-react';
 import { Icono } from './Icono';
 
 // Formatos que vienen en camino (se muestran para que se sepa que llegan, sin poder elegirse).
 const EN_CAMINO = ['Hombre de palo', 'Top X', 'Narración de historias', 'Personaje garabato', 'Videos para dormir'];
 
-export function CajaIdea({ creado }: { creado: (slug: string) => void }) {
+export function CajaIdea({ creado, formatoInicial, personalizado = false }: {
+  creado: (slug: string) => void; formatoInicial?: string; personalizado?: boolean;
+}) {
   const ir = useNavigate();
   const [formatos, setFormatos] = useState<Formato[]>([]);
   const [canales, setCanales] = useState<Canal[]>([]);
   const [formato, setFormato] = useState('');
   const [canal, setCanal] = useState('');
   const [minutos, setMinutos] = useState(9);
-  const [modo, setModo] = useState<'auto' | 'personalizado'>('auto');
+  const [modo, setModo] = useState<'auto' | 'personalizado'>(personalizado ? 'personalizado' : 'auto');
   const [idea, setIdea] = useState('');
   const [disfraz, setDisfraz] = useState(false);
   const [modoMapa, setModoMapa] = useState(false);
@@ -22,9 +25,13 @@ export function CajaIdea({ creado }: { creado: (slug: string) => void }) {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    api<Formato[]>('/api/v2/recursos/formatos').then((f) => { setFormatos(f); if (f[0]) setFormato(f[0].id); }).catch(() => {});
+    api<Formato[]>('/api/v2/recursos/formatos').then((f) => {
+      setFormatos(f);
+      const inicial = f.find((x) => x.id === formatoInicial || x.clave === formatoInicial) ?? f[0];
+      if (inicial) setFormato(inicial.id);
+    }).catch(() => {});
     api<Canal[]>('/api/v2/canales').then((c) => { setCanales(c); if (c[0]) setCanal(c[0].clave); }).catch(() => {});
-  }, []);
+  }, [formatoInicial]);
   const f = formatos.find((x) => x.id === formato);
   const duraciones = f?.datos.duraciones_min ?? [6, 9, 11];
   useEffect(() => { if (f?.datos.duracion_min) setMinutos(f.datos.duracion_min); }, [formato]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -72,9 +79,9 @@ export function CajaIdea({ creado }: { creado: (slug: string) => void }) {
         <span className="crece" />
         <div className="alternar" role="group" aria-label="Modo">
           <button className={modo === 'auto' ? 'sel' : ''} onClick={() => setModo('auto')}
-            title="Xandart escribe el guion y te avisa cuando toca aprobar">Auto</button>
+            title="Xandart lo hace todo y te avisa cuando toca aprobar">Automático</button>
           <button className={modo === 'personalizado' ? 'sel' : ''} onClick={() => setModo('personalizado')}
-            title="Abre el video para que ajustes el guion antes de las imágenes">Personalizado</button>
+            title="Revisas el guion antes de que se hagan las imágenes">Paso a paso</button>
         </div>
       </div>
       <textarea value={idea} onChange={(e) => setIdea(e.target.value)} rows={4}
@@ -82,19 +89,24 @@ export function CajaIdea({ creado }: { creado: (slug: string) => void }) {
         onKeyDown={(e) => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) crear(); }} />
       {error && <p className="error">{error}</p>}
       <div className="caja-pie">
-        <label className="casilla" title="Videos de países: los mapas y las banderas salen reales, dibujados por código (sin pagar imágenes), con un marcador de países.">
-          <input type="checkbox" checked={modoMapa} onChange={(e) => setModoMapa(e.target.checked)} />
-          Modo mapa
-        </label>
-        <label className="casilla" title="Una imagen extra (≈ $0.07): la mascota con un hoodie del animal del video. Solo en las escenas nuevas; las reacciones guardadas salen sin disfraz.">
-          <input type="checkbox" checked={disfraz} onChange={(e) => setDisfraz(e.target.checked)} />
-          Mascota disfrazada del animal
-        </label>
-        <span className="tenue">
-          {cot ? (cot.a_costo
-            ? <>A costo real ≈ {miles(cot.creditos)} créditos · un cliente pagaría {miles(cot.precio_cliente.creditos)}</>
-            : <>Cuesta ≈ {miles(cot.creditos)} créditos{cot.alcanza ? '' : ' · no te alcanza el saldo'}</>) : ' '}
-        </span>
+        <details className="avanzadas">
+          <summary>Opciones avanzadas</summary>
+          <label className="casilla" title="Videos de países: los mapas y las banderas salen reales, dibujados por código (sin pagar imágenes), con un marcador de países.">
+            <input type="checkbox" checked={modoMapa} onChange={(e) => setModoMapa(e.target.checked)} />
+            Modo mapa
+          </label>
+          <label className="casilla" title="Una imagen extra (≈ $0.07): la mascota con un hoodie del animal del video. Solo en las escenas nuevas; las reacciones guardadas salen sin disfraz.">
+            <input type="checkbox" checked={disfraz} onChange={(e) => setDisfraz(e.target.checked)} />
+            Mascota disfrazada del animal
+          </label>
+        </details>
+        <span className="crece" />
+        {cot && (
+          <span className={`costo ${cot.alcanza ? '' : 'no-alcanza'}`}
+            title={cot.a_costo ? `A costo real. Un cliente pagaría ${miles(cot.precio_cliente.creditos)} créditos.` : `Te quedan ${miles(cot.saldo)} créditos`}>
+            <Zap size={13} aria-hidden="true" />≈ {miles(cot.creditos)} créditos{cot.alcanza ? '' : ' · no te alcanza'}
+          </span>
+        )}
         <button className="boton-primario" onClick={crear} disabled={enviando || (cot !== null && !cot.alcanza)}>
           <Icono nombre="chispa" tam={18} /> {enviando ? 'Creando…' : 'Crear video'}
         </button>

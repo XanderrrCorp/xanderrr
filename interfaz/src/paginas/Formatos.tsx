@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { api, type Formato } from '../api';
 
 const EN_CAMINO = [
@@ -14,13 +15,17 @@ export function Formatos() {
   useEffect(() => { api<Formato[]>('/api/v2/recursos/formatos').then(setFormatos).catch(() => {}); }, []);
   return (
     <div className="pagina">
-      <div className="seccion-cab"><h1>Formatos</h1></div>
-      <p className="tenue">Un formato junta guion, estilo y edición. Usa uno del catálogo o, pronto, crea el tuyo.</p>
+      <div className="seccion-cab" style={{ marginTop: 0 }}><h1>Inspire</h1></div>
+      <p className="tenue">Formatos listos para usar: cada uno junta la estructura del guion, el estilo y la edición.</p>
       <div className="rejilla-formatos">
         {formatos.map((f) => (
           <article key={f.id} className="tarjeta-formato">
             <b>{f.nombre}</b><p className="tenue">{f.descripcion}</p>
-            <span className="pequeno">{(f.datos.duraciones_min ?? []).join(' · ')} min · {f.publico ? 'Catálogo' : 'Tuyo'}</span>
+            <div className="fila-botones">
+              <span className="pequeno tenue">{(f.datos.duraciones_min ?? []).join(' · ')} min · {f.publico ? 'Catálogo' : 'Tuyo'}</span>
+              <span className="crece" />
+              <Link className="boton-primario pequeno" to={`/producir?formato=${f.id}`}>Usar</Link>
+            </div>
           </article>
         ))}
         {EN_CAMINO.map((f) => (

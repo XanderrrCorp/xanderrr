@@ -8,6 +8,7 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from . import creditos as cr
@@ -25,7 +26,10 @@ TIPOS = {"estilos": Estilo, "personajes": Personaje, "plantillas": PlantillaMini
 def sesion():
     db.preparar()
     with db.sesion() as s:
-        precios.sembrar(s)
+        try:
+            precios.sembrar(s)
+        except IntegrityError:          # dos peticiones a la vez sobre una base nueva: la otra ya sembró
+            s.rollback()
         yield s
 
 
@@ -85,6 +89,35 @@ def canales(q: Quien = Depends(usuario_actual), s: Session = Depends(sesion)):
              "plantilla_miniatura": clave(PlantillaMiniatura, c.plantilla_miniatura_id),
              "perfil_edicion": clave(PerfilEdicion, c.perfil_edicion_id), "formato": clave(Formato, c.formato_id),
              "videos": s.query(Video).filter(Video.canal_id == c.id).count()} for c in filas]
+
+
+class NuevoCanal(BaseModel):
+    nombre: str = Field(min_length=2, max_length=120)
+    voz_id: str | None = None
+    estilo_id: str | None = None
+    personaje_id: str | None = None
+
+
+@api.post("/canales")
+def crear_canal(n: NuevoCanal, q: Quien = Depends(usuario_actual), s: Session = Depends(sesion)):
+    """(21-10) Asistente del primer canal: nombre → voz → estilo → personaje. Solo con recursos que el espacio puede
+    ver (los suyos o los del catálogo); el canal nace privado."""
+    from .modelos import PRIVADO
+
+    def visible(modelo, id_):
+        if not id_:
+            return None
+        try:
+            return recursos.obtener(s, modelo, id_, q.espacio).id
+        except SinPermiso as ex:
+            raise HTTPException(404, "Eso que elegiste ya no existe") from ex
+
+    c = Canal(espacio_id=q.espacio.id, clave=recursos.clave_libre(s, Canal, q.espacio.id, n.nombre),
+              nombre=n.nombre.strip(), voz_id=visible(Voz, n.voz_id), estilo_id=visible(Estilo, n.estilo_id),
+              personaje_id=visible(Personaje, n.personaje_id), visibilidad=PRIVADO)
+    s.add(c)
+    s.flush()
+    return {"id": c.id, "clave": c.clave, "nombre": c.nombre}
 
 
 AJUSTES_CANAL = {"llamados_comentar"}       # los que el dueño puede prender o apagar desde la página Canales

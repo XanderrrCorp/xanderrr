@@ -1,30 +1,35 @@
-import { Link } from 'react-router-dom';
-import { Icono } from './Icono';
+import { Link, useLocation } from 'react-router-dom';
+import { Zap } from 'lucide-react';
 import { miles, type Cuenta } from '../api';
 
-// Barra de arriba: marca a la izquierda y los créditos siempre visibles a la derecha.
-export function Barra({ cuenta, menu }: { cuenta: Cuenta | null; menu: () => void }) {
+const TITULOS: [RegExp, string][] = [
+  [/^\/$/, 'Home'], [/^\/producir/, 'Producer'], [/^\/videos\/[^/]+\/editor/, 'Editor'], [/^\/videos\/[^/]+\/miniatura/, 'Miniatura'],
+  [/^\/videos/, 'Proyectos'], [/^\/personajes/, 'Personajes'], [/^\/estilos/, 'Estilos'], [/^\/miniaturas/, 'Miniaturas'],
+  [/^\/media/, 'Media'], [/^\/canales/, 'Canales'], [/^\/formatos/, 'Inspire'], [/^\/planes/, 'Planes y créditos'],
+  [/^\/cola/, 'Cola de la semana'], [/^\/tracy/, 'Canal Tracy'], [/^\/explica/, 'El Calvo Explica'], [/^\/calma/, 'Hazlo con Calma'],
+  [/^\/espacio/, 'Liberar espacio'],
+];
+
+// Barra de arriba: dónde estás y los créditos siempre a la vista, con el botón para recargar.
+export function Barra({ cuenta }: { cuenta: Cuenta | null }) {
+  const { pathname } = useLocation();
+  const titulo = TITULOS.find(([r]) => r.test(pathname))?.[1] ?? '';
   const s = cuenta?.saldo;
   return (
     <header className="barra">
-      <button className="solo-movil boton-icono" onClick={menu} aria-label="Abrir menú"><Icono nombre="menu" /></button>
-      <Link to="/" className="marca"><img src="/app/xandart.svg" alt="" width={30} height={30} /><span>xandart</span></Link>
-      {cuenta?.usuario.a_costo && <span className="etiqueta">Dueño · a costo</span>}
+      <Link to="/" className="marca solo-movil"><i>X</i></Link>
+      <span className="barra-titulo">{titulo}</span>
       <span className="crece" />
-      <Link to="/planes" className="boton-borde">Obtener créditos</Link>
-      {cuenta?.usuario.a_costo ? (
-        <a href="/admin" className="saldo" title="Tu cuenta paga el costo real de los proveedores">
-          <i className="moneda" /><b>${cuenta.gasto_mes_usd.toFixed(2)}</b><small>real este mes</small>
-        </a>
-      ) : (
-        <Link to="/planes" className={`saldo ${s?.bajo ? 'bajo' : ''}`}
-          title={s ? `${miles(s.creditos)} créditos · alcanzan para unos ${s.minutos} minutos de video` : ''}>
-          <i className="moneda" />
-          <b>{s ? miles(s.creditos) : '…'}</b>
-          {s && <small>≈ {s.minutos} min</small>}
-        </Link>
+      {cuenta?.usuario.a_costo && (
+        <span className="etiqueta" title="Tu cuenta paga el costo real de los proveedores, sin margen">
+          A costo · ${cuenta.gasto_mes_usd.toFixed(2)} este mes</span>
       )}
-      <span className="avatar" title={cuenta?.usuario.email}>{(cuenta?.usuario.nombre || 'X').slice(0, 1).toUpperCase()}</span>
+      <div className={`saldo ${s?.bajo && !cuenta?.usuario.a_costo ? 'bajo' : ''}`}
+        title={s ? `${miles(s.creditos)} créditos · alcanzan para unos ${s.minutos} minutos de video` : 'Cargando tu saldo'}>
+        <Zap size={16} aria-hidden="true" />
+        <b>{s ? miles(s.creditos) : '…'}</b><small>créditos</small>
+        <Link to="/planes" className="boton-primario">Recargar</Link>
+      </div>
     </header>
   );
 }
