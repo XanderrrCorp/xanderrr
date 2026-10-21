@@ -67,6 +67,8 @@ def sesion() -> Session:
 
 
 _PREPARADAS: set[str] = set()
+# (22-10) mientras se hace la copia y se actualiza la base, la página lo muestra (avisos.respaldo) en vez de quedarse vacía
+PREPARANDO: dict = {}
 _CERROJO_MIGRAR = threading.Lock()
 
 
@@ -90,27 +92,36 @@ def preparar() -> None:
         cfg.set_main_option("sqlalchemy.url", direccion)
         pendiente = _pendiente(cfg, direccion)
         if pendiente:
-            # regla del dueño: antes de cambiar la estructura de una base con datos, copia de seguridad COMPLETA
-            # (base, proyectos, biblioteca, estilos, canales…). Si la copia falla, no se migra.
+            # regla del dueño: antes de cambiar la estructura de una base con datos, copia de seguridad LIVIANA
+            # (22-10: base, configuración, estilos, personajes, voces, plantillas, módulos privados y .env; sin videos
+            # ni audios de proyectos). Si la copia falla, no se migra.
             import json
 
             from .copias import hacer_copia
 
             from .copias import CopiaFallida
 
+            import time
+
             nota = carpeta_datos() / "ultima_copia_migracion.json"
+            PREPARANDO.update(fase="copiando", desde=time.time(), migracion=pendiente)
             try:
-                info = hacer_copia(f"antes_de_migrar_{pendiente}")
+                info = hacer_copia(f"antes_de_migrar_{pendiente}", liviano=True)
             except CopiaFallida as ex:      # se avisa al abrir Xandart (avisos.respaldo) y NO se migra
+                PREPARANDO.clear()
                 nota.write_text(json.dumps({"error": str(ex), "migracion": pendiente}, ensure_ascii=False, indent=2),
                                 encoding="utf-8")
                 raise
+            PREPARANDO.update(fase="actualizando")
             nota.write_text(
                 json.dumps({"carpeta": info["carpeta"], "fecha": info["fecha"], "migracion": pendiente,
-                            "total_bytes": info["total_bytes"],
+                            "total_bytes": info["total_bytes"], "liviana": True,
                             "partes": {k: v["archivos"] for k, v in info["partes"].items()}},
                            ensure_ascii=False, indent=2), encoding="utf-8")
-        command.upgrade(cfg, "head")
+        try:
+            command.upgrade(cfg, "head")
+        finally:
+            PREPARANDO.clear()
         _PREPARADAS.add(direccion)
 
 

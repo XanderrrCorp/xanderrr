@@ -9,6 +9,7 @@ interface Inventario {
   partes: Parte[]; se_puede_liberar: number; se_puede_liberar_texto: string; archivos: number; hay_trabajo: boolean;
   liberado_texto?: string; copias_viejas: number; copias_viejas_texto: string;
   videos_viejos: number; videos_viejos_texto: string; videos_viejos_lista: string[];
+  proyectos_por_peso?: { slug: string; titulo: string; canal: string; texto: string; terminado: boolean; fecha: string }[];
 }
 
 export function Espacio() {
@@ -85,6 +86,22 @@ export function Espacio() {
                 `Se borran los archivos de trabajo de ${inv.videos_viejos} videos ya terminados (${inv.videos_viejos_texto}). Sus videos finales se quedan en Videos › Xandart, pero ya no se podrán rehacer. ¿Seguir?`)}>
               {inv.videos_viejos === 0 ? 'No hay videos viejos' : `Liberar ${inv.videos_viejos_texto}`}</button>
           </section>
+          {!!inv.proyectos_por_peso?.length && (
+            <section className="rev-tarjeta">
+              <h2>Tus proyectos, del más pesado al más liviano</h2>
+              <p className="pequeno tenue">Solo para mirar: aquí no se borra nada. Dime cuáles quieres borrar y se borran solo esos.</p>
+              <div className="tabla-envoltura">
+                <table className="tabla">
+                  <thead><tr><th>Proyecto</th><th>Carpeta</th><th>Estado</th><th>Último cambio</th><th className="num">Peso</th></tr></thead>
+                  <tbody>{inv.proyectos_por_peso.map((p) => (
+                    <tr key={p.canal + p.slug}><td><b>{p.titulo}</b>{p.canal && <span className="tenue pequeno"> · {p.canal}</span>}</td>
+                      <td className="tenue pequeno">{p.slug}</td><td className="tenue">{p.terminado ? 'Terminado' : 'Sin terminar'}</td>
+                      <td className="tenue">{p.fecha}</td><td className="num">{p.texto}</td></tr>
+                  ))}</tbody>
+                </table>
+              </div>
+            </section>
+          )}
           {hecho && <p>{hecho}</p>}
           {error && <p className="error">{error}</p>}
         </>

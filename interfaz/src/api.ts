@@ -51,7 +51,7 @@ export interface Canal {
   estilo?: Ref | null; ajustes?: Record<string, unknown>;
 }
 export interface Formato {
-  id: string; clave: string; nombre: string; descripcion: string; publico: boolean;
+  id: string; clave: string; nombre: string; descripcion: string; publico: boolean; estudio?: boolean;
   datos: { duraciones_min?: number[]; duracion_min?: number; idea_ejemplo?: string; relacion_aspecto?: string; formula?: string; estilo?: string };
 }
 
@@ -119,7 +119,12 @@ export interface LineaDeTiempo {
 export const reloj = (s: number) => `${Math.floor(s / 60)}:${(s % 60).toFixed(1).padStart(4, '0')}`;
 
 export interface Aviso { id: string; tipo: 'listo' | 'error'; titulo: string; texto: string; enlace: string | null; fecha: number; leido: boolean }
-export interface Respaldo { estado: 'ok' | 'error' | 'ninguna' | 'movida'; carpeta?: string; fecha?: string; total_bytes?: number;
+export interface Respaldo { estado: 'ok' | 'error' | 'ninguna' | 'movida' | 'copiando' | 'actualizando'; segundos?: number; carpeta?: string; fecha?: string; total_bytes?: number;
   partes?: Record<string, number>; error?: string; visto?: boolean; migracion?: string }
 export interface MovimientoCredito { fecha: string; tipo: string; creditos: number; bolsa: string; accion: string | null;
   cantidad: number | null; nota: string; video: string | null; que: string; costo_real_usd?: number }
+export interface ModuloEstudio { clave: string; nombre: string; ir: string; menu: string }
+/** Tus módulos privados (solo la cuenta del dueño; a cualquier otro el servidor responde 403). */
+let _estudio: Promise<ModuloEstudio[]> | null = null;
+export const modulosEstudio = () => (_estudio ??= api<{ modulos: ModuloEstudio[] }>('/api/v2/estudio')
+  .then((r) => r.modulos).catch(() => []));

@@ -13,7 +13,7 @@ from sqlalchemy.orm import Session
 
 from . import creditos as cr
 from . import db, precios, proveedores, recursos
-from .cuentas import SinPermiso, cuenta_local, es_admin
+from .cuentas import SinPermiso, cuenta_local, es_admin, es_owner
 from .modelos import (Ajuste, Canal, Espacio, Estilo, Formato, FormulaGuion, Movimiento, Paquete, PerfilEdicion,
                       Personaje, Plan, PlantillaMiniatura, Precio, Usuario, Video, Voz)
 
@@ -140,14 +140,41 @@ def cambiar_ajuste_canal(canal_id: str, a: AjusteCanal, q: Quien = Depends(usuar
     return {"id": c.id, "ajustes": c.ajustes}
 
 
+# (22-10) recursos del catálogo que en realidad son las fórmulas de los canales del dueño: solo el OWNER los ve (salen
+# en su grupo «Tu estudio»); nadie más los recibe, ni en la lista ni por ID. Los genéricos llegan en el Paso E.
+DEL_DUENO = {"formatos": {"escala_peligro", "paradoja_documental"}, "formulas": {"escala_peligro", "paradoja_documental"},
+             "plantillas": {"escala_2x3"}}
+# módulos privados del dueño: sus nombres y rutas solo viajan en /api/v2/estudio, nunca en el código de la página
+MODULOS_DEL_DUENO = [
+    {"clave": "tracy", "nombre": "Estilo Brian Tracy (pegas tu guion)", "ir": "/tracy", "menu": "Canal Tracy"},
+    {"clave": "explica", "nombre": "El Calvo Explica", "ir": "/explica", "menu": "El Calvo Explica"},
+    {"clave": "calma", "nombre": "Hazlo con Calma", "ir": "/calma", "menu": "Hazlo con Calma"},
+    {"clave": "cola", "nombre": "Cola de la semana", "ir": "/cola", "menu": "Cola de la semana"},
+]
+
+
+def _del_dueno(tipo: str, r) -> bool:
+    return r.espacio_id is None and r.clave in DEL_DUENO.get(tipo, set())
+
+
 @api.get("/recursos/{tipo}")
 def listar_recursos(tipo: str, buscar: str = "", q: Quien = Depends(usuario_actual), s: Session = Depends(sesion)):
     modelo = TIPOS.get(tipo)
     if modelo is None:
         raise HTTPException(404, "tipo de recurso desconocido")
+    dueno = es_owner(q.usuario)
     return [{"id": r.id, "clave": r.clave, "nombre": r.nombre, "descripcion": r.descripcion, "publico": r.publico,
+             "estudio": _del_dueno(tipo, r) or (dueno and not r.publico and tipo == "formatos"),
              **({"datos": r.datos} if tipo == "formatos" else {})}      # duraciones e idea de ejemplo para elegir
-            for r in recursos.listar(s, modelo, q.espacio, buscar=buscar)]
+            for r in recursos.listar(s, modelo, q.espacio, buscar=buscar) if dueno or not _del_dueno(tipo, r)]
+
+
+@api.get("/estudio")
+def estudio(q: Quien = Depends(usuario_actual)):
+    """Tus módulos privados (Tracy, El Calvo, Calma, la cola). Solo para el dueño: a cualquier otro, 403."""
+    if not es_owner(q.usuario):
+        raise HTTPException(403, "No tienes permiso para esto")
+    return {"modulos": MODULOS_DEL_DUENO}
 
 
 class Duplicar(BaseModel):
@@ -161,7 +188,10 @@ def duplicar_recurso(tipo: str, recurso_id: str, p: Duplicar = Duplicar(), q: Qu
     if modelo is None:
         raise HTTPException(404, "tipo de recurso desconocido")
     try:
-        copia = recursos.duplicar(s, recursos.obtener(s, modelo, recurso_id, q.espacio), q.espacio, p.nombre)
+        original = recursos.obtener(s, modelo, recurso_id, q.espacio)
+        if _del_dueno(tipo, original) and not es_owner(q.usuario):
+            raise SinPermiso("ese recurso no existe o no es tuyo")
+        copia = recursos.duplicar(s, original, q.espacio, p.nombre)
     except SinPermiso as ex:
         raise HTTPException(404, str(ex)) from ex
     return {"id": copia.id, "clave": copia.clave, "nombre": copia.nombre}

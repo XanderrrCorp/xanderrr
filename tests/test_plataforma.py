@@ -123,6 +123,7 @@ def test_migracion_0005_respaldo_completo_y_nada_se_pierde(tmp_path, monkeypatch
     from alembic.config import Config
     from pathlib import Path
 
+    monkeypatch.delenv("XANDART_ORIGEN", raising=False)       # otra prueba pudo dejar fijada otra instalación
     proyecto = tmp_path / "proyectos" / "mi-video"
     proyecto.mkdir(parents=True)
     (proyecto / "guion.md").write_text("hola", encoding="utf-8")
@@ -148,7 +149,9 @@ def test_migracion_0005_respaldo_completo_y_nada_se_pierde(tmp_path, monkeypatch
     info = json.loads((db.carpeta_datos() / "ultima_copia_migracion.json").read_text(encoding="utf-8"))
     copia = Path(info["carpeta"])
     assert info["migracion"] == "0005" and copia.parent == tmp_path / "copias"
-    assert (copia / "proyectos" / "mi-video" / "guion.md").exists()            # completa: también los proyectos
+    # (22-10) liviana: lo necesario para producir (base, configuración, estilos, módulos…) y NADA de los proyectos
+    assert not (copia / "proyectos").exists() and (copia / "config").exists() and (copia / "modulo_tracy").exists()
+    assert info["total_bytes"] < 200 * 2**20
     assert (copia / "datos" / "xandart.db").exists()
     with db.motor().connect() as c:
         roles = dict(c.execute(sa.text("SELECT email, rol FROM usuarios")).all())

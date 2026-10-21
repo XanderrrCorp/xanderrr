@@ -259,7 +259,37 @@ def inventario() -> dict:
             "archivos": len(borrable) + len(dobles), "hay_trabajo": _hay_trabajo(),
             "copias_viejas": len(viejas), "copias_viejas_texto": _gb(b_viejas),
             "videos_viejos": len(archivo), "videos_viejos_texto": _gb(b_archivo),
-            "videos_viejos_lista": [d.name for d in archivo][:50]}
+            "videos_viejos_lista": [d.name for d in archivo][:50],
+            "proyectos_por_peso": proyectos_por_peso()}
+
+
+def proyectos_por_peso(limite: int = 300) -> list[dict]:
+    """(22-10) Tus proyectos del más pesado al más liviano, solo para mirar: el dueño elige cuáles borrar y se borran
+    únicamente cuando él lo dice (regla fija). Incluye los videos de El Calvo."""
+    from datetime import datetime
+
+    filas = []
+    for d in _proyectos():
+        try:
+            titulo = json.loads((d / "proyecto.json").read_text(encoding="utf-8")).get("titulo") or d.name
+        except (OSError, ValueError):
+            titulo = d.name
+        b = _tamano(d)
+        filas.append({"slug": d.name, "titulo": titulo, "canal": "", "bytes": b, "texto": _gb(b),
+                      "terminado": _terminado(d), "fecha": datetime.fromtimestamp(d.stat().st_mtime).strftime("%Y-%m-%d")})
+    try:
+        from .explica.flujo import carpeta_base
+
+        for d in sorted((carpeta_base() / "videos").glob("*")) if (carpeta_base() / "videos").exists() else []:
+            if d.is_dir():
+                b = _tamano(d)
+                filas.append({"slug": d.name, "titulo": d.name.replace("-", " "), "canal": "El Calvo Explica",
+                              "bytes": b, "texto": _gb(b), "terminado": (d / "final.mp4").exists(),
+                              "fecha": datetime.fromtimestamp(d.stat().st_mtime).strftime("%Y-%m-%d")})
+    except Exception:  # noqa: BLE001
+        pass
+    filas.sort(key=lambda f: -f["bytes"])
+    return filas[:limite]
 
 
 def _hay_trabajo() -> bool:

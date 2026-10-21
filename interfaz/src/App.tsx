@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { Route, Routes } from 'react-router-dom';
 import { api, type Cuenta, type EstadoLocal } from './api';
 import { Barra } from './componentes/Barra';
@@ -12,10 +12,6 @@ import { MisVideos } from './paginas/MisVideos';
 import { Planes } from './paginas/Planes';
 import { Pronto } from './paginas/Pronto';
 import { Revision } from './paginas/Revision';
-import { Tracy, TracyVideo } from './paginas/Tracy';
-import { Calma } from './paginas/Calma';
-import { Explica } from './paginas/Explica';
-import { Cola } from './paginas/Cola';
 import { Espacio } from './paginas/Espacio';
 import { Personajes } from './paginas/Personajes';
 import { PersonajeDetalle } from './paginas/PersonajeDetalle';
@@ -26,6 +22,15 @@ import { Media } from './paginas/Media';
 import { CanalNuevo } from './paginas/CanalNuevo';
 import { Creditos } from './paginas/Creditos';
 import { AvisoRespaldo } from './componentes/Respaldo';
+import { Esqueleto } from './componentes/Estados';
+
+// tus módulos privados van en archivos aparte: solo se descargan cuando tú los abres (nada de su texto va en la página
+// que recibe cualquier usuario); en el Paso C el servidor además solo se los entrega al dueño
+const Tracy = lazy(() => import('./paginas/Tracy').then((m) => ({ default: m.Tracy })));
+const TracyVideo = lazy(() => import('./paginas/Tracy').then((m) => ({ default: m.TracyVideo })));
+const Calma = lazy(() => import('./paginas/Calma').then((m) => ({ default: m.Calma })));
+const Explica = lazy(() => import('./paginas/Explica').then((m) => ({ default: m.Explica })));
+const Cola = lazy(() => import('./paginas/Cola').then((m) => ({ default: m.Cola })));
 
 export function App() {
   const [cuenta, setCuenta] = useState<Cuenta | null>(null);
@@ -62,6 +67,7 @@ export function App() {
           </div>
         )}
         <main>
+          <Suspense fallback={<Esqueleto filas={5} />}>
           <Routes>
             <Route path="/" element={<Inicio />} />
             <Route path="/videos" element={<MisVideos />} />
@@ -92,6 +98,7 @@ export function App() {
             <Route path="/pronto/:que" element={<Pronto />} />
             <Route path="*" element={<Pronto />} />
           </Routes>
+          </Suspense>
         </main>
       </div>
     </div>

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { Ellipsis } from 'lucide-react';
 import { Icono } from './Icono';
-import { paginaVieja, type Cuenta } from '../api';
+import { modulosEstudio, paginaVieja, type Cuenta, type ModuloEstudio } from '../api';
 
 // Menú lateral (estilo Artbase): Home, Create, Assets e Inspire. En el celular se vuelve una barra abajo con lo
 // principal y un botón «Más» que abre el menú completo.
@@ -23,13 +23,7 @@ const ASSETS: Item[] = [
   { nombre: 'Media', icono: 'media', ir: '/media' },
   { nombre: 'Canales', icono: 'canal', ir: '/canales' },
 ];
-// tus herramientas privadas: solo en la cuenta del dueño
-const ESTUDIO: Item[] = [
-  { nombre: 'Cola de la semana', icono: 'videos', ir: '/cola' },
-  { nombre: 'Canal Tracy', icono: 'video', ir: '/tracy' },
-  { nombre: 'El Calvo Explica', icono: 'personaje', ir: '/explica' },
-  { nombre: 'Hazlo con Calma', icono: 'video', ir: '/calma' },
-];
+
 
 function Enlace({ i }: { i: Item }) {
   const contenido = <><Icono nombre={i.icono} tam={18} />{i.nombre}{i.pronto && <em>pronto</em>}</>;
@@ -39,9 +33,10 @@ function Enlace({ i }: { i: Item }) {
 
 export function Lateral({ cuenta }: { cuenta: Cuenta | null }) {
   const [abierto, setAbierto] = useState(false);
+  const [estudio, setEstudio] = useState<ModuloEstudio[]>([]);       // tus módulos privados: solo los manda el servidor
+  useEffect(() => { if (cuenta?.usuario.rol === 'owner') modulosEstudio().then(setEstudio); }, [cuenta?.usuario.rol]);
   const lugar = useLocation();
   useEffect(() => setAbierto(false), [lugar.pathname, lugar.search]);
-  const dueno = cuenta?.usuario.rol === 'owner';
   const nombre = cuenta?.usuario.nombre || cuenta?.usuario.email || '';
   const ROL: Record<string, string> = { owner: 'Owner', admin: 'Admin', beta: 'Beta' };
 
@@ -56,9 +51,9 @@ export function Lateral({ cuenta }: { cuenta: Cuenta | null }) {
         {ASSETS.map((i) => <Enlace key={i.nombre} i={i} />)}
         <div className="lat-grupo">Inspire</div>
         <Enlace i={{ nombre: 'Inspire', icono: 'explorar', ir: '/formatos' }} />
-        {dueno && <>
+        {estudio.length > 0 && <>
           <div className="lat-grupo">Tu estudio</div>
-          {ESTUDIO.map((i) => <Enlace key={i.nombre} i={i} />)}
+          {estudio.map((m) => <Enlace key={m.clave} i={{ nombre: m.menu, icono: m.clave === 'explica' ? 'personaje' : m.clave === 'cola' ? 'videos' : 'video', ir: m.ir }} />)}
         </>}
         <span className="crece" />
         <Enlace i={{ nombre: 'Planes y créditos', icono: 'planes', ir: '/planes' }} />

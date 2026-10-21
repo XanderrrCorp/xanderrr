@@ -262,6 +262,20 @@ Estado al 04-10-2026. El repositorio es PÚBLICO: nunca escribir claves, tokens 
   revisión del guion con selector de duración (POST /api/videos/{slug}/guion {minutos}) y costo del video completo;
   «Reintentar esta escena» en las escenas sin imagen. Los cajones y mensajes flotantes van con createPortal (la barra
   tiene backdrop-filter y atrapa a los fixed).
+  (22-10) COPIA LIVIANA (pedido del dueño: sus videos viejos ya están en YouTube; lo único que importa es que
+  El Calvo, Peligro Tropical y Tracy sigan saliendo igual): antes de migrar, copias.hacer_copia(liviano=True) =
+  base de datos, config, estilos, canales, perfiles, catálogo, datos/espacios (sin videos ni audios), módulos
+  tracy/explica/calma, biblioteca, .env, credenciales_google.json y datos/*.json. Sin proyectos. Simulada: 33 MB.
+  db.PREPARANDO + avisos.respaldo dicen «copiando/actualizando» (banner con giro y recarga al terminar); antes, con la
+  copia completa, la página quedaba sin canales (captura del dueño). Inicio ya no ofrece «crea tu canal» si fallan.
+  PRIVADO DEL DUEÑO (22-10): api.DEL_DUENO (formatos y fórmulas escala_peligro/paradoja_documental, plantilla
+  escala_2x3) solo para OWNER (marcados «estudio»: grupo «Tu estudio» del selector); api.MODULOS_DEL_DUENO (Tracy,
+  El Calvo, Calma, Cola) solo por GET /api/v2/estudio (403 a otros); sus pantallas van con React.lazy (fuera del
+  archivo principal). tests/test_privado.py lo comprueba (BETA por dependency_overrides). Elegir en Canal uno con
+  página propia (El Calvo → /explica, sin estilo → /tracy) lleva a esa página; Peligro Tropical carga su formato.
+  voz_del_canal ignora «voz_principal» (la de proveedores.json sigue mandando, igual que antes).
+  /espacio muestra «Tus proyectos, del más pesado al más liviano» (limpieza.proyectos_por_peso): SOLO mirar; se borra
+  únicamente lo que el dueño diga.
 ## Pendiente
 - Preguntas sin responder del dueño: ¿en qué canal notó la voz lenta? (Peligro Tropical está en 1.3 en
   config/proveedores.json; Tracy en 1.0 por pedido suyo). ¿En qué momento sale «la tira de animales» sin sentido?

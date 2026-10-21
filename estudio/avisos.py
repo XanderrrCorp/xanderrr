@@ -124,8 +124,12 @@ def _email_dueno() -> str | None:
 
 def respaldo() -> dict:
     """Estado de la última copia hecha antes de actualizar la base (la anota plataforma/db.py)."""
-    from .plataforma.db import carpeta_datos
+    import time as _t
 
+    from .plataforma.db import PREPARANDO, carpeta_datos
+
+    if PREPARANDO:                     # se está copiando o actualizando ahora mismo
+        return {"estado": PREPARANDO.get("fase", "copiando"), "segundos": int(_t.time() - PREPARANDO.get("desde", _t.time()))}
     r = carpeta_datos() / "ultima_copia_migracion.json"
     if not r.exists():
         return {"estado": "ninguna"}

@@ -145,6 +145,8 @@ def voz_del_canal(clave_canal: str) -> dict | None:
         with db.sesion() as s:
             c = buscar(s)
             v = s.get(Voz, c.voz_id) if c and c.voz_id else None
+            if v is not None and v.clave == "voz_principal":
+                return None        # la voz de siempre (copia de proveedores.json): se sigue leyendo de allá, igual que antes
             datos = dict(v.datos or {}) if v else {}
             return {k: datos[k] for k in ("voz_id", "velocidad", "modelo", "idioma") if datos.get(k)} or None
     except Exception:  # noqa: BLE001

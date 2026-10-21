@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { api, archivo, type Canal, type Formato, type VideoLista } from '../api';
 import { CajaIdea } from '../componentes/CajaIdea';
-import { Esqueleto, Vacio } from '../componentes/Estados';
+import { ErrorAmable, Esqueleto, Vacio } from '../componentes/Estados';
 import { Icono } from '../componentes/Icono';
 
 // Portadas de las plantillas: color propio por formato (sin imágenes que pagar).
@@ -14,11 +14,13 @@ export function Inicio() {
   const [formatos, setFormatos] = useState<Formato[]>([]);
   const [canales, setCanales] = useState<Canal[] | null>(null);
   const [formato, setFormato] = useState<string | undefined>();
+  const [errorCanales, setErrorCanales] = useState('');
 
   useEffect(() => {
     api<VideoLista[]>('/api/v2/videos').then(setVideos).catch(() => setVideos([]));
     api<Formato[]>('/api/v2/recursos/formatos').then(setFormatos).catch(() => {});
-    api<Canal[]>('/api/v2/canales').then(setCanales).catch(() => setCanales([]));
+    // si no se pueden leer los canales NO se ofrece «crear tu canal»: se dice qué pasó
+    api<Canal[]>('/api/v2/canales').then(setCanales).catch((e) => setErrorCanales(e.message));
   }, []);
 
   return (
@@ -27,6 +29,7 @@ export function Inicio() {
         <h1>¿Qué quieres crear hoy?</h1>
         <p className="tenue">Escribe una idea y Xandart hace el guion, las imágenes, la voz y el video. Tú apruebas cada paso.</p>
       </div>
+      {errorCanales && <ErrorAmable titulo="No pudimos leer tus canales" texto={`${errorCanales} Si Xandart se está actualizando, espera a que termine la copia de seguridad.`} />}
       {canales !== null && canales.length === 0 && (
         <div className="aviso-canal">
           <Icono nombre="canal" />

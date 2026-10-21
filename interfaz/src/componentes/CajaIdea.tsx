@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { api, miles, type Canal, type Cotizacion, type Formato, type VideoDetalle } from '../api';
+import { api, miles, modulosEstudio, type Canal, type Cotizacion, type Formato, type ModuloEstudio, type VideoDetalle } from '../api';
 import { Zap } from 'lucide-react';
 import { Icono } from './Icono';
 
@@ -12,6 +12,7 @@ export function CajaIdea({ creado, formatoInicial, personalizado = false }: {
 }) {
   const ir = useNavigate();
   const [formatos, setFormatos] = useState<Formato[]>([]);
+  const [estudio, setEstudio] = useState<ModuloEstudio[]>([]);
   const [canales, setCanales] = useState<Canal[]>([]);
   const [formato, setFormato] = useState('');
   const [canal, setCanal] = useState('');
@@ -31,8 +32,25 @@ export function CajaIdea({ creado, formatoInicial, personalizado = false }: {
       if (inicial) setFormato(inicial.id);
     }).catch(() => {});
     api<Canal[]>('/api/v2/canales').then((c) => { setCanales(c); if (c[0]) setCanal(c[0].clave); }).catch(() => {});
+    modulosEstudio().then(setEstudio);
   }, [formatoInicial]);
+  useEffect(() => {          // sin plantilla elegida: el formato de siempre del canal
+    if (formatoInicial) return;
+    const c = canales.find((x) => x.clave === canal);
+    if (c?.formato && formatos.some((x) => x.id === c.formato!.id)) setFormato(c.formato.id);
+  }, [canal, canales.length, formatos.length]); // eslint-disable-line react-hooks/exhaustive-deps
   const f = formatos.find((x) => x.id === formato);
+  const generales = formatos.filter((x) => !x.estudio);
+  const propios = formatos.filter((x) => x.estudio);
+  // canales de tu estudio con su propia página: El Calvo (modo explica) y los de guion pegado (sin estilo de imágenes)
+  const paginaDelCanal = (c: Canal) => (c.ajustes?.visual_mode === 'explica' ? '/explica' : !c.estilo ? '/tracy' : null);
+  const elegirCanal = (clave: string) => {
+    const c = canales.find((x) => x.clave === clave);
+    const pagina = c && paginaDelCanal(c);
+    if (pagina && estudio.length) { ir(pagina); return; }
+    setCanal(clave);
+    if (c?.formato) setFormato(c.formato.id);          // su formato de siempre
+  };
   const duraciones = f?.datos.duraciones_min ?? [6, 9, 11];
   useEffect(() => { if (f?.datos.duracion_min) setMinutos(f.datos.duracion_min); }, [formato]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
@@ -56,19 +74,25 @@ export function CajaIdea({ creado, formatoInicial, personalizado = false }: {
         <label className="selector">
           <span>Formato</span>
           <select value={formato} onChange={(e) => {
-            // Tracy no escribe el guion: tú lo pegas en su propia página
-            if (e.target.value === '__tracy') { ir('/tracy'); return; }
+            // los módulos de tu estudio (Tracy, El Calvo, Calma) tienen su propia página
+            const m = estudio.find((x) => `__${x.clave}` === e.target.value);
+            if (m) { ir(m.ir); return; }
             setFormato(e.target.value);
           }}>
-            {formatos.map((x) => <option key={x.id} value={x.id}>{x.nombre}</option>)}
-            <option value="__tracy">Estilo Brian Tracy (pegas tu guion)</option>
+            {generales.map((x) => <option key={x.id} value={x.id}>{x.nombre}</option>)}
+            {(propios.length > 0 || estudio.length > 0) && (
+              <optgroup label="Tu estudio">
+                {propios.map((x) => <option key={x.id} value={x.id}>{x.nombre}</option>)}
+                {estudio.filter((m) => m.clave !== 'cola').map((m) => <option key={m.clave} value={`__${m.clave}`}>{m.nombre}</option>)}
+              </optgroup>
+            )}
             <optgroup label="En camino">{EN_CAMINO.map((n) => <option key={n} disabled>{n} · pronto</option>)}</optgroup>
           </select>
         </label>
         <label className="selector">
           <span>Canal</span>
-          <select value={canal} onChange={(e) => setCanal(e.target.value)}>
-            {canales.map((c) => <option key={c.id} value={c.clave}>{c.nombre}</option>)}
+          <select value={canal} onChange={(e) => elegirCanal(e.target.value)}>
+            {canales.map((c) => <option key={c.id} value={c.clave}>{c.nombre}{paginaDelCanal(c) ? ' ↗' : ''}</option>)}
           </select>
         </label>
         <div className="chips" role="group" aria-label="Duración">
