@@ -10,6 +10,8 @@ Estado al 04-10-2026. El repositorio es PÚBLICO: nunca escribir claves, tokens 
 - **No gastar en pruebas**: nada de llamadas pagadas (imágenes, voz) sin permiso explícito. Probar con proveedor
   simulado, imágenes de colores y Claude falso. Decir el costo antes de gastar; nunca pasar el tope sin permiso.
 - Claude (CLI) va por su suscripción: 0 pesos.
+- REGLA FIJA (21-10): NUNCA borrar, renombrar ni modificar sus canales, estilos, personajes, presets ni proyectos
+  existentes sin pedirle permiso explícito antes.
 - Reglas fijas: no dosis ni tratamientos de salud; no descargar videos de terceros; audio solo con licencia
   verificable; marcar contenido sintético; no copiar textos, personajes ni marcas de la competencia (solo técnicas);
   no borrar nada existente (migraciones, nunca borrar y recrear tablas).
@@ -40,6 +42,18 @@ Estado al 04-10-2026. El repositorio es PÚBLICO: nunca escribir claves, tokens 
   subtítulos con 3-4 estilos editables, miniatura con 2-3 opciones, paquete SEO (título, descripción, tags), descarga
   completa (video, miniatura, SRT, SEO; 16:9 y 9:16), historial de créditos claro, ayuda por pantalla + «Reportar
   problema» con la información del error.
+- Ola 1 APROBADA (21-10) con este orden: Bloque 1 (historial de créditos, ayuda + reportar, revisión con duración y
+  costo total, «Reintentar esta escena», avisos) → pasos B, C, D → Bloque 2 (guion genérico + pegar guion, SEO,
+  miniatura genérica con 3 opciones, 3-4 estilos de subtítulos, descarga completa .zip y 9:16, KIT DE CANAL) → pasos E
+  a J → Bloque 3 (onboarding guiado completo, video de prueba gratis, kit dentro del onboarding).
+- KIT DE CANAL DE YOUTUBE (aprobado): a) 10 nombres con @handle (nada de famosos ni marcas: aviso + alternativas;
+  «posiblemente ocupado» mirando youtube.com/@handle, siempre «confírmalo en YouTube»); b) logo 800×800, 3 opciones,
+  vista en círculo, puede ser el personaje; c) banner 2560×1440: Google pinta solo el fondo y el nombre/frase van por
+  código dentro de la zona segura 1546×423, vista celular/PC/TV, 2-3 opciones con la paleta del logo; d) descripción
+  ≤1.000 caracteres editable; e) palabras clave para copiar; f) guía de YouTube Studio + «Descargar mi kit» (.zip) y
+  botones de copiar. Se guarda en el canal (nombre, logo, paleta) y se usa en miniaturas y videos. Precios: textos 10
+  créditos, logo 30, banner 30, kit 70, regenerar logo/banner 10 (costo real ≈ 0,45 USD). GRATIS una vez a cada
+  usuario nuevo, APARTE de los 300 créditos de bienvenida. Fórmulas genéricas, nunca sus prompts.
 - OLA 2 (NO programar todavía): generador de ideas y títulos, Shorts automáticos de los mejores momentos, música de
   fondo con volumen automático bajo la voz, galería de ejemplos por estilo, mini tutoriales en video.
 
@@ -239,6 +253,15 @@ Estado al 04-10-2026. El repositorio es PÚBLICO: nunca escribir claves, tokens 
   ahora se usan: consultas.estilo_del_canal / voz_del_canal), PersonajeDetalle (asistente que ya existía sin pantalla),
   Estilos, Miniaturas, Media; Estados.tsx (vacío, esqueleto, girando, error) y Costo.tsx junto a cada botón que gasta.
   Para revisar a ojo: scratchpad demo/lanzar.py (puerto 8099, imágenes simuladas) + capturas con Playwright.
+  BLOQUE 1 (21-10, hecho): estudio/avisos.py («tu video está listo / no se pudo terminar» en la app y por correo:
+  pipeline.lanzar llama avisos.al_terminar; un video está listo si dejó un .mp4 nuevo en Videos/Xandart; campana en la
+  barra + mensaje flotante; GET/POST /api/v2/avisos); aviso al abrir de la copia de seguridad antes de migrar
+  (avisos.respaldo lee datos/ultima_copia_migracion.json; si la copia falla db.preparar lo anota y NO migra);
+  «Reportar problema» en el cajón de Ayuda (POST /api/v2/reportes → datos/reportes/*.json + correo, sin claves);
+  ayuda corta por pantalla (componentes/Ayuda.tsx); historial de créditos /creditos (con el nombre de cada acción);
+  revisión del guion con selector de duración (POST /api/videos/{slug}/guion {minutos}) y costo del video completo;
+  «Reintentar esta escena» en las escenas sin imagen. Los cajones y mensajes flotantes van con createPortal (la barra
+  tiene backdrop-filter y atrapa a los fixed).
 ## Pendiente
 - Preguntas sin responder del dueño: ¿en qué canal notó la voz lenta? (Peligro Tropical está en 1.3 en
   config/proveedores.json; Tracy en 1.0 por pedido suyo). ¿En qué momento sale «la tira de animales» sin sentido?

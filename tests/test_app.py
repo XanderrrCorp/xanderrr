@@ -103,3 +103,11 @@ def test_ajustes_cuenta_de_google(cliente, tmp_path, monkeypatch):
     r = cliente.post("/api/google-cuenta", files={"archivo": ("cuenta.json", bueno.encode())}).json()
     assert r["conectada"] and r["proyecto"] == "p1" and r["prueba"]["ok"]
     assert cliente.delete("/api/google-cuenta").json()["conectada"] is False
+
+
+def test_reescribir_el_guion_con_otra_duracion(cliente):
+    """(21-10) En la revisión se puede cambiar la duración: se guarda y se reescribe el guion."""
+    v = cliente.post("/api/videos", json={"tema": "Ranas venenosas", "minutos": 9}).json()
+    r = cliente.post(f"/api/videos/{v['slug']}/guion", json={"minutos": 6})
+    assert r.status_code == 200 and r.json()["minutos"] == 6
+    assert cliente.post(f"/api/videos/{v['slug']}/guion").status_code == 200        # sin duración: la de siempre

@@ -218,11 +218,12 @@ def historial(video: str | None = None, limite: int = 200, q: Quien = Depends(us
         video_id = v.id
     titulos = dict(s.execute(select(Video.id, Video.titulo).where(Video.espacio_id == q.espacio.id)).all())
     ver_costo = q.usuario.a_costo or es_admin(q.usuario)
+    nombres = dict(s.execute(select(Precio.clave, Precio.nombre)).all())     # «Minuto de video (720p)»…
     filas = []
     for m in cr.historial(s, q.espacio, video_id, min(max(limite, 1), 1000)):
         f = {"fecha": m.creado.isoformat(timespec="seconds"), "tipo": m.tipo, "creditos": m.creditos,
              "bolsa": m.bolsa, "accion": m.accion, "cantidad": m.cantidad, "nota": m.nota,
-             "video": titulos.get(m.video_id)}
+             "video": titulos.get(m.video_id), "que": nombres.get(m.accion or "", "")}
         if ver_costo:
             f["costo_real_usd"], f["precio_cliente_usd"] = m.costo_real_usd, m.precio_cliente_usd
         filas.append(f)
@@ -436,6 +437,56 @@ def videos():
                                     "activo": t.activo, "error": t.error} if t else None)})
     salida.sort(key=lambda v: (v["estado"] != "en_marcha", -v["modificado"]))
     return salida
+
+
+# ------------------------------------------------------------------ (21-10) avisos y copia de seguridad
+
+@api.get("/avisos")
+def ver_avisos():
+    """Avisos de la app («tu video está listo», «no se pudo terminar»). Sin base de datos: sale aunque esté rota."""
+    from .. import avisos
+
+    lista = avisos.listar()
+    return {"avisos": lista[:20], "sin_leer": sum(1 for a in lista if not a.get("leido"))}
+
+
+@api.post("/avisos/leidos")
+def avisos_leidos():
+    from .. import avisos
+
+    avisos.marcar_leidos()
+    return ver_avisos()
+
+
+class Reporte(BaseModel):
+    texto: str = Field(min_length=3, max_length=3000)
+    ruta: str = ""
+    error: str = ""
+    navegador: str = ""
+
+
+@api.post("/reportes")
+def reportar(r: Reporte):
+    from .. import avisos
+
+    avisos.reportar(r.texto, r.ruta, r.error, r.navegador)
+    return {"ok": True}
+
+
+@api.get("/respaldo")
+def ver_respaldo():
+    """Si la copia de seguridad de antes de actualizar la base salió bien y dónde quedó (se muestra al abrir)."""
+    from .. import avisos
+
+    return avisos.respaldo()
+
+
+@api.post("/respaldo/visto")
+def respaldo_visto():
+    from .. import avisos
+
+    avisos.respaldo_visto()
+    return avisos.respaldo()
 
 
 # ------------------------------------------------------------------ copias de seguridad y preparación

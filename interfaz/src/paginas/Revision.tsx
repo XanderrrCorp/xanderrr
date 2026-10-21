@@ -20,6 +20,7 @@ export function Revision() {
   const [v, setV] = useState<VideoDetalle | null>(null);
   const [error, setError] = useState('');
   const [aviso, setAviso] = useState('');
+  const [minutos, setMinutos] = useState(0);
   const [fps, setFps] = useState(() => { try { return +(localStorage.getItem('xandart_fps') || 60); } catch { return 60; } });
 
   const cargar = useCallback(async () => {
@@ -27,6 +28,7 @@ export function Revision() {
     catch (e) { setError((e as Error).message); }
   }, [slug]);
   useEffect(() => { cargar(); }, [cargar]);
+  useEffect(() => { if (v) setMinutos(Math.round(v.minutos)); }, [v?.minutos]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {                                     // mientras trabaja, se actualiza solo
     if (!v?.trabajo?.activo) return;
     const id = window.setTimeout(cargar, 2000);
@@ -145,6 +147,18 @@ export function Revision() {
           <p className="tenue">Toca el texto de cualquier escena para cambiarlo. Cuando te guste, aprueba y se hacen las imágenes.</p>
           {e.pasa_maximo && <p className="rev-aviso">Ojo: este video ya lleva {e.gastado_texto} gastados. Las {e.faltan} imágenes que faltan (≈ {e.texto}) lo llevarían a ≈ {e.total_texto}, por encima del máximo de {e.maximo_texto}. Para no pasarte usa «Usar Pexels y ajustar»; si igual quieres todas, Xandart te pide permiso antes de gastar.</p>}
           {v.prueba && <PruebaHecha v={v} />}
+          <div className="rev-resumen">
+            <label className="campo-linea">Duración
+              <select value={minutos} onChange={(x) => setMinutos(+x.target.value)}>
+                {[...new Set([4, 6, 9, 11, 15, Math.round(v.minutos)])].sort((a, b) => a - b).map((m) => <option key={m} value={m}>{m} min</option>)}
+              </select>
+            </label>
+            {minutos !== Math.round(v.minutos)
+              ? <button className="boton-borde pequeno" onClick={() => {
+                  if (window.confirm(`¿Reescribir el guion para ${minutos} minutos? El guion de ahora se reemplaza.`)) accion('guion', { minutos });
+                }}>Reescribir el guion con {minutos} min</button>
+              : <span className="tenue pequeno">Video completo (imágenes, voz y montaje): <Costo accion="video_minuto" cantidad={v.minutos} /></span>}
+          </div>
           <div className="fila-botones">
             <button className={e.pasa_maximo ? 'boton-primario' : 'boton-borde'} onClick={() => {
               if (window.confirm('Xandart busca fotos y videos reales en Pexels (gratis) para las escenas que solo muestran al animal, y si aún pasa el máximo, algunas escenas reusan una imagen cercana. El texto del guion no cambia. ¿Seguir?')) accion('ajustar-imagenes');
@@ -304,7 +318,10 @@ function Escenas({ v, conImagenes, bloqueado, slug, alRegenerar }: {
                 <div className="rev-texto" contentEditable={!conImagenes && !bloqueado} suppressContentEditableWarning
                   onBlur={(ev) => guardarTexto(e, ev.currentTarget.innerText)}>{e.narracion}</div>
                 {e.medico && <span className="rev-medico">revisar dato de salud</span>}
-                {conImagenes && e.puede_regenerar && !bloqueado && (
+                {conImagenes && e.accion === 'generar' && !e.imagen && !bloqueado && (
+                  <button className="boton-borde pequeno" onClick={() => alRegenerar(e.id, '')}>Reintentar esta escena</button>
+                )}
+                {conImagenes && e.puede_regenerar && !!e.imagen && !bloqueado && (
                   <button className="boton-icono pequeno" onClick={() => {
                     const inst = window.prompt('¿Qué quieres cambiar? (vacío = otra versión igual)', '');
                     if (inst !== null) alRegenerar(e.id, inst);

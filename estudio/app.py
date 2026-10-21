@@ -523,9 +523,17 @@ def _lanzar(slug, paso, f):
     return pipeline.resumen(_proyecto(slug))
 
 
+class OtroGuion(BaseModel):
+    minutos: float | None = Field(None, ge=1, le=25)     # (21-10) reescribirlo con otra duración
+
+
 @app.post("/api/videos/{slug}/guion")
-def rehacer_guion(slug: str):
+def rehacer_guion(slug: str, o: OtroGuion = OtroGuion()):
     c = _proyecto(slug)
+    if o.minutos:
+        p = c.cargar()
+        p.duracion_objetivo_seg = o.minutos * 60
+        c.guardar(p)
     return _lanzar(slug, "guion", lambda t: pipeline.paso_guion(c, t))
 
 

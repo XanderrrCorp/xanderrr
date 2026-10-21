@@ -95,6 +95,12 @@ def lanzar(slug: str, paso: str, funcion) -> Trabajo:
         finally:
             t.activo = False
             despierto(False)
+            try:
+                from .avisos import al_terminar      # «tu video está listo» o «no se pudo terminar»
+
+                al_terminar(slug, t)
+            except Exception:  # noqa: BLE001 — un aviso nunca tumba el trabajo
+                pass
 
     # el trabajo corre en el mismo espacio de trabajo que la petición que lo lanzó
     contexto_actual = contextvars.copy_context()

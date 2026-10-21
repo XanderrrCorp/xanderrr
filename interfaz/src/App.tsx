@@ -24,6 +24,8 @@ import { Estilos } from './paginas/Estilos';
 import { Miniaturas } from './paginas/Miniaturas';
 import { Media } from './paginas/Media';
 import { CanalNuevo } from './paginas/CanalNuevo';
+import { Creditos } from './paginas/Creditos';
+import { AvisoRespaldo } from './componentes/Respaldo';
 
 export function App() {
   const [cuenta, setCuenta] = useState<Cuenta | null>(null);
@@ -51,6 +53,7 @@ export function App() {
       <Lateral cuenta={cuenta} />
       <div className="contenido">
         <Barra cuenta={cuenta} />
+        <AvisoRespaldo />
         {prep && prep.activo && prep.fase !== 'listo' && (
           <div className={`aviso-prep ${prep.fase === 'error' ? 'malo' : ''}`} role="status">
             {prep.fase === 'error'
@@ -83,6 +86,7 @@ export function App() {
             <Route path="/estilos/nuevo" element={<Estilos nuevo />} />
             <Route path="/miniaturas" element={<Miniaturas />} />
             <Route path="/media" element={<Media />} />
+            <Route path="/creditos" element={<Creditos />} />
             <Route path="/formatos" element={<Formatos />} />
             <Route path="/planes" element={<Planes />} />
             <Route path="/pronto/:que" element={<Pronto />} />

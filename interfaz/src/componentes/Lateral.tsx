@@ -62,6 +62,7 @@ export function Lateral({ cuenta }: { cuenta: Cuenta | null }) {
         </>}
         <span className="crece" />
         <Enlace i={{ nombre: 'Planes y créditos', icono: 'planes', ir: '/planes' }} />
+        <Enlace i={{ nombre: 'Historial de créditos', icono: 'videos', ir: '/creditos' }} />
         {cuenta?.usuario.admin && <Enlace i={{ nombre: 'Admin', icono: 'admin', ir: '/admin', fuera: true }} />}
         <Enlace i={{ nombre: 'Liberar espacio', icono: 'proyectos', ir: '/espacio' }} />
         <Enlace i={{ nombre: 'Ajustes', icono: 'ajustes', ir: paginaVieja(), fuera: true }} />

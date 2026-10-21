@@ -1,11 +1,13 @@
 import { Link, useLocation } from 'react-router-dom';
 import { Zap } from 'lucide-react';
 import { miles, type Cuenta } from '../api';
+import { Avisos } from './Avisos';
+import { Ayuda } from './Ayuda';
 
 const TITULOS: [RegExp, string][] = [
   [/^\/$/, 'Home'], [/^\/producir/, 'Producer'], [/^\/videos\/[^/]+\/editor/, 'Editor'], [/^\/videos\/[^/]+\/miniatura/, 'Miniatura'],
   [/^\/videos/, 'Proyectos'], [/^\/personajes/, 'Personajes'], [/^\/estilos/, 'Estilos'], [/^\/miniaturas/, 'Miniaturas'],
-  [/^\/media/, 'Media'], [/^\/canales/, 'Canales'], [/^\/formatos/, 'Inspire'], [/^\/planes/, 'Planes y créditos'],
+  [/^\/media/, 'Media'], [/^\/canales/, 'Canales'], [/^\/formatos/, 'Inspire'], [/^\/planes/, 'Planes y créditos'], [/^\/creditos/, 'Historial de créditos'],
   [/^\/cola/, 'Cola de la semana'], [/^\/tracy/, 'Canal Tracy'], [/^\/explica/, 'El Calvo Explica'], [/^\/calma/, 'Hazlo con Calma'],
   [/^\/espacio/, 'Liberar espacio'],
 ];
@@ -24,10 +26,12 @@ export function Barra({ cuenta }: { cuenta: Cuenta | null }) {
         <span className="etiqueta" title="Tu cuenta paga el costo real de los proveedores, sin margen">
           A costo · ${cuenta.gasto_mes_usd.toFixed(2)} este mes</span>
       )}
+      <Ayuda />
+      <Avisos />
       <div className={`saldo ${s?.bajo && !cuenta?.usuario.a_costo ? 'bajo' : ''}`}
         title={s ? `${miles(s.creditos)} créditos · alcanzan para unos ${s.minutos} minutos de video` : 'Cargando tu saldo'}>
         <Zap size={16} aria-hidden="true" />
-        <b>{s ? miles(s.creditos) : '…'}</b><small>créditos</small>
+        <Link to="/creditos" className="saldo-cifra" title="Ver en qué se usaron"><b>{s ? miles(s.creditos) : '…'}</b><small>créditos</small></Link>
         <Link to="/planes" className="boton-primario">Recargar</Link>
       </div>
     </header>

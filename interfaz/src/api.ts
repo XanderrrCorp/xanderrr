@@ -8,12 +8,20 @@ export async function api<T = unknown>(ruta: string, opciones: { metodo?: string
       body: opciones.cuerpo !== undefined ? JSON.stringify(opciones.cuerpo) : undefined,
     });
   } catch {
+    ultimoError.texto = `${ruta}: sin conexión`;
     throw new Error('No hay conexión con Xandart. Revisa que su ventana negra siga abierta y vuelve a intentarlo.');
   }
   const datos = await r.json().catch(() => ({}));
-  if (!r.ok) throw new Error(humano(r.status, (datos as { detail?: unknown }).detail));
+  if (!r.ok) {
+    const m = humano(r.status, (datos as { detail?: unknown }).detail);
+    ultimoError.texto = `${ruta} → ${r.status}: ${m}`;      // va solo en «Reportar problema»
+    throw new Error(m);
+  }
   return datos as T;
 }
+
+/** El último error que vio la persona (para adjuntarlo al reportar un problema). */
+export const ultimoError = { texto: '' };
 
 /** Errores en palabras normales: el servidor ya los manda en español; lo técnico se traduce aquí. */
 export function humano(estado: number, detalle?: unknown): string {
@@ -109,3 +117,9 @@ export interface LineaDeTiempo {
   trabajo: (Trabajo & { segundos: number }) | null;
 }
 export const reloj = (s: number) => `${Math.floor(s / 60)}:${(s % 60).toFixed(1).padStart(4, '0')}`;
+
+export interface Aviso { id: string; tipo: 'listo' | 'error'; titulo: string; texto: string; enlace: string | null; fecha: number; leido: boolean }
+export interface Respaldo { estado: 'ok' | 'error' | 'ninguna' | 'movida'; carpeta?: string; fecha?: string; total_bytes?: number;
+  partes?: Record<string, number>; error?: string; visto?: boolean; migracion?: string }
+export interface MovimientoCredito { fecha: string; tipo: string; creditos: number; bolsa: string; accion: string | null;
+  cantidad: number | null; nota: string; video: string | null; que: string; costo_real_usd?: number }

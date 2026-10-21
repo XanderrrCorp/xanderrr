@@ -96,10 +96,20 @@ def preparar() -> None:
 
             from .copias import hacer_copia
 
-            info = hacer_copia(f"antes_de_migrar_{pendiente}")
-            (carpeta_datos() / "ultima_copia_migracion.json").write_text(
+            from .copias import CopiaFallida
+
+            nota = carpeta_datos() / "ultima_copia_migracion.json"
+            try:
+                info = hacer_copia(f"antes_de_migrar_{pendiente}")
+            except CopiaFallida as ex:      # se avisa al abrir Xandart (avisos.respaldo) y NO se migra
+                nota.write_text(json.dumps({"error": str(ex), "migracion": pendiente}, ensure_ascii=False, indent=2),
+                                encoding="utf-8")
+                raise
+            nota.write_text(
                 json.dumps({"carpeta": info["carpeta"], "fecha": info["fecha"], "migracion": pendiente,
-                            "total_bytes": info["total_bytes"]}, ensure_ascii=False, indent=2), encoding="utf-8")
+                            "total_bytes": info["total_bytes"],
+                            "partes": {k: v["archivos"] for k, v in info["partes"].items()}},
+                           ensure_ascii=False, indent=2), encoding="utf-8")
         command.upgrade(cfg, "head")
         _PREPARADAS.add(direccion)
 
