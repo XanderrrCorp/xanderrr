@@ -2173,6 +2173,11 @@ def _renderizar(carpeta: CarpetaProyecto, ffmpeg: str, destino: Path | None, des
             if tc and 0 <= tt - tc["en"] < tc["dur"]:
                 a = 14 * (1 - (tt - tc["en"]) / tc["dur"])        # golpe en un nivel alto: sacudida corta
                 dx, dy = temblor.uniform(-a, a), temblor.uniform(-a, a)
+            gp = ef.get("golpe")
+            if gp and 0 <= tt - gp["en"] < gp["dur"]:
+                k = 1 - (tt - gp["en"]) / gp["dur"]                # (23-10) remate: zoom de golpe y sacudida
+                s *= 1 + 0.13 * k * k
+                dx, dy = dx + temblor.uniform(-10, 10) * k, dy + temblor.uniform(-10, 10) * k
             previo = zoom_previo.get(c["id"])
             capas_p = esc_c.profundidad.get(c["id"]) if c["modo"] == "pantalla_completa" else None
             if capas_p is not None and _cv2 is not None:
@@ -2244,10 +2249,15 @@ def _renderizar(carpeta: CarpetaProyecto, ffmpeg: str, destino: Path | None, des
             img = _poner_dato(img, ef["dato"], tt, c["fin"])
         if "rotulo_tiempo" in ef and not en_reaccion:
             img = _rotulo_tiempo(img, ef["rotulo_tiempo"], tt)
-        for nombre in ("veredicto", "pero_espera", "cta_like", "cta_suscribir", "comentario"):
+        for nombre in ("veredicto", "pero_espera", "cta_like", "cta_suscribir", "comentario", "palabra_golpe",
+                       "sube_nivel"):
             x = ef.get(nombre)
             if x and not en_reaccion and x["en"] <= tt < x["en"] + x["dur"]:
-                if nombre == "veredicto":
+                if nombre == "palabra_golpe":
+                    img = RR.palabra_golpe(img, x, tt - x["en"])
+                elif nombre == "sube_nivel":
+                    img = RR.sube_nivel(img, x, tt - x["en"])
+                elif nombre == "veredicto":
                     img = RR.veredicto(img, x, tt - x["en"])
                 elif nombre == "pero_espera":
                     img = RR.pero_espera(img, x, tt - x["en"], n)

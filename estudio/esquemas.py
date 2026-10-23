@@ -45,6 +45,9 @@ EFECTOS = (
     # destello blanco al salir de la tira, temblor corto en golpes, llamados a la acción y cierre con la mascota
     "ambiente_oscuro", "veredicto", "pero_espera", "destello_blanco", "temblor_corto", "cta_like", "cta_suscribir", "comentario",
     "final_personaje",
+    # (23-10) «más dopamina» (perfil peligro_tropical_v3): palabra grande que salta, golpe con zoom en los remates
+    # y aviso de que sube el peligro entre un animal y el siguiente
+    "palabra_golpe", "golpe", "sube_nivel",
     # entradas del objeto al cortar (sale de abajo o de un lado con rebote) y vaivén suave mientras está
     "entrada_abajo", "entrada_lado", "vaiven",
     # escala de peligro 0–10 a pantalla completa cuando se presenta un nivel (dibujada con código)
@@ -287,6 +290,9 @@ class PerfilEdicion(Modelo):
     movimiento: Literal["normal", "sin_vaiven", "deslizar", "historia"] = "normal"
     # (07-10) la receta del dueño para Peligro Tropical (ver estudio/receta_pt.py)
     receta: bool = False
+    # (23-10) «más dopamina» encima de la receta: palabra grande que salta en las cifras y frases de golpe, golpe con
+    # zoom y sacudida en los remates, aviso «sube el peligro» al pasar al siguiente animal (receta_pt.dopamina)
+    dopamina: bool = False
 
 
 # ---------------------------------------------------------- perfil_canal.json

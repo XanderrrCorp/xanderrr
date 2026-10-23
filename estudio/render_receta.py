@@ -326,3 +326,68 @@ def comentario(img: Image.Image, ef: dict, loc: float) -> Image.Image:
     sale = max(0.0, min(1.0, (dur - loc) / 0.3))
     y = H - 330 + (1 - entra) * 420 + (1 - sale) * 420
     return _pegar(img, t, 80 + t.width / 2, y, 0.85 + 0.15 * entra)
+
+
+# ------------------------------------------------------------------ (23-10) más dopamina
+
+def _palabra(texto: str, cifra: bool) -> Image.Image:
+    R = _r()
+    color = AMARILLO if cifra else (255, 255, 255)
+    im = R._texto_img(texto, 190, 16, color=color)
+    if im.width > 1560:                                       # que quepa siempre en el ancho
+        f = 1560 / im.width
+        im = im.resize((int(im.width * f), int(im.height * f)), Image.Resampling.LANCZOS)
+    sombra = Image.new("RGBA", (im.width + 80, im.height + 80), (0, 0, 0, 0))
+    sombra.alpha_composite(Image.fromarray(np.dstack([np.zeros(im.size[::-1] + (3,), np.uint8),
+                                                      (np.asarray(im)[..., 3] * 0.55).astype(np.uint8)]), "RGBA"),
+                           (52, 56))
+    sombra = sombra.filter(ImageFilter.GaussianBlur(12))
+    sombra.alpha_composite(im, (40, 40))
+    return sombra
+
+
+def palabra_golpe(img: Image.Image, ef: dict, loc: float) -> Image.Image:
+    """La palabra fuerte salta en grande al centro (entra pasada de tamaño y se asienta) y se va rápido."""
+    clave = ("pg", ef["texto"], ef.get("cifra", False), ef.get("giro", 0))
+    if clave not in _CACHE:
+        _CACHE[clave] = _palabra(ef["texto"], ef.get("cifra", False)).rotate(ef.get("giro", 0), expand=True,
+                                                                              resample=Image.Resampling.BICUBIC)
+    capa = _CACHE[clave]
+    queda = ef["dur"] - loc
+    esc = (1.35 - 0.35 * _rebote(loc, 0.18, 0.12)) if loc < 0.18 else _rebote(loc, 0.18, 0.12)
+    if queda < 0.14:                                          # sale encogiéndose
+        esc *= max(0.0, queda / 0.14)
+    return _pegar(img, capa, W / 2, H * 0.5, esc)
+
+
+def _cinta(texto: str, alto: bool) -> Image.Image:
+    R = _r()
+    letras = R._texto_img(texto, 92, 6)
+    lado = 70
+    w, h = letras.width + lado + 110, max(letras.height, lado) + 46
+    im = Image.new("RGBA", (w + 30, h + 30), (0, 0, 0, 0))
+    d = ImageDraw.Draw(im)
+    d.rounded_rectangle((22, 26, w + 22, h + 26), radius=26, fill=(0, 0, 0, 120))
+    im = im.filter(ImageFilter.GaussianBlur(8))
+    d = ImageDraw.Draw(im)
+    color = (215, 25, 25, 255) if alto else (245, 140, 10, 255)
+    d.rounded_rectangle((10, 10, w + 10, h + 10), radius=26, fill=color, outline=(255, 255, 255, 255), width=6)
+    cx, cy = 10 + 40 + lado // 2, 10 + h // 2                  # flecha hacia arriba
+    d.polygon([(cx, cy - lado // 2), (cx - lado // 2, cy + lado // 3), (cx + lado // 2, cy + lado // 3)],
+              fill=(255, 255, 255, 255))
+    im.alpha_composite(letras, (10 + 40 + lado + 30, 10 + (h - letras.height) // 2))
+    return im
+
+
+def sube_nivel(img: Image.Image, ef: dict, loc: float) -> Image.Image:
+    """Cinta «▲ SUBE EL PELIGRO» que entra desde abajo con rebote, se queda un momento y sale hacia arriba."""
+    clave = ("sube", ef["texto"], ef.get("alto", False))
+    if clave not in _CACHE:
+        _CACHE[clave] = _cinta(ef["texto"], ef.get("alto", False))
+    capa = _CACHE[clave]
+    destino = H * 0.80
+    y = H + capa.height - (H + capa.height - destino) * _rebote(loc, 0.3, 0.15)
+    queda = ef["dur"] - loc
+    if queda < 0.22:                                          # se va hacia arriba, rápido
+        y -= (1 - queda / 0.22) ** 2 * (destino + capa.height)
+    return _pegar(img, capa, W / 2, y)

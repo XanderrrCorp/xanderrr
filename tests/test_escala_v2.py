@@ -60,3 +60,49 @@ def test_pausas_mas_cortas_solo_con_el_factor():
     b = N(seccion="Nivel 1", intencion="normal")
     assert pausa_despues(a, b) == 0.75
     assert abs(pausa_despues(a, b, 0.75) - 0.5625) < 1e-9
+
+
+def test_palabra_fuerte_cifras_remates_y_palabra_clave():
+    from estudio.receta_pt import palabra_fuerte
+
+    assert palabra_fuerte("Puede pesar más de ochenta kilos.", None, "explicacion")[0] == "OCHENTA KILOS"
+    assert palabra_fuerte("Lleva aquí veinticinco millones de años.", None, "explicacion")[0] == \
+        "VEINTICINCO MILLONES DE AÑOS"
+    assert palabra_fuerte("Cero.", None, "explicacion") == ("CERO", 0.0)
+    assert palabra_fuerte("Y entonces la aspira de golpe.", "aspira", "revelacion")[0] == "ASPIRA"
+    assert palabra_fuerte("Y entonces la aspira de golpe.", "aspira", "explicacion") is None   # sin fuerza: nada
+    assert palabra_fuerte("Es un animal bastante tranquilo.", None, "explicacion") is None
+
+
+def test_dopamina_solo_con_la_version_2(estilo):
+    """Con la versión 2: cinta «sube el peligro» al pasar de animal (y «el último de la lista»); antes: nada nuevo."""
+    from test_peligro_tropical_edicion import _proyecto_niveles
+
+    from estudio.edicion import construir_edl
+
+    c, edl = _proyecto_niveles(estilo)
+    nuevos = {"palabra_golpe", "golpe", "sube_nivel"}
+    assert not [x for cl in edl["pistas"]["escenas"] for x in cl["efectos"] if x["efecto"] in nuevos]
+    p = c.cargar()
+    p.formula = "escala_peligro_v2"
+    c.guardar(p)
+    edl = construir_edl(c)
+    cintas = [x["texto"] for cl in edl["pistas"]["escenas"] for x in cl["efectos"] if x["efecto"] == "sube_nivel"]
+    assert cintas[-1] == "EL ÚLTIMO DE LA LISTA" and len(cintas) == 3 and cintas[0] == "SUBE EL PELIGRO"
+    # el subtítulo no se repite debajo de la cinta
+    ventanas = [(x["en"], x["en"] + x["dur"]) for cl in edl["pistas"]["escenas"] for x in cl["efectos"]
+                if x["efecto"] == "sube_nivel"]
+    for s in edl["pistas"]["subtitulos"]:
+        assert not any(min(s["fin"], b) - max(s["inicio"], a) > 0.3 for a, b in ventanas), s
+
+
+def test_se_dibujan_la_palabra_y_la_cinta():
+    from PIL import Image
+
+    from estudio import render_receta as RR
+
+    base = Image.new("RGB", (RR.W, RR.H), (40, 90, 60))
+    a = RR.palabra_golpe(base, {"texto": "OCHENTA KILOS", "cifra": True, "giro": 3, "dur": 1.0}, 0.3)
+    b = RR.sube_nivel(base, {"texto": "SUBE EL PELIGRO", "alto": False, "dur": 1.3}, 0.5)
+    assert a.size == base.size and a.getpixel((RR.W // 2, RR.H // 2)) != base.getpixel((RR.W // 2, RR.H // 2))
+    assert b.getpixel((RR.W // 2, int(RR.H * 0.80))) != base.getpixel((RR.W // 2, int(RR.H * 0.80)))

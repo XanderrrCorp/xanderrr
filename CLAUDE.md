@@ -320,9 +320,15 @@ Estado al 04-10-2026. El repositorio es PÚBLICO: nunca escribir claves, tokens 
   sin respiros, MISMA cantidad de imágenes). guionista.FORMULA_PELIGRO = v2: crear_video la guarda explícita y el
   formato escala_peligro apunta a v2. Los videos de antes (formula None o escala_peligro) siguen IGUAL (voz, edición
   y llamados). Volver atrás: FORMULA_PELIGRO y formato.json → "escala_peligro". Medido con imágenes de prueba: v3
-  solo baja de un cambio cada 1,3 s a 1,1 s; lo que de verdad falta para «más dopamina» son efectos NUEVOS (palabra
-  grande que salta en las palabras fuertes, golpe en los remates, momento «sube de nivel» entre animales): propuesto,
-  sin hacer. La muestra de voz a 1.4 (≈30-50 COP) NO se hizo: el dueño no la aprobó.
+  solo baja de un cambio cada 1,3 s a 1,1 s. La muestra de voz a 1.4 (≈30-50 COP) NO se hizo: el dueño no la aprobó.
+  (23-10) MÁS DOPAMINA (el dueño: «haz primero lo de la dopamina», antes del Paso D): PerfilEdicion.dopamina (True solo
+  en peligro_tropical_v3) → receta_pt.aplicar_dopamina: «palabra_golpe» (receta_pt.palabra_fuerte: cifra con unidad
+  «OCHENTA KILOS» en amarillo, frase de golpe de 1-3 palabras «CERO», o la palabra clave en revelación/amenaza/giro;
+  máx. una cada 4,5 s, 1 s al centro con rebote), «golpe» (zoom ×1,13 + sacudida 0,35 s en remates, sfx golpe_grave)
+  y «sube_nivel» (cinta naranja/roja «▲ SUBE EL PELIGRO / MÁS PELIGROSO / ESTO SE PONE SERIO / CUIDADO AQUÍ», en el
+  último «EL ÚLTIMO DE LA LISTA», sobre la tira al pasar de animal, con swoosh). Mientras salen, el subtítulo de
+  debajo se esconde. Dibujo en render_receta.palabra_golpe/sube_nivel; el golpe en render.py junto a temblor_corto.
+  Todo por código, sin costo. Hoja de cuadros revisada con imágenes de colores (scratchpad v3/demo.py).
 ## Pendiente
 - Preguntas sin responder del dueño: ¿en qué canal notó la voz lenta? (Peligro Tropical está en 1.3 en
   config/proveedores.json; Tracy en 1.0 por pedido suyo). ¿En qué momento sale «la tira de animales» sin sentido?

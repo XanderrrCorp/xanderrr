@@ -14,9 +14,22 @@ Se activa con `receta: true` en el perfil de edición (perfiles/peligro_tropical
 from __future__ import annotations
 
 import random
+import re
+import unicodedata
 
 LIKE_S = 100.0
 SUSCRIBIR_S = 180.0
+
+# (23-10) «más dopamina»: cada cuánto puede saltar una palabra grande y cuánto dura en pantalla
+CADA_PALABRA_S = 4.5
+DUR_PALABRA_S = 1.0
+_NUMEROS = (r"cero|uno|una|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez|once|doce|trece|catorce|quince|"
+            r"dieci\w+|veinte|veinti\w+|treinta|cuarenta|cincuenta|sesenta|setenta|ochenta|noventa|cien|ciento|"
+            r"\w*cientos|miles|\w+cientas|mil|millon|millones|medio|media|doble|triple")
+_UNIDADES = ("kilos?|kilogramos?|gramos?|toneladas?|metros?|centimetros?|kilometros?|litros?|anos|dias|horas|"
+             "minutos|segundos|grados|veces|dientes|patas|ojos|especies|personas|ataques|por ciento|kilometros por hora")
+CIFRA = re.compile(rf"\b((?:(?:{_NUMEROS})\b(?:\s+(?:y|de)\s+)?\s*)+(?:{_UNIDADES})\b)", re.I)
+TEXTOS_SUBE = ("SUBE EL PELIGRO", "MÁS PELIGROSO", "ESTO SE PONE SERIO", "CUIDADO AQUÍ")
 
 
 def veredicto(valor: int) -> tuple[str, bool]:
@@ -64,7 +77,7 @@ def palabras_con_tiempo(texto: str, a: float, b: float) -> list[list]:
 
 
 def aplicar(clips: list, textos: list, subtitulos: list, sfx: list, escenas: list, esc, sfx_fn,
-            valor_de, poses: dict, rng: random.Random, total: float) -> None:
+            valor_de, poses: dict, rng: random.Random, total: float, dopamina: bool = False) -> None:
     """Aplica la receta sobre la edición ya armada (modifica las listas en su lugar)."""
     niveles = sorted(n.numero for n in esc.niveles)
     n_niv = len(niveles)
@@ -184,6 +197,9 @@ def aplicar(clips: list, textos: list, subtitulos: list, sfx: list, escenas: lis
                                  "pose": pose})
             textos[:] = [t for t in textos if not (c["inicio"] <= t["inicio"] < c["fin"])]
 
+    if dopamina:
+        aplicar_dopamina(clips, escenas, sfx, sfx_fn, nivel, n_niv, rng)
+
     # --- subtítulos de 1 a 3 palabras con la palabra activa
     from .edicion import trozos_subtitulo
 
@@ -199,4 +215,89 @@ def aplicar(clips: list, textos: list, subtitulos: list, sfx: list, escenas: lis
             t1 = max(a + (b - a) * acum / largo, t0 + 0.2)
             nuevos.append({"inicio": round(t0, 3), "fin": round(t1, 3), "texto": tr, "escena": e.id,
                            "palabras": palabras_con_tiempo(tr, t0, t1)})
+    if dopamina:
+        # mientras salta la palabra grande o la cinta de «sube el peligro» no se repite el subtítulo debajo
+        ventanas = [(x["en"], x["en"] + x["dur"]) for c in clips for x in c["efectos"]
+                    if x["efecto"] in ("palabra_golpe", "sube_nivel")]
+        def tapado(s: dict) -> bool:
+            return any(min(s["fin"], b) - max(s["inicio"], a) > min(0.3, 0.5 * (s["fin"] - s["inicio"]))
+                       for a, b in ventanas)
+
+        nuevos = [s for s in nuevos if not tapado(s)]
     subtitulos[:] = nuevos
+
+
+# ------------------------------------------------------------------ (23-10) más dopamina
+
+def _sin_tildes(t: str) -> str:
+    return "".join(c for c in unicodedata.normalize("NFD", t) if unicodedata.category(c) != "Mn")
+
+
+def palabra_fuerte(narracion: str, palabra_clave: str | None, intencion: str) -> tuple[str, float] | None:
+    """La palabra (o frase corta) que salta en grande y en qué parte de la frase se dice (0 a 1):
+    1) una cifra con su unidad («ochenta kilos»); 2) una frase de golpe de 1 a 3 palabras («Cero.», «Nada.»);
+    3) la palabra clave en una revelación, amenaza o dato fuerte. Si no hay nada fuerte, None."""
+    plano = _sin_tildes(narracion)
+    m = CIFRA.search(plano)
+    if m and len(m.group(1).split()) <= 4:
+        a, b = m.span(1)
+        return narracion[a:b].strip().upper(), a / max(1, len(narracion))
+    palabras = narracion.split()
+    if 1 <= len(palabras) <= 3 and narracion.rstrip()[-1:] in ".!":
+        return narracion.strip().rstrip(".!").upper(), 0.0
+    if palabra_clave and intencion in ("revelacion", "amenaza", "dato_impactante", "giro", "advertencia"):
+        i = plano.lower().find(_sin_tildes(palabra_clave).lower())
+        if i >= 0:
+            return palabra_clave.upper(), i / max(1, len(narracion))
+    return None
+
+
+_OCUPADO = ("veredicto", "pero_espera", "cta_like", "cta_suscribir", "comentario", "final_personaje", "dato",
+            "etiqueta")
+
+
+def aplicar_dopamina(clips: list, escenas: list, sfx: list, sfx_fn, nivel: list, n_niv: int,
+                     rng: random.Random) -> None:
+    """Encima de la receta: palabra grande que salta, golpe con zoom en los remates y «sube el peligro» al pasar de un
+    animal al siguiente. Todo por código: no hay imágenes nuevas ni costo extra."""
+    ultima = -99.0
+    for idx, (c, e) in enumerate(zip(clips, escenas)):
+        if not _libre(c) or nivel[idx] is None:
+            continue
+        if any(x["efecto"] in _OCUPADO for x in c["efectos"]):
+            continue
+        fuerte = palabra_fuerte(e.narracion, e.palabra_clave, e.intencion)
+        if not fuerte:
+            continue
+        texto, donde = fuerte
+        a, b = e.tiempo.real_inicio, e.tiempo.real_fin
+        en = round(max(c["inicio"], a + (b - a) * donde - 0.05), 3)
+        dur = round(min(DUR_PALABRA_S, c["fin"] - en - 0.05), 3)
+        if dur < 0.6 or en - ultima < CADA_PALABRA_S or len(texto) > 26:
+            continue
+        ultima = en
+        corta = len(e.narracion.split()) <= 3
+        c["efectos"].append({"efecto": "palabra_golpe", "en": en, "dur": dur, "texto": texto,
+                             "cifra": bool(CIFRA.search(_sin_tildes(e.narracion))), "giro": round(rng.uniform(-5, 5), 1)})
+        if corta or e.intencion in ("revelacion", "giro", "dato_impactante"):
+            # remate: golpe con zoom y una sacudida corta
+            c["efectos"].append({"efecto": "golpe", "en": en, "dur": 0.35})
+            sfx_fn(sfx, "golpe_grave", en, idx, f"Golpe: remate «{texto}»")
+        else:
+            sfx_fn(sfx, "pop", en, idx, f"Pop: salta en grande «{texto}»")
+    # sube el peligro: al pasar al siguiente animal (no en el primero ni al repasar la tira del cierre)
+    vistos = 0
+    for idx, c in enumerate(clips):
+        t = next((x for x in c["efectos"] if x["efecto"] == "tira_deslizar_a_nivel" and not x.get("pasar")), None)
+        if not t:
+            continue
+        k = int(t["hasta"])
+        if k <= 1 or c["fin"] - c["inicio"] < 1.2:
+            continue
+        ultimo = n_niv and k == n_niv
+        texto = "EL ÚLTIMO DE LA LISTA" if ultimo else TEXTOS_SUBE[vistos % len(TEXTOS_SUBE)]
+        vistos += 0 if ultimo else 1
+        en = round(c["inicio"] + 0.15, 3)
+        c["efectos"].append({"efecto": "sube_nivel", "en": en, "dur": round(min(1.3, c["fin"] - en - 0.05), 3),
+                             "texto": texto, "alto": bool(n_niv and k > n_niv / 2)})
+        sfx_fn(sfx, "barrido", en, idx, f"Swoosh: {texto.lower()}")
