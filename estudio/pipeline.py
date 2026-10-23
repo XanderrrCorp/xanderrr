@@ -51,9 +51,10 @@ _CERROJO = threading.Lock()
 
 
 def _perfil(c):
-    from .estilos import cargar_estilo, cargar_perfil_edicion
+    from .estilos import cargar_estilo, perfil_del_proyecto
 
-    return cargar_perfil_edicion(cargar_estilo(c.cargar().estilo))
+    p = c.cargar()
+    return perfil_del_proyecto(p, cargar_estilo(p.estilo))
 
 
 def ocupado(slug: str) -> bool:
@@ -150,7 +151,9 @@ def crear_video(tema: str, giro: str, villano: str, minutos: float, notas: str =
     p = c.cargar()
     p.notas = [f"giro: {giro}", f"villano: {villano}", f"notas: {notas}"]
     p.disfraz_mascota = bool(disfraz)
-    p.formula = formula or None
+    from .guionista import FORMULA_PELIGRO
+
+    p.formula = formula or FORMULA_PELIGRO          # (23-10) se guarda explícita: la voz y la edición la leen
     p.modo_mapa = bool(modo_mapa)
     c.guardar(p)
     _copiar_mascota(c, estilo_id)

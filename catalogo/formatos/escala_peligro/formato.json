@@ -1,7 +1,7 @@
 {
   "nombre": "Escala de peligro",
   "descripcion": "Del más inofensivo al que nunca deberías tocar: niveles con tira que se desliza, mini historias y una revelación al final.",
-  "formula": "escala_peligro",
+  "formula": "escala_peligro_v2",
   "estilo": "",
   "perfil": "",
   "duraciones_min": [6, 9, 11],

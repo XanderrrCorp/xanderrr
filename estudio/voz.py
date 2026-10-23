@@ -144,7 +144,8 @@ class VozMiniMax:
         return bytes.fromhex(audio), caracteres
 
 
-def pausa_despues(actual: Escena, siguiente: Escena | None) -> float:
+def pausa_despues(actual: Escena, siguiente: Escena | None, factor: float = 1.0) -> float:
+    """Silencio después de una escena. `factor` < 1 acorta las pausas (voz más rápida de la escala v2, 23-10)."""
     if siguiente is None:
         return 0.8
     p = 0.32
@@ -154,18 +155,35 @@ def pausa_despues(actual: Escena, siguiente: Escena | None) -> float:
         p = max(p, 0.5)          # silencio breve antes de revelar (14.5)
     if actual.narracion.rstrip().endswith("?"):
         p = max(p, 0.45)
-    return p + actual.pausa_despues_seg
+    return p * factor + actual.pausa_despues_seg
+
+
+def voz_de_la_formula(proyecto) -> dict:
+    """Velocidad y pausas que pide la fórmula del video (23-10: la escala v2 va a 1,4 y con pausas ×0,75). Solo si el
+    video tiene su fórmula guardada: los videos de antes quedan con la voz de siempre (y no se vuelve a pagar)."""
+    if not getattr(proyecto, "formula", None):
+        return {}
+    from .guionista import cargar_formula
+
+    try:
+        return dict(cargar_formula(proyecto.formula).get("voz") or {})
+    except FileNotFoundError:
+        return {}
 
 
 def generar_voz(carpeta: CarpetaProyecto, ffmpeg: str, voz=None, config: ConfigCostos | None = None,
                 permiso: bool = False, avisar=print) -> dict:
     config = config or ConfigCostos.cargar()
+    de_formula = voz_de_la_formula(carpeta.cargar())
     if voz is None:
         ajustes = dict(leer_config("proveedores.json")["voz"])
         from .plataforma.consultas import voz_del_canal
 
         ajustes.update(voz_del_canal(carpeta.cargar().canal) or {})   # (21-10) la voz elegida para el canal
+        if de_formula.get("velocidad"):
+            ajustes["velocidad"] = float(de_formula["velocidad"])
         voz = VozMiniMax(config, ajustes)
+    factor_pausas = float(de_formula.get("pausas") or 1.0)
     esc = carpeta.cargar_escenas()
     libro = carpeta.libro(config)
     dir_audio = carpeta.ruta / "audio" / "grupos"
@@ -205,7 +223,8 @@ def generar_voz(carpeta: CarpetaProyecto, ffmpeg: str, voz=None, config: ConfigC
     pista, tiempos, t = [], {}, 0.0
     for i, (e, x) in enumerate(piezas):
         sig = piezas[i + 1][0] if i + 1 < len(piezas) else None
-        pausa = pausa_despues(e, sig) if (sig is None or sig.id not in _mismo_grupo(grupos, e)) else 0.12
+        pausa = (pausa_despues(e, sig, factor_pausas) if (sig is None or sig.id not in _mismo_grupo(grupos, e))
+                 else 0.12)
         tiempos[e.id] = (round(t, 3), round(t + len(x) / SR, 3))
         pista.append(x)
         pista.append(np.zeros(int(pausa * SR), np.float32))

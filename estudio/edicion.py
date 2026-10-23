@@ -29,7 +29,7 @@ from pathlib import Path
 from .config import escribir_json, leer_json
 from .escala_peligro import valor_por_posicion
 from .esquemas import EDL, EscenasV2, Estilo
-from .estilos import cargar_gramatica, cargar_perfil_edicion
+from .estilos import cargar_gramatica, cargar_perfil_edicion, perfil_del_proyecto
 from .proyecto import CarpetaProyecto
 
 FPS = 30
@@ -609,7 +609,7 @@ def construir_edl(carpeta: CarpetaProyecto) -> dict:
     gram = cargar_gramatica(estilo)["reglas"]
     esc: EscenasV2 = carpeta.cargar_escenas()
     vertical = esc.relacion_aspecto == "9:16"
-    perfil = cargar_perfil_edicion(estilo, PERFIL_SHORT if vertical else None)
+    perfil = cargar_perfil_edicion(estilo, PERFIL_SHORT) if vertical else perfil_del_proyecto(proyecto, estilo)
     clasica = perfil.estilo_edicion == "clasica"
     # «movido»: la clásica con todo su movimiento. Con movimiento «sin_vaiven» (Paradoja Sapiens) se queda
     # todo lo que da dopamina (zooms de golpe, entradas con rebote, ráfagas, pops y swoosh) pero la imagen

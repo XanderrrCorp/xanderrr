@@ -1,6 +1,6 @@
 """Llamados a comentar en los guiones de escala (17-10, pedido del dueño para Peligro Tropical).
 
-Cinco llamados fijos, integrados en la narración (sin escenas ni imágenes nuevas, máximo ~30 s en total):
+Cinco llamados fijos (la versión 2 de la escala, 23-10, usa 3: apuesta, experiencia y cierre), integrados en la narración (sin escenas ni imágenes nuevas, máximo ~30 s en total):
 apuesta (adivinar el último de la lista con 3 opciones), experiencia personal, debate sobre el orden, país y cierre
 («¿qué animal quieres en la próxima escala?»). Claude marca cada línea de un llamado con «[COMENTA:<tipo>]»; Xandart
 revisa que estén los 5 y que no pasen de MAX_PALABRAS, y QUITA las etiquetas antes de guardar el guion: nunca llegan
@@ -44,38 +44,51 @@ def posicion_correcta(tema: str) -> int:
     return int(hashlib.sha1(tema.strip().lower().encode()).hexdigest(), 16) % 3 + 1
 
 
-def instruccion(tema: str) -> str:
-    pos = posicion_correcta(tema)
-    return f"""
-== LLAMADOS A COMENTAR (OBLIGATORIOS, aunque las notas no los pidan) ==
-Mete EXACTAMENTE estos 5 llamados dentro de la narración, en tono natural de amigo, sin sonar a anuncio y sin
-cortar el ritmo. No agregan secciones ni animales: van dentro de la sección que se indica. Escribe CADA línea que
-forme parte de un llamado empezando con su etiqueta, por ejemplo «[COMENTA:apuesta] Antes de seguir…» (la etiqueta
-no se lee en voz alta: el sistema la quita). Entre los 5 llamados, máximo {MAX_PALABRAS} palabras en total.
-1. [COMENTA:apuesta] Al final de la sección Gancho (justo antes del primer animal): pide adivinar cuál es el último
+# Lo que se le pide a Claude en cada llamado (la versión 2 de la escala usa solo apuesta, experiencia y cierre)
+PEDIDOS = {
+    "apuesta": lambda pos: f"""Al final de la sección Gancho (justo antes del primer animal): pide adivinar cuál es el último
    de la lista con 3 opciones ya escritas para copiar; una es la correcta (el último animal de verdad) y va en la
    {ORDINALES[pos]} posición. Solo aquí puedes decir «el último de la lista, el número ocho» (o el número que sea).
    Ejemplo: «Antes de seguir, escribe en los comentarios cuál crees que es el último de la lista, el número ocho:
-   ¿pitón, anaconda o cachalote? Al final vemos quién acertó.»
-2. [COMENTA:experiencia] En la sección del animal más cotidiano o conocido de la lista: pide que comenten una
+   ¿pitón, anaconda o cachalote? Al final vemos quién acertó.»""",
+    "experiencia": lambda pos: """En la sección del animal más cotidiano o conocido de la lista: pide que comenten una
    experiencia propia CON ESE MISMO ANIMAL (nómbralo) con una palabra corta lista para copiar, dicha en voz (sin
    emojis: la voz no los lee).
-   Ejemplo: «Si alguna vez te picó una avispa, escribe sobreviviente en los comentarios.»
-3. [COMENTA:debate] En el puesto más discutible del orden: reconoce en voz alta que habrá desacuerdo y pregunta
-   «¿tú dónde lo pondrías?». El debate es sobre el ORDEN, nunca sobre los hechos: no metas datos falsos a propósito.
-4. [COMENTA:pais] En la sección del animal que cae a mitad del video: «Escribe desde qué país nos ves y te digo cuál
-   de estos animales vive cerca de ti.»
-5. [COMENTA:cierre] En la sección Cierre, como pregunta final (en lugar de «¿cuál te dio más miedo?»), con estas
+   Ejemplo: «Si alguna vez te picó una avispa, escribe sobreviviente en los comentarios.»""",
+    "debate": lambda pos: """En el puesto más discutible del orden: reconoce en voz alta que habrá desacuerdo y pregunta
+   «¿tú dónde lo pondrías?». El debate es sobre el ORDEN, nunca sobre los hechos: no metas datos falsos a propósito.""",
+    "pais": lambda pos: """En la sección del animal que cae a mitad del video: «Escribe desde qué país nos ves y te digo cuál
+   de estos animales vive cerca de ti.»""",
+    "cierre": lambda pos: """En la sección Cierre, como pregunta final (en lugar de «¿cuál te dio más miedo?»), con estas
    palabras exactas (aquí SÍ se dice «escala», es pedido del dueño):
-   «¿Qué animal quieres en la próxima escala? El más pedido sale en el siguiente video.»
+   «¿Qué animal quieres en la próxima escala? El más pedido sale en el siguiente video.»""",
+}
+EJEMPLOS_PEDIDO = {"apuesta": "Yo digo que es la anaconda", "experiencia": "SOBREVIVIENTE",
+                   "debate": "Yo lo pondría de primero", "pais": "Desde México", "cierre": "¡Quiero ver los tiburones!"}
+NUMEROS = {1: "el", 2: "estos 2", 3: "estos 3", 4: "estos 4", 5: "estos 5"}
+
+
+def maximo_palabras(tipos=TIPOS) -> int:
+    """85 palabras para los 5; proporcional si son menos (3 llamados ≈ 55)."""
+    return round(MAX_PALABRAS * len(tipos) / len(TIPOS))
+
+
+def instruccion(tema: str, tipos=TIPOS) -> str:
+    pos = posicion_correcta(tema)
+    tipos = tuple(tipos)
+    lista = "\n".join(f"{k}. [COMENTA:{t}] {PEDIDOS[t](pos)}" for k, t in enumerate(tipos, 1))
+    ejemplos = "\n".join(f"EJEMPLO: {t} | {EJEMPLOS_PEDIDO[t]}" for t in tipos)
+    return f"""
+== LLAMADOS A COMENTAR (OBLIGATORIOS, aunque las notas no los pidan) ==
+Mete EXACTAMENTE {NUMEROS.get(len(tipos), str(len(tipos)))} llamados dentro de la narración, en tono natural de amigo, sin sonar a anuncio y sin
+cortar el ritmo. No agregan secciones ni animales: van dentro de la sección que se indica. Escribe CADA línea que
+forme parte de un llamado empezando con su etiqueta, por ejemplo «[COMENTA:apuesta] Antes de seguir…» (la etiqueta
+no se lee en voz alta: el sistema la quita). Entre los {len(tipos)} llamados, máximo {maximo_palabras(tipos)} palabras en total.
+{lista}
 Después del TITULO escribe además, para el cuadro de comentario animado que sale en pantalla, UNA línea por llamado
 con lo que escribiría un espectador (máximo {MAX_EJEMPLO} caracteres, sin emojis; en la apuesta, una opción que NO
 sea la correcta, para no regalar la respuesta):
-EJEMPLO: apuesta | Yo digo que es la anaconda
-EJEMPLO: experiencia | SOBREVIVIENTE
-EJEMPLO: debate | Yo lo pondría de primero
-EJEMPLO: pais | Desde México
-EJEMPLO: cierre | ¡Quiero ver los tiburones!
+{ejemplos}
 Y escribe UNA línea:
 COMENTARIO_FIJADO: <revela la respuesta de la apuesta con un emoji del animal y repite la pregunta del cierre>
 Ejemplo: «COMENTARIO_FIJADO: El número 8 era el cachalote 🐋 ¿Acertaste? Y dime: ¿qué animal quieres en la próxima
@@ -134,14 +147,16 @@ def _palabras(texto: str) -> int:
     return len(texto.split())
 
 
-def problemas(historia: dict, fijado: str | None = None) -> list[str]:
+def problemas(historia: dict, fijado: str | None = None, tipos=TIPOS) -> list[str]:
     """Lo que falla en los llamados (vacío = todo bien)."""
     marcados = encontrar(historia)
-    tipos = {x["tipo"] for x in marcados}
-    salida = [f"falta el llamado «{t}»" for t in TIPOS if t not in tipos]
+    vistos = {x["tipo"] for x in marcados}
+    salida = [f"falta el llamado «{t}»" for t in tipos if t not in vistos]
+    salida += [f"sobra el llamado «{t}» (quítalo)" for t in sorted(vistos) if t not in tipos]
     total = sum(_palabras(x["texto"]) for x in marcados)
-    if total > MAX_PALABRAS:
-        salida.append(f"los llamados suman {total} palabras y el máximo es {MAX_PALABRAS}: acórtalos")
+    maximo = maximo_palabras(tipos)
+    if total > maximo:
+        salida.append(f"los llamados suman {total} palabras y el máximo es {maximo}: acórtalos")
     villano = next((n for n in historia.get("niveles", []) if n.get("villano")), None)
     apuesta = " ".join(x["texto"] for x in marcados if x["tipo"] == "apuesta").lower()
     if villano and apuesta and not _menciona(apuesta, villano["nombre"]):
@@ -177,7 +192,7 @@ def comentario_fijado(fijado: str | None, historia: dict) -> str:
     return texto
 
 
-def correccion(lista: list[str]) -> str:
+def correccion(lista: list[str], tipos=TIPOS) -> str:
     return ("\n\n== CORRIGE LOS LLAMADOS A COMENTAR ==\nTu guion anterior tiene estos problemas con los llamados:\n- "
-            + "\n- ".join(lista) + "\nDevuelve la historia completa en el mismo formato, con los 5 llamados "
+            + "\n- ".join(lista) + f"\nDevuelve la historia completa en el mismo formato, con los {len(tipos)} llamados "
             "etiquetados y la línea COMENTARIO_FIJADO. No cambies los animales ni el resto del texto.")

@@ -309,6 +309,20 @@ Estado al 04-10-2026. El repositorio es PÚBLICO: nunca escribir claves, tokens 
   y respaldo. Admin: /admin y /api/v2/admin/* (menos copias). tests/test_permisos_rutas.py falla si una dirección
   nueva no tiene regla. Interfaz: api.conectado/esDueno/esAdmin esconden menú y botones (Ajustes, Liberar espacio,
   Miniatura, Revisar, Media muestra «pronto» a beta). FALTA Paso D: las rutas de videos aún usan la carpeta de siempre.
+- (23-10) PELIGRO TROPICAL v2 (pedido del dueño tras mandar el guion de un video de tortugas de la competencia, en
+  inglés: «quiero estructuras como esta, en español, voz más rápida y más dopaminérgico»; eligió VERSIÓN NUEVA y 3
+  llamados en vez de 5 porque 5 en 8 min satura): catalogo/formulas/escala_peligro_v2 (de lo tierno a lo monstruoso,
+  SIN «probabilidad» ni «¿cuántos ataques? cero»; gancho con algo que el espectador conoce + misterio del último +
+  promesa del recorrido; tensión que sube en voz alta; ejemplos escritos desde cero, NADA del texto de la
+  competencia). La fórmula trae «llamados» (apuesta, experiencia, cierre; máx. ≈51 palabras: llamados.maximo_palabras),
+  «voz» {velocidad 1.4, pausas ×0.75} (voz.voz_de_la_formula, solo si el video tiene su fórmula guardada) y «perfiles»
+  {peligro_tropical_v2 → peligro_tropical_v3} (estilos.perfil_del_proyecto; v3 = interrupción cada 1,8 s, 30 sfx/min,
+  sin respiros, MISMA cantidad de imágenes). guionista.FORMULA_PELIGRO = v2: crear_video la guarda explícita y el
+  formato escala_peligro apunta a v2. Los videos de antes (formula None o escala_peligro) siguen IGUAL (voz, edición
+  y llamados). Volver atrás: FORMULA_PELIGRO y formato.json → "escala_peligro". Medido con imágenes de prueba: v3
+  solo baja de un cambio cada 1,3 s a 1,1 s; lo que de verdad falta para «más dopamina» son efectos NUEVOS (palabra
+  grande que salta en las palabras fuertes, golpe en los remates, momento «sube de nivel» entre animales): propuesto,
+  sin hacer. La muestra de voz a 1.4 (≈30-50 COP) NO se hizo: el dueño no la aprobó.
 ## Pendiente
 - Preguntas sin responder del dueño: ¿en qué canal notó la voz lenta? (Peligro Tropical está en 1.3 en
   config/proveedores.json; Tracy en 1.0 por pedido suyo). ¿En qué momento sale «la tira de animales» sin sentido?

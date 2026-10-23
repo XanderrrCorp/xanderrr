@@ -112,7 +112,7 @@ def test_formatos_del_catalogo_y_del_canal(tmp_path):
     assert r["catalogo"]["formatos"] >= 1
     with db.sesion() as s:
         f = s.scalar(select(Formato).where(Formato.clave == "escala_peligro"))
-        assert f.espacio_id is None and f.datos["formula"] == "escala_peligro"
+        assert f.espacio_id is None and f.datos["formula"] == "escala_peligro_v2"   # (23-10) Peligro Tropical usa la versión 2
         canal = s.scalar(select(Canal))
         assert canal.formato_id == f.id and s.scalar(select(Video)).formato_id == f.id
     cli = TestClient(modulo_app.app)

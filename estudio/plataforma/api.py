@@ -150,7 +150,7 @@ def cambiar_ajuste_canal(canal_id: str, a: AjusteCanal, q: Quien = Depends(usuar
 
 # (22-10) recursos del catálogo que en realidad son las fórmulas de los canales del dueño: solo el OWNER los ve (salen
 # en su grupo «Tu estudio»); nadie más los recibe, ni en la lista ni por ID. Los genéricos llegan en el Paso E.
-DEL_DUENO = {"formatos": {"escala_peligro", "paradoja_documental"}, "formulas": {"escala_peligro", "paradoja_documental"},
+DEL_DUENO = {"formatos": {"escala_peligro", "paradoja_documental"}, "formulas": {"escala_peligro", "escala_peligro_v2", "paradoja_documental"},
              "plantillas": {"escala_2x3"}}
 # módulos privados del dueño: sus nombres y rutas solo viajan en /api/v2/estudio, nunca en el código de la página
 MODULOS_DEL_DUENO = [

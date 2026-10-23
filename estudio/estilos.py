@@ -53,5 +53,21 @@ def cargar_perfil_edicion(estilo: Estilo, ruta: str | None = None) -> PerfilEdic
     return PerfilEdicion.model_validate(leer_json(_ruta_perfil(ruta or estilo.perfil_edicion)))
 
 
+def perfil_del_proyecto(proyecto, estilo: Estilo) -> PerfilEdicion:
+    """El perfil del estilo, salvo que la fórmula del video lo cambie (23-10: la versión 2 de la escala de Peligro
+    Tropical usa uno más movido). Solo cambia los perfiles que la fórmula nombra; los demás quedan igual."""
+    ruta = estilo.perfil_edicion
+    if getattr(proyecto, "formula", None):
+        from .guionista import cargar_formula
+
+        try:
+            cambio = (cargar_formula(proyecto.formula).get("perfiles") or {}).get(Path(ruta).stem)
+        except FileNotFoundError:
+            cambio = None
+        if cambio:
+            ruta = f"perfiles/{cambio}.json"
+    return cargar_perfil_edicion(estilo, ruta)
+
+
 def cargar_gramatica(estilo: Estilo) -> dict:
     return leer_json(RAIZ / estilo.gramatica_edicion)
