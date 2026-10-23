@@ -298,6 +298,17 @@ Estado al 04-10-2026. El repositorio es PÚBLICO: nunca escribir claves, tokens 
   Interfaz: paginas/Entrar.tsx (crear / entrar / cambiar temporal), MiCuenta.tsx (/cuenta: cambiar contraseña y
   salir; /cuentas: cuentas beta, la temporal se muestra UNA vez con «Copiar»); api.ts lanza «xandart:sin-sesion»
   ante un 401 y App vuelve a la pantalla de entrar. Correo de avisos con 127.0.0.1 (no localhost: otra galleta).
+  PASO C (23-10, PERMISOS POR RUTA): plataforma/permisos_rutas.py = REGLAS (métodos, plantilla, nivel libre|sesion|
+  admin|owner; gana la primera); SIN regla = solo owner. PRIVADAS_APP: los archivos de la página de Tracy/Calma/
+  Explica/Cola (/app/assets/<Nombre>-*.js) solo al dueño. acceso.PuertaDeEntrada: «libre» sale de estas reglas; con
+  sesión, si el rol no alcanza → 403 «Esto no está disponible en tu cuenta.» (páginas → /app/). /api/apagar libre
+  solo sin galleta, sin Origin y desde este PC (el acceso directo). Beta: cuenta, créditos, canales, recursos,
+  personajes, avisos, reportes, videos (crear/guion/imágenes/video/escenas/editor/animar/short, /archivos).
+  Solo owner: módulos privados, miniaturas de hoy (escala 2x3 y texto+retrato; la genérica llega en Bloque 2),
+  revisar (gasta su plan de Claude), Ajustes (/), claves, Google, biblioteca, espacio, copias, importar, estado-local
+  y respaldo. Admin: /admin y /api/v2/admin/* (menos copias). tests/test_permisos_rutas.py falla si una dirección
+  nueva no tiene regla. Interfaz: api.conectado/esDueno/esAdmin esconden menú y botones (Ajustes, Liberar espacio,
+  Miniatura, Revisar, Media muestra «pronto» a beta). FALTA Paso D: las rutas de videos aún usan la carpeta de siempre.
 ## Pendiente
 - Preguntas sin responder del dueño: ¿en qué canal notó la voz lenta? (Peligro Tropical está en 1.3 en
   config/proveedores.json; Tracy en 1.0 por pedido suyo). ¿En qué momento sale «la tira de animales» sin sentido?

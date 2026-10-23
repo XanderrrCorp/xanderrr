@@ -222,23 +222,23 @@ def _quien_en_pruebas() -> Conectado:
 
 # ------------------------------------------------------------------ la puerta
 
-# Sin sesión solo se puede: ver la página (sus archivos, sin datos), entrar y preguntar si hay sesión
-_LIBRES_GET = ("/app", "/web/", "/favicon.ico")
-_LIBRES_API = {"/api/v2/sesion", "/api/v2/entrar", "/api/v2/salir", "/api/v2/crear-clave-dueno", "/api/version"}
+# Sin sesión solo se puede lo que permisos_rutas marca «libre»: ver la página (sus archivos, sin datos ni las
+# pantallas privadas del dueño), entrar y preguntar si hay sesión. Además:
 # mientras se hace la copia y se actualiza la base, la página puede mostrar el avance (sin datos de nadie)
 _LIBRES_PREPARANDO = {"/api/v2/estado-local", "/api/v2/respaldo"}
 
 
-def _libre(metodo: str, ruta: str, cabeceras: dict[bytes, bytes]) -> bool:
-    if ruta in _LIBRES_API:
-        return True
-    if metodo in ("GET", "HEAD") and (ruta == "/app" or ruta.startswith("/app/") or ruta.startswith("/web/")
-                                      or ruta == "/favicon.ico"):
+def _libre(metodo: str, ruta: str, cabeceras: dict[bytes, bytes], scope=None) -> bool:
+    from .permisos_rutas import LIBRE, nivel
+
+    if nivel(metodo, ruta) == LIBRE:
         return True
     if ruta in _LIBRES_PREPARANDO and metodo == "GET" and db.PREPARANDO:
         return True
     # el acceso directo apaga un Xandart viejo antes de abrir el nuevo (sin navegador: sin cabecera Origin)
-    if ruta == "/api/apagar" and metodo == "POST" and b"origin" not in cabeceras:
+    # (con galleta ya no: quien entró por el navegador necesita ser el dueño, como manda permisos_rutas)
+    if (ruta == "/api/apagar" and metodo == "POST" and b"origin" not in cabeceras and _galleta(cabeceras) is None
+            and scope and desde_este_pc(scope)):
         return True
     return False
 
@@ -273,7 +273,8 @@ def desde_este_pc(scope) -> bool:
 
 class PuertaDeEntrada:
     """Revisa la sesión en cada petición. Sin sesión: las llamadas reciben 401 («Inicia sesión») y las páginas
-    viejas (/, /admin, archivos) llevan a la pantalla de entrar y luego vuelven a donde iban."""
+    viejas (/, /admin, archivos) llevan a la pantalla de entrar y luego vuelven a donde iban. Con sesión, cada ruta
+    pide su nivel (permisos_rutas.py; sin regla = solo el dueño): si no alcanza, 403 o vuelta a /app/."""
 
     def __init__(self, siguiente):
         self.siguiente = siguiente
@@ -293,13 +294,24 @@ class PuertaDeEntrada:
         else:
             token = _galleta(cabeceras)
             quien = await run_in_threadpool(_resolver, token) if token else None
-        if quien is None and not _libre(metodo, ruta, cabeceras):
-            if ruta.startswith("/api/") or metodo not in ("GET", "HEAD"):
+        es_pagina = not ruta.startswith(("/api/", "/app/assets/")) and metodo in ("GET", "HEAD")
+        if _libre(metodo, ruta, cabeceras, scope):
+            pass
+        elif quien is None:
+            if not es_pagina:
                 r = JSONResponse({"detail": "Inicia sesión para continuar."}, status_code=401)
             else:
                 volver = ruta + (("?" + scope["query_string"].decode("latin-1")) if scope.get("query_string") else "")
                 r = RedirectResponse(f"/app/entrar?volver={quote(volver, safe='')}", status_code=303)
             return await r(scope, receive, send)
+        else:
+            # (Paso C) permisos por ruta: lo que no tiene regla es solo del dueño (permisos_rutas.py)
+            from . import permisos_rutas as P
+
+            if not P.permitido(quien.rol, P.nivel(metodo, ruta)):
+                r = (RedirectResponse("/app/", status_code=303) if es_pagina else
+                     JSONResponse({"detail": "Esto no está disponible en tu cuenta."}, status_code=403))
+                return await r(scope, receive, send)
         marca = _actual.set(quien)
         try:
             await self.siguiente(scope, receive, send)

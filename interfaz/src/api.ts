@@ -22,6 +22,11 @@ export async function api<T = unknown>(ruta: string, opciones: { metodo?: string
   return datos as T;
 }
 
+/** (Paso C) Quién está conectado: la página esconde lo que su cuenta no puede usar (el servidor igual lo cierra). */
+export const conectado = { rol: '' };
+export const esDueno = () => conectado.rol === 'owner';
+export const esAdmin = () => conectado.rol === 'owner' || conectado.rol === 'admin';
+
 /** El último error que vio la persona (para adjuntarlo al reportar un problema). */
 export const ultimoError = { texto: '' };
 
@@ -32,7 +37,7 @@ export function humano(estado: number, detalle?: unknown): string {
     return 'El servicio está muy ocupado en este momento. Espera un par de minutos y vuelve a intentarlo; no se te cobró.';
   if (texto && !/Traceback|Exception|Error\(|errno|\{\s*"/.test(texto)) return texto;
   if (estado === 404) return 'No encontramos eso. Puede que se haya movido o borrado.';
-  if (estado === 403) return 'No tienes permiso para hacer esto.';
+  if (estado === 403) return 'Esto no está disponible en tu cuenta.';
   if (estado === 402) return 'No tienes créditos suficientes para esto.';
   if (estado >= 500) return 'Algo falló de nuestro lado. Vuelve a intentarlo; si se repite, avísanos.';
   return 'No se pudo completar. Revisa los datos y vuelve a intentarlo.';

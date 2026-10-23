@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link, Navigate, useNavigate, useParams } from 'react-router-dom';
-import { api, archivo, paginaVieja, type Escena, type VideoDetalle } from '../api';
+import { api, archivo, esDueno, paginaVieja, type Escena, type VideoDetalle } from '../api';
 import { Icono } from '../componentes/Icono';
 import { Costo } from '../componentes/Costo';
 
@@ -84,7 +84,7 @@ export function Revision() {
       <div className="rev-cab">
         <Link to="/videos" className="tenue pequeno">← Mis videos</Link>
         <span className="crece" />
-        {guionOk && !v.vertical && <Link className="boton-borde pequeno" to={`/videos/${slug}/miniatura`}>Miniatura</Link>}
+        {esDueno() && guionOk && !v.vertical && <Link className="boton-borde pequeno" to={`/videos/${slug}/miniatura`}>Miniatura</Link>}
         <span className="chip-gasto">Gastado: {v.costo}</span>
       </div>
       <h1 className="rev-titulo">{v.titulo}</h1>
@@ -125,9 +125,9 @@ export function Revision() {
               if (window.confirm('Claude escribe un short vertical de unos 40 s con el nivel del villano, usando las mismas imágenes (solo se paga la voz, unos pocos pesos). ¿Lo hago?')) accion('short');
             }}>Sacar un short vertical</button>}
             {v.puede_short && <Costo accion="short" />}
-            <button className="boton-borde" onClick={() => {
+            {esDueno() && <button className="boton-borde" onClick={() => {
               if (window.confirm('Claude mira 24 cuadros del video y te avisa si ve errores (personaje dentro de una escena en primera persona, textos cortados, imágenes que no cuadran…). No cuesta pesos; gasta un poco de tu plan de Claude. ¿Lo reviso?')) accion('revisar');
-            }}>{v.revision_video ? 'Revisar otra vez' : 'Revisar antes de subir'}</button>
+            }}>{v.revision_video ? 'Revisar otra vez' : 'Revisar antes de subir'}</button>}
           </div>
           {v.revision_video && (
             <div className={v.revision_video.problemas.length ? 'rev-aviso' : ''}>
@@ -197,7 +197,7 @@ export function Revision() {
       {v.creditos_fotos && <CreditosFotos texto={v.creditos_fotos} />}
       {guionOk && <GuionCompleto v={v} />}
       {guionOk && <Escenas v={v} conImagenes={imgOk} bloqueado={trabajando} slug={slug} alRegenerar={(id, inst) => accion(`escenas/${id}/regenerar`, { instruccion: inst })} />}
-      <p className="tenue pequeno" style={{ marginTop: 24 }}>¿Algo no está aquí? <a href={paginaVieja(slug)}>Ábrelo en la página de siempre</a>.</p>
+      {esDueno() && <p className="tenue pequeno" style={{ marginTop: 24 }}>¿Algo no está aquí? <a href={paginaVieja(slug)}>Ábrelo en la página de siempre</a>.</p>}
     </div>
   );
 }

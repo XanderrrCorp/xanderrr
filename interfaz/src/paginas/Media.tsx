@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { api, paginaVieja } from '../api';
+import { api, esDueno, paginaVieja } from '../api';
 import { Esqueleto, ErrorAmable, Vacio } from '../componentes/Estados';
 
 interface Audio { huella: string; clase: string; tipo: string; nombre_original: string; licencia: string; fuente: string }
@@ -10,8 +10,17 @@ export function Media() {
   const [error, setError] = useState('');
   const [clase, setClase] = useState<'musica' | 'sfx'>('musica');
   const cargar = () => api<{ archivos: Audio[] }>('/api/biblioteca').then((r) => setArchivos(r.archivos)).catch((e) => { setError(e.message); setArchivos([]); });
-  useEffect(() => { cargar(); }, []);
+  useEffect(() => { if (esDueno()) cargar(); }, []);
   const lista = (archivos ?? []).filter((a) => a.clase === clase);
+  // (Paso C) la biblioteca de sonidos es la del dueño (con sus licencias); la tuya llega más adelante
+  if (!esDueno()) {
+    return (
+      <div className="pagina"><h1>Media</h1>
+        <Vacio icono="sonidos" titulo="Pronto podrás subir tu música"
+          texto="Mientras tanto, tus videos usan los efectos de sonido que Xandart genera solo, sin problemas de derechos." />
+      </div>
+    );
+  }
   return (
     <div className="pagina">
       <div className="seccion-cab" style={{ marginTop: 0 }}><h1>Media</h1>

@@ -60,8 +60,10 @@ export function Lateral({ cuenta }: { cuenta: Cuenta | null }) {
         <Enlace i={{ nombre: 'Historial de créditos', icono: 'videos', ir: '/creditos' }} />
         {cuenta?.usuario.admin && <Enlace i={{ nombre: 'Cuentas beta', icono: 'personajes', ir: '/cuentas' }} />}
         {cuenta?.usuario.admin && <Enlace i={{ nombre: 'Admin', icono: 'admin', ir: '/admin', fuera: true }} />}
-        <Enlace i={{ nombre: 'Liberar espacio', icono: 'proyectos', ir: '/espacio' }} />
-        <Enlace i={{ nombre: 'Ajustes', icono: 'ajustes', ir: paginaVieja(), fuera: true }} />
+        {cuenta?.usuario.rol === 'owner' && <>
+          <Enlace i={{ nombre: 'Liberar espacio', icono: 'proyectos', ir: '/espacio' }} />
+          <Enlace i={{ nombre: 'Ajustes', icono: 'ajustes', ir: paginaVieja(), fuera: true }} />
+        </>}
         {cuenta && (
           <NavLink to="/cuenta" className="lat-cuenta" title="Mi cuenta: cambiar contraseña o cerrar sesión">
             <span className="avatar">{nombre.slice(0, 1).toUpperCase()}</span>

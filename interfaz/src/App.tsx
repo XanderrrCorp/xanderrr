@@ -1,6 +1,6 @@
 import { lazy, Suspense, useEffect, useState } from 'react';
 import { Navigate, Route, Routes, useNavigate, useSearchParams } from 'react-router-dom';
-import { api, type Cuenta, type EstadoLocal, type Sesion } from './api';
+import { api, conectado, esDueno, type Cuenta, type EstadoLocal, type Sesion } from './api';
 import { Barra } from './componentes/Barra';
 import { Lateral } from './componentes/Lateral';
 import { Canales } from './paginas/Canales';
@@ -64,6 +64,7 @@ export function App() {
       ir(dentro, { replace: true });
     }} />;
   }
+  conectado.rol = sesion.usuario?.rol ?? '';
   return <Marco />;
 }
 
@@ -72,6 +73,7 @@ function Marco() {
   const [prep, setPrep] = useState<EstadoLocal | null>(null);
   useEffect(() => {
     // la primera vez la plataforma hace la copia de seguridad y registra tus videos: se avisa hasta que termine
+    if (!esDueno()) return;            // la copia y la preparación de este PC solo le importan al dueño
     let espera: number | undefined;
     const mirar = () => api<EstadoLocal>('/api/v2/estado-local').then((e) => {
       setPrep(e);
@@ -80,7 +82,7 @@ function Marco() {
     mirar();
     return () => window.clearTimeout(espera);
   }, []);
-  useEffect(() => { api('/api/cola').catch(() => {}); }, []);   // la cola sigue donde iba al abrir Xandart
+  useEffect(() => { if (esDueno()) api('/api/cola').catch(() => {}); }, []);   // la cola sigue donde iba al abrir Xandart
   useEffect(() => {
     const traer = () => api<Cuenta>('/api/v2/cuenta').then(setCuenta).catch(() => {});
     traer();
@@ -93,7 +95,7 @@ function Marco() {
       <Lateral cuenta={cuenta} />
       <div className="contenido">
         <Barra cuenta={cuenta} />
-        <AvisoRespaldo />
+        {esDueno() && <AvisoRespaldo />}
         {prep && prep.activo && prep.fase !== 'listo' && (
           <div className={`aviso-prep ${prep.fase === 'error' ? 'malo' : ''}`} role="status">
             {prep.fase === 'error'
