@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { api, archivo, type Canal, type Formato, type VideoLista } from '../api';
 import { CajaIdea } from '../componentes/CajaIdea';
 import { ErrorAmable, Esqueleto, Vacio } from '../componentes/Estados';
+import { pasoTexto, progresoTotal } from '../componentes/EnMarcha';
 import { Icono } from '../componentes/Icono';
 
 // Portadas de las plantillas: color propio por formato (sin imágenes que pagar).
@@ -16,8 +17,8 @@ export function Inicio() {
   const [formato, setFormato] = useState<string | undefined>();
   const [errorCanales, setErrorCanales] = useState('');
 
+  useEffect(() => videosAlDia(setVideos, () => setVideos([])), []);
   useEffect(() => {
-    api<VideoLista[]>('/api/v2/videos').then(setVideos).catch(() => setVideos([]));
     api<Formato[]>('/api/v2/recursos/formatos').then(setFormatos).catch(() => {});
     // si no se pueden leer los canales NO se ofrece «crear tu canal»: se dice qué pasó
     api<Canal[]>('/api/v2/canales').then(setCanales).catch((e) => setErrorCanales(e.message));
@@ -70,8 +71,25 @@ const ESTADOS: Record<string, string> = {
   en_marcha: 'En marcha', listo: 'Listo', imagenes_listas: 'Imágenes listas', guion_listo: 'Guion listo', borrador: 'Borrador',
 };
 
+/** (24-10, el dueño: «ya no me sale si está avanzando») la lista de videos se pide otra vez sola: cada 4 s mientras
+ * alguno está en marcha y cada 30 s si no. Devuelve con qué se apaga (para el useEffect). */
+export function videosAlDia(poner: (l: VideoLista[]) => void, fallo: (e: Error) => void): () => void {
+  let vivo = true;
+  let espera: number | undefined;
+  const traer = () => api<VideoLista[]>('/api/v2/videos').then((l) => {
+    if (!vivo) return;
+    poner(l);
+    espera = window.setTimeout(traer, l.some((x) => x.estado === 'en_marcha') ? 4000 : 30000);
+  }).catch((e) => { if (vivo) { fallo(e); espera = window.setTimeout(traer, 30000); } });
+  traer();
+  return () => { vivo = false; window.clearTimeout(espera); };
+}
+
 export function TarjetaVideo({ v, elegir, activo }: { v: VideoLista; elegir?: () => void; activo?: boolean }) {
   const ir = useNavigate();
+  const t = v.trabajo;
+  const enMarcha = v.estado === 'en_marcha' && t?.activo;
+  const pct = enMarcha ? Math.round(progresoTotal(v).total * 100) : 0;
   // en marcha: el storyboard en vivo; terminado: el editor; a medio hacer: la revisión
   const abrir = () => ir(v.estado === 'en_marcha' ? `/producir/${v.slug}` : v.video ? `/videos/${v.slug}/editor` : `/videos/${v.slug}`);
   return (
@@ -79,9 +97,13 @@ export function TarjetaVideo({ v, elegir, activo }: { v: VideoLista; elegir?: ()
       <button className="tv-portada" onClick={elegir ?? abrir} aria-label={`Abrir ${v.titulo}`}>
         {v.portada ? <img src={archivo(v.slug, v.portada)} alt="" loading="lazy" /> : <Icono nombre="media" tam={30} />}
         <span className={`estado ${v.estado}`}>{ESTADOS[v.estado] ?? v.estado}</span>
+        {enMarcha && <span className="tv-barra" aria-hidden="true"><i style={{ width: `${Math.max(3, pct)}%` }} /></span>}
       </button>
       <div className="tv-texto">
         <b title={v.titulo}>{v.titulo}</b>
+        {enMarcha && <span className="tv-avance" title={t?.mensaje}>{pasoTexto(t)} · {pct} %
+          {t?.mensaje ? <small> · {t.mensaje.trim()}</small> : null}</span>}
+        {!enMarcha && t?.error && <span className="tv-error" title={t.error}>Se detuvo: ábrelo para ver qué pasó</span>}
         <span className="tenue pequeno">{v.minutos} min · {v.video
           ? <Link to={`/videos/${v.slug}/editor`}>editar</Link> : <Link to={`/videos/${v.slug}`}>abrir</Link>}</span>
       </div>

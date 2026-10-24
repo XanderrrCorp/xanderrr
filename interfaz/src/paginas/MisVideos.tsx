@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
-import { api, type VideoLista } from '../api';
-import { TarjetaVideo } from './Inicio';
+import { type VideoLista } from '../api';
+import { TarjetaVideo, videosAlDia } from './Inicio';
 
 export function MisVideos() {
   const [videos, setVideos] = useState<VideoLista[] | null>(null);
   const [error, setError] = useState('');
-  useEffect(() => { api<VideoLista[]>('/api/v2/videos').then(setVideos).catch((e) => { setError(e.message); setVideos([]); }); }, []);
+  useEffect(() => videosAlDia((l) => { setVideos(l); setError(''); }, (e) => { setError(e.message); setVideos((v) => v ?? []); }), []);
   return (
     <div className="pagina">
       <div className="seccion-cab"><h1>Mis videos</h1></div>

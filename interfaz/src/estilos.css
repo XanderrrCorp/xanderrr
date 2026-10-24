@@ -535,3 +535,10 @@ main { max-width: 1240px; margin: 0 auto; padding: 24px 28px 64px; }
 .fila-cuenta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 12px 14px; border-radius: var(--radio);
   background: var(--sup); border: 1px solid var(--linea); }
 .fila-cuenta b { display: block; } .fila-cuenta .crece { min-width: 200px; }
+
+/* (24-10) avance del video en las tarjetas de Inicio y Proyectos */
+.tv-barra { position: absolute; left: 0; right: 0; bottom: 0; height: 5px; background: rgba(0, 0, 0, .45); }
+.tv-barra i { display: block; height: 100%; background: var(--acento); transition: width .8s ease; }
+.tv-avance { font-size: 13px; color: var(--acento); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tv-avance small { color: var(--tenue); font-weight: 400; }
+.tv-error { font-size: 13px; color: var(--rojo); }

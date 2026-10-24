@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Check } from 'lucide-react';
-import { api, archivo, type VideoDetalle } from '../api';
+import { api, archivo, type Trabajo, type VideoDetalle } from '../api';
 import { Icono } from './Icono';
 import { Esqueleto, ErrorAmable, Vacio } from './Estados';
 
@@ -13,6 +13,13 @@ const PASOS: { clave: string[]; nombre: string; icono: string; peso: number }[] 
 ];
 const PASO_TRABAJO: Record<string, number> = { guion: 0, imagenes: 1, prueba: 1, ajustar: 1, regenerar: 1, video: 2, short: 2 };
 
+/** (24-10) En qué va el video, en palabras simples (para las tarjetas de Inicio y Proyectos). */
+export function pasoTexto(t: Trabajo | null): string {
+  if (!t) return '';
+  const nombre = PASOS[PASO_TRABAJO[t.paso] ?? -1]?.nombre;
+  return nombre ?? 'Trabajando';
+}
+
 export function minutosTexto(s: number): string {
   if (s < 60) return 'menos de 1 minuto';
   const m = Math.round(s / 60);
@@ -20,7 +27,8 @@ export function minutosTexto(s: number): string {
 }
 
 /** Progreso total del video (0-1) y segundos que faltan, con el ritmo del paso que va (es una estimación). */
-export function progresoTotal(v: VideoDetalle): { total: number; faltan: number | null } {
+export function progresoTotal(v: { pasos: Record<string, string>; trabajo: (Trabajo & { segundos?: number }) | null }):
+  { total: number; faltan: number | null } {
   const t = v.trabajo;
   const actual = t?.activo ? PASO_TRABAJO[t.paso] ?? -1 : -1;
   let total = 0;
@@ -29,7 +37,7 @@ export function progresoTotal(v: VideoDetalle): { total: number; faltan: number 
     else if (p.clave.every((k) => v.pasos[k] === 'completo')) total += p.peso;
   });
   let faltan: number | null = null;
-  if (t?.activo && actual >= 0 && t.progreso > 0.03 && t.segundos > 15) {
+  if (t?.activo && actual >= 0 && t.progreso > 0.03 && t.segundos && t.segundos > 15) {
     const porUnidad = t.segundos / (PASOS[actual].peso * t.progreso);     // segundos por «unidad» de video
     faltan = Math.max(0, (1 - total) * porUnidad);
   }
