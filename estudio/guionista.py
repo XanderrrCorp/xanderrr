@@ -200,9 +200,16 @@ def instruccion_detalles(historia: dict, k: int, estilo: Estilo, catalogo: list[
     nivel = next((n for n in historia["niveles"] if nombre.lower().startswith(f"nivel {n['numero']} ")
                   or nombre.lower().startswith(f"nivel {n['numero']}·")), None)
     especiales = []
-    especiales.append('- Si la escena es parte de una anécdota del narrador (habla en primera persona: «yo», «me», '
-                      '«mi amigo»), usa pov_personaje para lo que él vio con sus ojos, o escena_cartoon_completa con él '
-                      'en ese lugar reaccionando (por ejemplo congelado del susto en una calle).')
+    # (24-10, el dueño: «la escena POV ya no me mata, sé más creativo y menos predecible») la v2 trae «imagenes»
+    creativo = bool((historia.get("_imagenes") or {}).get("variedad"))
+    if creativo:
+        especiales.append('- Anécdotas del narrador («yo», «me», «mi primo»): muéstralo a ÉL ("the cartoon man") '
+                          'viviendo ese momento en una escena completa, con un encuadre que sorprenda; NO uses la vista '
+                          'en primera persona.')
+    else:
+        especiales.append('- Si la escena es parte de una anécdota del narrador (habla en primera persona: «yo», «me», '
+                          '«mi amigo»), usa pov_personaje para lo que él vio con sus ojos, o escena_cartoon_completa con '
+                          'él en ese lugar reaccionando (por ejemplo congelado del susto en una calle).')
     if es_gancho and con_niveles:
         especiales.append('- Esta es la sección del GANCHO: la escena que presenta la lista de niveles lleva '
                           '"accion": "componer" (el sistema muestra la tira). Si una escena muestra al villano, pon '
@@ -223,7 +230,28 @@ def instruccion_detalles(historia: dict, k: int, estilo: Estilo, catalogo: list[
                           'sorpresa (raised eyebrows, mouth wide open), asco (tongue out, squinting), alegría o alivio '
                           '(big smile), duda (hand on his chin, one eyebrow raised), alerta (pointing at the animal, '
                           'worried face). Si señala algo, que señale hacia el animal o el dato.')
-    if pov:
+    if pov and creativo:
+        especiales.append(f'- {pov} (vista en primera persona) casi nunca: como mucho UNA vez y solo si es la sección del '
+                          'último de la lista y el momento lo pide de verdad. Las acciones («si lo tocas», «si lo '
+                          'agarras») se muestran desde afuera: el personaje o una persona haciéndolo, con un encuadre '
+                          'que sorprenda.')
+    if creativo and estilo.con_personaje:
+        especiales.append(
+            '- IMÁGENES CREATIVAS Y NADA PREDECIBLES (pedido del dueño). Antes de describir cada escena, piensa qué '
+            'imagen pondría un buen editor para que el espectador NO adivine la siguiente:\n'
+            '  · Pon al personaje ("the cartoon man") EN SITUACIÓN según lo que dice la voz: si habla de '
+            'investigación, estudios, científicos, datos o «según los expertos», él frente a un computador o laptop '
+            'con varias pantallas encendidas (solo luz y formas, sin letras), papeles y café, de noche; si habla de internet o videos, con el celular '
+            'en la mano y cara de impacto; de historia o fósiles, en un museo frente a una vitrina; de un viaje o un '
+            'país, con mochila mirando un mapa; de tamaño, midiendo con una cinta métrica o al lado de algo '
+            'cotidiano para comparar; de dinero o mercado, en un puesto de mercado.\n'
+            '  · Varía el ENCUADRE de una escena a otra: primerísimo plano (un ojo, los dientes, una garra), plano '
+            'general, desde abajo (contrapicado), desde arriba (cenital), silueta a contraluz, a través de hojas o '
+            'de un vidrio, pantalla dividida para comparar.\n'
+            '  · Convierte las comparaciones de la voz en imagen literal y graciosa («como una trampa de ratón» → las mandíbulas '
+            'dibujadas como una trampa de ratón gigante), sobre todo en los primeros animales.\n'
+            '  · Nunca dos escenas seguidas con el mismo tipo y el mismo encuadre, ni el personaje en la misma pose.')
+    if pov and not creativo:
         especiales.append('- Si la voz describe una ACCIÓN con el animal o el objeto («si lo tocas», «si lo aplastas», '
                           '«si lo agarras», «al quitarlo de la piel»), '
                           f'muéstrala en primera persona con {pov}: '
@@ -617,6 +645,7 @@ def escribir_guion(encargo: Encargo, estilo: Estilo, carpeta: Path, canal: str,
     if con_llamados and not retomada:
         historia = _guardar_llamados(historia, fallas_llamados, carpeta, avisar, len(tipos))
     escribir_json(borrador / "historia.json", {**historia, "secciones": [list(x) for x in historia["secciones"]]})
+    historia["_imagenes"] = formula.get("imagenes") or {}      # (24-10) reglas de imágenes de la fórmula (v2)
     n = len(historia["secciones"])
     avisar(f"Historia lista ({sum(len(x[1]) for x in historia['secciones'])} escenas). Claude está dirigiendo "
            f"las {n} secciones…")

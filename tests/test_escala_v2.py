@@ -166,3 +166,16 @@ def test_flechas_que_rodean_la_imagen_de_vez_en_cuando():
     img = render._flechas_alrededor(base, ef, (0, 0, render.W, render.H), ef["en"] + 1.0)
     rojos = sum(1 for p in img.resize((192, 108)).getdata() if p[0] > 180 and p[1] < 80)
     assert rojos > 20
+
+
+def test_imagenes_creativas_y_casi_sin_primera_persona(estilo):
+    """(24-10) Con la v2: el personaje en situación (investigación → computador), encuadres variados y la vista en
+    primera persona casi nunca. La versión de siempre no cambia."""
+    historia = {"titulo": "x", "niveles": [{"numero": i, "nombre": f"B{i}", "villano": i == 4} for i in range(1, 5)],
+                "secciones": [("Nivel 1 · B1", ["Según los científicos, muerde fuerte."])]}
+    antes = guionista.instruccion_detalles(historia, 0, estilo)
+    assert "muéstrala en primera persona" in antes and "computador" not in antes
+    historia["_imagenes"] = guionista.cargar_formula("escala_peligro_v2")["imagenes"]
+    nueva = guionista.instruccion_detalles(historia, 0, estilo)
+    assert "computador" in nueva and "NO uses la vista" in nueva and "como mucho UNA vez" in nueva
+    assert "muéstrala en primera persona" not in nueva

@@ -339,6 +339,13 @@ Estado al 04-10-2026. El repositorio es PÚBLICO: nunca escribir claves, tokens 
   libres de 2 s o más sin flecha/lupa/círculo/escala/presentación; 3 flechas rojas curvas con borde blanco desde 3
   lados, una tras otra, que pican hacia la caja [0.3,0.22,0.7,0.78] de la imagen; pop por flecha) →
   render._flechas_alrededor (se dibuja sobre la imagen, antes del zoom). Voz: sigue en 1.4 en la v2.
+  (24-10) «La escena POV ya no me mata; más creativo y menos predecible; si habla de investigación, el personaje en
+  un computador» (el dueño): fórmula v2 «imagenes»: {"variedad": true} → guionista guarda historia["_imagenes"] y
+  instruccion_detalles(creativo): anécdotas = el personaje viviéndolas (sin POV), POV como mucho 1 y solo en la
+  sección del último, el personaje EN SITUACIÓN según la voz (investigación → computador con pantallas sin letras;
+  internet → celular; historia → museo; viaje → mapa; tamaño → cinta métrica), encuadres variados y comparaciones
+  literales. Paradoja y la v1 siguen igual. PENDIENTE: personaje «streetwear» (mandó capturas de «Psicología
+  Exótica»: gorra negra al revés, cadena y reloj dorados — es SU personaje: no copiarlo, diseño propio).
 ## Pendiente
 - Preguntas sin responder del dueño: ¿en qué canal notó la voz lenta? (Peligro Tropical está en 1.3 en
   config/proveedores.json; Tracy en 1.0 por pedido suyo). ¿En qué momento sale «la tira de animales» sin sentido?
