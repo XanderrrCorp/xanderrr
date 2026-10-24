@@ -333,9 +333,9 @@ def comentario(img: Image.Image, ef: dict, loc: float) -> Image.Image:
 def _palabra(texto: str, cifra: bool) -> Image.Image:
     R = _r()
     color = AMARILLO if cifra else (255, 255, 255)
-    im = R._texto_img(texto, 190, 16, color=color)
-    if im.width > 1560:                                       # que quepa siempre en el ancho
-        f = 1560 / im.width
+    im = R._texto_img(texto, 140, 13, color=color)
+    if im.width > 1300:                                       # que quepa siempre en el ancho
+        f = 1300 / im.width
         im = im.resize((int(im.width * f), int(im.height * f)), Image.Resampling.LANCZOS)
     sombra = Image.new("RGBA", (im.width + 80, im.height + 80), (0, 0, 0, 0))
     sombra.alpha_composite(Image.fromarray(np.dstack([np.zeros(im.size[::-1] + (3,), np.uint8),
@@ -347,7 +347,8 @@ def _palabra(texto: str, cifra: bool) -> Image.Image:
 
 
 def palabra_golpe(img: Image.Image, ef: dict, loc: float) -> Image.Image:
-    """La palabra fuerte salta en grande al centro (entra pasada de tamaño y se asienta) y se va rápido."""
+    """La palabra fuerte salta arriba (entra pasada de tamaño y se asienta) y se va rápido. (24-10, el dueño: no debe
+    tapar la imagen) va en la franja de arriba, donde va el título, nunca encima del animal."""
     clave = ("pg", ef["texto"], ef.get("cifra", False), ef.get("giro", 0))
     if clave not in _CACHE:
         _CACHE[clave] = _palabra(ef["texto"], ef.get("cifra", False)).rotate(ef.get("giro", 0), expand=True,
@@ -357,7 +358,7 @@ def palabra_golpe(img: Image.Image, ef: dict, loc: float) -> Image.Image:
     esc = (1.35 - 0.35 * _rebote(loc, 0.18, 0.12)) if loc < 0.18 else _rebote(loc, 0.18, 0.12)
     if queda < 0.14:                                          # sale encogiéndose
         esc *= max(0.0, queda / 0.14)
-    return _pegar(img, capa, W / 2, H * 0.5, esc)
+    return _pegar(img, capa, W / 2, H * 0.17, esc)
 
 
 def _cinta(texto: str, alto: bool) -> Image.Image:

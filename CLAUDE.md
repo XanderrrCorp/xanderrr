@@ -324,7 +324,7 @@ Estado al 04-10-2026. El repositorio es PÚBLICO: nunca escribir claves, tokens 
   (23-10) MÁS DOPAMINA (el dueño: «haz primero lo de la dopamina», antes del Paso D): PerfilEdicion.dopamina (True solo
   en peligro_tropical_v3) → receta_pt.aplicar_dopamina: «palabra_golpe» (receta_pt.palabra_fuerte: cifra con unidad
   «OCHENTA KILOS» en amarillo, frase de golpe de 1-3 palabras «CERO», o la palabra clave en revelación/amenaza/giro;
-  máx. una cada 4,5 s, 1 s al centro con rebote), «golpe» (zoom ×1,13 + sacudida 0,35 s en remates, sfx golpe_grave)
+  máx. una cada 4,5 s, 1 s ARRIBA con rebote, nunca tapando al animal y nunca junto a un título: el dueño, 24-10), «golpe» (zoom ×1,13 + sacudida 0,35 s en remates, sfx golpe_grave)
   y «sube_nivel» (cinta naranja/roja «▲ SUBE EL PELIGRO / MÁS PELIGROSO / ESTO SE PONE SERIO / CUIDADO AQUÍ», en el
   último «EL ÚLTIMO DE LA LISTA», sobre la tira al pasar de animal, con swoosh). Mientras salen, el subtítulo de
   debajo se esconde. Dibujo en render_receta.palabra_golpe/sube_nivel; el golpe en render.py junto a temblor_corto.

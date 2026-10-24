@@ -198,7 +198,7 @@ def aplicar(clips: list, textos: list, subtitulos: list, sfx: list, escenas: lis
             textos[:] = [t for t in textos if not (c["inicio"] <= t["inicio"] < c["fin"])]
 
     if dopamina:
-        aplicar_dopamina(clips, escenas, sfx, sfx_fn, nivel, n_niv, rng)
+        aplicar_dopamina(clips, escenas, sfx, sfx_fn, nivel, n_niv, rng, textos)
 
     # --- subtítulos de 1 a 3 palabras con la palabra activa
     from .edicion import trozos_subtitulo
@@ -257,7 +257,7 @@ _OCUPADO = ("veredicto", "pero_espera", "cta_like", "cta_suscribir", "comentario
 
 
 def aplicar_dopamina(clips: list, escenas: list, sfx: list, sfx_fn, nivel: list, n_niv: int,
-                     rng: random.Random) -> None:
+                     rng: random.Random, textos: list | None = None) -> None:
     """Encima de la receta: palabra grande que salta, golpe con zoom en los remates y «sube el peligro» al pasar de un
     animal al siguiente. Todo por código: no hay imágenes nuevas ni costo extra."""
     ultima = -99.0
@@ -274,6 +274,9 @@ def aplicar_dopamina(clips: list, escenas: list, sfx: list, sfx_fn, nivel: list,
         en = round(max(c["inicio"], a + (b - a) * donde - 0.05), 3)
         dur = round(min(DUR_PALABRA_S, c["fin"] - en - 0.05), 3)
         if dur < 0.6 or en - ultima < CADA_PALABRA_S or len(texto) > 26:
+            continue
+        # (24-10, el dueño: que no tape la imagen) va arriba: si ahí ya hay un título en ese momento, no sale
+        if any(t["inicio"] < en + dur and en < t["fin"] for t in (textos or [])):
             continue
         ultima = en
         corta = len(e.narracion.split()) <= 3
