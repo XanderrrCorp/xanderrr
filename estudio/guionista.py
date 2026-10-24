@@ -82,7 +82,7 @@ Duración: unos {encargo.minutos:g} minutos de voz = entre {int(palabras * 0.93)
 {estructura}{L.instruccion(encargo.tema, tipos) if llamados else ""}
 == FORMATO DE SALIDA (texto, no JSON) ==
 Responde SOLO con esto, sin nada antes ni después:
-TITULO: <título del video, gancho de YouTube>{(chr(10) + "COMENTARIO_FIJADO: <el comentario fijado>" + chr(10)
+TITULO: <título del video, gancho de YouTube>{(chr(10) + ESCALA_SALIDA) if formula.get("escala_opcional") else ""}{(chr(10) + "COMENTARIO_FIJADO: <el comentario fijado>" + chr(10)
     + chr(10).join(f"EJEMPLO: {t} | <lo que escribiría un espectador>" for t in tipos)) if llamados else ""}
 NIVEL: 1 | <nombre del animal> | <english description of the animal for a card: species, colors, pose, magnified, whole body visible and centered> | no
 NIVEL: 2 | ... | ... | no
@@ -97,6 +97,11 @@ SECCION: Nivel 1 · <nombre>
 ... (una SECCION por nivel)
 SECCION: Cierre
 <escenas del cierre>"""
+
+
+# (24-10) en la fórmula v2 la escala de peligro 0-10 (y la tarjeta «Nivel de amenaza») es opcional: la decide Claude
+ESCALA_SALIDA = ("ESCALA_PELIGRO: <si | no> (si SOLO cuando el video ordena a los animales por qué tan peligrosos son "
+                 "para las personas; no si los ordena por rareza, tamaño, lo feo, lo extraño u otra cosa)")
 
 
 def instruccion_llamados(tema: str) -> str:
@@ -128,10 +133,14 @@ def leer_historia(texto: str, usa_niveles: bool = True) -> dict:
     """Lee la respuesta de la fase 1 (texto con TITULO / NIVEL / SECCION)."""
     import re
 
-    titulo, niveles, secciones = None, [], []
+    titulo, niveles, secciones, escala = None, [], [], None
     for linea in (texto or "").splitlines():
         linea = linea.strip().strip("`").strip()
         if not linea or linea.startswith("("):
+            continue
+        m = re.match(r"(?i)^escala[_ ]peligro\s*:\s*(s[ií]|no)\b", linea)
+        if m:
+            escala = m.group(1).lower().startswith("s")
             continue
         m = re.match(r"(?i)^t[íi]tulo\s*:\s*(.+)$", linea)
         if m:
@@ -157,7 +166,8 @@ def leer_historia(texto: str, usa_niveles: bool = True) -> dict:
     if not titulo or len(niveles) < 4 or len(secciones) < 3:
         raise ValueError(f"historia incompleta: título={bool(titulo)}, niveles={len(niveles)} (van de 4 a 8), "
                          f"secciones={len(secciones)}")
-    return {"titulo": titulo, "niveles": niveles, "secciones": secciones}
+    return {"titulo": titulo, "niveles": niveles, "secciones": secciones,
+            **({"escala_peligro": escala} if escala is not None else {})}
 
 
 def _niveles_coinciden(historia: dict, fijos: list[dict]) -> None:
@@ -624,6 +634,8 @@ def escribir_guion(encargo: Encargo, estilo: Estilo, carpeta: Path, canal: str,
     datos = {"titulo": historia["titulo"], "niveles": historia["niveles"], "escenas": [e for p in partes for e in p],
              "catalogo": catalogo or []}
     doc, direccion, md = a_escenas(datos, estilo, canal)
+    if formula.get("escala_opcional"):                   # (24-10) la escala 0-10 solo si el tema es de peligro
+        direccion["escala_peligro"] = bool(historia.get("escala_peligro", False))
     if historia.get("llamados"):                         # el cuadro de comentario animado (17-10)
         direccion["comentarios"] = L.comentarios_en_pantalla(historia["llamados"], partes, historia.get("ejemplos") or {})
     escribir_json(carpeta / "escenas.json", doc)

@@ -77,7 +77,8 @@ def palabras_con_tiempo(texto: str, a: float, b: float) -> list[list]:
 
 
 def aplicar(clips: list, textos: list, subtitulos: list, sfx: list, escenas: list, esc, sfx_fn,
-            valor_de, poses: dict, rng: random.Random, total: float, dopamina: bool = False) -> None:
+            valor_de, poses: dict, rng: random.Random, total: float, dopamina: bool = False,
+            veredictos: bool = True) -> None:
     """Aplica la receta sobre la edición ya armada (modifica las listas en su lugar)."""
     niveles = sorted(n.numero for n in esc.niveles)
     n_niv = len(niveles)
@@ -108,7 +109,7 @@ def aplicar(clips: list, textos: list, subtitulos: list, sfx: list, escenas: lis
             clips[idx]["efectos"].append({"efecto": "destello_blanco", "en": clips[idx]["inicio"]})
 
     # --- veredicto al final de cada nivel (el último clip antes de la tira siguiente o del cierre)
-    for k in niveles:
+    for k in niveles if veredictos else ():
         idxs = [i for i, x in enumerate(nivel) if x == k and clips[i]["modo"] != "tira"]
         if not idxs:
             continue

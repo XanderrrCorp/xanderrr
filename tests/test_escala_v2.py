@@ -108,3 +108,36 @@ def test_se_dibujan_la_palabra_y_la_cinta():
     assert a.size == base.size and a.getpixel(arriba) != base.getpixel(arriba)
     assert a.getpixel((RR.W // 2, RR.H // 2)) == base.getpixel((RR.W // 2, RR.H // 2))
     assert b.getpixel((RR.W // 2, int(RR.H * 0.80))) != base.getpixel((RR.W // 2, int(RR.H * 0.80)))
+
+
+def test_escala_de_peligro_solo_si_el_tema_es_de_peligro(estilo):
+    """(24-10) La escala 0-10 y la tarjeta «Nivel de amenaza» no aplican a todos los videos: con la v2 las pide Claude
+    (ESCALA_PELIGRO: si/no); los videos de antes, sin esa marca, siguen como siempre."""
+    import json
+
+    from test_peligro_tropical_edicion import _proyecto_niveles
+
+    from estudio.edicion import construir_edl
+
+    texto = ("TITULO: Los animales más raros\nESCALA_PELIGRO: no\n"
+             + "".join(f"NIVEL: {i} | Bicho {i} | a bug | {'si' if i == 4 else 'no'}\n" for i in range(1, 5))
+             + "SECCION: Gancho\nHola.\nSECCION: Nivel 1 · Bicho 1\nUno.\nSECCION: Cierre\nAdiós.\n")
+    assert guionista.leer_historia(texto)["escala_peligro"] is False
+    assert "escala_peligro" not in guionista.leer_historia(texto.replace("ESCALA_PELIGRO: no\n", ""))
+    assert "ESCALA_PELIGRO" in guionista.instruccion(guionista.Encargo(tema="x"), estilo,
+                                                     formula=guionista.cargar_formula("escala_peligro_v2"))
+    assert "ESCALA_PELIGRO" not in guionista.instruccion(guionista.Encargo(tema="x"), estilo,
+                                                         formula=guionista.cargar_formula("escala_peligro"))
+
+    def efectos(edl):
+        return {x["efecto"] for cl in edl["pistas"]["escenas"] for x in cl["efectos"]}
+
+    c, edl = _proyecto_niveles(estilo)
+    p = c.cargar()
+    p.formula = "escala_peligro_v2"
+    c.guardar(p)
+    assert "escala_peligro" in efectos(construir_edl(c))              # sin marca: como siempre
+    (c.ruta / "direccion.json").write_text(json.dumps({"terminos": {"3": "cantaridina"}, "escala_peligro": False}),
+                                           "utf-8")
+    sin = efectos(construir_edl(c))
+    assert "escala_peligro" not in sin and "veredicto" not in sin and "sube_nivel" in sin

@@ -329,6 +329,11 @@ Estado al 04-10-2026. El repositorio es PÚBLICO: nunca escribir claves, tokens 
   último «EL ÚLTIMO DE LA LISTA», sobre la tira al pasar de animal, con swoosh). Mientras salen, el subtítulo de
   debajo se esconde. Dibujo en render_receta.palabra_golpe/sube_nivel; el golpe en render.py junto a temblor_corto.
   Todo por código, sin costo. Hoja de cuadros revisada con imágenes de colores (scratchpad v3/demo.py).
+  (24-10) «La tira de peligro no aplica a todos los videos» (el dueño) = la escala de colores 0-10 al presentar cada
+  animal + la tarjeta «Nivel de amenaza»: con la v2 (formula.escala_opcional) Claude responde ESCALA_PELIGRO: si|no
+  (guionista.ESCALA_SALIDA; si solo si el video ordena por peligro para las personas) → direccion.json
+  «escala_peligro» → edicion (mostrar_escala) y receta_pt.aplicar(veredictos=…). Sin esa marca (videos de antes):
+  sale como siempre. La tira de tarjetas de niveles, «PERO ESPERA» y la cinta «sube el peligro» siguen en todos.
 ## Pendiente
 - Preguntas sin responder del dueño: ¿en qué canal notó la voz lenta? (Peligro Tropical está en 1.3 en
   config/proveedores.json; Tracy en 1.0 por pedido suyo). ¿En qué momento sale «la tira de animales» sin sentido?

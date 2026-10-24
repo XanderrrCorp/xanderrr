@@ -654,6 +654,9 @@ def construir_edl(carpeta: CarpetaProyecto) -> dict:
     usos_entrada = {"entrada_abajo": 0, "entrada_lado": 0, "entrada_rebote": 0}
     ultima_entrada = None
     escala_pendiente = None
+    # (24-10, el dueño: «la tira de peligro no aplica a todos los videos») la escala 0-10 y la tarjeta «Nivel de
+    # amenaza» salen solo si el guion dijo que el tema es de peligro; los videos de antes no lo dicen: salen como siempre
+    mostrar_escala = direccion.get("escala_peligro", True) is not False
     presentar_pendiente = None
     ultimo_al_lado = -99.0
     tarjetas_gancho = 0
@@ -691,7 +694,9 @@ def construir_edl(carpeta: CarpetaProyecto) -> dict:
                 _sfx(sfx, "ruleta", ini, idx, "Ruleta: la tira gira y sus clics se frenan justo en la tarjeta del nivel",
                      termina_en=frena, duracion_max=round(frena - ini, 3))
                 valor = n.peligro if n.peligro is not None else valor_por_posicion(n.numero, len(esc.niveles))
-                if dur >= 3.0:
+                if not mostrar_escala:
+                    pass                                 # (24-10) el tema no es de peligro: sin escala 0-10
+                elif dur >= 3.0:
                     efectos.append(_escala(round(frena + 0.5, 3), round(fin - frena - 0.5, 3), valor, n))
                     _sfx(sfx, "golpe_grave" if n.villano else "pop", frena + 0.5 + 0.9, idx,
                          f"La flecha llega a {valor}/10 en la escala de peligro")
@@ -1185,7 +1190,7 @@ def construir_edl(carpeta: CarpetaProyecto) -> dict:
 
         receta(clips, textos, subtitulos, sfx, escenas, esc, _sfx,
                lambda n: n.peligro if n.peligro is not None else valor_por_posicion(n.numero, len(esc.niveles)),
-               poses_mascota, rng, total, dopamina=perfil.dopamina)
+               poses_mascota, rng, total, dopamina=perfil.dopamina, veredictos=mostrar_escala)
     musica = [] if clasica else _musica(escenas, clips, revelacion, total, rng)   # clásica: sin música
     _equilibrar_movimientos(clips, perfil, rng, estilo.movimiento_maximo)
     _sonido_en_cada_corte(sfx, escenas, clips, rng, clasica)   # el recorte deja solo sfx_por_minuto
