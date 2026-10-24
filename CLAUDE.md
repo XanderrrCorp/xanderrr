@@ -346,6 +346,19 @@ Estado al 04-10-2026. El repositorio es PÚBLICO: nunca escribir claves, tokens 
   internet → celular; historia → museo; viaje → mapa; tamaño → cinta métrica), encuadres variados y comparaciones
   literales. Paradoja y la v1 siguen igual. PENDIENTE: personaje «streetwear» (mandó capturas de «Psicología
   Exótica»: gorra negra al revés, cadena y reloj dorados — es SU personaje: no copiarlo, diseño propio).
+  (24-10) FOTO REALISTA (IA) por animal (el dueño: «una por animal»): tipo «foto_realista» en estilos/enciclopedia_mascota
+  (plantilla que empieza con «Photorealistic»; llega a las copias por _con_tipos_nuevos). guionista: en la v2, exactamente
+  UNA por sección de nivel; en lo demás «No uses …»; _fotos_realistas_justas deja máx. 1 y el resto pasa a
+  amenaza_cinematografica. edicion: efecto «ilustrativa» (etiqueta «Imagen ilustrativa» arriba a la izquierda,
+  render_receta.ilustrativa) + requiere_divulgacion_contenido_sintetico. Los tipos NUNCA se escriben por nombre en el
+  código (test_imagenes): se reconocen por su plantilla.
+  (24-10) MÁS AVATAR REAL: fórmula v2 «presentador» {maximo_por_video 14, separacion_minima_seg 22, maximo_por_pose 3}
+  → edicion._presentador_de_la_formula. LLAMADO A LA ACCIÓN que le encantó (de la competencia, en otras palabras):
+  like + suscripción como PAUSA en el momento de más intriga (minuto 1-1:40: «aquí todo se pone raro… pero antes…
+  ahora sí»); receta_pt pone cta_like donde la voz dice «like» y cta_suscribir justo después (v2).
+  PENDIENTE (aprobado sin gasto): paquete de técnicas por código (mano que señala, detalle borroso con «?», mapa
+  antiguo con nubes, círculos de zoom con «?», nube de pensamiento por prompt; tarjetas de nivel tipo foto vieja).
+  Personaje streetwear propio: ESPERA permiso del gasto (~3.000-3.500 COP).
 ## Pendiente
 - Preguntas sin responder del dueño: ¿en qué canal notó la voz lenta? (Peligro Tropical está en 1.3 en
   config/proveedores.json; Tracy en 1.0 por pedido suyo). ¿En qué momento sale «la tira de animales» sin sentido?

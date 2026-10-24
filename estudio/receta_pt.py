@@ -160,7 +160,19 @@ def aplicar(clips: list, textos: list, subtitulos: list, sfx: list, escenas: lis
                 return i
         return None
 
-    if total > LIKE_S + 30:
+    # (24-10) con la v2 el like va donde la VOZ lo pide (la pausa en el momento de más intriga), no a un minuto fijo
+    pide_like = next((k for k, e in enumerate(escenas) if dopamina and re.search(r"(?i)\blike\b", e.narracion)
+                      and _libre(clips[k]) and clips[k]["fin"] - clips[k]["inicio"] >= 2.0
+                      and not any(x["efecto"] in ("veredicto", "pero_espera", "dato", "comentario")
+                                  for x in clips[k]["efectos"])), None)
+    if pide_like is not None:
+        c = clips[pide_like]
+        pose = poses.get("senalando_sorpresa") or next(iter(poses.values()), None)
+        c["efectos"].append({"efecto": "cta_like", "en": round(c["inicio"] + 0.2, 3),
+                             "dur": round(min(2.6, c["fin"] - c["inicio"] - 0.3), 3), "pose": pose,
+                             "texto": "¿Te gusta? Dale like"})
+        sfx_fn(sfx, "boing", c["inicio"] + 0.35, pide_like, "Boing: la mascota salta con el like (la voz lo pide)")
+    elif total > LIKE_S + 30:
         i = _hueco(LIKE_S, 2.4)
         if i is not None:
             c = clips[i]
@@ -169,8 +181,9 @@ def aplicar(clips: list, textos: list, subtitulos: list, sfx: list, escenas: lis
                                  "dur": round(min(2.6, c["fin"] - c["inicio"] - 0.3), 3), "pose": pose,
                                  "texto": "¿Te gusta? Dale like"})
             sfx_fn(sfx, "boing", c["inicio"] + 0.35, i, "Boing: la mascota salta con el like")
-    if total > SUSCRIBIR_S + 30:
-        i = _hueco(SUSCRIBIR_S, 2.0)
+    if pide_like is not None or total > SUSCRIBIR_S + 30:
+        # con la v2 el botón de suscribirse sale justo después del like (la voz pide las dos cosas juntas)
+        i = _hueco(clips[pide_like]["fin"] - 0.01, 1.6) if pide_like is not None else _hueco(SUSCRIBIR_S, 2.0)
         if i is not None:
             c = clips[i]
             c["efectos"].append({"efecto": "cta_suscribir", "en": round(c["inicio"] + 0.2, 3),

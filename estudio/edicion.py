@@ -429,6 +429,22 @@ def _stock(esc: EscenasV2, escenas: list, clips: list, raiz: Path, revelacion: i
     return len(tiempos)
 
 
+def _presentador_de_la_formula(estilo: Estilo, proyecto) -> Estilo:
+    """(24-10, el dueño: «más escenas del avatar real») la fórmula del video puede pedir más cortes al presentador
+    (la escala v2: más por video y más seguidos). Los videos sin fórmula guardada quedan igual."""
+    if estilo.presentador is None or not getattr(proyecto, "formula", None):
+        return estilo
+    from .guionista import cargar_formula
+
+    try:
+        cambios = cargar_formula(proyecto.formula).get("presentador") or {}
+    except FileNotFoundError:
+        return estilo
+    if not cambios:
+        return estilo
+    return estilo.model_copy(update={"presentador": estilo.presentador.model_copy(update=cambios)})
+
+
 def _reacciones(estilo: Estilo, escenas: list, clips: list, raiz: Path, revelacion: int | None,
                 rng: random.Random, elegidas: list | None = None, sfx: list | None = None) -> int:
     """Cortes de ~2 s al presentador reaccionando (la voz sigue). Solo en las intenciones
@@ -606,6 +622,7 @@ def construir_edl(carpeta: CarpetaProyecto) -> dict:
     from .estilos import cargar_estilo
 
     estilo: Estilo = cargar_estilo(proyecto.estilo)
+    estilo = _presentador_de_la_formula(estilo, proyecto)
     gram = cargar_gramatica(estilo)["reglas"]
     esc: EscenasV2 = carpeta.cargar_escenas()
     vertical = esc.relacion_aspecto == "9:16"

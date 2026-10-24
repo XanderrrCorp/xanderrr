@@ -217,3 +217,29 @@ def test_etiqueta_imagen_ilustrativa_y_aviso_de_contenido_sintetico(estilo):
     assert con == [2] and c.cargar().requiere_divulgacion_contenido_sintetico is True
     base = Image.new("RGB", (RR.W, RR.H), (200, 200, 200))
     assert RR.ilustrativa(base).getpixel((60, 50)) != base.getpixel((60, 50))
+
+
+def test_like_donde_la_voz_lo_pide_y_mas_avatar(estilo):
+    """(24-10) Con la v2 el like sale donde la voz lo pide (pausa en el momento de más intriga) y el suscribirse justo
+    después; y la fórmula pide más cortes al presentador real."""
+    from test_peligro_tropical_edicion import _proyecto_niveles
+
+    from estudio.edicion import _presentador_de_la_formula, construir_edl
+
+    c, _ = _proyecto_niveles(estilo)
+    esc = c.cargar_escenas()
+    esc.escenas[6].narracion = "Pero antes, si te gusta, dale like y suscríbete."
+    c.guardar_escenas(esc)
+    p = c.cargar()
+    p.formula = "escala_peligro_v2"
+    c.guardar(p)
+    edl = construir_edl(c)
+    clips = edl["pistas"]["escenas"]
+    like = [cl["escena"] for cl in clips if any(x["efecto"] == "cta_like" for x in cl["efectos"])]
+    sus = [cl["escena"] for cl in clips if any(x["efecto"] == "cta_suscribir" for x in cl["efectos"])]
+    assert like == [7] and sus and sus[0] > 7
+    assert "momento de más intriga" in guionista.cargar_formula("escala_peligro_v2")["estructura"]
+    pr = _presentador_de_la_formula(estilo, p).presentador
+    assert pr.maximo_por_video == 14 and pr.separacion_minima_seg == 22
+    p.formula = None
+    assert _presentador_de_la_formula(estilo, p).presentador.maximo_por_video == estilo.presentador.maximo_por_video
