@@ -104,5 +104,7 @@ def test_se_dibujan_la_palabra_y_la_cinta():
     base = Image.new("RGB", (RR.W, RR.H), (40, 90, 60))
     a = RR.palabra_golpe(base, {"texto": "OCHENTA KILOS", "cifra": True, "giro": 3, "dur": 1.0}, 0.3)
     b = RR.sube_nivel(base, {"texto": "SUBE EL PELIGRO", "alto": False, "dur": 1.3}, 0.5)
-    assert a.size == base.size and a.getpixel((RR.W // 2, RR.H // 2)) != base.getpixel((RR.W // 2, RR.H // 2))
+    arriba = (RR.W // 2, int(RR.H * 0.17))                   # va arriba: nunca encima del animal
+    assert a.size == base.size and a.getpixel(arriba) != base.getpixel(arriba)
+    assert a.getpixel((RR.W // 2, RR.H // 2)) == base.getpixel((RR.W // 2, RR.H // 2))
     assert b.getpixel((RR.W // 2, int(RR.H * 0.80))) != base.getpixel((RR.W // 2, int(RR.H * 0.80)))
