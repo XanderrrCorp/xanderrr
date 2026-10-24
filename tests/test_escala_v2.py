@@ -179,3 +179,41 @@ def test_imagenes_creativas_y_casi_sin_primera_persona(estilo):
     nueva = guionista.instruccion_detalles(historia, 0, estilo)
     assert "computador" in nueva and "NO uses la vista" in nueva and "como mucho UNA vez" in nueva
     assert "muéstrala en primera persona" not in nueva
+
+
+def test_una_foto_realista_por_animal_con_etiqueta(estilo):
+    """(24-10) Con la v2, una foto que parece real (IA) por animal, nunca más; en la versión de siempre, ninguna."""
+    historia = {"titulo": "x", "niveles": [{"numero": i, "nombre": f"B{i}", "villano": i == 4} for i in range(1, 5)],
+                "secciones": [("Gancho", ["Hola."]), ("Nivel 1 · B1", ["Uno.", "Dos.", "Tres."])]}
+    assert "No uses foto_realista" in guionista.instruccion_detalles(historia, 1, estilo)
+    historia["_imagenes"] = {"variedad": True}
+    assert "EXACTAMENTE UNA escena" in guionista.instruccion_detalles(historia, 1, estilo)
+    assert "No uses foto_realista" in guionista.instruccion_detalles(historia, 0, estilo)       # gancho: ninguna
+    tres = [{"tipo": "foto_realista"} for _ in range(3)]
+    quedan = [e["tipo"] for e in guionista._fotos_realistas_justas(tres, historia, estilo, 1)]
+    assert quedan == ["foto_realista", "amenaza_cinematografica", "amenaza_cinematografica"]
+    historia.pop("_imagenes")
+    assert all(e["tipo"] != "foto_realista"
+               for e in guionista._fotos_realistas_justas([{"tipo": "foto_realista"}], historia, estilo, 1))
+
+
+def test_etiqueta_imagen_ilustrativa_y_aviso_de_contenido_sintetico(estilo):
+    from PIL import Image
+
+    from test_peligro_tropical_edicion import _proyecto
+
+    from estudio import render_receta as RR
+    from estudio.edicion import construir_edl
+
+    c, _ = _proyecto(estilo, n=4)
+    esc = c.cargar_escenas()
+    esc.escenas[1].visual.tipo = "foto_realista"
+    c.guardar_escenas(esc)
+    p = c.cargar()
+    p.requiere_divulgacion_contenido_sintetico = False
+    c.guardar(p)
+    edl = construir_edl(c)
+    con = [cl["escena"] for cl in edl["pistas"]["escenas"] if any(x["efecto"] == "ilustrativa" for x in cl["efectos"])]
+    assert con == [2] and c.cargar().requiere_divulgacion_contenido_sintetico is True
+    base = Image.new("RGB", (RR.W, RR.H), (200, 200, 200))
+    assert RR.ilustrativa(base).getpixel((60, 50)) != base.getpixel((60, 50))

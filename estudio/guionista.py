@@ -258,6 +258,15 @@ def instruccion_detalles(historia: dict, k: int, estilo: Estilo, catalogo: list[
                           'solo se ven las manos del personaje haciendo esa acción. Si la misma acción sigue en la '
                           'escena siguiente, la primera muestra la mano acercándose y la segunda la mano ya encima '
                           '(mismo lugar y encuadre), como dos momentos seguidos. Sin heridas ni nada gráfico.')
+    # (24-10) foto que parece real (IA): en la v2, UNA por animal; en lo demás, nunca
+    foto = next((t.id for t in estilo.tipos_de_escena if t.plantilla_prompt.lower().startswith("photorealistic")), None)
+    if foto and creativo and nivel:
+        especiales.append(f'- Usa {foto} en EXACTAMENTE UNA escena de esta sección (nunca en la que presenta al animal): '
+                          'una foto que parece real del animal haciendo justo lo que dice la voz en esa escena, '
+                          'descrita como la tomaría un fotógrafo de naturaleza (lugar real, luz, encuadre). Sin '
+                          'personas reales reconocibles. El montaje le pone la etiqueta «Imagen ilustrativa».')
+    elif foto:
+        especiales.append(f'- No uses {foto} en esta sección.')
     # tipos especiales que el estilo pueda tener (se reconocen por su plantilla, no por su nombre)
     pizarra = next((t.id for t in estilo.tipos_de_escena if "chalk" in t.plantilla_prompt.lower()), None)
     rayos = next((t.id for t in estilo.tipos_de_escena if "x-ray" in t.plantilla_prompt.lower()), None)
@@ -360,11 +369,30 @@ def _detalles(historia: dict, k: int, estilo: Estilo, carpeta: Path, ejecutar, a
             for i, narr in enumerate(lineas):
                 d = {k2: v for k2, v in por_n[i + 1].items() if k2 != "n"}
                 salida.append({"seccion": nombre, "narracion": narr, **d})
-            return salida
+            return _fotos_realistas_justas(salida, historia, estilo, k)
         except (ValueError, KeyError, TypeError) as ex:
             error = str(ex)[:300]
             avisar(f"  sección «{nombre}»: intento {intento + 1} no válido ({error[:100]})")
     raise claude_cli.ErrorClaude(f"La sección «{nombre}» no quedó válida: {error}")
+
+
+def _fotos_realistas_justas(escenas: list[dict], historia: dict, estilo: Estilo, k: int) -> list[dict]:
+    """(24-10) Como mucho UNA foto que parece real por sección, y solo en las secciones de un animal de la v2; las
+    que sobren pasan a la ilustración dramática del animal (el mismo prompt sirve)."""
+    foto = next((t.id for t in estilo.tipos_de_escena if t.plantilla_prompt.lower().startswith("photorealistic")), None)
+    if not foto:
+        return escenas
+    nombre = historia["secciones"][k][0].lower()
+    permitida = bool((historia.get("_imagenes") or {}).get("variedad")) and nombre.startswith("nivel")
+    respaldo = next((t.id for t in estilo.tipos_de_escena if "cinematic" in t.plantilla_prompt.lower()),
+                    estilo.tipos_de_escena[0].id)
+    usadas = 0
+    for e in escenas:
+        if e.get("tipo") == foto:
+            usadas += 1
+            if not permitida or usadas > 1:
+                e["tipo"] = respaldo
+    return escenas
 
 
 def _id_catalogo(texto: str, ids: set) -> str | None:

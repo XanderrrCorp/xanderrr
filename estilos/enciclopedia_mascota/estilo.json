@@ -68,6 +68,13 @@
       "plantilla_prompt": "Medical X-ray style illustration: {descripcion}. The body is semi-transparent and glows cyan-white over a dark navy blue background, the skeleton and the internal organs are clearly visible like an x-ray scan, the affected organ glows soft red, standing on a simple dark platform, clean and educational, no blood, no gore, no wounds, no text, no letters, no labels. Aspect ratio 16:9.",
       "quitar_fondo": false,
       "modo_montaje": "recuadro_sobre_papel"
+    },
+    {
+      "id": "foto_realista",
+      "descripcion": "Foto que parece real (hecha con IA) del animal haciendo lo que dice la voz: una por animal como mucho; el montaje le pone la etiqueta «Imagen ilustrativa»",
+      "plantilla_prompt": "Photorealistic wildlife photograph, as if shot by a professional nature photographer with a DSLR and a telephoto lens, natural light, shallow depth of field, sharp focus on the subject, true-to-life colors and textures, anatomically faithful to the real species. {descripcion}. Real natural setting, no illustration, no cartoon, no drawing, no text, no letters, no watermark, no logos. Aspect ratio 16:9.",
+      "quitar_fondo": false,
+      "modo_montaje": "recuadro_sobre_papel"
     }
   ],
   "mezcla_recomendada": {

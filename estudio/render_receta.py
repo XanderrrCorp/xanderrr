@@ -392,3 +392,16 @@ def sube_nivel(img: Image.Image, ef: dict, loc: float) -> Image.Image:
     if queda < 0.22:                                          # se va hacia arriba, rápido
         y -= (1 - queda / 0.22) ** 2 * (destino + capa.height)
     return _pegar(img, capa, W / 2, y)
+
+
+def ilustrativa(img: Image.Image) -> Image.Image:
+    """(24-10) Etiqueta pequeña «Imagen ilustrativa» arriba a la izquierda: la foto parece real pero es de IA."""
+    if "ilus" not in _CACHE:
+        R = _r()
+        letras = R._texto_img("Imagen ilustrativa", 34, 0)
+        caja = Image.new("RGBA", (letras.width + 36, letras.height + 18), (0, 0, 0, 0))
+        ImageDraw.Draw(caja).rounded_rectangle((0, 0, caja.width - 1, caja.height - 1), radius=12, fill=(0, 0, 0, 150))
+        caja.alpha_composite(letras, (18, 9))
+        _CACHE["ilus"] = caja
+    capa = _CACHE["ilus"]
+    return _pegar(img, capa, 40 + capa.width / 2, 34 + capa.height / 2)

@@ -1179,7 +1179,15 @@ def construir_edl(carpeta: CarpetaProyecto) -> dict:
             _sfx(sfx, x["tipo"], c["inicio"] + float(x["t"]), idx, f"{x['tipo']} con la animación")
     _stock(esc, escenas, clips, carpeta.ruta, revelacion, rng, sfx)
     reacciones = _reacciones(estilo, escenas, clips, carpeta.ruta, revelacion, rng, direccion.get("reacciones"), sfx)
-    if reacciones:
+    # (24-10) las fotos que parecen reales pero son de IA llevan la etiqueta «Imagen ilustrativa» y el video se marca
+    # como contenido sintético (el dueño la marca al subirlo a YouTube)
+    fotos_ia = 0
+    tipos_foto = {t.id for t in estilo.tipos_de_escena if t.plantilla_prompt.lower().startswith("photorealistic")}
+    for e, c in zip(escenas, clips):
+        if getattr(e.visual, "tipo", None) in tipos_foto and c.get("archivo") == getattr(e.visual, "archivo", None):
+            c["efectos"].append({"efecto": "ilustrativa"})
+            fotos_ia += 1
+    if reacciones or fotos_ia:
         p = carpeta.cargar()
         if not p.requiere_divulgacion_contenido_sintetico:
             p.requiere_divulgacion_contenido_sintetico = True

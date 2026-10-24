@@ -50,6 +50,8 @@ EFECTOS = (
     "palabra_golpe", "golpe", "sube_nivel",
     # (24-10) de vez en cuando, varias flechas rojas que rodean la imagen y apuntan al animal
     "flechas_alrededor",
+    # (24-10) etiqueta «Imagen ilustrativa» sobre las fotos que parecen reales pero son de IA
+    "ilustrativa",
     # entradas del objeto al cortar (sale de abajo o de un lado con rebote) y vaivén suave mientras está
     "entrada_abajo", "entrada_lado", "vaiven",
     # escala de peligro 0–10 a pantalla completa cuando se presenta un nivel (dibujada con código)

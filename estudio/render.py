@@ -2292,6 +2292,8 @@ def _renderizar(carpeta: CarpetaProyecto, ffmpeg: str, destino: Path | None, des
             img = _poner_dato(img, ef["dato"], tt, c["fin"])
         if "rotulo_tiempo" in ef and not en_reaccion:
             img = _rotulo_tiempo(img, ef["rotulo_tiempo"], tt)
+        if "ilustrativa" in ef and not en_reaccion:
+            img = RR.ilustrativa(img)
         for nombre in ("veredicto", "pero_espera", "cta_like", "cta_suscribir", "comentario", "palabra_golpe",
                        "sube_nivel"):
             x = ef.get(nombre)
