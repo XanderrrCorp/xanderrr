@@ -303,6 +303,41 @@ def probar(ruta: Path, permiso: bool = False, proveedor=None, avisar: Aviso = pr
     return [p.archivo for p in e.pruebas]
 
 
+def poses_del_canal(estilo_id: str) -> list:
+    from .estilos import cargar_estilo
+
+    return list(cargar_estilo(estilo_id).poses_canal)
+
+
+def poses(ruta: Path, permiso: bool = False, proveedor=None, avisar: Aviso = print) -> list[str]:
+    """(24-10) Las poses del canal (señalando con susto, sorpresa, asco…) pero con ESTE personaje: el video las usa en
+    el like, junto a las fotos y en el cierre. Se hacen una vez (las que ya están no se vuelven a pagar)."""
+    from .config import escribir_json
+    from .imagenes import prompts
+
+    e = cargar(ruta)
+    if not e.elegida or not e.bloqueo:
+        raise ValueError("Primero elige cómo se ve el personaje")
+    config = ConfigCostos.cargar()
+    proveedor = proveedor or _proveedor(config)
+    plantilla, estilo = _plantilla(e, "pose")
+    refs = [ruta / e.elegida] + ([ruta / e.hoja["hoja"]] if e.hoja.get("hoja") else [])
+    destino = ruta / "poses"
+    destino.mkdir(exist_ok=True)
+    hechas = []
+    for k, pose in enumerate(estilo.poses_canal, 1):
+        if (destino / f"{pose.id}.png").exists():
+            hechas.append(pose.id)
+            continue
+        avisar(f"Pose {k} de {len(estilo.poses_canal)}: {pose.id.replace('_', ' ')}…")
+        prompt = prompts.armar(plantilla, estilo, e.bloqueo, pose.descripcion)
+        archivo = _generar(ruta, e, prompt, refs, f"pose_{pose.id}", pose.id, proveedor, config, permiso)
+        shutil.copy(ruta / archivo, destino / f"{pose.id}.png")
+        hechas.append(pose.id)
+    escribir_json(destino / "poses.json", {p: {"archivo": f"{p}.png"} for p in hechas})
+    return hechas
+
+
 def editar_bloqueo(ruta: Path, bloqueo: str) -> EstadoPersonaje:
     e = cargar(ruta)
     bloqueo = re.sub(r"\s+", " ", bloqueo).strip()
@@ -313,8 +348,9 @@ def editar_bloqueo(ruta: Path, bloqueo: str) -> EstadoPersonaje:
     return e
 
 
-def imagenes_por_paso() -> dict[str, int]:
-    return {"variantes": 3, "afinar": 1, "hoja": len(VISTAS), "probar": len(ESCENAS_DE_PRUEBA)}
+def imagenes_por_paso(estilo_id: str | None = None) -> dict[str, int]:
+    return {"variantes": 3, "afinar": 1, "hoja": len(VISTAS), "probar": len(ESCENAS_DE_PRUEBA),
+            "poses": len(poses_del_canal(estilo_id)) if estilo_id else 3}
 
 
 def gastado_usd(ruta: Path) -> float:
@@ -335,6 +371,10 @@ def usar_en_video(ruta_personaje: Path, carpeta_video: Path) -> bool:
     # las reacciones guardadas del estilo son de OTRO personaje: en este video no se usan
     shutil.rmtree(carpeta_video / "assets" / ("presentador" if e.tipo == "presentador" else "poses"),
                   ignore_errors=True)
+    # (24-10) si al personaje ya se le hicieron sus propias poses, el video usa esas
+    propias = ruta_personaje / "poses"
+    if e.tipo != "presentador" and propias.exists() and any(propias.glob("*.png")):
+        shutil.copytree(propias, carpeta_video / "assets" / "poses")
     shutil.copy(ruta_personaje / e.elegida, carpeta_video / "assets" / "mascota_base.png")
     if e.hoja.get("hoja"):
         shutil.copy(ruta_personaje / e.hoja["hoja"], carpeta_video / "assets" / "personaje_hoja.png")

@@ -44,7 +44,7 @@
     {
       "id": "pov_personaje",
       "descripcion": "Anécdota del narrador en primera persona: lo que él ve con sus propios ojos (se ven sus manos y rodillas abajo); el animal de frente, mirándolo",
-      "plantilla_prompt": "{bloque_estilo} First-person point of view through the eyes of this character: {personaje}. We only see his own body from his eyes: his white cartoon hands resting on his knees at the bottom corners of the frame, the edge of his khaki pants and the red plaid sleeves in the lower foreground, slightly out of focus. {descripcion}. The animal is drawn much more detailed and realistic than the room, looking straight at the viewer. Aspect ratio 16:9, no text, no signs, no letters, no logos.",
+      "plantilla_prompt": "{bloque_estilo} First-person point of view through the eyes of this character: {personaje}. We only see his own body from his eyes: his white cartoon hands resting on his knees at the bottom corners of the frame, the edge of his own pants and sleeves (exactly as described above) in the lower foreground, slightly out of focus. {descripcion}. The animal is drawn much more detailed and realistic than the room, looking straight at the viewer. Aspect ratio 16:9, no text, no signs, no letters, no logos.",
       "quitar_fondo": false,
       "modo_montaje": "recuadro_sobre_papel"
     },

@@ -140,3 +140,24 @@ def test_api_del_asistente_y_asignacion_al_canal(monkeypatch):
     c = pipeline.crear_video("Paradojas del tiempo", "", "", 6, canal="paradoja", estilo_id="enciclopedia_mascota")
     assert (c.ruta / "assets" / "personaje_hoja.png").exists()
     assert "neandertal" not in (c.ruta / "perfil_canal.json").read_text() and "green frog" in (c.ruta / "perfil_canal.json").read_text()
+
+
+def test_poses_propias_del_personaje_para_el_canal(tmp_path):
+    """(24-10) El personaje nuevo del canal tiene sus propias poses (señalando, susto, asco): se hacen una vez y cada
+    video del canal las usa en el like, junto a las fotos y en el cierre."""
+    ruta = tmp_path / "streetwear"
+    ps.crear(ruta, "Streetwear", "enciclopedia_mascota", "El de siempre pero con hoodie y gorro de pescador rojo")
+    prov = ProveedorSimulado(ConfigCostos.cargar())
+    ps.variantes(ruta, 1, proveedor=prov, ejecutar=claude_falso([]), avisar=lambda *_: None)
+    ps.elegir(ruta, ps.cargar(ruta).variantes[0].archivo)
+    hechas = ps.poses(ruta, proveedor=prov, avisar=lambda *_: None)
+    ids = [x.id for x in ps.poses_del_canal("enciclopedia_mascota")]
+    assert hechas == ids and prov.llamadas == 1 + len(ids)
+    assert ps.poses(ruta, proveedor=prov, avisar=lambda *_: None) == ids and prov.llamadas == 1 + len(ids)  # no repaga
+    video = tmp_path / "video"
+    (video / "assets" / "poses").mkdir(parents=True)
+    (video / "assets" / "poses" / "senalando_susto.png").write_bytes(b"del granjero")
+    assert ps.usar_en_video(ruta, video)
+    nuevas = sorted(p.stem for p in (video / "assets" / "poses").glob("*.png"))
+    assert nuevas == sorted(ids)
+    assert (video / "assets" / "poses" / "senalando_susto.png").read_bytes() != b"del granjero"

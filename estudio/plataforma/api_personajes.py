@@ -22,7 +22,8 @@ from .modelos import Canal, Estilo, Personaje
 rutas = APIRouter(prefix="/api/v2/personajes")
 
 NOMBRES_PASO = {"variantes": "Dibujando variantes", "afinar": "Afinando el personaje",
-                "hoja": "Haciendo la hoja de referencia", "probar": "Probando en 3 escenas"}
+                "hoja": "Haciendo la hoja de referencia", "probar": "Probando en 3 escenas",
+                "poses": "Haciendo sus poses para el canal"}
 
 
 def _clave_trabajo(p: Personaje) -> str:
@@ -57,7 +58,8 @@ def _detalle(s: Session, q: Quien, p: Personaje) -> dict:
     e = ps.cargar(ruta)
     canales = s.scalars(select(Canal).where(Canal.espacio_id == q.espacio.id, Canal.archivado.is_(False))).all()
     return {"id": p.id, **e.model_dump(), "paso": e.paso, "gastado_usd": round(ps.gastado_usd(ruta), 3),
-            "imagenes_por_paso": ps.imagenes_por_paso(),
+            "imagenes_por_paso": ps.imagenes_por_paso(e.estilo),
+            "poses_hechas": sorted(x.stem for x in (ruta / "poses").glob("*.png")) if (ruta / "poses").exists() else [],
             "canales": [{"id": c.id, "nombre": c.nombre, "asignado": c.personaje_id == p.id} for c in canales],
             "trabajo": trabajo}
 
@@ -170,6 +172,18 @@ def probar(personaje_id: str, d: Pedido = Pedido(), q: Quien = Depends(usuario_a
     p = _obtener(s, q, personaje_id)
     return _lanzar(s, q, p, "probar", len(ps.ESCENAS_DE_PRUEBA),
                    lambda r, t: ps.probar(r, permiso=d.permiso, avisar=t.avisar))
+
+
+@rutas.post("/{personaje_id}/poses")
+def hacer_poses(personaje_id: str, d: Pedido = Pedido(), q: Quien = Depends(usuario_actual),
+                s: Session = Depends(sesion)):
+    """(24-10) Sus poses para el canal (señalando, susto, asco…): salen en el like, junto a las fotos y en el cierre."""
+    p = _obtener(s, q, personaje_id)
+    e = ps.cargar(_ruta(q, p))
+    faltan = [x for x in ps.poses_del_canal(e.estilo) if not (_ruta(q, p) / "poses" / f"{x.id}.png").exists()]
+    if not faltan:
+        return _detalle(s, q, p)
+    return _lanzar(s, q, p, "poses", len(faltan), lambda r, t: ps.poses(r, permiso=d.permiso, avisar=t.avisar))
 
 
 class Elegir(BaseModel):

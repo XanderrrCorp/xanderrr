@@ -11,7 +11,7 @@ interface Imagen { archivo: string; nota: string }
 interface Detalle {
   id: string; nombre: string; tipo: string; estilo: string; descripcion: string; paso: string;
   variantes: Imagen[]; elegida: string | null; hoja: Record<string, string>; pruebas: Imagen[];
-  imagenes_por_paso: Record<string, number>; gastado_usd: number;
+  imagenes_por_paso: Record<string, number>; gastado_usd: number; poses_hechas: string[];
   canales: { id: string; nombre: string; asignado: boolean }[];
   trabajo: { nombre: string; mensaje: string; progreso: number; activo: boolean; error: string | null; segundos: number } | null;
 }
@@ -136,6 +136,20 @@ export function PersonajeDetalle() {
           </div>
           {p.pruebas.length > 0 && (
             <div className="pj-variantes ancho">{p.pruebas.map((x) => <figure key={x.archivo} className="pj-variante"><img src={img(x.archivo)} alt="" loading="lazy" /></figure>)}</div>
+          )}
+          <h3 style={{ marginTop: 18 }}>Sus poses para el canal</h3>
+          <p className="tenue pequeno">Señalando con susto, sorpresa y asco: salen en el like, junto a las fotos y al final
+            del video. Sin ellas, esos momentos quedan sin el personaje.</p>
+          <div className="fila-botones">
+            {p.poses_hechas.length >= (n.poses ?? 3) ? <span className="ok-texto"><Check size={16} /> Poses listas</span> : <>
+              <button className="boton-primario" disabled={ocupado} onClick={() => hacer('poses')}>Hacer sus poses</button>
+              <Costo accion="personaje_imagen" cantidad={(n.poses ?? 3) - p.poses_hechas.length} />
+            </>}
+          </div>
+          {p.poses_hechas.length > 0 && (
+            <div className="pj-variantes">{p.poses_hechas.map((x) => (
+              <figure key={x} className="pj-variante"><img src={img(`imagenes/pose_${x}.png`)} alt={x} loading="lazy" />
+                <figcaption className="tenue pequeno">{x.replace('_', ' ')}</figcaption></figure>))}</div>
           )}
           {p.canales.length > 0 && (
             <>

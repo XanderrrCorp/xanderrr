@@ -21,6 +21,9 @@ REEMPLAZOS: list[tuple[str, str]] = [
 
 # Cambios que el dueño pidió y que SÍ cambian cómo se ve la imagen (no cuentan como «la misma de antes»).
 CAMBIOS_DE_ESTILO: list[tuple[str, str]] = [
+    # (24-10) la vista en primera persona ya no dibuja la ropa del granjero fija: la del personaje del canal
+    ("the edge of his khaki pants and the red plaid sleeves in the lower foreground, slightly out of focus.",
+     "the edge of his own pants and sleeves (exactly as described above) in the lower foreground, slightly out of focus."),
     # Paradoja Sapiens (30-09): no quiso el fondo turquesa, papel claro como el de los peces del Amazonas
     ("Dark flat teal-blue background with a few pale sketchy pencil lines",
      "Light cream paper background with a few faint sketchy pencil lines"),

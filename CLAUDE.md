@@ -358,7 +358,11 @@ Estado al 04-10-2026. El repositorio es PÚBLICO: nunca escribir claves, tokens 
   ahora sí»); receta_pt pone cta_like donde la voz dice «like» y cta_suscribir justo después (v2).
   PENDIENTE (aprobado sin gasto): paquete de técnicas por código (mano que señala, detalle borroso con «?», mapa
   antiguo con nubes, círculos de zoom con «?», nube de pensamiento por prompt; tarjetas de nivel tipo foto vieja).
-  Personaje streetwear propio: ESPERA permiso del gasto (~3.000-3.500 COP).
+  Personaje streetwear propio: APROBADO el gasto (~3.000-3.500 COP) el 24-10; se hace en SU PC (Google solo funciona
+  allá) con el asistente de Personajes. Nuevo: personajes.poses (las poses_canal del estilo con ESE personaje, en
+  <personaje>/poses; POST /api/v2/personajes/{id}/poses; botón «Hacer sus poses» en PersonajeDetalle) y usar_en_video
+  copia esas poses al video (antes las borraba). La vista en primera persona ya no fija la ropa del granjero
+  (arreglos.CAMBIOS_DE_ESTILO).
 ## Pendiente
 - Preguntas sin responder del dueño: ¿en qué canal notó la voz lenta? (Peligro Tropical está en 1.3 en
   config/proveedores.json; Tracy en 1.0 por pedido suyo). ¿En qué momento sale «la tira de animales» sin sentido?
