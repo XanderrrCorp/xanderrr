@@ -334,6 +334,11 @@ Estado al 04-10-2026. El repositorio es PÚBLICO: nunca escribir claves, tokens 
   (guionista.ESCALA_SALIDA; si solo si el video ordena por peligro para las personas) → direccion.json
   «escala_peligro» → edicion (mostrar_escala) y receta_pt.aplicar(veredictos=…). Sin esa marca (videos de antes):
   sale como siempre. La tira de tarjetas de niveles, «PERO ESPERA» y la cinta «sube el peligro» siguen en todos.
+  (24-10) El dueño: la tira de tarjetas SÍ va obligada siempre. Pidió «de vez en cuando más flechas rodeando la
+  imagen»: efecto «flechas_alrededor» (receta_pt.aplicar_dopamina, máx. una vez cada CADA_FLECHAS_S=15 s, en clips
+  libres de 2 s o más sin flecha/lupa/círculo/escala/presentación; 3 flechas rojas curvas con borde blanco desde 3
+  lados, una tras otra, que pican hacia la caja [0.3,0.22,0.7,0.78] de la imagen; pop por flecha) →
+  render._flechas_alrededor (se dibuja sobre la imagen, antes del zoom). Voz: sigue en 1.4 en la v2.
 ## Pendiente
 - Preguntas sin responder del dueño: ¿en qué canal notó la voz lenta? (Peligro Tropical está en 1.3 en
   config/proveedores.json; Tracy en 1.0 por pedido suyo). ¿En qué momento sale «la tira de animales» sin sentido?

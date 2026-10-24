@@ -22,6 +22,8 @@ SUSCRIBIR_S = 180.0
 
 # (23-10) «más dopamina»: cada cuánto puede saltar una palabra grande y cuánto dura en pantalla
 CADA_PALABRA_S = 4.5
+# (24-10, el dueño: «que de vez en cuando salgan más flechas rodeando la imagen») una vez cada ~15 s como máximo
+CADA_FLECHAS_S = 15.0
 DUR_PALABRA_S = 1.0
 _NUMEROS = (r"cero|uno|una|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez|once|doce|trece|catorce|quince|"
             r"dieci\w+|veinte|veinti\w+|treinta|cuarenta|cincuenta|sesenta|setenta|ochenta|noventa|cien|ciento|"
@@ -289,6 +291,25 @@ def aplicar_dopamina(clips: list, escenas: list, sfx: list, sfx_fn, nivel: list,
             sfx_fn(sfx, "golpe_grave", en, idx, f"Golpe: remate «{texto}»")
         else:
             sfx_fn(sfx, "pop", en, idx, f"Pop: salta en grande «{texto}»")
+    # flechas que rodean la imagen, de vez en cuando (en las escenas con más fuerza primero)
+    ultima_f = -99.0
+    for idx, (c, e) in enumerate(zip(clips, escenas)):
+        dur = c["fin"] - c["inicio"]
+        if not _libre(c) or nivel[idx] is None or dur < 2.0 or c["inicio"] - ultima_f < CADA_FLECHAS_S:
+            continue
+        if any(x["efecto"] in ("flecha", "lupa", "circulo_rojo", "palabra_golpe", "escala_peligro", "presentacion_especie",
+                               "palabra_completa", "capitulo") + _OCUPADO for x in c["efectos"]):
+            continue
+        fuerte = e.intencion in ("amenaza", "revelacion", "dato_impactante", "advertencia", "giro", "explicacion")
+        if not fuerte and rng.random() < 0.5:
+            continue
+        ultima_f = c["inicio"]
+        base = rng.choice([(200, -20, 250), (160, 20, 290), (210, -30, 90), (180, 300, 0)])
+        en = round(c["inicio"] + min(0.5, dur * 0.2), 3)
+        c["efectos"].append({"efecto": "flechas_alrededor", "en": en, "angulos": list(base),
+                             "caja": [0.3, 0.22, 0.7, 0.78]})
+        for k in range(len(base)):
+            sfx_fn(sfx, "pop", en + 0.14 * k, idx, "Pop: entra una flecha que rodea la imagen")
     # sube el peligro: al pasar al siguiente animal (no en el primero ni al repasar la tira del cierre)
     vistos = 0
     for idx, c in enumerate(clips):

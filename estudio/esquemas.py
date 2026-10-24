@@ -48,6 +48,8 @@ EFECTOS = (
     # (23-10) «más dopamina» (perfil peligro_tropical_v3): palabra grande que salta, golpe con zoom en los remates
     # y aviso de que sube el peligro entre un animal y el siguiente
     "palabra_golpe", "golpe", "sube_nivel",
+    # (24-10) de vez en cuando, varias flechas rojas que rodean la imagen y apuntan al animal
+    "flechas_alrededor",
     # entradas del objeto al cortar (sale de abajo o de un lado con rebote) y vaivén suave mientras está
     "entrada_abajo", "entrada_lado", "vaiven",
     # escala de peligro 0–10 a pantalla completa cuando se presenta un nivel (dibujada con código)

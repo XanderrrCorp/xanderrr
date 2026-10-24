@@ -141,3 +141,28 @@ def test_escala_de_peligro_solo_si_el_tema_es_de_peligro(estilo):
                                            "utf-8")
     sin = efectos(construir_edl(c))
     assert "escala_peligro" not in sin and "veredicto" not in sin and "sube_nivel" in sin
+
+
+def test_flechas_que_rodean_la_imagen_de_vez_en_cuando():
+    """(24-10) De vez en cuando varias flechas rojas rodean la imagen (máx. una vez cada 15 s) y se dibujan."""
+    import random
+    from types import SimpleNamespace as N
+
+    from PIL import Image
+
+    from estudio import receta_pt, render
+
+    clips = [{"id": f"c{i}", "inicio": i * 3.0, "fin": i * 3.0 + 2.8, "modo": "recuadro", "efectos": []}
+             for i in range(20)]
+    escenas = [N(narracion="Mira cómo se mueve.", palabra_clave=None, intencion="amenaza",
+                 tiempo=N(real_inicio=c["inicio"], real_fin=c["fin"])) for c in clips]
+    sfx = []
+    receta_pt.aplicar_dopamina(clips, escenas, sfx, lambda l, t, en, i, r, **k: l.append((t, en)), [1] * 20, 4,
+                               random.Random(1))
+    tiempos = [c["inicio"] for c in clips for x in c["efectos"] if x["efecto"] == "flechas_alrededor"]
+    assert len(tiempos) >= 3 and all(b - a >= receta_pt.CADA_FLECHAS_S for a, b in zip(tiempos, tiempos[1:]))
+    ef = next(x for c in clips for x in c["efectos"] if x["efecto"] == "flechas_alrededor")
+    base = Image.new("RGB", (render.W, render.H), (90, 100, 140))
+    img = render._flechas_alrededor(base, ef, (0, 0, render.W, render.H), ef["en"] + 1.0)
+    rojos = sum(1 for p in img.resize((192, 108)).getdata() if p[0] > 180 and p[1] < 80)
+    assert rojos > 20

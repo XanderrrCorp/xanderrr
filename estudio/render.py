@@ -753,6 +753,46 @@ def _flecha_curva(img: Image.Image, ef: dict, ubic: tuple, tt: float) -> Image.I
     return img.convert("RGB")
 
 
+def _flechas_alrededor(img: Image.Image, ef: dict, ubic: tuple, tt: float) -> Image.Image:
+    """(24-10, pedido del dueño) Varias flechas rojas curvas que rodean la imagen desde distintos lados y apuntan al
+    animal; entran una tras otra y «pican» hacia él. Mismo trazo que la flecha de siempre (rojo con borde blanco)."""
+    if not ubic or tt < ef["en"]:
+        return img
+    x0, y0, x1, y1 = _caja_px(ubic, ef["caja"])
+    centro = np.array([(x0 + x1) / 2, (y0 + y1) / 2])
+    rx, ry = (x1 - x0) / 2 + 18, (y1 - y0) / 2 + 18
+    capa = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    d = ImageDraw.Draw(capa)
+    for k, ang in enumerate(ef["angulos"]):
+        loc = tt - ef["en"] - 0.14 * k                       # una tras otra
+        avance = _sale(loc / 0.28)
+        if avance < 0.05:
+            continue
+        a = math.radians(ang)
+        hacia = np.array([math.cos(a), math.sin(a)])         # de la imagen hacia afuera
+        punta = centro + hacia * np.array([rx, ry])
+        punta = np.clip(punta, [60, 60], [W - 60, H * 0.78])
+        lado = np.array([-hacia[1], hacia[0]]) * (1 if k % 2 else -1)
+        cola = punta + hacia * 260 + lado * 120
+        ctrl = punta + hacia * 120 + lado * 170               # la curva se abre hacia un lado
+        ts = np.linspace(0, avance, 32)
+        pts = np.array([(1 - t) ** 2 * cola + 2 * (1 - t) * t * ctrl + t ** 2 * punta for t in ts])
+        u = pts[-1] - pts[-2]
+        u = u / (np.linalg.norm(u) + 1e-6)
+        pts = pts + u * 12 * abs(math.sin(loc * 5.5 + k)) * min(1.0, max(0.0, (loc - 0.28) / 0.2))
+        fin, n = pts[-1], np.array([-u[1], u[0]])
+        for grosor, color, extra in ((26, (255, 255, 255, 235), 7), (15, ROJO + (255,), 0)):
+            base = fin - u * 38
+            cuerpo = [tuple(p) for p in pts if np.dot(p - base, u) < 0] + [tuple(base)]
+            if len(cuerpo) > 1:
+                d.line(cuerpo, fill=color, width=grosor, joint="curve")
+            d.polygon([tuple(fin + u * (10 + extra)), tuple(base + n * (30 + extra) - u * extra),
+                       tuple(base - n * (30 + extra) - u * extra)], fill=color)
+    img = img.convert("RGBA")
+    img.alpha_composite(capa)
+    return img.convert("RGB")
+
+
 def _flecha(img: Image.Image, ef: dict, ubic: tuple, tt: float) -> Image.Image:
     if not ubic or tt < ef["en"]:
         return img
@@ -2156,13 +2196,16 @@ def _renderizar(carpeta: CarpetaProyecto, ffmpeg: str, destino: Path | None, des
                     if tt >= t_k:
                         s = s + (esc_k - s) * _sale((tt - t_k) / 0.07)
                 foco = foco_r
-            if "oscurecer_fondo" in ef or "circulo_rojo" in ef or "flecha" in ef or "lupa" in ef:
+            if "oscurecer_fondo" in ef or "circulo_rojo" in ef or "flecha" in ef or "lupa" in ef \
+                    or "flechas_alrededor" in ef:
                 ubic = esc_c.ubicacion.get(c["id"])
                 base = capa_foco.aplicar(base, c, ef, ubic, tt)
                 if "flecha" in ef:
                     base = _flecha(base, ef["flecha"], ubic, tt)
                 if "lupa" in ef:
                     base = _lupa(base, ef["lupa"], ubic, tt)
+                if "flechas_alrededor" in ef:
+                    base = _flechas_alrededor(base, ef["flechas_alrededor"], ubic, tt)
             if "rotulos" in ef:
                 base = _rotulos(base, ef["rotulos"], esc_c.tablero.get(c["id"]), tt)
             dx = dy = 0.0
