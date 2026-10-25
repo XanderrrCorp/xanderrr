@@ -243,3 +243,73 @@ def test_like_donde_la_voz_lo_pide_y_mas_avatar(estilo):
     assert pr.maximo_por_video == 14 and pr.separacion_minima_seg == 22
     p.formula = None
     assert _presentador_de_la_formula(estilo, p).presentador.maximo_por_video == estilo.presentador.maximo_por_video
+
+
+def test_tecnicas_nuevas_se_dibujan():
+    """(24-10) Mano que señala, halo de luz, detalle borroso con «?», círculos de zoom y mapa antiguo con nubes."""
+    import random
+
+    from PIL import Image
+
+    from estudio import render_tecnicas as T
+
+    base = Image.new("RGB", (T.W, T.H), (90, 140, 90))
+    ubic, caja = (0, 0, T.W, T.H), [0.45, 0.3, 0.55, 0.45]
+    centro = (T.W // 2, int(T.H * 0.375))
+    for funcion, ef in ((T.mano, {"en": 0, "caja": caja, "desde": "izquierda"}),
+                        (T.halo, {"en": 0, "caja": caja}),
+                        (T.borroso, {"en": 0, "dur": 2, "caja": caja}),
+                        (T.circulos, {"en": 0, "puntos": T.puntos_circulos(random.Random(1))})):
+        img = funcion(base, ef, ubic, 1.0)
+        assert img.size == base.size and img.tobytes() != base.tobytes(), funcion.__name__
+    assert T.halo(base, {"en": 0, "caja": caja}, ubic, 1.0).getpixel(centro) > base.getpixel(centro)
+    mapa = T.mapa_antiguo({"texto": "Hace cien millones de años", "dur": 2.5, "semilla": 2}, 1.5)
+    assert mapa.size == (T.W, T.H)
+
+
+def test_tecnicas_nuevas_en_la_edicion_v2(estilo):
+    """Con la v2 el detalle se señala de formas que se turnan, el pasado sale en el mapa antiguo y las preguntas
+    llevan círculos de zoom (sin repetir los «?» de siempre en el mismo corte). La versión de siempre no cambia."""
+    import json
+
+    from test_peligro_tropical_edicion import _proyecto
+
+    from estudio.edicion import construir_edl
+
+    c, _ = _proyecto(estilo, n=16)
+    esc = c.cargar_escenas()
+    esc.escenas[3].narracion = "Lleva aquí veinticinco millones de años."
+    c.guardar_escenas(esc)
+    d = json.loads((c.ruta / "direccion.json").read_text("utf-8"))
+    d["historias"] = {"4": "veinticinco millones de años"}
+    (c.ruta / "direccion.json").write_text(json.dumps(d), "utf-8")
+
+    def efectos(edl):
+        return [x["efecto"] for cl in edl["pistas"]["escenas"] for x in cl["efectos"]]
+
+    antes = efectos(construir_edl(c))
+    assert not {"mano", "halo", "borroso", "mapa_antiguo", "circulos_misterio"} & set(antes)
+    p = c.cargar()
+    p.formula = "escala_peligro_v2"
+    c.guardar(p)
+    edl = construir_edl(c)
+    ahora = efectos(edl)
+    assert "mapa_antiguo" in ahora
+    assert {"mano", "halo", "borroso"} & set(ahora)                  # se turnan con la flecha y la lupa
+    for cl in edl["pistas"]["escenas"]:
+        nombres = [x["efecto"] for x in cl["efectos"]]
+        assert not ("circulos_misterio" in nombres and "signos_pregunta" in nombres)
+
+
+def test_frase_historia_del_guion_va_a_la_direccion(estilo):
+    datos = {"titulo": "x", "niveles": [], "catalogo": [],
+             "escenas": [{"seccion": "Gancho", "narracion": "Hace cien millones de años vivía aquí.",
+                          "intencion": "explicacion", "intensidad": 2, "accion": "generar",
+                          "tipo": "escena_cartoon_completa", "descripcion": "a forest", "con_mascota": False,
+                          "frase_historia": "Hace cien millones de años"}]}
+    _, direccion, _ = guionista.a_escenas(datos, estilo, "animales-peligrosos")
+    assert direccion["historias"] == {"1": "Hace cien millones de años"}
+    historia = {"titulo": "x", "niveles": [{"numero": i, "nombre": f"B{i}", "villano": i == 4} for i in range(1, 5)],
+                "secciones": [("Nivel 1 · B1", ["Uno."])], "_imagenes": {"variedad": True}}
+    texto = guionista.instruccion_detalles(historia, 0, estilo)
+    assert "frase_historia" in texto and "nube de pensamiento" in texto

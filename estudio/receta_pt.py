@@ -24,6 +24,8 @@ SUSCRIBIR_S = 180.0
 CADA_PALABRA_S = 4.5
 # (24-10, el dueño: «que de vez en cuando salgan más flechas rodeando la imagen») una vez cada ~15 s como máximo
 CADA_FLECHAS_S = 15.0
+# (24-10) círculos de zoom con «?» cuando la voz pregunta o crea intriga: como mucho una vez cada 30 s
+CADA_CIRCULOS_S = 30.0
 DUR_PALABRA_S = 1.0
 _NUMEROS = (r"cero|uno|una|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez|once|doce|trece|catorce|quince|"
             r"dieci\w+|veinte|veinti\w+|treinta|cuarenta|cincuenta|sesenta|setenta|ochenta|noventa|cien|ciento|"
@@ -323,6 +325,27 @@ def aplicar_dopamina(clips: list, escenas: list, sfx: list, sfx_fn, nivel: list,
                              "caja": [0.3, 0.22, 0.7, 0.78]})
         for k in range(len(base)):
             sfx_fn(sfx, "pop", en + 0.14 * k, idx, "Pop: entra una flecha que rodea la imagen")
+    # círculos de zoom con «?» (misterio) en una pregunta o un momento de intriga
+    ultima_c = -99.0
+    for idx, (c, e) in enumerate(zip(clips, escenas)):
+        dur = c["fin"] - c["inicio"]
+        if not _libre(c) or nivel[idx] is None or dur < 2.2 or c["inicio"] - ultima_c < CADA_CIRCULOS_S:
+            continue
+        if e.intencion not in ("pregunta_al_espectador", "tension_creciente", "giro") and "?" not in e.narracion:
+            continue
+        if any(x["efecto"] in ("flecha", "lupa", "circulo_rojo", "palabra_golpe", "flechas_alrededor", "mano", "halo",
+                               "borroso", "escala_peligro", "presentacion_especie", "palabra_completa",
+                               "mapa_antiguo") + _OCUPADO for x in c["efectos"]):
+            continue
+        ultima_c = c["inicio"]
+        from .render_tecnicas import puntos_circulos
+
+        c["efectos"] = [x for x in c["efectos"] if x["efecto"] != "signos_pregunta"]    # un solo juego de «?»
+        en = round(c["inicio"] + min(0.4, dur * 0.15), 3)
+        puntos = puntos_circulos(rng, 3)
+        c["efectos"].append({"efecto": "circulos_misterio", "en": en, "puntos": puntos})
+        for k in range(len(puntos)):
+            sfx_fn(sfx, "pop", en + 0.18 * k + 0.12, idx, "Pop: sale un círculo de zoom con «?»")
     # sube el peligro: al pasar al siguiente animal (no en el primero ni al repasar la tira del cierre)
     vistos = 0
     for idx, c in enumerate(clips):

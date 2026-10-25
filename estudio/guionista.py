@@ -250,7 +250,15 @@ def instruccion_detalles(historia: dict, k: int, estilo: Estilo, catalogo: list[
             'de un vidrio, pantalla dividida para comparar.\n'
             '  · Convierte las comparaciones de la voz en imagen literal y graciosa («como una trampa de ratón» → las mandíbulas '
             'dibujadas como una trampa de ratón gigante), sobre todo en los primeros animales.\n'
-            '  · Nunca dos escenas seguidas con el mismo tipo y el mismo encuadre, ni el personaje en la misma pose.')
+            '  · Nunca dos escenas seguidas con el mismo tipo y el mismo encuadre, ni el personaje en la misma pose.\n'
+            '  · «Lo que crees contra lo que es» (1 vez en el video como mucho): cuando la voz contrasta lo que la gente '
+            'imagina con la realidad, "the cartoon man" pensativo con una nube de pensamiento que muestra la versión '
+            'tierna o común del animal, y al fondo la silueta negra del animal real (sin signos ni letras: el montaje '
+            'pone el «?»).\n'
+            '- Añade a cada escena el campo "frase_historia": SOLO cuando la voz habla del pasado lejano o de otra '
+            'época («hace cien millones de años», «en la época de los dinosaurios», «a lo largo de la historia»), copia '
+            'de la voz esa frase de 2 a 6 palabras: sale grande sobre un mapa antiguo con nubes. Como mucho en 1 escena '
+            'de la sección; en las demás, null.')
     if pov and not creativo:
         especiales.append('- Si la voz describe una ACCIÓN con el animal o el objeto («si lo tocas», «si lo aplastas», '
                           '«si lo agarras», «al quitarlo de la piel»), '
@@ -524,6 +532,10 @@ def a_escenas(datos: dict, estilo: Estilo, canal: str) -> tuple[dict, dict, str]
             termino = _clave_en(crudo, e["narracion"]) if crudo else None
         if termino:
             direccion.setdefault("terminos", {})[str(i)] = termino[:32]
+        # (24-10) v2: la frase sobre el pasado («hace cien millones de años») sale sobre un mapa antiguo con nubes
+        frase = str(e.get("frase_historia") or "").strip().strip('"«»“”\'').rstrip(".")
+        if frase and 2 <= len(frase.split()) <= 7 and _clave_en(frase.split()[0], e["narracion"]):
+            direccion.setdefault("historias", {})[str(i)] = frase[:40]
         lugar = str(e.get("lugar") or "").strip()
         if lugar and accion == "generar":
             direccion.setdefault("lugares", {})[str(i)] = lugar[:50]

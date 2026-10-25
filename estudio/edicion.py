@@ -935,8 +935,25 @@ def construir_edl(carpeta: CarpetaProyecto) -> dict:
                         and (f.get("tipo") == "detalle" or e.intencion == "explicacion"):
                     x0, y0, x1, y1 = f["caja"]
                     lado = "izquierda" if (x0 + x1) / 2 > 0.5 else "derecha"
-                    # detalle chico (garras, aguijón, ojos): lupa con zoom; si no, flecha
-                    if area < 0.08 and usos_cambio["lupa"] <= usos_cambio["flecha"]:
+                    # (24-10) v2: el detalle se señala de 4 formas que se turnan (flecha, lupa, mano, halo de luz);
+                    # si la voz pregunta, el detalle queda borroso con «?» y se aclara al final del corte
+                    nueva = None
+                    if perfil.dopamina:
+                        if "?" in e.narracion and fin - t0 >= 1.2:
+                            nueva = "borroso"
+                        else:
+                            nueva = min(("flecha", "lupa", "mano", "halo"),
+                                        key=lambda r: (usos_cambio.get(r, 0), rng.random()))
+                    if nueva in ("borroso", "mano", "halo"):
+                        efectos.append({"efecto": nueva, "en": t0, "caja": f["caja"], "desde": lado,
+                                        **({"dur": round(max(0.6, (fin - t0) * 0.7), 3)} if nueva == "borroso" else {})})
+                        usos_cambio[nueva] = usos_cambio.get(nueva, 0) + 1
+                        razon = (razon + "; " if razon else "") + {
+                            "borroso": "El detalle borroso con «?» (la voz pregunta) y se aclara al final",
+                            "mano": "Una mano de caricatura señala el detalle",
+                            "halo": "Halo de luz detrás del detalle"}[nueva] + f" «{f.get('palabra') or ''}»"
+                    elif (nueva == "lupa" or (nueva is None and area < 0.08)) \
+                            and (nueva == "lupa" or usos_cambio["lupa"] <= usos_cambio["flecha"]):
                         efectos.append({"efecto": "lupa", "en": t0, "caja": f["caja"]})
                         usos_cambio["lupa"] += 1
                         razon = (razon + "; " if razon else "") + f"Lupa con el detalle «{f.get('palabra') or ''}»"
@@ -1079,6 +1096,14 @@ def construir_edl(carpeta: CarpetaProyecto) -> dict:
                                 **({"fondo": "papel"} if historia else {})})
                 _sfx(sfx, "pop", t_t, idx, f"Pop: «{termino}» a pantalla completa")
                 razon = (razon + "; " if razon else "") + f"El término «{termino}» solo, a pantalla completa"
+        # --- (24-10) v2: cuando la voz habla del pasado («hace millones de años»), mapa antiguo con nubes y la frase
+        historia_frase = (direccion.get("historias") or {}).get(str(e.id)) if perfil.dopamina else None
+        if historia_frase and modo != "tira" and dur >= 1.6 \
+                and not any(x["efecto"] == "palabra_completa" for x in efectos):
+            efectos.append({"efecto": "mapa_antiguo", "en": ini, "dur": round(min(2.6, dur - 0.1), 3),
+                            "texto": historia_frase, "semilla": e.id})
+            _sfx(sfx, "barrido", ini, idx, "Swoosh: se abren las nubes sobre el mapa antiguo")
+            razon = (razon + "; " if razon else "") + f"Mapa antiguo con nubes: «{historia_frase}»"
         # --- pila de fotos que crece (Peligro Tropical): fotos seguidas se apilan y cada una nueva se
         # desliza encima de la anterior con swoosh (las de abajo siguen asomando, un poco giradas)
         debajo: list = []

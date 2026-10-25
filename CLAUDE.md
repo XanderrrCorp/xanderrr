@@ -356,8 +356,14 @@ Estado al 04-10-2026. El repositorio es PÚBLICO: nunca escribir claves, tokens 
   → edicion._presentador_de_la_formula. LLAMADO A LA ACCIÓN que le encantó (de la competencia, en otras palabras):
   like + suscripción como PAUSA en el momento de más intriga (minuto 1-1:40: «aquí todo se pone raro… pero antes…
   ahora sí»); receta_pt pone cta_like donde la voz dice «like» y cta_suscribir justo después (v2).
-  PENDIENTE (aprobado sin gasto): paquete de técnicas por código (mano que señala, detalle borroso con «?», mapa
-  antiguo con nubes, círculos de zoom con «?», nube de pensamiento por prompt; tarjetas de nivel tipo foto vieja).
+  (25-10) PAQUETE DE TÉCNICAS (de capturas de «Psicología Exótica», dibujo propio, sin costo): estudio/render_tecnicas.py
+  (mano de caricatura que señala, halo de luz detrás del detalle, detalle borroso con «?» que se aclara, círculos de
+  zoom con «?» fijos en pantalla, mapa antiguo sepia de geo/ con nubes que se abren + frase). edicion: con
+  perfil.dopamina el foco «detalle» se turna entre flecha/lupa/mano/halo y si la voz pregunta → borroso;
+  direccion «historias» (guionista: campo «frase_historia» de la v2, validado contra la voz) → efecto mapa_antiguo a
+  pantalla completa. receta_pt: «circulos_misterio» en preguntas/intriga cada ≥30 s (quita los signos_pregunta de ese
+  corte). Nube de pensamiento «lo que crees contra lo que es»: regla en instruccion_detalles (creativo). Falta, si lo
+  pide: tarjetas de nivel tipo foto vieja.
   Personaje streetwear propio: APROBADO el gasto (~3.000-3.500 COP) el 24-10; se hace en SU PC (Google solo funciona
   allá) con el asistente de Personajes. Nuevo: personajes.poses (las poses_canal del estilo con ESE personaje, en
   <personaje>/poses; POST /api/v2/personajes/{id}/poses; botón «Hacer sus poses» en PersonajeDetalle) y usar_en_video

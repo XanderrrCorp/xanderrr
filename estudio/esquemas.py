@@ -52,6 +52,9 @@ EFECTOS = (
     "flechas_alrededor",
     # (24-10) etiqueta «Imagen ilustrativa» sobre las fotos que parecen reales pero son de IA
     "ilustrativa",
+    # (24-10) técnicas de la competencia con dibujo propio: mano que señala, halo de luz, detalle borroso con «?»,
+    # círculos de zoom con «?» y mapa antiguo con nubes (render_tecnicas.py)
+    "mano", "halo", "borroso", "circulos_misterio", "mapa_antiguo",
     # entradas del objeto al cortar (sale de abajo o de un lado con rebote) y vaivén suave mientras está
     "entrada_abajo", "entrada_lado", "vaiven",
     # escala de peligro 0–10 a pantalla completa cuando se presenta un nivel (dibujada con código)

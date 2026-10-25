@@ -2197,7 +2197,7 @@ def _renderizar(carpeta: CarpetaProyecto, ffmpeg: str, destino: Path | None, des
                         s = s + (esc_k - s) * _sale((tt - t_k) / 0.07)
                 foco = foco_r
             if "oscurecer_fondo" in ef or "circulo_rojo" in ef or "flecha" in ef or "lupa" in ef \
-                    or "flechas_alrededor" in ef:
+                    or "flechas_alrededor" in ef or {"mano", "halo", "borroso"} & set(ef):
                 ubic = esc_c.ubicacion.get(c["id"])
                 base = capa_foco.aplicar(base, c, ef, ubic, tt)
                 if "flecha" in ef:
@@ -2206,6 +2206,15 @@ def _renderizar(carpeta: CarpetaProyecto, ffmpeg: str, destino: Path | None, des
                     base = _lupa(base, ef["lupa"], ubic, tt)
                 if "flechas_alrededor" in ef:
                     base = _flechas_alrededor(base, ef["flechas_alrededor"], ubic, tt)
+                from . import render_tecnicas as RT
+
+                if "halo" in ef:
+                    base = RT.halo(base, ef["halo"], ubic, tt)
+                if "borroso" in ef:
+                    base = RT.borroso(base, ef["borroso"], ubic, tt)
+                if "mano" in ef:
+                    base = RT.mano(base, ef["mano"], ubic, tt)
+
             if "rotulos" in ef:
                 base = _rotulos(base, ef["rotulos"], esc_c.tablero.get(c["id"]), tt)
             dx = dy = 0.0
@@ -2277,6 +2286,11 @@ def _renderizar(carpeta: CarpetaProyecto, ffmpeg: str, destino: Path | None, des
         fin_p = ef.get("final_personaje")
         if not en_reaccion and fin_p and fin_p["en"] <= tt < fin_p["en"] + fin_p["dur"]:
             img, en_reaccion = RR.final_personaje(raiz, fin_p, tt - fin_p["en"]), True
+        mapa_v = ef.get("mapa_antiguo")
+        if not en_reaccion and mapa_v and mapa_v["en"] <= tt < mapa_v["en"] + mapa_v["dur"]:
+            from . import render_tecnicas as RT
+
+            img, en_reaccion = RT.mapa_antiguo(mapa_v, tt - mapa_v["en"]), True
         cap = ef.get("capitulo")
         if not en_reaccion and cap and cap["en"] <= tt < cap["en"] + cap["dur"]:
             img, en_reaccion = _capitulo(papel, cap, tt - cap["en"]), True
@@ -2294,6 +2308,11 @@ def _renderizar(carpeta: CarpetaProyecto, ffmpeg: str, destino: Path | None, des
             img = _rotulo_tiempo(img, ef["rotulo_tiempo"], tt)
         if "ilustrativa" in ef and not en_reaccion:
             img = RR.ilustrativa(img)
+        if "circulos_misterio" in ef and not en_reaccion:
+            # sobre el cuadro ya armado (fijos en pantalla: no se arrastran con el movimiento de la imagen)
+            from . import render_tecnicas as RT
+
+            img = RT.circulos(img, ef["circulos_misterio"], (0, 0, W, H), tt)
         for nombre in ("veredicto", "pero_espera", "cta_like", "cta_suscribir", "comentario", "palabra_golpe",
                        "sube_nivel"):
             x = ef.get(nombre)
