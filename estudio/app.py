@@ -463,8 +463,9 @@ def sesion_claude():
     if not exe:
         raise HTTPException(400, "Claude no está instalado: corre de nuevo el instalador")
     if os.name == "nt":
-        # esta ventana sí se ve: es para que la persona inicie sesión en Claude
-        subprocess.Popen(["cmd", "/c", "start", "Claude", "cmd", "/k", exe], creationflags=subprocess.CREATE_NEW_CONSOLE)
+        # esta ventana sí se ve: es para que la persona inicie sesión en Claude. (26-10) Antes iba con «start Claude …»:
+        # start tomaba «Claude» como el programa a abrir (no como título) y Windows decía «no encuentra el archivo»
+        subprocess.Popen(["cmd", "/k", exe], creationflags=subprocess.CREATE_NEW_CONSOLE)
     else:
         subprocess.Popen(["x-terminal-emulator", "-e", exe])
     return {"ok": True}

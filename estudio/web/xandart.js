@@ -385,7 +385,8 @@ async function borrarAudio(huella) {
 }
 
 /* ------------------------------------------------------------ ajustes */
-function abrirAjustes() {
+async function abrirAjustes() {
+  try { ESTADO = await api('/api/estado'); } catch (e) { /* se muestra lo último que se supo */ }
   const c = (ESTADO && ESTADO.claves) || {};
   $('#e-together').textContent = c.together ? 'guardada' : 'falta';
   $('#e-minimax').textContent = c.minimax ? 'guardada' : 'falta';
