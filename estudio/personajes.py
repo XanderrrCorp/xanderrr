@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import re
 import shutil
+import time
 from pathlib import Path
 from typing import Callable, Literal
 
@@ -139,13 +140,39 @@ def _bloqueo(e: EstadoPersonaje, ejecutar=None, cambio: str = "") -> str:
     return bloqueo
 
 
+# (26-10) Google responde 429 («demasiados pedidos», no cobra): se espera y se vuelve a pedir, unos 6 min en total
+ESPERAS_429_S = (15, 30, 45, 60, 90, 120)
+_dormir = time.sleep
+MENSAJE_429 = ("Google está recibiendo demasiados pedidos ahora mismo y no dibujó la imagen. No se cobró nada: "
+               "espera unos minutos y dale otra vez al mismo botón.")
+
+
+class GoogleOcupado(RuntimeError):
+    pass
+
+
+def _pedir(proveedor, prompt: str, refs: list[Path], avisar: Aviso):
+    from .imagenes.proveedores import ErrorProveedor
+
+    for espera in (*ESPERAS_429_S, None):
+        try:
+            return proveedor.generar(prompt, refs)
+        except ErrorProveedor as ex:
+            if not ex.limite:
+                raise
+            if espera is None:
+                raise GoogleOcupado(MENSAJE_429) from ex
+            avisar(f"Google está ocupado: espero {espera} s y lo vuelvo a pedir (esto no cobra)…")
+            _dormir(espera)
+
+
 def _generar(ruta: Path, e: EstadoPersonaje, prompt: str, refs: list[Path], nombre: str, detalle: str,
-             proveedor, config: ConfigCostos, permiso: bool) -> str:
+             proveedor, config: ConfigCostos, permiso: bool, avisar: Aviso = print) -> str:
     from .costos import LibroCostos
 
     libro = LibroCostos(ruta, config)
     libro.autorizar(proveedor.estimar_usd(prompt, refs), permiso=permiso)
-    r = proveedor.generar(prompt, refs)
+    r = _pedir(proveedor, prompt, refs, avisar)
     libro.registrar(modulo="personaje", proveedor=r.proveedor, modelo=r.modelo, unidades={"imagenes": 1},
                     costo_usd=r.uso.costo_usd, detalle=detalle)
     (ruta / "imagenes").mkdir(exist_ok=True)
@@ -194,7 +221,7 @@ def variantes(ruta: Path, n: int = 3, permiso: bool = False, proveedor=None, eje
     for k in range(n):
         avisar(f"Dibujando la variante {k + 1} de {n}…")
         prompt = prompts.armar(plantilla, estilo, e.bloqueo, nota, escenario="a simple neutral studio")
-        archivo = _generar(ruta, e, prompt, refs, _siguiente(ruta, "variante"), "variante", proveedor, config, permiso)
+        archivo = _generar(ruta, e, prompt, refs, _siguiente(ruta, "variante"), "variante", proveedor, config, permiso, avisar)
         e.variantes.append(Imagen(archivo=archivo))
         guardar(ruta, e)
         hechas.append(archivo)
@@ -231,7 +258,7 @@ def afinar(ruta: Path, instruccion: str, permiso: bool = False, proveedor=None, 
     prompt = prompts.armar(plantilla, estilo, e.bloqueo, f"Change only this: {instruccion}. Keep everything else "
                            "identical to the reference.", escenario="a simple neutral studio")
     archivo = _generar(ruta, e, prompt, [ruta / e.elegida], _siguiente(ruta, "afinada"), instruccion[:80],
-                       proveedor, config, permiso)
+                       proveedor, config, permiso, avisar)
     e.variantes.append(Imagen(archivo=archivo, nota=instruccion))
     e.elegida, e.hoja, e.pruebas = archivo, {}, []
     guardar(ruta, e)
@@ -249,14 +276,22 @@ def hoja(ruta: Path, permiso: bool = False, proveedor=None, avisar: Aviso = prin
     proveedor = proveedor or _proveedor(config)
     plantilla, estilo = _plantilla(e, "pose")
     vistas = {}
+    archivo_parcial = ruta / "hoja_parcial.json"          # (26-10) si Google corta a mitad, lo ya hecho se reusa
+    base = [e.elegida, e.bloqueo]
+    parcial = leer_json(archivo_parcial) if archivo_parcial.exists() else {}
     for k, (vista, texto) in enumerate(VISTAS.items(), 1):
         avisar(f"Hoja de referencia: vista {k} de {len(VISTAS)}…")
+        if parcial.get("base") == base and vista in parcial.get("vistas", {}):
+            vistas[vista] = parcial["vistas"][vista]          # ya pagada en un intento que no terminó: no se repaga
+            continue
         prompt = prompts.armar(plantilla, estilo, e.bloqueo, f"Full body, {texto}, standing relaxed, neutral expression.",
                                escenario="a simple neutral studio")
-        vistas[vista] = _generar(ruta, e, prompt, [ruta / e.elegida], f"hoja_{vista}", vista, proveedor, config, permiso)
+        vistas[vista] = _generar(ruta, e, prompt, [ruta / e.elegida], f"hoja_{vista}", vista, proveedor, config, permiso, avisar)
+        escribir_json(archivo_parcial, {"base": base, "vistas": vistas})
     vistas["hoja"] = _armar_hoja(ruta, [vistas[v] for v in VISTAS], e.nombre)
     e.hoja, e.pruebas = vistas, []
     guardar(ruta, e)
+    archivo_parcial.unlink(missing_ok=True)
     return vistas["hoja"]
 
 
@@ -297,7 +332,7 @@ def probar(ruta: Path, permiso: bool = False, proveedor=None, avisar: Aviso = pr
     for k, escena in enumerate(ESCENAS_DE_PRUEBA, 1):
         avisar(f"Escena de prueba {k} de {len(ESCENAS_DE_PRUEBA)}…")
         prompt = prompts.armar(PLANTILLA_ESCENA, estilo, e.bloqueo, escena)
-        archivo = _generar(ruta, e, prompt, refs, f"prueba_{k}", escena[:60], proveedor, config, permiso)
+        archivo = _generar(ruta, e, prompt, refs, f"prueba_{k}", escena[:60], proveedor, config, permiso, avisar)
         e.pruebas.append(Imagen(archivo=archivo, nota=escena))
         guardar(ruta, e)
     return [p.archivo for p in e.pruebas]
@@ -331,7 +366,7 @@ def poses(ruta: Path, permiso: bool = False, proveedor=None, avisar: Aviso = pri
             continue
         avisar(f"Pose {k} de {len(estilo.poses_canal)}: {pose.id.replace('_', ' ')}…")
         prompt = prompts.armar(plantilla, estilo, e.bloqueo, pose.descripcion)
-        archivo = _generar(ruta, e, prompt, refs, f"pose_{pose.id}", pose.id, proveedor, config, permiso)
+        archivo = _generar(ruta, e, prompt, refs, f"pose_{pose.id}", pose.id, proveedor, config, permiso, avisar)
         shutil.copy(ruta / archivo, destino / f"{pose.id}.png")
         hechas.append(pose.id)
     escribir_json(destino / "poses.json", {p: {"archivo": f"{p}.png"} for p in hechas})

@@ -161,3 +161,36 @@ def test_poses_propias_del_personaje_para_el_canal(tmp_path):
     nuevas = sorted(p.stem for p in (video / "assets" / "poses").glob("*.png"))
     assert nuevas == sorted(ids)
     assert (video / "assets" / "poses" / "senalando_susto.png").read_bytes() != b"del granjero"
+
+
+def test_si_google_esta_ocupado_espera_y_no_repaga_lo_hecho(tmp_path, monkeypatch):
+    """(26-10) El dueño vio «HTTP 429 RESOURCE_EXHAUSTED» al hacer la hoja: ahora espera y reintenta solo, y si
+    Google sigue ocupado da un mensaje claro; lo ya dibujado no se vuelve a pagar."""
+    from estudio.imagenes.proveedores import ErrorProveedor
+
+    esperas = []
+    monkeypatch.setattr(ps, "_dormir", esperas.append)
+    ruta = tmp_path / "p"
+    ps.crear(ruta, "P", "enciclopedia_mascota", "Un búho con gafas")
+    prov = ProveedorSimulado(ConfigCostos.cargar())
+    ps.variantes(ruta, 1, proveedor=prov, ejecutar=claude_falso([]), avisar=lambda *_: None)
+    ps.elegir(ruta, ps.cargar(ruta).variantes[0].archivo)
+
+    original, fallos = prov.generar, {"n": 0}
+
+    def ocupado(prompt, refs):
+        if prov.llamadas == 2 and fallos["n"] < 10:       # la segunda vista de la hoja: Google ocupado un rato largo
+            fallos["n"] += 1
+            raise ErrorProveedor("HTTP 429: RESOURCE_EXHAUSTED", limite=True)
+        return original(prompt, refs)
+
+    monkeypatch.setattr(prov, "generar", ocupado)
+    avisos = []
+    with pytest.raises(ps.GoogleOcupado, match="No se cobró nada"):
+        ps.hoja(ruta, proveedor=prov, avisar=avisos.append)
+    assert esperas == list(ps.ESPERAS_429_S) and any("Google está ocupado" in a for a in avisos)
+    assert prov.llamadas == 2                                  # la variante + la primera vista
+
+    ps.hoja(ruta, proveedor=prov, avisar=lambda *_: None)      # al volver a darle: Google ya responde
+    assert prov.llamadas == 2 + 2 and set(ps.cargar(ruta).hoja) == {"frente", "perfil", "tres_cuartos", "hoja"}
+    assert not (ruta / "hoja_parcial.json").exists()
