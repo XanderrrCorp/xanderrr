@@ -111,7 +111,8 @@ def _instruccion(lote: list[dict]) -> str:
             "No encierres a la mascota salvo que la narración hable de ella.")
 
 
-def ubicar_focos(carpeta: Path, ejecutar=claude_cli.ejecutar, avisar=print) -> dict:
+@claude_cli.en_paso("Flechas y círculos (mira imágenes)")
+def ubicar_focos(carpeta: Path, ejecutar=claude_cli.revisor, avisar=print) -> dict:
     """Llena direccion.json["focos"] con {escena: {tipo, palabra, caja}}. Reanudable:
     las escenas ya revisadas no se vuelven a preguntar."""
     ruta = carpeta / "direccion.json"

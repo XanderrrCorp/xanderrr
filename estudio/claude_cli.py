@@ -8,10 +8,15 @@ Lecciones del código de referencia (pasos/cli_claude.py):
 """
 from __future__ import annotations
 
+import contextvars
+import functools
 import json
 import os
 import shutil
 import subprocess
+import time
+from contextlib import contextmanager
+from datetime import datetime
 from pathlib import Path
 
 PAGO_POR_USO = ("ANTHROPIC_API_KEY", "ANTHROPIC_AUTH_TOKEN", "ANTHROPIC_BASE_URL",
@@ -26,6 +31,92 @@ SIN_VENTANA = {"creationflags": getattr(subprocess, "CREATE_NO_WINDOW", 0x080000
 
 class ErrorClaude(RuntimeError):
     pass
+
+
+# (27-10, el dueño: «un video gasta el 50 % de mi uso») cada pedido a Claude dentro de un proyecto queda anotado en
+# <proyecto>/uso_claude.jsonl con el paso que lo hizo, para ver qué se come el plan (resumen_uso).
+_PASO: contextvars.ContextVar[str | None] = contextvars.ContextVar("paso_claude", default=None)
+USO = "uso_claude.jsonl"
+
+
+@contextmanager
+def paso(nombre: str):
+    marca = _PASO.set(nombre)
+    try:
+        yield
+    finally:
+        _PASO.reset(marca)
+
+
+def en_paso(nombre: str):
+    """Decorador: todo lo que esa función le pida a Claude se anota con este paso."""
+    def envolver(f):
+        @functools.wraps(f)
+        def con_paso(*a, **k):
+            with paso(nombre):
+                return f(*a, **k)
+        return con_paso
+    return envolver
+
+
+def _anotar(cwd, modelo: str | None, sobre: dict, segundos: float) -> None:
+    if not cwd or not (Path(cwd) / "proyecto.json").exists():
+        return
+    try:
+        uso = sobre.get("usage") or {}
+        usados = list((sobre.get("modelUsage") or {}).keys())
+        fila = {"fecha": datetime.now().isoformat(timespec="seconds"), "paso": _PASO.get() or "Otros",
+                "modelo": modelo or (usados[0] if usados else "el de tu plan"),
+                "entrada": int(uso.get("input_tokens") or 0) + int(uso.get("cache_creation_input_tokens") or 0)
+                + int(uso.get("cache_read_input_tokens") or 0),
+                "salida": int(uso.get("output_tokens") or 0),
+                "equivalente_usd": round(float(sobre.get("total_cost_usd") or 0), 5), "segundos": round(segundos, 1)}
+        with open(Path(cwd) / USO, "a", encoding="utf-8") as f:
+            f.write(json.dumps(fila, ensure_ascii=False) + "\n")
+    except Exception:  # noqa: BLE001 — anotar nunca frena un video
+        pass
+
+
+def resumen_uso(carpeta: Path) -> dict | None:
+    """Cuánto del plan se llevó cada paso del video (en % del total: el peso de cada pedido según su modelo y largo)."""
+    ruta = Path(carpeta) / USO
+    if not ruta.exists():
+        return None
+    pasos: dict[str, dict] = {}
+    for linea in ruta.read_text(encoding="utf-8").splitlines():
+        try:
+            f = json.loads(linea)
+        except json.JSONDecodeError:
+            continue
+        p = pasos.setdefault(f.get("paso") or "Otros", {"paso": f.get("paso") or "Otros", "pedidos": 0, "peso": 0.0,
+                                                          "modelos": set(), "minutos": 0.0})
+        p["pedidos"] += 1
+        p["peso"] += float(f.get("equivalente_usd") or 0) or (int(f.get("entrada") or 0) + 5 * int(f.get("salida") or 0)) / 1e6
+        p["modelos"].add(str(f.get("modelo")))
+        p["minutos"] += float(f.get("segundos") or 0) / 60
+    total = sum(p["peso"] for p in pasos.values()) or 1.0
+    lista = sorted(pasos.values(), key=lambda p: -p["peso"])
+    return {"pedidos": sum(p["pedidos"] for p in lista),
+            "pasos": [{"paso": p["paso"], "pedidos": p["pedidos"], "porcentaje": round(100 * p["peso"] / total, 1),
+                       "modelos": sorted(p["modelos"]), "minutos": round(p["minutos"], 1)} for p in lista]}
+
+
+def _modelo_revisor() -> str:
+    try:
+        from .config import leer_config
+
+        return (leer_config("proveedores.json").get("claude") or {}).get("modelo_revisor") or "sonnet"
+    except Exception:  # noqa: BLE001
+        return "sonnet"
+
+
+def revisor(prompt: str, **k) -> tuple[str, dict]:
+    """(27-10) Mirar imágenes (flechas y círculos, tapar al animal), revisar las fotos de Pexels, elegir lugares y
+    reacciones: con el modelo liviano (Sonnet) y poco razonamiento, que gasta varias veces menos del plan. La
+    historia del guion sigue con el modelo de siempre."""
+    k.setdefault("modelo", _modelo_revisor())
+    k.setdefault("pensamiento", 2000)
+    return ejecutar(prompt, **k)
 
 
 class SinCupo(ErrorClaude):
@@ -72,6 +163,7 @@ def ejecutar(prompt: str, *, cwd: Path | None = None, herramientas: list[str] | 
     liviano = base + ["--system-prompt", SISTEMA_CORTO, "--tools", ",".join(herramientas) if herramientas else ""]
     cmd = liviano if _LIVIANO["ok"] else base
     entorno = {k: v for k, v in os.environ.items() if k not in PAGO_POR_USO}
+    inicio = time.monotonic()
     if pensamiento is not None:
         entorno["MAX_THINKING_TOKENS"] = str(int(pensamiento))
     try:
@@ -99,6 +191,7 @@ def ejecutar(prompt: str, *, cwd: Path | None = None, herramientas: list[str] | 
         if any(p in detalle.lower() for p in ("login", "log in", "authenticat", "/login", "sesión")):
             raise SinSesion("Claude no tiene sesión iniciada. Abre «Iniciar sesión en Claude» desde Xandart.")
         raise ErrorClaude(f"Claude devolvió un error: {detalle}")
+    _anotar(cwd, modelo, sobre, time.monotonic() - inicio)
     return texto, sobre
 
 

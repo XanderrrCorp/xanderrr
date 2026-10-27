@@ -38,7 +38,8 @@ def _instruccion(escenas: list[dict], poses: dict[str, str], pr) -> str:
     )
 
 
-def elegir_reacciones(carpeta: Path, ejecutar=claude_cli.ejecutar, avisar=print) -> list[dict]:
+@claude_cli.en_paso("Escenas del presentador")
+def elegir_reacciones(carpeta: Path, ejecutar=claude_cli.revisor, avisar=print) -> list[dict]:
     """Guarda en direccion.json["reacciones"] la lista elegida por Claude (una vez por guion)."""
     ruta = carpeta / "direccion.json"
     direccion = leer_json(ruta) if ruta.exists() else {}

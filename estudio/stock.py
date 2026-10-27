@@ -123,6 +123,7 @@ def _hoja(candidatos: list[dict], destino: Path, sesion=requests) -> Path:
     return destino
 
 
+@claude_cli.en_paso("Pexels: preparar las búsquedas")
 def _busquedas(niveles: list[dict], carpeta: Path, ejecutar) -> dict[str, str]:
     lista = "\n".join(f"- nivel {n['numero']}: {n['nombre']}" for n in niveles)
     texto, _ = ejecutar("Para buscar fotos reales en un banco de imágenes en inglés, da para cada animal la búsqueda "
@@ -132,6 +133,7 @@ def _busquedas(niveles: list[dict], carpeta: Path, ejecutar) -> dict[str, str]:
     return {str(k): str(v)[:80] for k, v in datos.items() if str(v).strip()}
 
 
+@claude_cli.en_paso("Pexels: revisar fotos y videos (mira imágenes)")
 def _verificar(nivel: dict, hoja: Path, candidatos: list[dict], carpeta: Path, ejecutar) -> dict[int, str]:
     texto, _ = ejecutar(
         f"Mira la hoja de contacto {hoja.relative_to(carpeta).as_posix()} con la herramienta Read. Tiene {len(candidatos)} "
@@ -152,6 +154,7 @@ def _verificar(nivel: dict, hoja: Path, candidatos: list[dict], carpeta: Path, e
     return salida
 
 
+@claude_cli.en_paso("Pexels: revisar la recreación (mira una imagen)")
 def _verificar_recreacion(nivel: dict, archivo: Path, carpeta: Path, ejecutar) -> str | None:
     texto, _ = ejecutar(
         f"Mira la imagen {archivo.relative_to(carpeta).as_posix()} con la herramienta Read. Debe ser una recreación "
@@ -192,7 +195,7 @@ def recrear(carpeta: Path, nivel: dict, busqueda: str, ejecutar, avisar=print, p
     return None
 
 
-def preparar_stock(carpeta: Path, ejecutar=claude_cli.ejecutar, avisar=print, sesion=requests,
+def preparar_stock(carpeta: Path, ejecutar=claude_cli.revisor, avisar=print, sesion=requests,
                    recrear_faltantes: bool = True, proveedor=None, permiso: bool = False,
                    pex: dict | None = None) -> dict:
     """Busca, verifica y baja fotos y videos reales por nivel. Reanudable: los niveles
@@ -256,6 +259,7 @@ VIDEOS_POR_LUGAR, VIDEOS_APROBADOS_LUGAR = 8, 2
 MAX_LUGARES, MAX_ESCENAS_LUGAR = 6, 12
 
 
+@claude_cli.en_paso("Pexels: elegir los lugares")
 def elegir_lugares(carpeta: Path, escenas: list[dict], ejecutar) -> dict[str, str]:
     """(27-10) Claude elige las escenas cuya voz habla de un LUGAR (costa, selva, río, desierto, páramo, ciudad…) donde
     un video real del paisaje queda bien, sin animal ni personaje. Devuelve {id de escena: búsqueda en inglés}."""
@@ -281,7 +285,7 @@ def elegir_lugares(carpeta: Path, escenas: list[dict], ejecutar) -> dict[str, st
     return salida
 
 
-def preparar_lugares(carpeta: Path, lugares: dict[str, str], ejecutar=claude_cli.ejecutar, avisar=print,
+def preparar_lugares(carpeta: Path, lugares: dict[str, str], ejecutar=claude_cli.revisor, avisar=print,
                      sesion=requests) -> dict:
     """Videos REALES de los lugares elegidos (solo videos, verificados en la hoja de contacto como todo lo demás)."""
     ruta = carpeta / "assets" / "stock" / "stock.json"

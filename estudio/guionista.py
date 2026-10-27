@@ -359,6 +359,7 @@ Responde SOLO un JSON: {{"escenas": [{{"n": 1, "intencion": "...", "intensidad":
 "palabra": null, "dato": null, "termino": null, "lugar": null, "rotulos": null, "salto_tiempo": null}}, ...]}} con exactamente {len(lineas)} escenas."""
 
 
+@claude_cli.en_paso("Guion: detalles de cada escena")
 def _detalles(historia: dict, k: int, estilo: Estilo, carpeta: Path, ejecutar, avisar,
               catalogo: list[dict] | None = None) -> list[dict]:
     nombre, lineas = historia["secciones"][k]
@@ -626,9 +627,10 @@ def escribir_guion(encargo: Encargo, estilo: Estilo, carpeta: Path, canal: str,
     else:
         avisar("Claude está escribiendo la historia…")
     for intento in range(0 if historia else 3):
-        texto, sobre = ejecutar(prompt if not error else
-                                prompt + f"\n\n== CORRIGE ==\nTu respuesta anterior falló: {error}. "
-                                         "Devuelve la historia completa en el formato pedido.", cwd=carpeta)
+        with claude_cli.paso("Guion: escribir la historia"):
+            texto, sobre = ejecutar(prompt if not error else
+                                    prompt + f"\n\n== CORRIGE ==\nTu respuesta anterior falló: {error}. "
+                                             "Devuelve la historia completa en el formato pedido.", cwd=carpeta)
         try:
             historia = leer(texto)
             break
@@ -647,8 +649,9 @@ def escribir_guion(encargo: Encargo, estilo: Estilo, carpeta: Path, canal: str,
             if not fallas_llamados:
                 break
             avisar(f"  llamados a comentar: corrigiendo ({'; '.join(fallas_llamados)[:160]})")
-            texto2, _ = ejecutar(prompt + L.correccion(fallas_llamados, tipos) + "\n\nTU HISTORIA ANTERIOR:\n" + texto,
-                                 cwd=carpeta)
+            with claude_cli.paso("Guion: corregir los llamados (reescribe la historia)"):
+                texto2, _ = ejecutar(prompt + L.correccion(fallas_llamados, tipos) + "\n\nTU HISTORIA ANTERIOR:\n"
+                                     + texto, cwd=carpeta)
             try:
                 nueva = leer(texto2)
             except ValueError:
@@ -665,7 +668,8 @@ def escribir_guion(encargo: Encargo, estilo: Estilo, carpeta: Path, canal: str,
     if abs(palabras - objetivo) / objetivo > tolerancia:
         # Xandart cuenta las palabras (no Claude): si se aleja mucho, un solo ajuste (es otra
         # vuelta completa de la historia, por eso solo cuando de verdad hace falta)
-        texto2, _ = ejecutar(prompt + f"\n\n== AJUSTA EL LARGO ==\nEsta es tu historia, con {palabras} palabras. Debe tener "
+        with claude_cli.paso("Guion: ajustar el largo (reescribe la historia)"):
+            texto2, _ = ejecutar(prompt + f"\n\n== AJUSTA EL LARGO ==\nEsta es tu historia, con {palabras} palabras. Debe tener "
                                       f"entre {int(objetivo * 0.95)} y {int(objetivo * 1.05)}. "
                                       f"{'Alárgala con más datos concretos y escenas' if palabras < objetivo else 'Acórtala'} "
                                       "sin cambiar la estructura ni los niveles, y devuélvela completa en el mismo formato"
@@ -748,7 +752,8 @@ def _llamados_sin_imagen(escenas: list[dict], k: int, llamados: list) -> None:
         e.pop("descripcion", None)
 
 
-def ubicar_villano(carpeta: Path, ejecutar=claude_cli.ejecutar) -> dict:
+@claude_cli.en_paso("Tapar al animal del final (mira imágenes)")
+def ubicar_villano(carpeta: Path, ejecutar=claude_cli.revisor) -> dict:
     """Mira las escenas previas a la revelación que muestran al villano y
     guarda en direccion.json las zonas a pixelar (15.4)."""
     ruta = carpeta / "direccion.json"

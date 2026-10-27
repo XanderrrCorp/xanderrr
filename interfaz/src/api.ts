@@ -98,6 +98,7 @@ export interface VideoDetalle {
   revision_video?: { resumen: string; problemas: { cuadro: number; minuto: string; que: string; gravedad: string }[] };
   llamados?: { comentario_fijado: string | null; avisos: string[]; lista: { tipo: string; seccion: string; texto: string }[] };
   creditos_fotos?: string | null;
+  uso_claude?: { pedidos: number; pasos: { paso: string; pedidos: number; porcentaje: number; modelos: string[]; minutos: number }[] } | null;
 }
 
 export interface Cotizacion {

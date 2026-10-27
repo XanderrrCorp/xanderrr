@@ -349,7 +349,7 @@ def usar_pexels_en_escenas(c: CarpetaProyecto, t=None, ejecutar_claude=None, pex
 
     avisar = t.avisar if t else print
     try:
-        indice = preparar_stock(c.ruta, ejecutar=ejecutar_claude or claude_cli.ejecutar, avisar=avisar,
+        indice = preparar_stock(c.ruta, ejecutar=ejecutar_claude or claude_cli.revisor, avisar=avisar,
                                 recrear_faltantes=False, pex=pex)
     except SinClavePexels as ex:
         avisar(f"⚠ Sin fotos reales de Pexels: {ex}. Se ajusta solo reusando imágenes.")
@@ -480,7 +480,7 @@ def usar_lugares_en_escenas(c: CarpetaProyecto, t=None, ejecutar_claude=None) ->
     from .stock import elegir_lugares, preparar_lugares
 
     avisar = t.avisar if t else print
-    ejecutar = ejecutar_claude or (lambda prompt, **k: claude_cli.ejecutar(prompt, modelo="sonnet", **k))
+    ejecutar = ejecutar_claude or claude_cli.revisor
     ruta_dir = c.ruta / "direccion.json"
     direccion = leer_json(ruta_dir) if ruta_dir.exists() else {}
     if "lugares" not in direccion:
@@ -638,7 +638,7 @@ def paso_imagenes(c: CarpetaProyecto, t: Trabajo, permiso: bool = False, ejecuta
         t.avisar("Claude está ubicando al villano para pixelarlo antes de su revelación…")
         from . import claude_cli
 
-        ubicar_villano(c.ruta, ejecutar=ejecutar_claude or claude_cli.ejecutar)
+        ubicar_villano(c.ruta, ejecutar=ejecutar_claude or claude_cli.revisor)
     _ubicar_focos(c, t, ejecutar_claude)
     _stock(c, t, ejecutar_claude)
     c.marcar("assets", "completo", ["imagenes/", "assets/tira/"])
@@ -688,7 +688,7 @@ def usar_las_que_hay(c: CarpetaProyecto, t: Trabajo, ejecutar_claude=None) -> di
     if (c.ruta / "direccion.json").exists() and leer_json(c.ruta / "direccion.json").get("pixelar_pendiente"):
         from . import claude_cli
 
-        ubicar_villano(c.ruta, ejecutar=ejecutar_claude or claude_cli.ejecutar)
+        ubicar_villano(c.ruta, ejecutar=ejecutar_claude or claude_cli.revisor)
     _ubicar_focos(c, t, ejecutar_claude)
     _stock(c, t, ejecutar_claude)
     c.marcar("assets", "completo", ["imagenes/", "assets/tira/"])
@@ -701,7 +701,7 @@ def _stock(c: CarpetaProyecto, t: Trabajo, ejecutar_claude=None) -> None:
     from .stock import SinClavePexels, preparar_stock
 
     try:
-        preparar_stock(c.ruta, ejecutar=ejecutar_claude or claude_cli.ejecutar, avisar=t.avisar)
+        preparar_stock(c.ruta, ejecutar=ejecutar_claude or claude_cli.revisor, avisar=t.avisar)
     except SinClavePexels as ex:
         t.avisar(f"⚠ Sin fotos reales de Pexels: {ex}")
     except Exception as ex:  # noqa: BLE001 — no es imprescindible
@@ -728,7 +728,7 @@ def _ubicar_focos(c: CarpetaProyecto, t: Trabajo, ejecutar_claude=None) -> None:
     from .foco import ubicar_focos
 
     try:
-        ubicar_focos(c.ruta, ejecutar=ejecutar_claude or claude_cli.ejecutar, avisar=t.avisar)
+        ubicar_focos(c.ruta, ejecutar=ejecutar_claude or claude_cli.revisor, avisar=t.avisar)
     except Exception as ex:  # noqa: BLE001 — no es imprescindible
         t.avisar(f"Sin círculo ni flechas esta vez: {str(ex)[:160]}")
 
@@ -992,6 +992,9 @@ def resumen(c: CarpetaProyecto) -> dict:
         datos["estimacion_imagenes"] = estimar_imagenes(c)
         if (c.ruta / "guion.md").exists():
             datos["guion"] = (c.ruta / "guion.md").read_text(encoding="utf-8")
+    from .claude_cli import resumen_uso
+
+    datos["uso_claude"] = resumen_uso(c.ruta)              # (27-10) qué paso se llevó cuánto del plan de Claude
     if (c.ruta / "render" / "revision.json").exists():   # la revisión del video terminado (17-10)
         datos["revision_video"] = leer_json(c.ruta / "render" / "revision.json")
     if (c.ruta / "llamados.json").exists():          # llamados a comentar y comentario fijado (17-10)

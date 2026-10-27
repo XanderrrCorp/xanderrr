@@ -378,6 +378,17 @@ Estado al 04-10-2026. El repositorio es PÚBLICO: nunca escribir claves, tokens 
   gana_al_efecto el video real quita flecha/lupa/círculo/mano/halo/borroso (EFECTOS_QUE_CEDEN). También (26-10):
   personajes espera y reintenta ante 429 (GoogleOcupado, mensaje claro; la hoja reusa vistas ya pagadas) y Ajustes
   «Iniciar sesión» de Claude abre «cmd /k <exe>» (antes «start Claude» buscaba un programa llamado Claude).
+- (27-10) MENOS PLAN DE CLAUDE EN PELIGRO TROPICAL (el dueño: «un video gasta el 50 % de mi uso»): claude_cli.revisor
+  (modelo liviano «sonnet», 2000 de razonamiento; proveedores.json claude.modelo_revisor lo cambia) para flechas y
+  círculos (foco.ubicar_focos), tapar al villano, búsquedas/revisión de Pexels y lugares, reacciones del presentador y
+  animaciones por código. La HISTORIA del guion sigue con el modelo de siempre. MEDICIÓN: cada pedido dentro de un
+  proyecto queda en <proyecto>/uso_claude.jsonl con su paso (claude_cli.paso / en_paso; «Otros» si no tiene) y el
+  peso total_cost_usd del CLI; claude_cli.resumen_uso → resumen["uso_claude"] → tarjeta «Uso de tu plan de Claude en
+  este video» (solo dueño, Revision.tsx). OJO: corregir llamados y ajustar el largo REESCRIBEN la historia completa
+  (cada uno cuesta como otra historia): mirar en la tarjeta si pesan. Después: MOTION GRAPHICS aprobados en idea
+  (prueba en scratchpad mg/en_pt.py: ficha animada en lugar de la escala 0-10, líneas que señalan con imagen quieta,
+  datos que cuentan con círculo, cortina de 3 colores en el cambio de animal, el último en rojo con chispas y título);
+  falta que Claude (liviano) marque dónde va cada uno según el tema, con 3-4 versiones que se turnan.
 ## Pendiente
 - Preguntas sin responder del dueño: ¿en qué canal notó la voz lenta? (Peligro Tropical está en 1.3 en
   config/proveedores.json; Tracy en 1.0 por pedido suyo). ¿En qué momento sale «la tira de animales» sin sentido?

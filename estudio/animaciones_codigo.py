@@ -18,6 +18,7 @@ import hashlib
 import json
 from pathlib import Path
 
+from . import claude_cli
 from .config import escribir_json, leer_json
 
 CARPETA = Path("assets") / "animaciones"
@@ -103,6 +104,7 @@ Devuelve SOLO un JSON:
 """
 
 
+@claude_cli.en_paso("Animaciones por código")
 def disenar(carpeta, ejecutar=None, avisar=print, proporcion: float | None = None) -> dict:
     """Elige las frases y arma sus animaciones. Las escenas elegidas dejan de pagar imagen (reusan una
     anterior). Si ya está hecho, no hace nada."""
@@ -113,6 +115,7 @@ def disenar(carpeta, ejecutar=None, avisar=print, proporcion: float | None = Non
     ruta = carpeta.ruta / DISENOS
     if ruta.exists():
         return leer_json(ruta)
+    ejecutar = ejecutar or claude_cli.revisor        # (27-10) el modelo liviano: gasta menos del plan del dueño
     p = carpeta.cargar()
     proporcion = cargar_estilo(p.estilo).animaciones_codigo if proporcion is None else proporcion
     esc = carpeta.cargar_escenas()

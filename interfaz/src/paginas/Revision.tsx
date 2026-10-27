@@ -195,6 +195,7 @@ export function Revision() {
 
       {guionOk && v.llamados && <Llamados l={v.llamados} />}
       {v.creditos_fotos && <CreditosFotos texto={v.creditos_fotos} />}
+      {esDueno() && v.uso_claude && <UsoClaude u={v.uso_claude} />}
       {guionOk && <GuionCompleto v={v} />}
       {guionOk && <Escenas v={v} conImagenes={imgOk} bloqueado={trabajando} slug={slug} alRegenerar={(id, inst) => accion(`escenas/${id}/regenerar`, { instruccion: inst })} />}
       {esDueno() && <p className="tenue pequeno" style={{ marginTop: 24 }}>¿Algo no está aquí? <a href={paginaVieja(slug)}>Ábrelo en la página de siempre</a>.</p>}
@@ -225,6 +226,23 @@ function Llamados({ l }: { l: NonNullable<VideoDetalle['llamados']> }) {
         <p><b>Comentario fijado:</b> {l.comentario_fijado}{' '}
           <button className="boton-borde pequeno" onClick={copiar}>{copiado ? 'Copiado' : 'Copiar'}</button></p>
       )}
+    </section>
+  );
+}
+
+/** (27-10) Qué parte del video se llevó más del plan de Claude (solo para el dueño; 0 pesos, pero tiene límite). */
+function UsoClaude({ u }: { u: NonNullable<VideoDetalle['uso_claude']> }) {
+  return (
+    <section className="rev-tarjeta">
+      <details>
+        <summary><b>Uso de tu plan de Claude en este video</b> <span className="tenue pequeno">({u.pedidos} pedidos)</span></summary>
+        <p className="tenue pequeno">Cuánto se llevó cada paso, del total de este video.</p>
+        <ul className="pequeno">
+          {u.pasos.map((p) => (
+            <li key={p.paso}><b>{p.porcentaje} %</b> · {p.paso} <span className="tenue">({p.pedidos} {p.pedidos === 1 ? 'pedido' : 'pedidos'}, {p.modelos.join(', ')}, {p.minutos} min)</span></li>
+          ))}
+        </ul>
+      </details>
     </section>
   );
 }

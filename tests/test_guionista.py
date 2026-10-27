@@ -390,3 +390,50 @@ def test_cli_va_liviano_y_vuelve_a_lo_de_siempre_si_no_entiende(monkeypatch):
     assert "--system-prompt" not in cmds[1] and claude_cli._LIVIANO["ok"] is False
     claude_cli.ejecutar("otra", lanzar=lanzar)
     assert len(cmds) == 3 and "--tools" not in cmds[2]                 # ya no se vuelve a intentar
+
+
+def test_cada_pedido_a_claude_queda_anotado_con_su_paso(monkeypatch, tmp_path):
+    """(27-10, el dueño: «un video gasta el 50 % de mi uso») qué paso se lleva cuánto del plan, y lo que mira
+    imágenes va con el modelo liviano."""
+    monkeypatch.setattr(claude_cli, "ejecutable", lambda: "claude")
+    (tmp_path / "proyecto.json").write_text("{}", "utf-8")
+    cmds = []
+
+    def respuesta(costo, modelo):
+        class R:
+            returncode, stderr = 0, ""
+            stdout = json.dumps({"result": "ok", "total_cost_usd": costo, "modelUsage": {modelo: {}},
+                                 "usage": {"input_tokens": 100, "cache_read_input_tokens": 900, "output_tokens": 50}})
+        return R()
+
+    def lanzar(cmd, **kw):
+        cmds.append(cmd)
+        return respuesta(0.3 if "--model" not in cmd else 0.1, "claude-sonnet" if "--model" in cmd else "claude-opus")
+
+    with claude_cli.paso("Guion: escribir la historia"):
+        claude_cli.ejecutar("historia", cwd=tmp_path, lanzar=lanzar)
+
+    @claude_cli.en_paso("Flechas y círculos (mira imágenes)")
+    def mirar():
+        return claude_cli.revisor("mira", cwd=tmp_path, lanzar=lanzar)
+
+    mirar()
+    claude_cli.ejecutar("sin carpeta de video", lanzar=lanzar)            # fuera de un video: no se anota
+    assert cmds[1][cmds[1].index("--model") + 1] == "sonnet"
+    u = claude_cli.resumen_uso(tmp_path)
+    assert u["pedidos"] == 2
+    assert [(p["paso"], p["porcentaje"]) for p in u["pasos"]] == [("Guion: escribir la historia", 75.0),
+                                                                   ("Flechas y círculos (mira imágenes)", 25.0)]
+    assert u["pasos"][1]["modelos"] == ["sonnet"]
+    filas = [json.loads(x) for x in (tmp_path / claude_cli.USO).read_text("utf-8").splitlines()]
+    assert filas[0]["entrada"] == 1000 and filas[0]["salida"] == 50
+
+
+def test_mirar_imagenes_y_revisar_fotos_van_con_el_modelo_liviano():
+    import inspect
+
+    from estudio import foco, guionista, reacciones, stock
+
+    for f in (foco.ubicar_focos, guionista.ubicar_villano, stock.preparar_stock, stock.preparar_lugares,
+              reacciones.elegir_reacciones):
+        assert inspect.signature(f).parameters["ejecutar"].default is claude_cli.revisor, f.__name__
