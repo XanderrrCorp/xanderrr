@@ -369,6 +369,15 @@ Estado al 04-10-2026. El repositorio es PÚBLICO: nunca escribir claves, tokens 
   <personaje>/poses; POST /api/v2/personajes/{id}/poses; botón «Hacer sus poses» en PersonajeDetalle) y usar_en_video
   copia esas poses al video (antes las borraba). La vista en primera persona ya no fija la ropa del granjero
   (arreglos.CAMBIOS_DE_ESTILO).
+- (27-10) MÁS VIDEOS DE PEXELS en la v2 (el dueño: «hay videos que ni salen videos»; aprobó los 5 puntos): fórmula
+  escala_peligro_v2 «pexels» (stock.ajustes_pexels; sin fórmula = todo igual). pipeline.pexels_primero, al empezar
+  paso_imagenes y solo con clave de Pexels: usar_pexels_en_escenas (el animal cuando la voz lo nombra; hasta 3 videos
+  por animal entre 15 buscados) + usar_lugares_en_escenas (Claude sonnet elige ≤12 escenas de LUGARES → direccion
+  «lugares», una vez; stock.preparar_lugares baja ≤2 videos verificados por lugar, prefijo «lugar_»). Nunca dos
+  escenas seguidas con Pexels; lo no verificado no se usa. Montaje: edicion._stock hasta 12 cada 20 s y con
+  gana_al_efecto el video real quita flecha/lupa/círculo/mano/halo/borroso (EFECTOS_QUE_CEDEN). También (26-10):
+  personajes espera y reintenta ante 429 (GoogleOcupado, mensaje claro; la hoja reusa vistas ya pagadas) y Ajustes
+  «Iniciar sesión» de Claude abre «cmd /k <exe>» (antes «start Claude» buscaba un programa llamado Claude).
 ## Pendiente
 - Preguntas sin responder del dueño: ¿en qué canal notó la voz lenta? (Peligro Tropical está en 1.3 en
   config/proveedores.json; Tracy en 1.0 por pedido suyo). ¿En qué momento sale «la tira de animales» sin sentido?

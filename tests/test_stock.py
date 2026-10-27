@@ -278,3 +278,137 @@ def test_peligro_tropical_suma_fotos_de_wikimedia(tmp_path, monkeypatch):
     (foto,) = idx["archivos"]
     assert foto["fuente"] == "wikimedia" and "CC BY 3.0" in foto["licencia"] and (tmp_path / foto["archivo"]).exists()
     assert "Autor 77" in stock.creditos(tmp_path) and "commons.wikimedia.org" in stock.creditos(tmp_path)
+
+
+# ---------------------------------------------------------------- (27-10) más videos de Pexels en la v2
+
+class SesionVideos(SesionFalsa):
+    """Pexels con 4 videos por búsqueda (y fotos como siempre); anota lo que se pidió."""
+
+    def __init__(self):
+        super().__init__()
+        self.params = []
+
+    def get(self, url, params=None, headers=None, timeout=None):
+        self.params.append((url, params))
+        if url == stock.API_VIDEOS:
+            self.pedidos.append(url)
+            return Resp({"videos": [{"id": 20 + i, "url": f"https://www.pexels.com/video/{20 + i}/", "duration": 8,
+                                     "image": f"mv{i}", "user": {"name": "Luis", "url": "u"},
+                                     "video_files": [{"file_type": "video/mp4", "width": 1920, "link": f"V{20 + i}"}]}
+                                    for i in range(4)]})
+        return super().get(url, params, headers, timeout)
+
+
+def test_la_v2_pide_mas_videos_por_animal(tmp_path, monkeypatch):
+    monkeypatch.setenv("PEXELS_API_KEY", "clave-prueba")
+    (tmp_path / "escenas.json").write_text(json.dumps({"niveles": [{"numero": 1, "nombre": "Mapaná", "asset": "a",
+                                                                     "villano": False}]}), "utf-8")
+
+    def claude(prompt, cwd=None, herramientas=None):
+        if "búsqueda" in prompt:
+            return '{"1": "fer-de-lance snake"}', {}
+        return json.dumps({"aprobados": [{"numero": n, "razon": "sí"} for n in range(1, 8)]}), {}
+
+    sesion = SesionVideos()
+    idx = stock.preparar_stock(tmp_path, ejecutar=claude, avisar=lambda *_: None, sesion=sesion,
+                               pex={"videos_por_animal": 3, "buscar_videos": 15})
+    assert sum(a["tipo"] == "video" for a in idx["archivos"]) == 3
+    assert any(u == stock.API_VIDEOS and p["per_page"] == 15 for u, p in sesion.params)
+    # sin la fórmula nueva: 1 video, como siempre
+    otra = tmp_path / "antes"
+    otra.mkdir()
+    (otra / "escenas.json").write_text((tmp_path / "escenas.json").read_text("utf-8"), "utf-8")
+    idx = stock.preparar_stock(otra, ejecutar=claude, avisar=lambda *_: None, sesion=SesionVideos())
+    assert sum(a["tipo"] == "video" for a in idx["archivos"]) == 1
+
+
+def _proyecto_lugares(formula, titulo="Departamentos"):
+    from estudio.config import escribir_json
+    from estudio.proyecto import CarpetaProyecto
+
+    c = CarpetaProyecto.crear(titulo, "animales-peligrosos", "enciclopedia_mascota", 540)
+    p = c.cargar()
+    p.formula = formula
+    c.guardar(p)
+    niveles = [{"numero": k, "nombre": n, "asset": f"tira_{k}", "villano": k == 4}
+               for k, n in enumerate(["Mapaná", "Caimán", "Jaguar", "Anaconda"], 1)]
+    textos = ["En las costas del Caribe, entre arena y cactus.", "Dato suelto número dos.",
+              "La mapaná se esconde entre hojas secas.", "Dato suelto cuatro.", "Subimos al páramo, frío y con neblina."]
+    escenas = [{"id": k, "seccion": "Nivel 1 · Mapaná", "narracion": t, "intencion": "explicacion", "intensidad": 2,
+                "visual": {"accion": "generar", "tipo": "animal_fondo_gris" if k == 3 else "escena_cartoon_completa",
+                           "prompt": "x"}} for k, t in enumerate(textos, 1)]
+    escribir_json(c.archivo_escenas, {"version": 2, "video": "dep", "canal": "animales-peligrosos",
+                                      "estilo": "enciclopedia_mascota", "niveles": niveles, "escenas": escenas,
+                                      "assets": [{"id": f"tira_{k}", "tipo": "tarjeta",
+                                                  "archivo": f"assets/tira/tira_{k}.png"} for k in range(1, 5)]})
+    escribir_json(c.ruta / "direccion.json", {})
+    return c
+
+
+def test_pexels_primero_usa_videos_del_animal_y_de_los_lugares(monkeypatch):
+    from types import SimpleNamespace
+
+    from estudio import pipeline
+    from estudio.config import leer_json
+
+    monkeypatch.setenv("PEXELS_API_KEY", "clave-prueba")
+    monkeypatch.setattr(stock.requests, "get", SesionVideos().get)
+    monkeypatch.setattr(pipeline, "_cuadro_de_video", lambda raiz, archivo: archivo.replace(".mp4", ".jpg"))
+    pedidos = []
+
+    def claude(prompt, cwd=None, herramientas=None):
+        pedidos.append(prompt)
+        if "LUGAR" in prompt:
+            assert "1: En las costas" in prompt
+            return json.dumps({"lugares": [{"busqueda": "caribbean desert coast", "escenas": [1]},
+                                           {"busqueda": "andes paramo fog", "escenas": [5, 99]}]}), {}
+        if "búsqueda" in prompt:
+            return '{"1": "fer-de-lance snake"}', {}
+        return json.dumps({"aprobados": [{"numero": n, "razon": "se ve claro"} for n in range(1, 20)]}), {}
+
+    t = SimpleNamespace(avisar=lambda *_: None)
+    c = _proyecto_lugares("escala_peligro_v2")
+    pipeline.pexels_primero(c, t, claude)
+    esc = {e.id: e for e in c.cargar_escenas().escenas}
+    direccion = leer_json(c.ruta / "direccion.json")
+    assert direccion["lugares"] == {"1": "caribbean desert coast", "5": "andes paramo fog"}   # la 99 no existe
+    assert set(direccion["video_escena"]) == {"1", "3", "5"}         # dos lugares y el animal cuando la voz lo nombra
+    assert esc[2].visual.accion == esc[4].visual.accion == "generar"  # lo demás lo dibuja Google
+    assert all(esc[k].narracion for k in esc)                        # el texto no cambia
+    # al retomar no le vuelve a preguntar a Claude
+    n = len(pedidos)
+    pipeline.pexels_primero(c, t, claude)
+    assert not any("LUGAR" in p for p in pedidos[n:])
+
+    # videos de antes (sin la fórmula nueva): nada cambia
+    c2 = _proyecto_lugares(None, "Departamentos antes")
+    pipeline.pexels_primero(c2, t, claude)
+    assert all(e.visual.accion == "generar" for e in c2.cargar_escenas().escenas)
+
+
+def test_en_el_montaje_el_video_real_gana_a_la_flecha(tmp_path):
+    import random
+    from types import SimpleNamespace as N
+
+    from estudio import edicion
+    from estudio.config import escribir_json
+
+    (tmp_path / "assets" / "stock").mkdir(parents=True)
+    (tmp_path / "assets" / "stock" / "nivel_1_video_1.mp4").write_bytes(b"x")
+    escribir_json(tmp_path / "assets" / "stock" / "stock.json", {"archivos": [
+        {"archivo": "assets/stock/nivel_1_video_1.mp4", "tipo": "video", "nivel": 1, "verificado": True,
+         "url_origen": "https://www.pexels.com/video/1/"}]})
+    nivel = N(numero=1, nombre="Mapaná", villano=False, model_dump=lambda: {"numero": 1, "nombre": "Mapaná"})
+    esc = N(niveles=[nivel])
+    escenas = [N(id=1, narracion="La mapaná está quieta aquí, mírala bien de cerca.", intencion="explicacion",
+                 tiempo=N(real_inicio=0.0, real_fin=3.0))]
+
+    def clips():
+        return [{"modo": "imagen", "inicio": 0.0, "fin": 3.0, "razon": "", "efectos": [{"efecto": "flecha"}]}]
+
+    antes = clips()
+    assert edicion._stock(esc, escenas, antes, tmp_path, None, random.Random(1), []) == 0   # como siempre: se salta
+    ahora = clips()
+    assert edicion._stock(esc, escenas, ahora, tmp_path, None, random.Random(1), [], gana=True) == 1
+    assert [x["efecto"] for x in ahora[0]["efectos"]] in (["video_real"], ["foto_real"])

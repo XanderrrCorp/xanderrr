@@ -338,7 +338,7 @@ MARGEN_COP = 1200            # voz y miniatura también cuentan dentro del máxi
 USOS_POR_TOMA = 2
 
 
-def usar_pexels_en_escenas(c: CarpetaProyecto, t=None, ejecutar_claude=None) -> int:
+def usar_pexels_en_escenas(c: CarpetaProyecto, t=None, ejecutar_claude=None, pex: dict | None = None) -> int:
     """Antes de generar: las escenas que solo muestran al animal y lo nombran usan una foto o un
     video REAL verificado de Pexels (gratis) en vez de una imagen nueva. Cada toma se usa como
     mucho 2 veces y nunca en escenas seguidas; el villano oculto no se muestra antes de tiempo."""
@@ -350,7 +350,7 @@ def usar_pexels_en_escenas(c: CarpetaProyecto, t=None, ejecutar_claude=None) -> 
     avisar = t.avisar if t else print
     try:
         indice = preparar_stock(c.ruta, ejecutar=ejecutar_claude or claude_cli.ejecutar, avisar=avisar,
-                                recrear_faltantes=False)
+                                recrear_faltantes=False, pex=pex)
     except SinClavePexels as ex:
         avisar(f"⚠ Sin fotos reales de Pexels: {ex}. Se ajusta solo reusando imágenes.")
         return 0
@@ -421,12 +421,13 @@ def usar_pexels_en_escenas(c: CarpetaProyecto, t=None, ejecutar_claude=None) -> 
     return cambiadas
 
 
-def _pexels_por_temas(c: CarpetaProyecto, esc, direccion: dict, tomas: list[dict], avisar) -> int:
+def _pexels_por_temas(c: CarpetaProyecto, esc, direccion: dict, tomas: list[dict], avisar,
+                      reales: dict | None = None) -> int:
     """Documentales (sin niveles): cada escena que el director marcó como real usa una toma aprobada de
     ese mismo tema. Máximo USOS_POR_TOMA usos por toma y nunca dos escenas seguidas con foto real."""
     from .esquemas import EscenasV2
 
-    reales = {int(k): v for k, v in (direccion.get("reales") or {}).items()}
+    reales = {int(k): v for k, v in ((direccion.get("reales") or {}) if reales is None else reales).items()}
     man = leer_json(c.ruta / "imagenes" / "manifiesto.json") if (c.ruta / "imagenes" / "manifiesto.json").exists() else {}
     datos = esc.model_dump()
     assets = {a["id"] for a in datos["assets"]}
@@ -470,6 +471,53 @@ def _pexels_por_temas(c: CarpetaProyecto, esc, direccion: dict, tomas: list[dict
     escribir_json(c.ruta / "direccion.json", direccion)
     avisar(f"{cambiadas} escenas usan fotos o videos reales de Pexels en vez de imágenes nuevas")
     return cambiadas
+
+
+def usar_lugares_en_escenas(c: CarpetaProyecto, t=None, ejecutar_claude=None) -> int:
+    """(27-10) Peligro Tropical v2: las escenas que hablan de un lugar usan un VIDEO REAL del paisaje (Pexels, gratis,
+    verificado en la hoja de contacto). Claude elige las escenas una sola vez (queda en direccion.json «lugares»)."""
+    from . import claude_cli
+    from .stock import elegir_lugares, preparar_lugares
+
+    avisar = t.avisar if t else print
+    ejecutar = ejecutar_claude or (lambda prompt, **k: claude_cli.ejecutar(prompt, modelo="sonnet", **k))
+    ruta_dir = c.ruta / "direccion.json"
+    direccion = leer_json(ruta_dir) if ruta_dir.exists() else {}
+    if "lugares" not in direccion:
+        esc = c.cargar_escenas()
+        man = leer_json(c.ruta / "imagenes" / "manifiesto.json") if (c.ruta / "imagenes" / "manifiesto.json").exists() else {}
+        libres = [{"id": e.id, "narracion": e.narracion} for e in esc.escenas
+                  if e.visual.accion == "generar" and f"escena:{e.id}" not in man and e.intencion not in PROTEGIDAS]
+        avisar("Claude busca las escenas que hablan de un lugar, para mostrarlo con video real…")
+        direccion["lugares"] = elegir_lugares(c.ruta, libres, ejecutar)
+        escribir_json(ruta_dir, direccion)
+    if not direccion["lugares"]:
+        return 0
+    indice = preparar_lugares(c.ruta, direccion["lugares"], ejecutar=ejecutar, avisar=avisar)
+    temas = set(direccion["lugares"].values())
+    tomas = [a for a in indice["archivos"] if a.get("verificado") and a.get("tipo") == "video" and a.get("tema") in temas
+             and (c.ruta / a["archivo"]).exists()]
+    if not tomas:
+        return 0
+    return _pexels_por_temas(c, c.cargar_escenas(), direccion, tomas, avisar, reales=direccion["lugares"])
+
+
+def pexels_primero(c: CarpetaProyecto, t, ejecutar_claude=None) -> None:
+    """(27-10, el dueño: «quiero que salgan más videos de Pexels») antes de pedir imágenes a Google, lo que Pexels
+    tiene de verdad (gratis): el animal cuando la voz lo nombra y los lugares. Solo si la fórmula del video lo pide;
+    si Pexels falla, se dibuja todo como siempre."""
+    from .config import clave_api
+    from .stock import ajustes_pexels
+
+    pex = ajustes_pexels(c.cargar())
+    if not pex.get("primero") or not c.cargar_escenas().niveles or not clave_api("PEXELS_API_KEY"):
+        return
+    try:
+        usar_pexels_en_escenas(c, t, ejecutar_claude, pex=pex)
+        if pex.get("lugares"):
+            usar_lugares_en_escenas(c, t, ejecutar_claude)
+    except Exception as ex:  # noqa: BLE001 — sin Pexels, Google dibuja todo
+        t.avisar(f"Sin videos reales de Pexels ({str(ex)[:100]}): se dibujan todas")
 
 
 def _cuadro_de_video(raiz: Path, archivo: str) -> str:
@@ -553,6 +601,7 @@ def paso_imagenes(c: CarpetaProyecto, t: Trabajo, permiso: bool = False, ejecuta
     from .imagenes.generador import generar_imagenes
     from .tira import armar_tira
 
+    pexels_primero(c, t, ejecutar_claude)
     esc = c.cargar_escenas()
     total = sum(1 for e in esc.escenas if e.visual.accion == "generar") + len(esc.assets)
     hechas = [0]

@@ -41,6 +41,20 @@ class SinClavePexels(RuntimeError):
     pass
 
 
+def ajustes_pexels(proyecto) -> dict:
+    """(27-10, el dueño: «quiero que salgan más videos de Pexels») la fórmula del video puede pedir Pexels antes que
+    Google, videos de lugares, más videos por animal y más apariciones en el montaje. Sin fórmula guardada (videos de
+    antes) o sin la clave «pexels»: {} y todo queda como siempre."""
+    if not getattr(proyecto, "formula", None):
+        return {}
+    from .guionista import cargar_formula
+
+    try:
+        return dict(cargar_formula(proyecto.formula).get("pexels") or {})
+    except FileNotFoundError:
+        return {}
+
+
 def _cabeceras() -> dict:
     clave = clave_api("PEXELS_API_KEY")
     if not clave:
@@ -55,17 +69,18 @@ def _revisar(r) -> None:
     r.raise_for_status()
 
 
-def buscar(consulta: str, sesion=requests) -> list[dict]:
+def buscar(consulta: str, sesion=requests, fotos: int = FOTOS_POR_NIVEL, videos: int = VIDEOS_POR_NIVEL) -> list[dict]:
     """Candidatos de foto y video para una búsqueda, en un formato común."""
     salida = []
-    r = sesion.get(API_FOTOS, params={"query": consulta, "per_page": FOTOS_POR_NIVEL, "orientation": "landscape"},
-                   headers=_cabeceras(), timeout=30)
-    _revisar(r)
-    for f in r.json().get("photos", []):
+    r = sesion.get(API_FOTOS, params={"query": consulta, "per_page": fotos, "orientation": "landscape"},
+                   headers=_cabeceras(), timeout=30) if fotos else None
+    if r is not None:
+        _revisar(r)
+    for f in (r.json().get("photos", []) if r is not None else []):
         salida.append({"tipo": "foto", "pexels_id": f["id"], "url_origen": f["url"], "autor": f.get("photographer", ""),
                        "autor_url": f.get("photographer_url", ""), "miniatura": f["src"]["medium"],
                        "descarga": f["src"].get("large2x") or f["src"]["large"], "descripcion": f.get("alt", "")})
-    r = sesion.get(API_VIDEOS, params={"query": consulta, "per_page": VIDEOS_POR_NIVEL, "orientation": "landscape"},
+    r = sesion.get(API_VIDEOS, params={"query": consulta, "per_page": videos, "orientation": "landscape"},
                    headers=_cabeceras(), timeout=30)
     _revisar(r)
     for v in r.json().get("videos", []):
@@ -178,9 +193,13 @@ def recrear(carpeta: Path, nivel: dict, busqueda: str, ejecutar, avisar=print, p
 
 
 def preparar_stock(carpeta: Path, ejecutar=claude_cli.ejecutar, avisar=print, sesion=requests,
-                   recrear_faltantes: bool = True, proveedor=None, permiso: bool = False) -> dict:
+                   recrear_faltantes: bool = True, proveedor=None, permiso: bool = False,
+                   pex: dict | None = None) -> dict:
     """Busca, verifica y baja fotos y videos reales por nivel. Reanudable: los niveles
-    ya revisados no se vuelven a buscar."""
+    ya revisados no se vuelven a buscar. `pex` (ajustes_pexels) puede pedir más videos por animal."""
+    pex = pex or {}
+    videos_buscar = int(pex.get("buscar_videos") or VIDEOS_POR_NIVEL)
+    aprobadas = {**APROBADAS_POR_NIVEL, "video": int(pex.get("videos_por_animal") or APROBADAS_POR_NIVEL["video"])}
     ruta = carpeta / "assets" / "stock" / "stock.json"
     indice = leer_json(ruta) if ruta.exists() else {"archivos": [], "niveles_revisados": []}
     niveles = leer_json(carpeta / "escenas.json").get("niveles", [])
@@ -197,7 +216,7 @@ def preparar_stock(carpeta: Path, ejecutar=claude_cli.ejecutar, avisar=print, se
         if not consulta:
             continue
         avisar(f"Buscando fotos y videos reales de «{n['nombre']}» ({consulta})…")
-        candidatos = buscar(consulta, sesion) + wikimedia.buscar(consulta, sesion)   # (20-10) + Wikimedia Commons
+        candidatos = buscar(consulta, sesion, videos=videos_buscar) + wikimedia.buscar(consulta, sesion)   # (20-10) + Wikimedia
         aprobados = {}
         if candidatos:
             hoja = _hoja(candidatos, carpeta / "assets" / "stock" / f"hoja_nivel_{n['numero']}.png", sesion)
@@ -205,7 +224,7 @@ def preparar_stock(carpeta: Path, ejecutar=claude_cli.ejecutar, avisar=print, se
         cuenta = {"foto": 0, "video": 0}
         for k, razon in sorted(aprobados.items()):
             c = candidatos[k]
-            if cuenta[c["tipo"]] >= APROBADAS_POR_NIVEL[c["tipo"]]:
+            if cuenta[c["tipo"]] >= aprobadas[c["tipo"]]:
                 continue
             cuenta[c["tipo"]] += 1
             ext = ".mp4" if c["tipo"] == "video" else ".jpg"
@@ -233,14 +252,54 @@ def preparar_stock(carpeta: Path, ejecutar=claude_cli.ejecutar, avisar=print, se
 
 
 MAX_TEMAS = 24
+VIDEOS_POR_LUGAR, VIDEOS_APROBADOS_LUGAR = 8, 2
+MAX_LUGARES, MAX_ESCENAS_LUGAR = 6, 12
 
 
-def _stock_por_temas(carpeta: Path, indice: dict, ruta: Path, ejecutar, avisar, sesion) -> dict:
+def elegir_lugares(carpeta: Path, escenas: list[dict], ejecutar) -> dict[str, str]:
+    """(27-10) Claude elige las escenas cuya voz habla de un LUGAR (costa, selva, río, desierto, páramo, ciudad…) donde
+    un video real del paisaje queda bien, sin animal ni personaje. Devuelve {id de escena: búsqueda en inglés}."""
+    lista = "\n".join(f"- {e['id']}: {e['narracion'][:140]}" for e in escenas)
+    if not lista:
+        return {}
+    texto, _ = ejecutar(
+        "Estas son escenas de un video de animales (id: lo que dice la voz). Elige las que hablan de un LUGAR o paisaje "
+        "(una región, costa, selva, río, desierto, páramo, montaña, ciudad, pueblo) donde mostrar un VIDEO REAL de ese "
+        "paisaje queda bien. NO elijas escenas que necesitan ver al animal, a una persona o al personaje. "
+        f"Máximo {MAX_LUGARES} lugares distintos y {MAX_ESCENAS_LUGAR} escenas en total; si no hay, devuelve la lista "
+        "vacía. Para cada lugar da una búsqueda corta en inglés para un banco de videos, solo del paisaje y sin "
+        'animales (ej.: "caribbean desert coast cactus").\nEscenas:\n' + lista +
+        '\nResponde SOLO un JSON: {"lugares": [{"busqueda": "<inglés>", "escenas": [<id>, ...]}]}', cwd=carpeta)
+    datos = claude_cli.extraer_json(texto) or {}
+    validos = {str(e["id"]) for e in escenas}
+    salida: dict[str, str] = {}
+    for lugar in (datos.get("lugares") or [])[:MAX_LUGARES] if isinstance(datos, dict) else []:
+        busqueda = str((lugar or {}).get("busqueda") or "").strip()[:80]
+        for i in (lugar or {}).get("escenas") or []:
+            if busqueda and str(i) in validos and len(salida) < MAX_ESCENAS_LUGAR:
+                salida[str(i)] = busqueda
+    return salida
+
+
+def preparar_lugares(carpeta: Path, lugares: dict[str, str], ejecutar=claude_cli.ejecutar, avisar=print,
+                     sesion=requests) -> dict:
+    """Videos REALES de los lugares elegidos (solo videos, verificados en la hoja de contacto como todo lo demás)."""
+    ruta = carpeta / "assets" / "stock" / "stock.json"
+    indice = leer_json(ruta) if ruta.exists() else {"archivos": [], "niveles_revisados": []}
+    if not lugares:
+        return indice
+    return _stock_por_temas(carpeta, indice, ruta, ejecutar, avisar, sesion, reales=lugares, solo_videos=True,
+                            prefijo="lugar")
+
+
+def _stock_por_temas(carpeta: Path, indice: dict, ruta: Path, ejecutar, avisar, sesion, reales: dict | None = None,
+                     solo_videos: bool = False, prefijo: str = "tema") -> dict:
     """Videos sin niveles (documentales): lo que el director visual marcó como real en cada escena
     («congo river rapids»). Mismo cuidado: solo se usa lo que Claude aprueba en la hoja de contacto.
     Sin recreaciones con IA: si Pexels no tiene algo bueno, esa escena se dibuja."""
-    dir_ruta = carpeta / "direccion.json"
-    reales = (leer_json(dir_ruta).get("reales") or {}) if dir_ruta.exists() else {}
+    if reales is None:
+        dir_ruta = carpeta / "direccion.json"
+        reales = (leer_json(dir_ruta).get("reales") or {}) if dir_ruta.exists() else {}
     revisados = set(indice.setdefault("temas_revisados", []))
     temas = [t for t in dict.fromkeys(reales.values()) if t not in revisados][:MAX_TEMAS]
     if not temas:
@@ -248,19 +307,20 @@ def _stock_por_temas(carpeta: Path, indice: dict, ruta: Path, ejecutar, avisar, 
     _cabeceras()
     for k, tema in enumerate(temas, 1):
         avisar(f"Buscando fotos y videos reales de «{tema}» ({k} de {len(temas)})…")
-        candidatos = buscar(tema, sesion) + wikimedia.buscar(tema, sesion)
+        candidatos = buscar(tema, sesion, fotos=0, videos=VIDEOS_POR_LUGAR) if solo_videos else \
+            buscar(tema, sesion) + wikimedia.buscar(tema, sesion)
         aprobados = {}
         if candidatos:
-            hoja = _hoja(candidatos, carpeta / "assets" / "stock" / f"hoja_tema_{len(revisados) + k}.png", sesion)
+            hoja = _hoja(candidatos, carpeta / "assets" / "stock" / f"hoja_{prefijo}_{len(revisados) + k}.png", sesion)
             aprobados = _verificar({"nombre": tema}, hoja, candidatos, carpeta, ejecutar)
         cuenta = {"foto": 0, "video": 0}
         for n, razon in sorted(aprobados.items()):
             c = candidatos[n]
-            if cuenta[c["tipo"]] >= APROBADAS_POR_NIVEL[c["tipo"]]:
+            if cuenta[c["tipo"]] >= (VIDEOS_APROBADOS_LUGAR if solo_videos else APROBADAS_POR_NIVEL[c["tipo"]]):
                 continue
             cuenta[c["tipo"]] += 1
             ext = ".mp4" if c["tipo"] == "video" else ".jpg"
-            destino = carpeta / "assets" / "stock" / f"tema_{len(revisados) + k}_{c['tipo']}_{cuenta[c['tipo']]}{ext}"
+            destino = carpeta / "assets" / "stock" / f"{prefijo}_{len(revisados) + k}_{c['tipo']}_{cuenta[c['tipo']]}{ext}"
             r = sesion.get(c["descarga"], timeout=300)
             r.raise_for_status()
             destino.write_bytes(r.content)

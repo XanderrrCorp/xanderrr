@@ -361,8 +361,12 @@ def _animo_de_seccion(escenas: list, k: int, n: int) -> str:
 ASCO = ("asco", "sucio", "sucia", "basura", "excremento", "heces", "caca", "vómito", "vomita", "podrido", "coladera")
 
 
+# (27-10) con la fórmula que lo pide, el video real gana: estos efectos se quitan en vez de saltarse el momento
+EFECTOS_QUE_CEDEN = ("circulo_rojo", "lupa", "flecha", "mano", "halo", "borroso")
+
+
 def _stock(esc: EscenasV2, escenas: list, clips: list, raiz: Path, revelacion: int | None, rng: random.Random,
-           sfx: list, maximo: int = 6, separacion: float = 30.0) -> int:
+           sfx: list, maximo: int = 6, separacion: float = 30.0, gana: bool = False) -> int:
     """De vez en cuando (no siempre), cuando la voz nombra a un animal que tiene fotos o
     videos reales VERIFICADOS, se muestra lo real: la foto en un marco rojo con la mascota
     señalándola, o el video a pantalla completa. Una vez por animal, separadas y sin pisar
@@ -385,7 +389,7 @@ def _stock(esc: EscenasV2, escenas: list, clips: list, raiz: Path, revelacion: i
     for i, (e, c) in enumerate(zip(escenas, clips)):
         if len(tiempos) >= maximo or c["modo"] == "tira":
             continue
-        if any(x["efecto"] in ("circulo_rojo", "lupa", "flecha", "pixelar", "rafaga", "reaccion_presentador")
+        if any(x["efecto"] in ("pixelar", "rafaga", "reaccion_presentador") + (() if gana else EFECTOS_QUE_CEDEN)
                for x in c["efectos"]):
             continue
         for n in esc.niveles:
@@ -406,6 +410,8 @@ def _stock(esc: EscenasV2, escenas: list, clips: list, raiz: Path, revelacion: i
             elegido = next((a for a in propios if a["tipo"] == tipo), None) or (propios[0] if propios else None)
             if not elegido:
                 continue
+            if gana:
+                c["efectos"] = [x for x in c["efectos"] if x["efecto"] not in EFECTOS_QUE_CEDEN]
             if elegido["tipo"] == "video":
                 c["efectos"].append({"efecto": "video_real", "en": round(t0, 3), "dur": round(dur, 3),
                                      "archivo": elegido["archivo"], "desde": round(rng.uniform(0.3, 1.5), 2),
@@ -1199,9 +1205,14 @@ def construir_edl(carpeta: CarpetaProyecto) -> dict:
             subtitulos.append({"inicio": round(t0, 3), "fin": round(max(t1, t0 + 0.2), 3), "texto": tr, "escena": e.id})
     if deslizar:
         _escalonar(clips, textos, sfx)
+    from .stock import ajustes_pexels
+
+    pex = ajustes_pexels(proyecto)
     for e, c in zip(escenas, clips):
         v = (direccion.get("video_escena") or {}).get(str(e.id))
         if v and (carpeta.ruta / v["archivo"]).exists():
+            if pex.get("gana_al_efecto"):
+                c["efectos"] = [x for x in c["efectos"] if x["efecto"] not in EFECTOS_QUE_CEDEN]
             # escena hecha con un video REAL verificado de Pexels: se ve a pantalla completa
             c["efectos"].append({"efecto": "video_real", "en": c["inicio"], "dur": round(c["fin"] - c["inicio"], 3),
                                  "archivo": v["archivo"], "desde": v.get("desde", 0.5), "origen": v.get("origen", "")})
@@ -1219,7 +1230,8 @@ def construir_edl(carpeta: CarpetaProyecto) -> dict:
         sfx[:] = [x for x in sfx if x["clip"] != idx]
         for x in a.get("efectos") or []:
             _sfx(sfx, x["tipo"], c["inicio"] + float(x["t"]), idx, f"{x['tipo']} con la animación")
-    _stock(esc, escenas, clips, carpeta.ruta, revelacion, rng, sfx)
+    _stock(esc, escenas, clips, carpeta.ruta, revelacion, rng, sfx, maximo=int(pex.get("maximo_montaje") or 6),
+           separacion=float(pex.get("separacion_montaje_seg") or 30.0), gana=bool(pex.get("gana_al_efecto")))
     reacciones = _reacciones(estilo, escenas, clips, carpeta.ruta, revelacion, rng, direccion.get("reacciones"), sfx)
     # (24-10) las fotos que parecen reales pero son de IA llevan la etiqueta «Imagen ilustrativa» y el video se marca
     # como contenido sintético (el dueño la marca al subirlo a YouTube)
