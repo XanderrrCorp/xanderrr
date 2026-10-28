@@ -300,12 +300,8 @@ class Escenario:
         if zonas:
             img = _pixelar_zonas(img, zonas, next(e.get("bloque", 26) for e in clip["efectos"] if e["efecto"] == "pixelar"))
         if clip["modo"] == "pantalla_completa":
-            # sin papel: la imagen llena el cuadro (recortando lo que sobre del centro)
-            k = max(W / img.width, H / img.height)
-            d = img.resize((max(W, round(img.width * k)), max(H, round(img.height * k))), Image.Resampling.LANCZOS)
-            x0, y0 = (d.width - W) // 2, (d.height - H) // 2
-            self.ubicacion[clip["id"]] = (-x0, -y0, d.width, d.height)
-            final = d.crop((x0, y0, x0 + W, y0 + H))
+            final, (x0, y0, dw, dh) = llenar_cuadro(img)
+            self.ubicacion[clip["id"]] = (-x0, -y0, dw, dh)
             if any(e.get("efecto") == "profundidad" for e in clip.get("efectos", [])) \
                     and clip["id"] not in self.profundidad:
                 self.profundidad[clip["id"]] = capas_de_profundidad(final, self.raiz, clip["archivo"])
@@ -565,6 +561,29 @@ def mascara_sujeto(img: Image.Image) -> np.ndarray | None:
     if rgba is None:
         return None
     return np.asarray(rgba.convert("RGBA").resize(img.size))[:, :, 3]
+
+
+def llenar_cuadro(img: Image.Image) -> tuple[Image.Image, tuple[int, int, int, int]]:
+    """Pantalla completa sin papel: la imagen llena el cuadro (recortando lo que sobre del centro)."""
+    k = max(W / img.width, H / img.height)
+    d = img.resize((max(W, round(img.width * k)), max(H, round(img.height * k))), Image.Resampling.LANCZOS)
+    x0, y0 = (d.width - W) // 2, (d.height - H) // 2
+    return d.crop((x0, y0, x0 + W, y0 + H)), (x0, y0, d.width, d.height)
+
+
+def precalcular_capas(raiz: Path, archivos: list[str]) -> int:
+    """(28-10, el dueño: «los documentales se demoran tanto») separar sujeto y fondo (rembg) se hacía en pleno
+    montaje, imagen por imagen y en cada tramo. Se adelanta mientras Google dibuja (el PC solo espera): el montaje
+    encuentra las capas ya hechas en assets/capas. Mismo recorte y mismo archivo que usaría el montaje."""
+    hechas = 0
+    for archivo in archivos:
+        try:
+            img = Image.open(raiz / archivo).convert("RGB")
+        except OSError:
+            continue
+        if capas_de_profundidad(llenar_cuadro(img)[0], raiz, archivo) is not None:
+            hechas += 1
+    return hechas
 
 
 def capas_de_profundidad(img: Image.Image, raiz: Path, archivo: str) -> tuple | None:

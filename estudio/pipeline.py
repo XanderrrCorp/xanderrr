@@ -597,10 +597,6 @@ def ajustar_al_presupuesto(c: CarpetaProyecto, t=None, ejecutar_claude=None, usa
 
 
 def paso_imagenes(c: CarpetaProyecto, t: Trabajo, permiso: bool = False, ejecutar_claude=None) -> None:
-    from .guionista import ubicar_villano
-    from .imagenes.generador import generar_imagenes
-    from .tira import armar_tira
-
     pexels_primero(c, t, ejecutar_claude)
     esc = c.cargar_escenas()
     total = sum(1 for e in esc.escenas if e.visual.accion == "generar") + len(esc.assets)
@@ -621,6 +617,19 @@ def paso_imagenes(c: CarpetaProyecto, t: Trabajo, permiso: bool = False, ejecuta
             t.avisar(f"Sin fotos reales de Pexels ({str(ex)[:100]}): se dibujan todas")
     _disfraz(c, t, permiso, None, ejecutar_claude)
     c.marcar("assets", "en_curso")
+    capas = CapasMientras(c)
+    try:
+        _imagenes_y_lo_demas(c, t, esc, permiso, avisar, ejecutar_claude, capas)
+    finally:
+        capas.terminar()                 # si algo falló, el hilo acaba lo que tenga y se apaga solo
+
+
+def _imagenes_y_lo_demas(c: CarpetaProyecto, t: Trabajo, esc, permiso: bool, avisar, ejecutar_claude,
+                         capas: "CapasMientras") -> None:
+    from .guionista import ubicar_villano
+    from .imagenes.generador import generar_imagenes
+    from .tira import armar_tira
+
     r = generar_imagenes(c, permiso=permiso, avisar=avisar)
     if r.frenado:
         raise RuntimeError(r.frenado)
@@ -641,7 +650,64 @@ def paso_imagenes(c: CarpetaProyecto, t: Trabajo, permiso: bool = False, ejecuta
         ubicar_villano(c.ruta, ejecutar=ejecutar_claude or claude_cli.revisor)
     _ubicar_focos(c, t, ejecutar_claude)
     _stock(c, t, ejecutar_claude)
+    if capas.terminar():
+        t.avisar("Terminando de preparar la profundidad de las imágenes para el montaje…")
+    capas.esperar()
     c.marcar("assets", "completo", ["imagenes/", "assets/tira/"])
+
+
+class CapasMientras:
+    """(28-10) Mientras Google dibuja (el PC solo espera su turno), un hilo separa sujeto y fondo de las imágenes ya
+    listas (render.precalcular_capas): el montaje ya no lo hace imagen por imagen en cada tramo. Si rembg no está
+    instalado, se apaga solo y el montaje sigue como siempre."""
+
+    def __init__(self, c: CarpetaProyecto):
+        import threading
+
+        self.c, self.hechas, self.fin, self.cortar = c, set(), threading.Event(), threading.Event()
+        self.hilo = threading.Thread(target=self._trabajar, daemon=True, name="capas-profundidad")
+        self.hilo.start()
+
+    def _pendientes(self) -> list[str]:
+        try:
+            esc = self.c.cargar_escenas()
+        except Exception:  # noqa: BLE001 — escenas a medio guardar: se mira otra vez en un momento
+            return []
+        return [e.visual.archivo for e in esc.escenas if e.visual.accion == "generar" and e.visual.archivo
+                and e.visual.archivo not in self.hechas and (self.c.ruta / e.visual.archivo).exists()]
+
+    def _trabajar(self) -> None:
+        from PIL import Image
+
+        from .miniaturas.recorte import _rembg
+        from .render import precalcular_capas
+
+        if _rembg(Image.new("RGB", (32, 32))) is None:
+            return                                        # sin rembg: nada que adelantar
+        while not self.cortar.is_set():
+            pendientes = self._pendientes()
+            if not pendientes:
+                if self.fin.is_set():
+                    return
+                self.cortar.wait(3)
+                continue
+            archivo = pendientes[0]
+            try:
+                precalcular_capas(self.c.ruta, [archivo])
+            except Exception:  # noqa: BLE001 — una imagen que falla se deja al montaje
+                pass
+            self.hechas.add(archivo)
+
+    def terminar(self) -> bool:
+        """Que haga lo que falta y se apague. True si todavía le queda trabajo."""
+        self.fin.set()
+        return self.hilo.is_alive() and bool(self._pendientes())
+
+    def esperar(self) -> None:
+        self.hilo.join()
+
+    def parar(self) -> None:
+        self.cortar.set()
 
 
 def usar_las_que_hay(c: CarpetaProyecto, t: Trabajo, ejecutar_claude=None) -> dict:

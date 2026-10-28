@@ -389,6 +389,13 @@ Estado al 04-10-2026. El repositorio es PÚBLICO: nunca escribir claves, tokens 
   (prueba en scratchpad mg/en_pt.py: ficha animada en lugar de la escala 0-10, líneas que señalan con imagen quieta,
   datos que cuentan con círculo, cortina de 3 colores en el cambio de animal, el último en rojo con chispas y título);
   falta que Claude (liviano) marque dónde va cada uno según el tema, con 3-4 versiones que se turnan.
+- (28-10) DOCUMENTALES LENTOS AL MONTAR (el dueño: render 0.2 / 12.7 min tras 20 min): medido en la nube, por segundo
+  de video el documental (paradoja_sapiens, perfil historia) y Peligro Tropical cuestan casi igual (1,85 vs 1,72 s);
+  la diferencia en su PC es la profundidad 2.5D (rembg en CPU, imagen por imagen y en cada tramo) en TODAS las escenas
+  a pantalla completa (el documental casi solo tiene esas) + 12,7 min a 60 cps. Arreglo: pipeline.CapasMientras
+  adelanta render.precalcular_capas (mismo recorte llenar_cuadro, mismo archivo en assets/capas) en un hilo mientras
+  Google dibuja; al final del paso de imágenes espera lo que falte. Sin rembg se apaga solo. Solo videos cuyas
+  imágenes se hagan después de instalar. Si sigue lento: bajar a 30 cps o rembg con la tarjeta NVIDIA.
 ## Pendiente
 - Preguntas sin responder del dueño: ¿en qué canal notó la voz lenta? (Peligro Tropical está en 1.3 en
   config/proveedores.json; Tracy en 1.0 por pedido suyo). ¿En qué momento sale «la tira de animales» sin sentido?

@@ -164,3 +164,34 @@ def test_componer_sin_niveles_usa_la_imagen_vecina():
     clips = edl["pistas"]["escenas"]
     assert all(cl["modo"] != "tira" and "tira" not in cl["archivo"] for cl in clips)
     assert clips[1]["archivo"] == clips[0]["archivo"]
+
+
+def test_la_profundidad_se_adelanta_mientras_google_dibuja(tmp_path, monkeypatch):
+    """(28-10, el dueño: «los documentales se demoran tanto») separar sujeto y fondo se hace durante el paso de
+    imágenes; el montaje encuentra las capas hechas (mismo archivo) y no vuelve a llamar a rembg."""
+    import estudio.render as r
+    from estudio import pipeline
+    from estudio.miniaturas import recorte
+
+    c, _ = _proyecto()
+    esc = c.cargar_escenas()
+    archivos = [e.visual.archivo for e in esc.escenas if e.visual.accion == "generar"]
+    for a in archivos:
+        _escena_con_sujeto(c.ruta / a)
+    llamadas = []
+
+    def mascara(im):
+        llamadas.append(1)
+        return (((np.asarray(im)[:, :, 0] > 200) & (np.asarray(im)[:, :, 2] < 90)) * 255).astype("uint8")
+
+    monkeypatch.setattr(r, "mascara_sujeto", mascara)
+    monkeypatch.setattr(recorte, "_rembg", lambda im: im.convert("RGBA"))          # «rembg está instalado»
+    capas = pipeline.CapasMientras(c)
+    capas.terminar()
+    capas.esperar()
+    assert len(llamadas) == len(set(archivos))
+    # el montaje: mismo recorte de pantalla completa → mismas capas del disco, sin rembg
+    clip = {"id": "c001", "archivo": archivos[0], "modo": "pantalla_completa", "efectos": [{"efecto": "profundidad"}]}
+    img = Image.open(c.ruta / archivos[0]).convert("RGB")
+    assert r.capas_de_profundidad(r.llenar_cuadro(img)[0], c.ruta, clip["archivo"]) is not None
+    assert len(llamadas) == len(set(archivos))
