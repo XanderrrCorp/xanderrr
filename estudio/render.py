@@ -1878,6 +1878,11 @@ def renderizar(carpeta: CarpetaProyecto, ffmpeg: str, destino: Path | None = Non
         avisar("Codificando con la tarjeta NVIDIA (el procesador queda libre para dibujar)")
     if not solo_video and desde == 0 and hasta is None:
         n = _procesos(procesos)
+        if n == 1 and not procesos:
+            libre = memoria_libre_gb()
+            avisar("Montando en un solo proceso (más lento): " + (f"tu PC tiene solo {libre:.1f} GB de memoria libre. "
+                   "Cierra otros programas, como el navegador con muchas pestañas, para que vaya más rápido."
+                   if libre is not None else "no se pudo medir la memoria libre."))
         if n > 1:
             hecho = _renderizar_paralelo(carpeta, ffmpeg, destino, avisar, calidad, (ancho, alto, fps), vertical, n)
             if hecho is not None:
@@ -1934,7 +1939,9 @@ def _procesos(pedidos: int | None) -> int:
     n = min(4, (os.cpu_count() or 2) // 2)
     libre = memoria_libre_gb()
     if libre is not None:
-        n = min(n, int((libre - 1.0) // 1.2))          # ~1,2 GB por tramo y 1 GB para el resto del PC
+        # ~1 GB por tramo y 1 GB para el resto del PC. (28-10, el dueño: documental de 1 hora «y el ventilador ni se
+        # prende») con poca memoria libre quedaba en UN solo tramo; con 2,5 GB o más, al menos dos.
+        n = min(n, max(2 if libre >= 2.5 else 1, int((libre - 1.0) // 1.0)))
     return max(1, n)
 
 
@@ -2003,7 +2010,13 @@ def _renderizar_paralelo(carpeta: CarpetaProyecto, ffmpeg: str, destino: Path | 
     esc = carpeta.cargar_escenas()
     if esc.niveles:
         armar_tira(esc, cargar_estilo(proyecto.estilo), raiz, seed=proyecto.semilla)
-    preparar_profundidad(raiz, edl, avisar)
+    if preparar_profundidad(raiz, edl, avisar):
+        import gc
+
+        from .miniaturas import recorte
+
+        recorte._SESION = None          # el modelo ya no hace falta aquí: su memoria queda para los tramos
+        gc.collect()
     carpeta_tramos = destino.parent / "tramos"
     shutil.rmtree(carpeta_tramos, ignore_errors=True)
     carpeta_tramos.mkdir(parents=True)

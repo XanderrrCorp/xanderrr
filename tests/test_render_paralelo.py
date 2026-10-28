@@ -68,3 +68,15 @@ def test_codificador_usa_nvidia_si_hay_y_si_no_el_procesador(monkeypatch):
     monkeypatch.setenv("XANDART_CODIFICADOR", "cpu")
     assert r.codificador("otro") == "libx264"
     r._CODIFICADOR.clear()
+
+
+def test_con_poca_memoria_libre_igual_usa_dos_tramos(monkeypatch):
+    """(28-10) Documental de 1 hora «y el ventilador ni se prende»: con 2,5-3 GB libres quedaba en un solo tramo."""
+    import estudio.render as r
+
+    monkeypatch.setattr(r.os, "cpu_count", lambda: 8)
+    monkeypatch.setattr(r, "leer_json", lambda _: {})
+    for libre, esperado in ((1.8, 1), (2.6, 2), (3.1, 2), (4.2, 3), (12.0, 4)):
+        monkeypatch.setattr(r, "memoria_libre_gb", lambda libre=libre: libre)
+        assert r._procesos(None) == esperado, libre
+    assert r._procesos(3) == 3                                       # lo pedido manda

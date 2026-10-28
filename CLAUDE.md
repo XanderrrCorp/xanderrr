@@ -399,6 +399,10 @@ Estado al 04-10-2026. El repositorio es PÚBLICO: nunca escribir claves, tokens 
   Además (28-10, para videos con imágenes ya hechas): render.preparar_profundidad, antes de los tramos, prepara
   UNA vez (un solo modelo; antes cada tramo cargaba su rembg en un PC de 16 GB) las capas que falten y avisa
   «profundidad k de n»; recorte._nueva_sesion usa CUDAExecutionProvider si onnxruntime lo ve (si no, CPU).
+  (28-10) «Con Peligro Tropical el ventilador se prende y con el documental no»: render._procesos bajaba a UN solo
+  tramo con poca memoria libre ((libre-1)//1,2). Ahora ~1 GB por tramo y, con ≥2,5 GB libres, mínimo 2; si queda en
+  1 avisa «Montando en un solo proceso… tienes X GB libres, cierra otros programas». El modelo de rembg se suelta
+  (recorte._SESION=None + gc) tras preparar la profundidad, antes de los tramos.
 ## Pendiente
 - Preguntas sin responder del dueño: ¿en qué canal notó la voz lenta? (Peligro Tropical está en 1.3 en
   config/proveedores.json; Tracy en 1.0 por pedido suyo). ¿En qué momento sale «la tira de animales» sin sentido?
