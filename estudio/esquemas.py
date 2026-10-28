@@ -216,6 +216,9 @@ class Estilo(Modelo):
     # tipos de escena que solo muestran al animal: se pueden cambiar por una foto o video real de Pexels
     tipos_reemplazables_por_foto_real: list[str] = []
     poses_canal: list["PoseCanal"] = []
+    # (28-10, Sobrevive Si Puedes) personajes secundarios {nombre: bloqueo literal}: el bloqueo se pega en el prompt
+    # solo de las escenas que los nombran (imagenes.prompts.con_elenco)
+    elenco: dict[str, str] = {}
     # Presentador realista (persona INVENTADA) para reacciones cortas en giro, revelación y humor
     presentador: "Presentador | None" = None
     # miniaturas: cuánto se exagera cada animal según su peligro (villano, peligroso, neutral, inofensivo)

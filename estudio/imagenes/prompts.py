@@ -75,7 +75,27 @@ def prompt_de_escena(escena: Escena, estilo: Estilo, personaje: str) -> str:
         # las plantillas de animales hablan de «placas del exoesqueleto» y brillos: con piernas o
         # manos humanas Gemini dibujaba un robot negro. Solo cambia el prompt de esas escenas.
         descripcion = descripcion.rstrip(". ") + ". " + PERSONA_NORMAL
+    descripcion = con_elenco(descripcion, escena.narracion, estilo)
     return armar(tipo.plantilla_prompt, estilo, personaje, descripcion)
+
+
+def _sin_tildes(texto: str) -> str:
+    import unicodedata
+
+    return "".join(c for c in unicodedata.normalize("NFD", texto.lower()) if unicodedata.category(c) != "Mn")
+
+
+def con_elenco(descripcion: str, narracion: str, estilo: Estilo) -> str:
+    """(28-10) El bloqueo literal de cada personaje secundario del estilo, solo si la escena lo nombra (en la voz o en
+    la descripción): «Don Rubén» se reconoce por «Rubén». Estilos sin elenco: el prompt queda igual que siempre."""
+    if not estilo.elenco:
+        return descripcion
+    texto = _sin_tildes(f"{narracion} {descripcion}")
+    presentes = [bloqueo for nombre, bloqueo in estilo.elenco.items()
+                 if re.search(rf"\b{re.escape(_sin_tildes(nombre.split()[-1]))}\b", texto)]
+    if not presentes:
+        return descripcion
+    return descripcion.rstrip(". ") + ". Also in the scene: " + " ".join(presentes)
 
 
 HUMANO = re.compile(r"\b(legs?|feet|foot|ankles?|knees?|toes?|hands?|arms?|fingers?|skin|person|people|human|man|"

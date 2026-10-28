@@ -1,0 +1,99 @@
+{
+  "id": "sobrevive_si_puedes",
+  "nombre": "Sobrevive Si Puedes · terror animado",
+  "descripcion": "Supervivencia de terror animada y narrada por días, en lugares reales de Latinoamérica. Caricatura vectorial con fondos pintados de noche (morado, azul y negro, luz naranja de la linterna). Protagonista fijo: Mateo, stickman con bandana roja, mochila y linterna (el «tú» de la voz). La amenaza solo en silueta. Sin sangre ni heridas.",
+  "con_personaje": true,
+  "bloque_estilo": "STYLE: polished 2D vector cartoon, thick clean black outlines, soft cel shading, glossy highlights. Simple stickman characters in front of detailed, atmospheric, semi-realistic painted backgrounds. Night-time horror mood: deep purple, navy and black palette, warm orange light from the flashlight, windows and fires, cold blue moonlight, light ground fog. Threats are shown as silhouettes, shadows, glowing eyes or partially hidden figures, never fully lit. Latin American locations with recognizable details (colonial houses with balconies, mountain towns, Medellín metro, supermarket aisles, apartment towers, coffee farms).",
+  "personaje_por_defecto": "a white stickman with a big round white head, spiky messy black hair, a bright red bandana tied around his forehead with two long red tails flowing behind, large expressive brown eyes, thin white stick body and limbs, white cartoon-glove hands, a small brown backpack, holding a black flashlight with a warm orange-yellow glow",
+  "elenco": {
+    "Valentina": "VALENTINA: a white stickman girl with a big round white head, long black hair in a high ponytail, a green military jacket, a first-aid pouch on her belt, determined eyebrows.",
+    "Don Rubén": "DON RUBÉN: an older white stickman with a big round white head, gray mustache, bald top with gray sides, a brown poncho (ruana), a wooden cane, kind but tired eyes.",
+    "Canela": "CANELA: a small cartoon street dog, caramel-brown fur, floppy ears, a red collar, very loyal and alert."
+  },
+  "tipos_de_escena": [
+    {
+      "id": "escena_mateo",
+      "descripcion": "Mateo (el «tú» de la voz) en el lugar haciendo lo que dice la voz: acción o postura, lugar concreto con hora y luz, la amenaza al fondo en silueta y el encuadre. El tipo más usado (Mateo sale en 8 de cada 10 escenas)",
+      "plantilla_prompt": "{bloque_estilo} MATEO: {personaje}. {descripcion}. No weapons pointed at people, no dead bodies, no logos or brand names. 16:9 composition, cinematic lighting, high contrast, clean readable shapes, no text, no letters, no watermark, no blood, no gore, no visible wounds.",
+      "quitar_fondo": false,
+      "modo_montaje": "pantalla_completa"
+    },
+    {
+      "id": "tecnica_supervivencia",
+      "descripcion": "Plano medio de Mateo haciendo con claridad una técnica real de supervivencia (hervir agua, tapar una ventana, repartir la comida, hacer una señal)",
+      "plantilla_prompt": "{bloque_estilo} Medium shot that clearly shows the action. MATEO: {personaje}. {descripcion}. No weapons pointed at people, no dead bodies, no logos or brand names. 16:9 composition, cinematic lighting, high contrast, clean readable shapes, no text, no letters, no watermark, no blood, no gore, no visible wounds.",
+      "quitar_fondo": false,
+      "modo_montaje": "pantalla_completa"
+    },
+    {
+      "id": "primer_plano_mateo",
+      "descripcion": "Primer plano de la cara de Mateo con la emoción del momento (miedo, alerta, alivio, duda), iluminada por su linterna",
+      "plantilla_prompt": "{bloque_estilo} Close-up of the face and shoulders. MATEO: {personaje}. {descripcion}. No weapons pointed at people, no dead bodies, no logos or brand names. 16:9 composition, cinematic lighting, high contrast, clean readable shapes, no text, no letters, no watermark, no blood, no gore, no visible wounds.",
+      "quitar_fondo": false,
+      "modo_montaje": "pantalla_completa"
+    },
+    {
+      "id": "lugar_dia",
+      "descripcion": "Plano general del lugar sin personajes en primer plano: abre cada día («El miércoles, tercer día…») o muestra cómo cambió el lugar",
+      "plantilla_prompt": "{bloque_estilo} Wide establishing shot of the location, no characters in the foreground. {descripcion}. No weapons pointed at people, no dead bodies, no logos or brand names. 16:9 composition, cinematic lighting, high contrast, clean readable shapes, no text, no letters, no watermark, no blood, no gore, no visible wounds.",
+      "quitar_fondo": false,
+      "modo_montaje": "pantalla_completa"
+    },
+    {
+      "id": "amenaza_silueta",
+      "descripcion": "La amenaza vista solo de forma parcial: silueta, sombra, ojos que brillan, al fondo o desenfocada; nunca completa ni iluminada",
+      "plantilla_prompt": "{bloque_estilo} The threat seen only partially as a silhouette, a shadow or glowing eyes, in the background or out of focus, never fully lit. {descripcion}. No weapons pointed at people, no dead bodies, no logos or brand names. 16:9 composition, cinematic lighting, high contrast, clean readable shapes, no text, no letters, no watermark, no blood, no gore, no visible wounds.",
+      "quitar_fondo": false,
+      "modo_montaje": "pantalla_completa"
+    },
+    {
+      "id": "vista_por_hueco",
+      "descripcion": "Lo que se ve a través de un hueco, una rendija, una mirilla o una ventana (sin personajes en primer plano): la calle, el pasillo, lo que se acerca",
+      "plantilla_prompt": "{bloque_estilo} Point of view shot looking through a narrow gap, a peephole or a window, framed by the dark edges of the opening. {descripcion}. No weapons pointed at people, no dead bodies, no logos or brand names. 16:9 composition, cinematic lighting, high contrast, clean readable shapes, no text, no letters, no watermark, no blood, no gore, no visible wounds.",
+      "quitar_fondo": false,
+      "modo_montaje": "pantalla_completa"
+    }
+  ],
+  "mezcla_recomendada": {
+    "escena_mateo": 0.45,
+    "tecnica_supervivencia": 0.15,
+    "primer_plano_mateo": 0.15,
+    "lugar_dia": 0.1,
+    "amenaza_silueta": 0.1,
+    "vista_por_hueco": 0.05
+  },
+  "fondo_montaje": {
+    "tipo": "cuadricula",
+    "valor": "assets/papel_arrugado.png"
+  },
+  "modos_de_montaje_permitidos": [
+    "pantalla_completa"
+  ],
+  "gramatica_edicion": "gramaticas/estandar.json",
+  "perfil_edicion": "perfiles/sobrevive_noche.json",
+  "movimiento_maximo": 0.05,
+  "subtitulos": {
+    "estilo": "blanco_contorno_negro",
+    "posicion": "abajo_centro"
+  },
+  "musica_por_defecto": [
+    "tension"
+  ],
+  "costo_relativo": 1.0,
+  "proporcion_imagenes_unicas": 0.5,
+  "proporcion_minima_unicas": 0.4,
+  "imagenes_fijas_por_video": 0,
+  "_variables_plantilla": "{bloque_estilo} = STYLE del canal (literal); {personaje} = CHARACTER LOCK de Mateo (literal); {descripcion} = lo que muestra la escena. El elenco (Valentina, Don Rubén, Canela) se pega literal solo en las escenas que los nombran (prompts.con_elenco).",
+  "plantillas_assets": {
+    "personaje": "STYLE: polished 2D vector cartoon, thick clean black outlines, soft cel shading, glossy highlights. Simple stickman characters in front of detailed, atmospheric, semi-realistic painted backgrounds. Night-time horror mood: deep purple, navy and black palette, warm orange light from the flashlight, windows and fires, cold blue moonlight, light ground fog. Threats are shown as silhouettes, shadows, glowing eyes or partially hidden figures, never fully lit. Latin American locations with recognizable details (colonial houses with balconies, mountain towns, Medellín metro, supermarket aisles, apartment towers, coffee farms). Full body, front view, standing relaxed, alert expression. MATEO: {personaje}. {descripcion}. Isolated on a flat solid medium-gray background (#808080), no shadow on the floor, no other objects, no text, no letters.",
+    "_defecto": "STYLE: polished 2D vector cartoon, thick clean black outlines, soft cel shading, glossy highlights. Simple stickman characters in front of detailed, atmospheric, semi-realistic painted backgrounds. Night-time horror mood: deep purple, navy and black palette, warm orange light from the flashlight, windows and fires, cold blue moonlight, light ground fog. Threats are shown as silhouettes, shadows, glowing eyes or partially hidden figures, never fully lit. Latin American locations with recognizable details (colonial houses with balconies, mountain towns, Medellín metro, supermarket aisles, apartment towers, coffee farms). {descripcion}. No weapons pointed at people, no dead bodies, no logos or brand names. 16:9 composition, cinematic lighting, high contrast, clean readable shapes, no text, no letters, no watermark, no blood, no gore, no visible wounds.",
+    "pose": "STYLE: polished 2D vector cartoon, thick clean black outlines, soft cel shading, glossy highlights. Simple stickman characters in front of detailed, atmospheric, semi-realistic painted backgrounds. Night-time horror mood: deep purple, navy and black palette, warm orange light from the flashlight, windows and fires, cold blue moonlight, light ground fog. Threats are shown as silhouettes, shadows, glowing eyes or partially hidden figures, never fully lit. Latin American locations with recognizable details (colonial houses with balconies, mountain towns, Medellín metro, supermarket aisles, apartment towers, coffee farms). Full body, the same character as the reference image. MATEO: {personaje}. {descripcion}. Isolated on a flat solid medium-gray background (#808080), no shadow on the floor, no other objects, no text, no letters."
+  },
+  "comportamiento_montaje": {
+    "pantalla_completa": "pantalla_completa"
+  },
+  "ocultar_villano": false,
+  "tipos_reemplazables_por_foto_real": [],
+  "poses_canal": [],
+  "_fuente": "Brief del dueño (28-10): STYLE, cierre técnico, lock de Mateo y elenco copiados LITERAL (VERBATIM)."
+}

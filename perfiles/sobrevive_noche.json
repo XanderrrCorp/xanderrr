@@ -1,0 +1,26 @@
+{
+  "fuente": [],
+  "segundos_promedio_por_imagen": 3.2,
+  "interrupcion_de_patron_cada_seg": 3.5,
+  "efectos_por_minuto": 9,
+  "sfx_por_minuto": 16,
+  "cambios_de_musica": "por_seccion",
+  "texto_en_pantalla_por_minuto": 2,
+  "densidad_primeros_30s": "alta",
+  "variacion_minima_duracion": 0.3,
+  "respiros_max_por_minuto": 1,
+  "uso_maximo_por_recurso": 0.35,
+  "recursos_exentos_de_uso_maximo": [
+    "corte",
+    "zoom_lento",
+    "alejamiento_lento",
+    "paneo_lento",
+    "fundido_corto",
+    "entrada_lado",
+    "sfx:barrido",
+    "barrido"
+  ],
+  "variacion_referencia": {},
+  "notas": "Sobrevive Si Puedes (28-10, brief del dueño): misma edición de historia que el documental (pantalla completa, zoom lento y sutil, fundidos, tarjeta al empezar cada día, viñeta oscura), sin dopamina ni receta. Perfil propio para poder ajustarlo sin tocar Paradoja Sapiens.",
+  "movimiento": "historia"
+}

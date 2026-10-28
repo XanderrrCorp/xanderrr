@@ -1,0 +1,16 @@
+{
+  "nombre": "Sobrevive Si Puedes (terror por días)",
+  "descripcion": "Supervivencia de terror animada en un lugar real de Latinoamérica, contada por días en segunda persona, con Mateo como protagonista.",
+  "formula": "supervivencia_por_dias",
+  "estilo": "sobrevive_si_puedes",
+  "perfil": "",
+  "duraciones_min": [
+    12,
+    15,
+    18
+  ],
+  "duracion_min": 15,
+  "relacion_aspecto": "16:9",
+  "idea_ejemplo": "Sobreviví 30 días atrapado en un supermercado de barrio durante un apocalipsis zombi",
+  "portada": ""
+}

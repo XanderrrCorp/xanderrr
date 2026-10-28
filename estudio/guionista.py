@@ -293,6 +293,11 @@ def instruccion_detalles(historia: dict, k: int, estilo: Estilo, catalogo: list[
                           'escenas completas seguidas (antes tranquilo, después asustado). En la escena donde el tiempo '
                           'salta, pon "salto_tiempo": un rótulo corto («Unas horas después», «Al día siguiente»); en las '
                           'demás, null.')
+    # (28-10) reglas visuales propias de la fórmula del canal (Sobrevive Si Puedes: Mateo, cámaras, elenco)
+    imagenes = historia.get("_imagenes") or {}
+    porcentaje = int(imagenes.get("porcentaje_generar") or 70)
+    if imagenes.get("reglas"):
+        especiales.append(str(imagenes["reglas"]))
     especiales = "\n".join(especiales)
     bloque_catalogo = ""
     if catalogo:
@@ -304,7 +309,7 @@ parece, o hay duda, pide imagen nueva ("generar"): una imagen que no cuadra con 
 No pongas la misma imagen en dos escenas seguidas.
 {filas}
 """
-    nota_real = ("" if con_niveles else
+    nota_real = ("" if con_niveles or imagenes.get("fotos_reales") is False else
                  '- "real": si la escena muestra algo REAL que se vería mejor con una foto o un video de verdad (un animal, '
                  'un lugar, un paisaje, un río, un fenómeno), la búsqueda corta en inglés para un banco de fotos '
                  '(«congo river rapids», «barn owl flying»); si es una idea, una comparación, una persona o algo '
@@ -321,7 +326,7 @@ Sección «{nombre}». Estas son sus escenas (lo que dice la voz), numeradas:
 Para CADA escena, en orden, decide:
 - "intencion": una de {", ".join(INTENCIONES)} (las preguntas al espectador son pregunta_al_espectador).
 - "intensidad": 1 a 5.
-- "accion": "generar" (imagen nueva), "reusar" o "componer". Alrededor del 70 % generan imagen; reusa con
+- "accion": "generar" (imagen nueva), "reusar" o "componer". Alrededor del {porcentaje} % generan imagen; reusa con
   "reusar": "escena:<primeras palabras exactas de una escena anterior de esta sección>" solo cuando la voz
   vuelve sobre EXACTAMENTE lo mismo que ya se vio en esa escena.
 - "tipo" (solo si generar), de esta lista del estilo «{estilo.nombre}»:

@@ -403,6 +403,15 @@ Estado al 04-10-2026. El repositorio es PÚBLICO: nunca escribir claves, tokens 
   tramo con poca memoria libre ((libre-1)//1,2). Ahora ~1 GB por tramo y, con ≥2,5 GB libres, mínimo 2; si queda en
   1 avisa «Montando en un solo proceso… tienes X GB libres, cierra otros programas». El modelo de rembg se suelta
   (recorte._SESION=None + gc) tras preparar la profundidad, antes de los tramos.
+- (28-10) CANAL NUEVO «SOBREVIVE SI PUEDES» (brief largo del dueño; terror de supervivencia animado por días, «tú» =
+  Mateo): estilos/sobrevive_si_puedes (STYLE, cierre, lock de Mateo y elenco LITERAL; 6 tipos a pantalla completa;
+  proporción de imágenes 0,5 = su image_group_size 2), campo nuevo Estilo.elenco → prompts.con_elenco pega Valentina/
+  Don Rubén/Canela solo si la escena los nombra; catalogo/formulas/supervivencia_por_dias (usa «imagenes»: reglas →
+  instruccion_detalles las agrega, porcentaje_generar 50, fotos_reales false = sin «real»/Pexels; voz 1,1 y pausas
+  ×1,25; sin nombres ni frases de la competencia); catalogo/formatos/sobrevive_si_puedes (12/15/18 min), ambos en
+  api.DEL_DUENO; perfiles/sobrevive_noche.json (copia de paradoja_historia). Resto en docs/canales/sobrevive_si_puedes.md
+  (títulos, miniatura, checklist). PENDIENTE: Mateo con el asistente (gasto, pedir permiso), elegir voz, tarjeta del día
+  oscura, música de terror y corte antes de sustos, plantilla de miniatura propia.
 ## Pendiente
 - Preguntas sin responder del dueño: ¿en qué canal notó la voz lenta? (Peligro Tropical está en 1.3 en
   config/proveedores.json; Tracy en 1.0 por pedido suyo). ¿En qué momento sale «la tira de animales» sin sentido?
@@ -413,6 +422,8 @@ Estado al 04-10-2026. El repositorio es PÚBLICO: nunca escribir claves, tokens 
   y sacar la estructura del guion (sin copiar textos) antes de construir.
 - Editor (música, mover, cortar): en pausa por pedido del dueño; backend hecho, sin interfaz.
 - Prueba inestable: 1 de 3 corridas completas falló una prueba (no identificada) el 04-10; el dueño dijo no perseguirla aún.
+  (28-10) Visto de nuevo: tests/test_peligro_tropical_edicion.py::test_sin_vaiven_ni_temblor_y_entradas_de_lado_suaves falló
+  una vez en la corrida completa y pasa sola y en la siguiente corrida.
 - El Calvo Explica: (17-10) /explica tiene «Hacer el video completo» (guion→escenas→video sin parar, explica.api.hacer_todo, lo mismo que usa la cola) y «Hacer todo lo que falta» en cada video. Falta música
   tranquila (biblioteca), miniatura (personaje señalando la muñeca + «¿TÚ LO TIENES?») y título. Muestras de
   Google sin generar (botón en /explica).
