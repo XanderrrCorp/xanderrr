@@ -586,6 +586,35 @@ def precalcular_capas(raiz: Path, archivos: list[str]) -> int:
     return hechas
 
 
+def preparar_profundidad(raiz: Path, edl: dict, avisar=print) -> int:
+    """(28-10, el dueño: documental con 1 hora de montaje) antes de partir el video en tramos, la profundidad de todas
+    las escenas que la llevan se prepara aquí, UNA vez y con un solo modelo cargado. Antes cada tramo cargaba su
+    propio rembg (cientos de MB cada uno en un PC de 16 GB) y separaba sus imágenes mientras dibujaba."""
+    from .miniaturas.recorte import _rembg
+
+    archivos = list(dict.fromkeys(
+        c["archivo"] for c in edl["pistas"]["escenas"]
+        if c["modo"] == "pantalla_completa" and any(e.get("efecto") == "profundidad" for e in c.get("efectos", []))))
+    faltan = [a for a in archivos if not _capas_hechas(raiz, a)]
+    if not faltan or _rembg(Image.new("RGB", (32, 32))) is None:
+        return 0
+    avisar(f"  preparando la profundidad de {len(faltan)} imágenes (una sola vez)…")
+    for k, archivo in enumerate(faltan, 1):
+        precalcular_capas(raiz, [archivo])
+        if k % 10 == 0 or k == len(faltan):
+            avisar(f"  profundidad {k} de {len(faltan)} imágenes")
+    return len(faltan)
+
+
+def _capas_hechas(raiz: Path, archivo: str) -> bool:
+    import hashlib
+
+    clave = hashlib.sha1(f"{archivo}|{(W, H)}".encode()).hexdigest()[:12]
+    carpeta = raiz / "assets" / "capas"
+    return (carpeta / f"{clave}.no").exists() or ((carpeta / f"{clave}_fondo.jpg").exists()
+                                                  and (carpeta / f"{clave}_frente.png").exists())
+
+
 def capas_de_profundidad(img: Image.Image, raiz: Path, archivo: str) -> tuple | None:
     """Separa la escena en fondo (con el hueco del sujeto rellenado y un poco desenfocado, como la
     profundidad de campo de una cámara) y frente (el sujeto recortado). Se guarda en assets/capas para
@@ -1974,6 +2003,7 @@ def _renderizar_paralelo(carpeta: CarpetaProyecto, ffmpeg: str, destino: Path | 
     esc = carpeta.cargar_escenas()
     if esc.niveles:
         armar_tira(esc, cargar_estilo(proyecto.estilo), raiz, seed=proyecto.semilla)
+    preparar_profundidad(raiz, edl, avisar)
     carpeta_tramos = destino.parent / "tramos"
     shutil.rmtree(carpeta_tramos, ignore_errors=True)
     carpeta_tramos.mkdir(parents=True)

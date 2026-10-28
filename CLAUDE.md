@@ -396,6 +396,9 @@ Estado al 04-10-2026. El repositorio es PÚBLICO: nunca escribir claves, tokens 
   adelanta render.precalcular_capas (mismo recorte llenar_cuadro, mismo archivo en assets/capas) en un hilo mientras
   Google dibuja; al final del paso de imágenes espera lo que falte. Sin rembg se apaga solo. Solo videos cuyas
   imágenes se hagan después de instalar. Si sigue lento: bajar a 30 cps o rembg con la tarjeta NVIDIA.
+  Además (28-10, para videos con imágenes ya hechas): render.preparar_profundidad, antes de los tramos, prepara
+  UNA vez (un solo modelo; antes cada tramo cargaba su rembg en un PC de 16 GB) las capas que falten y avisa
+  «profundidad k de n»; recorte._nueva_sesion usa CUDAExecutionProvider si onnxruntime lo ve (si no, CPU).
 ## Pendiente
 - Preguntas sin responder del dueño: ¿en qué canal notó la voz lenta? (Peligro Tropical está en 1.3 en
   config/proveedores.json; Tracy en 1.0 por pedido suyo). ¿En qué momento sale «la tira de animales» sin sentido?

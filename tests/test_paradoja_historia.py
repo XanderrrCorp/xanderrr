@@ -195,3 +195,32 @@ def test_la_profundidad_se_adelanta_mientras_google_dibuja(tmp_path, monkeypatch
     img = Image.open(c.ruta / archivos[0]).convert("RGB")
     assert r.capas_de_profundidad(r.llenar_cuadro(img)[0], c.ruta, clip["archivo"]) is not None
     assert len(llamadas) == len(set(archivos))
+
+
+def test_el_montaje_prepara_la_profundidad_una_sola_vez_antes_de_los_tramos(monkeypatch):
+    """(28-10) Videos con las imágenes ya hechas (el documental de la araña): la profundidad se prepara al empezar el
+    montaje, con un solo modelo, y los tramos solo la leen del disco."""
+    import estudio.render as r
+    from estudio.config import leer_json
+    from estudio.miniaturas import recorte
+
+    c, _ = _proyecto()
+    edl = leer_json(c.ruta / "edl.json")
+    archivos = {x["archivo"] for x in edl["pistas"]["escenas"] if any(e["efecto"] == "profundidad" for e in x["efectos"])}
+    for a in archivos:
+        _escena_con_sujeto(c.ruta / a)
+    llamadas = []
+
+    def mascara(im):
+        llamadas.append(1)
+        return (((np.asarray(im)[:, :, 0] > 200) & (np.asarray(im)[:, :, 2] < 90)) * 255).astype("uint8")
+
+    monkeypatch.setattr(r, "mascara_sujeto", mascara)
+    avisos = []
+    monkeypatch.setattr(recorte, "_rembg", lambda im: None)                     # sin rembg: no hace nada
+    assert r.preparar_profundidad(c.ruta, edl, avisos.append) == 0 and not llamadas
+    monkeypatch.setattr(recorte, "_rembg", lambda im: im.convert("RGBA"))
+    assert r.preparar_profundidad(c.ruta, edl, avisos.append) == len(archivos) == len(llamadas)
+    assert any("profundidad" in a for a in avisos)
+    assert r.preparar_profundidad(c.ruta, edl, avisos.append) == 0              # la segunda vez ya está todo
+    assert all(r._capas_hechas(c.ruta, a) for a in archivos)

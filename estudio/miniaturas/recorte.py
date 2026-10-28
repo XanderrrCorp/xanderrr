@@ -13,6 +13,18 @@ from PIL import Image, ImageDraw, ImageFilter
 _SESION = None
 
 
+def _nueva_sesion(new_session):
+    """(28-10) Con la tarjeta NVIDIA si onnxruntime la ve (mucho más rápido); si no, en el procesador como siempre."""
+    try:
+        import onnxruntime
+
+        if "CUDAExecutionProvider" in onnxruntime.get_available_providers():
+            return new_session("isnet-general-use", providers=["CUDAExecutionProvider", "CPUExecutionProvider"])
+    except Exception:  # noqa: BLE001 — rembg viejo sin «providers» o la tarjeta no arranca: procesador
+        pass
+    return new_session("isnet-general-use")
+
+
 def _rembg(img: Image.Image) -> Image.Image | None:
     global _SESION
     import os
@@ -25,7 +37,7 @@ def _rembg(img: Image.Image) -> Image.Image | None:
         return None
     try:
         if _SESION is None:
-            _SESION = new_session("isnet-general-use")
+            _SESION = _nueva_sesion(new_session)
         return remove(img.convert("RGB"), session=_SESION)
     except Exception:  # noqa: BLE001 — sin modelo (sin internet la primera vez): recorte simple
         return None
