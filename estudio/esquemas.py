@@ -219,6 +219,8 @@ class Estilo(Modelo):
     # (28-10, Sobrevive Si Puedes) personajes secundarios {nombre: bloqueo literal}: el bloqueo se pega en el prompt
     # solo de las escenas que los nombran (imagenes.prompts.con_elenco)
     elenco: dict[str, str] = {}
+    # (28-10) tarjeta al empezar cada parte: «papel» (Paradoja Sapiens) o «noche» (fondo oscuro, sin «CAPÍTULO N»)
+    tarjeta_capitulo: Literal["papel", "noche"] = "papel"
     # Presentador realista (persona INVENTADA) para reacciones cortas en giro, revelación y humor
     presentador: "Presentador | None" = None
     # miniaturas: cuánto se exagera cada animal según su peligro (villano, peligroso, neutral, inofensivo)

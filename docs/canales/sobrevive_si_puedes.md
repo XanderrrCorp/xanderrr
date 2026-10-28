@@ -17,7 +17,7 @@ Preset creado el 28-10 a partir del brief del dueño. No toca ningún otro canal
 - **Mateo con el asistente de Personajes** (cuesta ~3.000-3.500 COP, necesita permiso): sin su imagen de referencia,
   Google lo dibuja solo con el texto y puede variar entre escenas.
 - **Voz**: elegirla al crear el canal; probar 2-3 voces cuesta poco pero es pago (necesita permiso).
-- **Tarjeta del día en oscuro**: hoy la tarjeta «Lunes, primer día» sale sobre papel claro (la del documental).
+- ~~Tarjeta del día en oscuro~~: hecha (28-10).
 - **Música de terror** (drones, −22 dB bajo la voz) y **cortar la música 1-2 s antes de los sustos**: no existe todavía.
   Música solo con licencia verificable.
 - **Plantilla de miniatura propia** (sección 9 del brief): no existe todavía.

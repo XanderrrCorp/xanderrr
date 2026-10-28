@@ -75,3 +75,18 @@ def test_los_otros_canales_no_cambian():
                                "intencion": "explicacion", "intensidad": 2,
                                "visual": {"accion": "generar", "tipo": t.id, "prompt": "a frog"}})
     assert "Also in the scene" not in prompts.prompt_de_escena(e, pt, pt.personaje_por_defecto or "")
+
+
+def test_la_tarjeta_del_dia_es_oscura_en_este_canal_y_de_papel_en_paradoja():
+    import numpy as np
+    from PIL import Image
+
+    import estudio.render as r
+    from estudio.estilos import cargar_estilo
+
+    assert _estilo().tarjeta_capitulo == "noche" and cargar_estilo("paradoja_sapiens").tarjeta_capitulo == "papel"
+    papel = Image.new("RGB", (r.W, r.H), (240, 236, 228))
+    ef = {"numero": 2, "titulo": "Lunes, primer día"}
+    noche = np.asarray(r._capitulo(papel, ef, 1.0, noche=True)).mean()
+    claro = np.asarray(r._capitulo(papel, ef, 1.0)).mean()
+    assert noche < 60 < 200 < claro

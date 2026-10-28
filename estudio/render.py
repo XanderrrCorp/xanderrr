@@ -950,19 +950,31 @@ def _vineta(img: Image.Image) -> Image.Image:
     return Image.fromarray((np.asarray(img.convert("RGB"), np.float32) * _ICONO["vineta"]).astype("uint8"))
 
 
-def _capitulo(papel: Image.Image, ef: dict, loc: float) -> Image.Image:
+def _fondo_noche() -> Image.Image:
+    """Fondo de la tarjeta «noche» (Sobrevive Si Puedes): azul muy oscuro a negro, con niebla suave abajo."""
+    if "fondo_noche" not in _ICONO:
+        y = np.linspace(0, 1, H, dtype=np.float32)[:, None, None]
+        arr = np.array([22, 18, 44], np.float32) * (1 - y) + np.array([4, 4, 10], np.float32) * y
+        x = np.linspace(-1, 1, W, dtype=np.float32)[None, :, None]
+        niebla = np.clip(1 - np.abs(y - 0.82) * 6, 0, 1) * (0.6 + 0.4 * np.cos(x * 3)) * 40
+        _ICONO["fondo_noche"] = Image.fromarray(np.clip(np.broadcast_to(arr, (H, W, 3)) + niebla, 0, 255).astype("uint8"))
+    return _ICONO["fondo_noche"]
+
+
+def _capitulo(papel: Image.Image, ef: dict, loc: float, noche: bool = False) -> Image.Image:
     """Tarjeta de capítulo (Paradoja Sapiens): sobre el papel, «CAPÍTULO N» pequeño en rojo ladrillo y el
-    nombre de la parte grande en negro con un subrayado de marcador que se dibuja; entra deslizándose."""
-    clave = ("capitulo", ef["numero"], ef["titulo"])
+    nombre de la parte grande en negro con un subrayado de marcador que se dibuja; entra deslizándose.
+    `noche` (28-10, Sobrevive Si Puedes): fondo oscuro, solo el nombre del día en blanco y el subrayado rojo."""
+    clave = ("capitulo", ef["numero"], ef["titulo"], noche)
     if clave not in _ICONO:
         num = _texto_img(f"CAPÍTULO {ef['numero']}", 58, 0, color=(178, 58, 38))
-        tit = _texto_img(ef["titulo"], 118, 0, color=(20, 16, 12))
+        tit = _texto_img(ef["titulo"], 118, 6 if noche else 0, color=(245, 240, 232) if noche else (20, 16, 12))
         if tit.width > W - 200:
             k = (W - 200) / tit.width
             tit = tit.resize((int(tit.width * k), int(tit.height * k)), Image.Resampling.LANCZOS)
-        _ICONO[clave] = (num, tit)
+        _ICONO[clave] = (Image.new("RGBA", (1, 1), (0, 0, 0, 0)) if noche else num, tit)
     num, tit = _ICONO[clave]
-    img = papel.resize((W, H)).convert("RGBA")
+    img = (_fondo_noche() if noche else papel).resize((W, H)).convert("RGBA")
     entra = _sale(loc / 0.4)
     dx = int((1 - entra) * -W * 0.5)
     yt = H // 2 - tit.height // 2 + 30
@@ -974,7 +986,7 @@ def _capitulo(papel: Image.Image, ef: dict, loc: float) -> Image.Image:
         x0 = (W - tit.width) // 2
         y = yt + tit.height + 14
         pts = [(x0 + tit.width * t, y + 6 * math.sin(t * 9)) for t in np.linspace(0, trazo, 40)]
-        ImageDraw.Draw(img).line(pts, fill=(178, 58, 38, 255), width=10, joint="curve")
+        ImageDraw.Draw(img).line(pts, fill=(220, 40, 40, 255) if noche else (178, 58, 38, 255), width=10, joint="curve")
     return img.convert("RGB")
 
 
@@ -2355,7 +2367,7 @@ def _renderizar(carpeta: CarpetaProyecto, ffmpeg: str, destino: Path | None, des
             img, en_reaccion = RT.mapa_antiguo(mapa_v, tt - mapa_v["en"]), True
         cap = ef.get("capitulo")
         if not en_reaccion and cap and cap["en"] <= tt < cap["en"] + cap["dur"]:
-            img, en_reaccion = _capitulo(papel, cap, tt - cap["en"]), True
+            img, en_reaccion = _capitulo(papel, cap, tt - cap["en"], estilo.tarjeta_capitulo == "noche"), True
         if "vineta" in ef and not en_reaccion and c["modo"] == "pantalla_completa":
             img = _vineta(img)
         if "icono_advertencia" in ef and not en_reaccion:

@@ -411,7 +411,8 @@ Estado al 04-10-2026. El repositorio es PÚBLICO: nunca escribir claves, tokens 
   ×1,25; sin nombres ni frases de la competencia); catalogo/formatos/sobrevive_si_puedes (12/15/18 min), ambos en
   api.DEL_DUENO; perfiles/sobrevive_noche.json (copia de paradoja_historia). Resto en docs/canales/sobrevive_si_puedes.md
   (títulos, miniatura, checklist). PENDIENTE: Mateo con el asistente (gasto, pedir permiso), elegir voz, tarjeta del día
-  oscura, música de terror y corte antes de sustos, plantilla de miniatura propia.
+  oscura (HECHA el 28-10: Estilo.tarjeta_capitulo «noche» → render._capitulo fondo oscuro, sin «CAPÍTULO N»), música de
+  terror y corte antes de sustos, plantilla de miniatura propia. Prueba sin costo en scratchpad sob/prueba.py.
 ## Pendiente
 - Preguntas sin responder del dueño: ¿en qué canal notó la voz lenta? (Peligro Tropical está en 1.3 en
   config/proveedores.json; Tracy en 1.0 por pedido suyo). ¿En qué momento sale «la tira de animales» sin sentido?
