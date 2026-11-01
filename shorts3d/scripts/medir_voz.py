@@ -4,11 +4,12 @@ import numpy as np
 P = pathlib.Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(P / "scripts"))
 import os
-from voz_minimax import FRASES, FRASES_PANTERA  # noqa (no cobra: solo lee los textos)
+from voz_minimax import FRASES, FRASES_PANTERA, FRASES_COLOMBIA  # noqa (no cobra: solo lee los textos)
 PROD = os.environ.get("PROD", "avispon")
 if PROD == "pantera": FRASES = FRASES_PANTERA
-VOD = "public/pantera/vo" if PROD == "pantera" else "public/audio/vo"
-OUT = "src/pantera/vo.json" if PROD == "pantera" else "src/data/vo.json"
+if PROD == "colombia": FRASES = FRASES_COLOMBIA
+VOD = {"pantera": "public/pantera/vo", "colombia": "public/colombia/vo"}.get(PROD, "public/audio/vo")
+OUT = {"pantera": "src/pantera/vo.json", "colombia": "src/colombia/vo.json"}.get(PROD, "src/data/vo.json")
 res = {}
 for k, texto in FRASES.items():
     w = wave.open(str(P / f"{VOD}/{k}.wav")); sr = w.getframerate()

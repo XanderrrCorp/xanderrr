@@ -1,0 +1,622 @@
+{
+ "s1": {
+  "text": "En cada departamento de Colombia hay un animal que puede matarte.",
+  "seconds": 3.077,
+  "voiceStart": 0.12,
+  "voiceEnd": 2.82,
+  "segments": 1,
+  "groups": 1,
+  "words": [
+   {
+    "text": "En",
+    "start": 0.12,
+    "end": 0.254
+   },
+   {
+    "text": "cada",
+    "start": 0.254,
+    "end": 0.465
+   },
+   {
+    "text": "departamento",
+    "start": 0.465,
+    "end": 0.982
+   },
+   {
+    "text": "de",
+    "start": 0.982,
+    "end": 1.116
+   },
+   {
+    "text": "Colombia",
+    "start": 1.116,
+    "end": 1.48
+   },
+   {
+    "text": "hay",
+    "start": 1.48,
+    "end": 1.652
+   },
+   {
+    "text": "un",
+    "start": 1.652,
+    "end": 1.786
+   },
+   {
+    "text": "animal",
+    "start": 1.786,
+    "end": 2.073
+   },
+   {
+    "text": "que",
+    "start": 2.073,
+    "end": 2.246
+   },
+   {
+    "text": "puede",
+    "start": 2.246,
+    "end": 2.494
+   },
+   {
+    "text": "matarte.",
+    "start": 2.494,
+    "end": 2.82
+   }
+  ]
+ },
+ "s2": {
+  "text": "¿Sabes cuál es el del tuyo?",
+  "seconds": 1.173,
+  "voiceStart": 0.11,
+  "voiceEnd": 0.98,
+  "segments": 1,
+  "groups": 1,
+  "words": [
+   {
+    "text": "¿Sabes",
+    "start": 0.11,
+    "end": 0.305
+   },
+   {
+    "text": "cuál",
+    "start": 0.305,
+    "end": 0.47
+   },
+   {
+    "text": "es",
+    "start": 0.47,
+    "end": 0.575
+   },
+   {
+    "text": "el",
+    "start": 0.575,
+    "end": 0.68
+   },
+   {
+    "text": "del",
+    "start": 0.68,
+    "end": 0.815
+   },
+   {
+    "text": "tuyo?",
+    "start": 0.815,
+    "end": 0.98
+   }
+  ]
+ },
+ "s3": {
+  "text": "En el Cauca vive la rana dorada. Cabe en tu mano y su piel tiene veneno para matar a diez personas.",
+  "seconds": 4.888,
+  "voiceStart": 0.15,
+  "voiceEnd": 4.54,
+  "segments": 3,
+  "groups": 2,
+  "words": [
+   {
+    "text": "En",
+    "start": 0.15,
+    "end": 0.292
+   },
+   {
+    "text": "el",
+    "start": 0.292,
+    "end": 0.433
+   },
+   {
+    "text": "Cauca",
+    "start": 0.433,
+    "end": 0.696
+   },
+   {
+    "text": "vive",
+    "start": 0.696,
+    "end": 0.919
+   },
+   {
+    "text": "la",
+    "start": 0.919,
+    "end": 1.06
+   },
+   {
+    "text": "rana",
+    "start": 1.06,
+    "end": 1.283
+   },
+   {
+    "text": "dorada.",
+    "start": 1.283,
+    "end": 1.586
+   },
+   {
+    "text": "Cabe",
+    "start": 1.586,
+    "end": 1.809
+   },
+   {
+    "text": "en",
+    "start": 1.809,
+    "end": 1.951
+   },
+   {
+    "text": "tu",
+    "start": 1.951,
+    "end": 2.092
+   },
+   {
+    "text": "mano",
+    "start": 2.092,
+    "end": 2.315
+   },
+   {
+    "text": "y",
+    "start": 2.315,
+    "end": 2.416
+   },
+   {
+    "text": "su",
+    "start": 2.416,
+    "end": 2.557
+   },
+   {
+    "text": "piel",
+    "start": 2.557,
+    "end": 2.78
+   },
+   {
+    "text": "tiene",
+    "start": 2.78,
+    "end": 3.043
+   },
+   {
+    "text": "veneno",
+    "start": 3.043,
+    "end": 3.346
+   },
+   {
+    "text": "para",
+    "start": 3.346,
+    "end": 3.569
+   },
+   {
+    "text": "matar",
+    "start": 3.569,
+    "end": 3.832
+   },
+   {
+    "text": "a",
+    "start": 3.832,
+    "end": 3.933
+   },
+   {
+    "text": "diez",
+    "start": 3.933,
+    "end": 4.156
+   },
+   {
+    "text": "personas.",
+    "start": 4.156,
+    "end": 4.54
+   }
+  ]
+ },
+ "s4": {
+  "text": "En el Tolima, un escorpión del tamaño de tu dedo. Su picadura es una emergencia, sobre todo en niños.",
+  "seconds": 5.213,
+  "voiceStart": 0.12,
+  "voiceEnd": 4.86,
+  "segments": 3,
+  "groups": 4,
+  "words": [
+   {
+    "text": "En",
+    "start": 0.12,
+    "end": 0.274
+   },
+   {
+    "text": "el",
+    "start": 0.274,
+    "end": 0.429
+   },
+   {
+    "text": "Tolima,",
+    "start": 0.429,
+    "end": 0.759
+   },
+   {
+    "text": "un",
+    "start": 0.759,
+    "end": 0.914
+   },
+   {
+    "text": "escorpión",
+    "start": 0.914,
+    "end": 1.377
+   },
+   {
+    "text": "del",
+    "start": 1.377,
+    "end": 1.575
+   },
+   {
+    "text": "tamaño",
+    "start": 1.575,
+    "end": 1.906
+   },
+   {
+    "text": "de",
+    "start": 1.906,
+    "end": 2.06
+   },
+   {
+    "text": "tu",
+    "start": 2.06,
+    "end": 2.214
+   },
+   {
+    "text": "dedo.",
+    "start": 2.214,
+    "end": 2.457
+   },
+   {
+    "text": "Su",
+    "start": 2.457,
+    "end": 2.611
+   },
+   {
+    "text": "picadura",
+    "start": 2.611,
+    "end": 3.03
+   },
+   {
+    "text": "es",
+    "start": 3.03,
+    "end": 3.184
+   },
+   {
+    "text": "una",
+    "start": 3.184,
+    "end": 3.383
+   },
+   {
+    "text": "emergencia,",
+    "start": 3.383,
+    "end": 3.89
+   },
+   {
+    "text": "sobre",
+    "start": 3.89,
+    "end": 4.177
+   },
+   {
+    "text": "todo",
+    "start": 4.177,
+    "end": 4.419
+   },
+   {
+    "text": "en",
+    "start": 4.419,
+    "end": 4.573
+   },
+   {
+    "text": "niños.",
+    "start": 4.573,
+    "end": 4.86
+   }
+  ]
+ },
+ "s5": {
+  "text": "Y antes del más peligroso… suscríbete.",
+  "seconds": 2.984,
+  "voiceStart": 0.13,
+  "voiceEnd": 2.75,
+  "segments": 2,
+  "groups": 2,
+  "words": [
+   {
+    "text": "Y",
+    "start": 0.13,
+    "end": 0.248
+   },
+   {
+    "text": "antes",
+    "start": 0.248,
+    "end": 0.556
+   },
+   {
+    "text": "del",
+    "start": 0.556,
+    "end": 0.769
+   },
+   {
+    "text": "más",
+    "start": 0.769,
+    "end": 0.983
+   },
+   {
+    "text": "peligroso…",
+    "start": 0.983,
+    "end": 1.48
+   },
+   {
+    "text": "suscríbete.",
+    "start": 2.12,
+    "end": 2.75
+   }
+  ]
+ },
+ "s6": {
+  "text": "En Antioquia, una víbora que se esconde entre las hojas secas. Es de las serpientes que más mordeduras causan en Colombia.",
+  "seconds": 5.875,
+  "voiceStart": 0.14,
+  "voiceEnd": 5.67,
+  "segments": 3,
+  "groups": 3,
+  "words": [
+   {
+    "text": "En",
+    "start": 0.14,
+    "end": 0.282
+   },
+   {
+    "text": "Antioquia,",
+    "start": 0.282,
+    "end": 0.71
+   },
+   {
+    "text": "una",
+    "start": 0.98,
+    "end": 1.146
+   },
+   {
+    "text": "víbora",
+    "start": 1.146,
+    "end": 1.423
+   },
+   {
+    "text": "que",
+    "start": 1.423,
+    "end": 1.59
+   },
+   {
+    "text": "se",
+    "start": 1.59,
+    "end": 1.719
+   },
+   {
+    "text": "esconde",
+    "start": 1.719,
+    "end": 2.033
+   },
+   {
+    "text": "entre",
+    "start": 2.033,
+    "end": 2.273
+   },
+   {
+    "text": "las",
+    "start": 2.273,
+    "end": 2.44
+   },
+   {
+    "text": "hojas",
+    "start": 2.44,
+    "end": 2.68
+   },
+   {
+    "text": "secas.",
+    "start": 2.68,
+    "end": 2.92
+   },
+   {
+    "text": "Es",
+    "start": 3.36,
+    "end": 3.486
+   },
+   {
+    "text": "de",
+    "start": 3.486,
+    "end": 3.613
+   },
+   {
+    "text": "las",
+    "start": 3.613,
+    "end": 3.775
+   },
+   {
+    "text": "serpientes",
+    "start": 3.775,
+    "end": 4.19
+   },
+   {
+    "text": "que",
+    "start": 4.19,
+    "end": 4.353
+   },
+   {
+    "text": "más",
+    "start": 4.353,
+    "end": 4.515
+   },
+   {
+    "text": "mordeduras",
+    "start": 4.515,
+    "end": 4.93
+   },
+   {
+    "text": "causan",
+    "start": 4.93,
+    "end": 5.201
+   },
+   {
+    "text": "en",
+    "start": 5.201,
+    "end": 5.327
+   },
+   {
+    "text": "Colombia.",
+    "start": 5.327,
+    "end": 5.67
+   }
+  ]
+ },
+ "s7": {
+  "text": "¿De qué departamento eres? Escríbelo y te digo cuál te toca.",
+  "seconds": 2.949,
+  "voiceStart": 0.11,
+  "voiceEnd": 2.82,
+  "segments": 2,
+  "groups": 2,
+  "words": [
+   {
+    "text": "¿De",
+    "start": 0.11,
+    "end": 0.225
+   },
+   {
+    "text": "qué",
+    "start": 0.225,
+    "end": 0.374
+   },
+   {
+    "text": "departamento",
+    "start": 0.374,
+    "end": 0.819
+   },
+   {
+    "text": "eres?",
+    "start": 0.819,
+    "end": 1.0
+   },
+   {
+    "text": "Escríbelo",
+    "start": 1.43,
+    "end": 1.83
+   },
+   {
+    "text": "y",
+    "start": 1.83,
+    "end": 1.925
+   },
+   {
+    "text": "te",
+    "start": 1.925,
+    "end": 2.058
+   },
+   {
+    "text": "digo",
+    "start": 2.058,
+    "end": 2.268
+   },
+   {
+    "text": "cuál",
+    "start": 2.268,
+    "end": 2.477
+   },
+   {
+    "text": "te",
+    "start": 2.477,
+    "end": 2.611
+   },
+   {
+    "text": "toca.",
+    "start": 2.611,
+    "end": 2.82
+   }
+  ]
+ },
+ "s8": {
+  "text": "El de tu departamento está en el video completo. Porque, te lo repito…",
+  "seconds": 3.866,
+  "voiceStart": 0.15,
+  "voiceEnd": 3.7,
+  "segments": 2,
+  "groups": 3,
+  "words": [
+   {
+    "text": "El",
+    "start": 0.15,
+    "end": 0.317
+   },
+   {
+    "text": "de",
+    "start": 0.317,
+    "end": 0.484
+   },
+   {
+    "text": "tu",
+    "start": 0.484,
+    "end": 0.65
+   },
+   {
+    "text": "departamento",
+    "start": 0.65,
+    "end": 1.294
+   },
+   {
+    "text": "está",
+    "start": 1.294,
+    "end": 1.556
+   },
+   {
+    "text": "en",
+    "start": 1.556,
+    "end": 1.722
+   },
+   {
+    "text": "el",
+    "start": 1.722,
+    "end": 1.889
+   },
+   {
+    "text": "video",
+    "start": 1.889,
+    "end": 2.199
+   },
+   {
+    "text": "completo.",
+    "start": 2.199,
+    "end": 2.652
+   },
+   {
+    "text": "Porque,",
+    "start": 2.652,
+    "end": 3.009
+   },
+   {
+    "text": "te",
+    "start": 3.009,
+    "end": 3.176
+   },
+   {
+    "text": "lo",
+    "start": 3.176,
+    "end": 3.343
+   },
+   {
+    "text": "repito…",
+    "start": 3.343,
+    "end": 3.7
+   }
+  ]
+ }
+}

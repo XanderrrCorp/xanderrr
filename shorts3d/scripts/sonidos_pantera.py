@@ -37,3 +37,19 @@ x += np.sin(2 * np.pi * 85 * n) * np.exp(-n * 14) * 0.8
 save("sfx/crujido.wav", x)
 # (sin ambiente de selva: el grillo sintético sonaba como un zumbido durante todo el video)
 print("listo")
+
+# --- Short de los departamentos: campanita y tecleo ---
+C = pathlib.Path(__file__).resolve().parent.parent / "public/colombia/sfx"
+C.mkdir(parents=True, exist_ok=True)
+def save_c(name, x):
+    x = np.asarray(x, float); x = x / (np.max(np.abs(x)) + 1e-9) * 0.89
+    with wave.open(str(C / name), "wb") as w:
+        w.setnchannels(1); w.setsampwidth(2); w.setframerate(SR); w.writeframes((x * 32767).astype(np.int16).tobytes())
+n = t(1.2)
+save_c("campanita.wav", sum(np.sin(2 * np.pi * fr * n) * np.exp(-n * d) for fr, d in [(1568, 3), (2349, 4), (3136, 5)]) * (1 + 0.3 * np.sin(2 * np.pi * 9 * n)))
+n = t(1.2); x = np.zeros(len(n))
+for k in range(14):
+    st = k * 0.08 + rng.uniform(0, 0.02); m = (n >= st) & (n < st + 0.03); u = n[m] - st
+    x[m] += rng.standard_normal(m.sum()) * np.exp(-u * 300)
+save_c("tecleo.wav", x)
+print("colombia listo")

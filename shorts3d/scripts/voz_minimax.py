@@ -13,6 +13,16 @@ FRASES_PANTERA = {
  "s6": "¿Tú lo sabías? Escribe sí o no.",
  "s7": "Pero hay una mutación mucho más difícil de mirar. Está en el video completo. Porque te lo repito…",
 }
+FRASES_COLOMBIA = {
+ "s1": "En cada departamento de Colombia hay un animal que puede matarte.",
+ "s2": "¿Sabes cuál es el del tuyo?",
+ "s3": "En el Cauca vive la rana dorada. Cabe en tu mano y su piel tiene veneno para matar a diez personas.",
+ "s4": "En el Tolima, un escorpión del tamaño de tu dedo. Su picadura es una emergencia, sobre todo en niños.",
+ "s5": "Y antes del más peligroso… suscríbete.",
+ "s6": "En Antioquia, una víbora que se esconde entre las hojas secas. Es de las serpientes que más mordeduras causan en Colombia.",
+ "s7": "¿De qué departamento eres? Escríbelo y te digo cuál te toca.",
+ "s8": "El de tu departamento está en el video completo. Porque, te lo repito…",
+}
 FRASES = {
  "s1": "Este avispón es del tamaño de tu pulgar… y acaba de encontrar una colmena.",
  "s2": "Mide unos cinco centímetros. Su armadura es tan gruesa que las picaduras de abeja casi no le hacen daño.",
@@ -24,7 +34,9 @@ FRASES = {
 }
 if PROD == "pantera":
     FRASES = FRASES_PANTERA
-out = P / ("public/pantera/vo" if PROD == "pantera" else "public/audio/vo")
+if PROD == "colombia":
+    FRASES = FRASES_COLOMBIA
+out = P / {"pantera": "public/pantera/vo", "colombia": "public/colombia/vo"}.get(PROD, "public/audio/vo")
 total_chars = 0
 for k, t in (FRASES.items() if __name__ == "__main__" else []):
     mp3 = out / f"{k}.mp3"

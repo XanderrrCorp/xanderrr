@@ -8,6 +8,10 @@ así que no se copió su código).
 - `producciones/avispon-short`: el avispón gigante y la bola de calor (composición `AvisponGigante`, 39 s).
 - `producciones/pantera-short`: «La pantera negra no existe» (composición `PanteraNegra`, ~31 s), con la
   fórmula de Shorts del dueño (ver CLAUDE.md).
+- `src/colombia`: «El animal más peligroso de cada departamento» (composición `Departamentos`, ~33 s): mapa 3D de
+  Colombia por departamentos (Natural Earth 1:10m, dominio público, simplificado en `departamentos.json`), rana del
+  Cauca, escorpión del Tolima y víbora de Antioquia en 3D, botón de suscribirse, comentario y loop a la víbora.
+  `DepartamentosPrevia` = la vista previa sin voz.
 
 ## Cómo se arma uno
 1. Guion con la fórmula de Shorts → aprobación del dueño (y del costo de la voz).
