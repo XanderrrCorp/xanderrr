@@ -1,0 +1,4 @@
+node_modules/
+out/
+# audio generado (voz pagada y sonidos hechos por scripts/sonidos*.py): no se sube
+public/

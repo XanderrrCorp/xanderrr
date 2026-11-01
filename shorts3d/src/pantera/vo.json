@@ -1,0 +1,597 @@
+{
+ "s1": {
+  "text": "La pantera negra no existe.",
+  "seconds": 1.765,
+  "voiceStart": 0.14,
+  "voiceEnd": 1.53,
+  "segments": 1,
+  "groups": 1,
+  "words": [
+   {
+    "text": "La",
+    "start": 0.14,
+    "end": 0.305
+   },
+   {
+    "text": "pantera",
+    "start": 0.305,
+    "end": 0.705
+   },
+   {
+    "text": "negra",
+    "start": 0.705,
+    "end": 1.012
+   },
+   {
+    "text": "no",
+    "start": 1.012,
+    "end": 1.177
+   },
+   {
+    "text": "existe.",
+    "start": 1.177,
+    "end": 1.53
+   }
+  ]
+ },
+ "s2": {
+  "text": "Entonces, ¿qué es lo que te está mirando desde la oscuridad?",
+  "seconds": 2.984,
+  "voiceStart": 0.13,
+  "voiceEnd": 2.79,
+  "segments": 2,
+  "groups": 2,
+  "words": [
+   {
+    "text": "Entonces,",
+    "start": 0.13,
+    "end": 0.58
+   },
+   {
+    "text": "¿qué",
+    "start": 0.89,
+    "end": 1.048
+   },
+   {
+    "text": "es",
+    "start": 1.048,
+    "end": 1.171
+   },
+   {
+    "text": "lo",
+    "start": 1.171,
+    "end": 1.295
+   },
+   {
+    "text": "que",
+    "start": 1.295,
+    "end": 1.453
+   },
+   {
+    "text": "te",
+    "start": 1.453,
+    "end": 1.576
+   },
+   {
+    "text": "está",
+    "start": 1.576,
+    "end": 1.77
+   },
+   {
+    "text": "mirando",
+    "start": 1.77,
+    "end": 2.069
+   },
+   {
+    "text": "desde",
+    "start": 2.069,
+    "end": 2.297
+   },
+   {
+    "text": "la",
+    "start": 2.297,
+    "end": 2.421
+   },
+   {
+    "text": "oscuridad?",
+    "start": 2.421,
+    "end": 2.79
+   }
+  ]
+ },
+ "s3": {
+  "text": "Es un jaguar en América, o un leopardo en África y Asia. Con una mutación que llena su piel de pigmento negro.",
+  "seconds": 5.77,
+  "voiceStart": 0.15,
+  "voiceEnd": 5.55,
+  "segments": 4,
+  "groups": 3,
+  "words": [
+   {
+    "text": "Es",
+    "start": 0.15,
+    "end": 0.309
+   },
+   {
+    "text": "un",
+    "start": 0.309,
+    "end": 0.468
+   },
+   {
+    "text": "jaguar",
+    "start": 0.468,
+    "end": 0.808
+   },
+   {
+    "text": "en",
+    "start": 0.808,
+    "end": 0.967
+   },
+   {
+    "text": "América,",
+    "start": 0.967,
+    "end": 1.353
+   },
+   {
+    "text": "o",
+    "start": 1.353,
+    "end": 1.466
+   },
+   {
+    "text": "un",
+    "start": 1.466,
+    "end": 1.625
+   },
+   {
+    "text": "leopardo",
+    "start": 1.625,
+    "end": 2.056
+   },
+   {
+    "text": "en",
+    "start": 2.056,
+    "end": 2.215
+   },
+   {
+    "text": "África",
+    "start": 2.215,
+    "end": 2.555
+   },
+   {
+    "text": "y",
+    "start": 2.555,
+    "end": 2.668
+   },
+   {
+    "text": "Asia.",
+    "start": 2.668,
+    "end": 2.918
+   },
+   {
+    "text": "Con",
+    "start": 2.918,
+    "end": 3.122
+   },
+   {
+    "text": "una",
+    "start": 3.122,
+    "end": 3.326
+   },
+   {
+    "text": "mutación",
+    "start": 3.326,
+    "end": 3.758
+   },
+   {
+    "text": "que",
+    "start": 3.758,
+    "end": 3.962
+   },
+   {
+    "text": "llena",
+    "start": 3.962,
+    "end": 4.257
+   },
+   {
+    "text": "su",
+    "start": 4.257,
+    "end": 4.416
+   },
+   {
+    "text": "piel",
+    "start": 4.416,
+    "end": 4.665
+   },
+   {
+    "text": "de",
+    "start": 4.665,
+    "end": 4.824
+   },
+   {
+    "text": "pigmento",
+    "start": 4.824,
+    "end": 5.255
+   },
+   {
+    "text": "negro.",
+    "start": 5.255,
+    "end": 5.55
+   }
+  ]
+ },
+ "s4": {
+  "text": "De noche es casi invisible. Camina sin romper una rama. Y si es un jaguar, su mordida atraviesa el caparazón de una tortuga.",
+  "seconds": 5.898,
+  "voiceStart": 0.12,
+  "voiceEnd": 5.78,
+  "segments": 2,
+  "groups": 4,
+  "words": [
+   {
+    "text": "De",
+    "start": 0.12,
+    "end": 0.27
+   },
+   {
+    "text": "noche",
+    "start": 0.27,
+    "end": 0.547
+   },
+   {
+    "text": "es",
+    "start": 0.547,
+    "end": 0.697
+   },
+   {
+    "text": "casi",
+    "start": 0.697,
+    "end": 0.932
+   },
+   {
+    "text": "invisible.",
+    "start": 0.932,
+    "end": 1.38
+   },
+   {
+    "text": "Camina",
+    "start": 1.38,
+    "end": 1.701
+   },
+   {
+    "text": "sin",
+    "start": 1.701,
+    "end": 1.893
+   },
+   {
+    "text": "romper",
+    "start": 1.893,
+    "end": 2.213
+   },
+   {
+    "text": "una",
+    "start": 2.213,
+    "end": 2.405
+   },
+   {
+    "text": "rama.",
+    "start": 2.405,
+    "end": 2.64
+   },
+   {
+    "text": "Y",
+    "start": 2.64,
+    "end": 2.747
+   },
+   {
+    "text": "si",
+    "start": 2.747,
+    "end": 2.897
+   },
+   {
+    "text": "es",
+    "start": 2.897,
+    "end": 3.046
+   },
+   {
+    "text": "un",
+    "start": 3.046,
+    "end": 3.196
+   },
+   {
+    "text": "jaguar,",
+    "start": 3.196,
+    "end": 3.516
+   },
+   {
+    "text": "su",
+    "start": 3.516,
+    "end": 3.666
+   },
+   {
+    "text": "mordida",
+    "start": 3.666,
+    "end": 4.029
+   },
+   {
+    "text": "atraviesa",
+    "start": 4.029,
+    "end": 4.477
+   },
+   {
+    "text": "el",
+    "start": 4.477,
+    "end": 4.627
+   },
+   {
+    "text": "caparazón",
+    "start": 4.627,
+    "end": 5.075
+   },
+   {
+    "text": "de",
+    "start": 5.075,
+    "end": 5.225
+   },
+   {
+    "text": "una",
+    "start": 5.225,
+    "end": 5.417
+   },
+   {
+    "text": "tortuga.",
+    "start": 5.417,
+    "end": 5.78
+   }
+  ]
+ },
+ "s5": {
+  "text": "Pero lo más loco: sus manchas nunca desaparecieron. Siguen ahí, escondidas, negro sobre negro. Con buena luz, se ven.",
+  "seconds": 6.037,
+  "voiceStart": 0.09,
+  "voiceEnd": 5.89,
+  "segments": 5,
+  "groups": 7,
+  "words": [
+   {
+    "text": "Pero",
+    "start": 0.09,
+    "end": 0.355
+   },
+   {
+    "text": "lo",
+    "start": 0.355,
+    "end": 0.523
+   },
+   {
+    "text": "más",
+    "start": 0.523,
+    "end": 0.74
+   },
+   {
+    "text": "loco:",
+    "start": 0.74,
+    "end": 1.005
+   },
+   {
+    "text": "sus",
+    "start": 1.005,
+    "end": 1.221
+   },
+   {
+    "text": "manchas",
+    "start": 1.221,
+    "end": 1.63
+   },
+   {
+    "text": "nunca",
+    "start": 1.63,
+    "end": 1.943
+   },
+   {
+    "text": "desaparecieron.",
+    "start": 1.943,
+    "end": 2.689
+   },
+   {
+    "text": "Siguen",
+    "start": 2.689,
+    "end": 3.05
+   },
+   {
+    "text": "ahí,",
+    "start": 3.05,
+    "end": 3.267
+   },
+   {
+    "text": "escondidas,",
+    "start": 3.267,
+    "end": 3.82
+   },
+   {
+    "text": "negro",
+    "start": 3.82,
+    "end": 4.133
+   },
+   {
+    "text": "sobre",
+    "start": 4.133,
+    "end": 4.446
+   },
+   {
+    "text": "negro.",
+    "start": 4.446,
+    "end": 4.759
+   },
+   {
+    "text": "Con",
+    "start": 4.759,
+    "end": 4.975
+   },
+   {
+    "text": "buena",
+    "start": 4.975,
+    "end": 5.288
+   },
+   {
+    "text": "luz,",
+    "start": 5.288,
+    "end": 5.505
+   },
+   {
+    "text": "se",
+    "start": 5.505,
+    "end": 5.673
+   },
+   {
+    "text": "ven.",
+    "start": 5.673,
+    "end": 5.89
+   }
+  ]
+ },
+ "s6": {
+  "text": "¿Tú lo sabías? Escribe sí o no.",
+  "seconds": 2.032,
+  "voiceStart": 0.14,
+  "voiceEnd": 1.84,
+  "segments": 2,
+  "groups": 2,
+  "words": [
+   {
+    "text": "¿Tú",
+    "start": 0.14,
+    "end": 0.268
+   },
+   {
+    "text": "lo",
+    "start": 0.268,
+    "end": 0.396
+   },
+   {
+    "text": "sabías?",
+    "start": 0.396,
+    "end": 0.67
+   },
+   {
+    "text": "Escribe",
+    "start": 1.03,
+    "end": 1.412
+   },
+   {
+    "text": "sí",
+    "start": 1.412,
+    "end": 1.57
+   },
+   {
+    "text": "o",
+    "start": 1.57,
+    "end": 1.682
+   },
+   {
+    "text": "no.",
+    "start": 1.682,
+    "end": 1.84
+   }
+  ]
+ },
+ "s7": {
+  "text": "Pero hay una mutación mucho más difícil de mirar. Está en el video completo. Porque te lo repito…",
+  "seconds": 4.226,
+  "voiceStart": 0.11,
+  "voiceEnd": 4.08,
+  "segments": 2,
+  "groups": 3,
+  "words": [
+   {
+    "text": "Pero",
+    "start": 0.11,
+    "end": 0.32
+   },
+   {
+    "text": "hay",
+    "start": 0.32,
+    "end": 0.492
+   },
+   {
+    "text": "una",
+    "start": 0.492,
+    "end": 0.664
+   },
+   {
+    "text": "mutación",
+    "start": 0.664,
+    "end": 1.026
+   },
+   {
+    "text": "mucho",
+    "start": 1.026,
+    "end": 1.274
+   },
+   {
+    "text": "más",
+    "start": 1.274,
+    "end": 1.446
+   },
+   {
+    "text": "difícil",
+    "start": 1.446,
+    "end": 1.771
+   },
+   {
+    "text": "de",
+    "start": 1.771,
+    "end": 1.904
+   },
+   {
+    "text": "mirar.",
+    "start": 1.904,
+    "end": 2.152
+   },
+   {
+    "text": "Está",
+    "start": 2.152,
+    "end": 2.362
+   },
+   {
+    "text": "en",
+    "start": 2.362,
+    "end": 2.496
+   },
+   {
+    "text": "el",
+    "start": 2.496,
+    "end": 2.629
+   },
+   {
+    "text": "video",
+    "start": 2.629,
+    "end": 2.878
+   },
+   {
+    "text": "completo.",
+    "start": 2.878,
+    "end": 3.24
+   },
+   {
+    "text": "Porque",
+    "start": 3.24,
+    "end": 3.526
+   },
+   {
+    "text": "te",
+    "start": 3.526,
+    "end": 3.66
+   },
+   {
+    "text": "lo",
+    "start": 3.66,
+    "end": 3.794
+   },
+   {
+    "text": "repito…",
+    "start": 3.794,
+    "end": 4.08
+   }
+  ]
+ }
+}

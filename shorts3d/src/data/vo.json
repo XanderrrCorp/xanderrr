@@ -1,0 +1,642 @@
+{
+ "s1": {
+  "text": "Este avispón es del tamaño de tu pulgar… y acaba de encontrar una colmena.",
+  "seconds": 3.669,
+  "voiceStart": 0.14,
+  "voiceEnd": 3.48,
+  "segments": 2,
+  "groups": 2,
+  "words": [
+   {
+    "text": "Este",
+    "start": 0.14,
+    "end": 0.359
+   },
+   {
+    "text": "avispón",
+    "start": 0.359,
+    "end": 0.697
+   },
+   {
+    "text": "es",
+    "start": 0.697,
+    "end": 0.836
+   },
+   {
+    "text": "del",
+    "start": 0.836,
+    "end": 1.015
+   },
+   {
+    "text": "tamaño",
+    "start": 1.015,
+    "end": 1.313
+   },
+   {
+    "text": "de",
+    "start": 1.313,
+    "end": 1.452
+   },
+   {
+    "text": "tu",
+    "start": 1.452,
+    "end": 1.592
+   },
+   {
+    "text": "pulgar…",
+    "start": 1.592,
+    "end": 1.89
+   },
+   {
+    "text": "y",
+    "start": 2.23,
+    "end": 2.317
+   },
+   {
+    "text": "acaba",
+    "start": 2.317,
+    "end": 2.542
+   },
+   {
+    "text": "de",
+    "start": 2.542,
+    "end": 2.664
+   },
+   {
+    "text": "encontrar",
+    "start": 2.664,
+    "end": 3.029
+   },
+   {
+    "text": "una",
+    "start": 3.029,
+    "end": 3.185
+   },
+   {
+    "text": "colmena.",
+    "start": 3.185,
+    "end": 3.48
+   }
+  ]
+ },
+ "s2": {
+  "text": "Mide unos cinco centímetros. Su armadura es tan gruesa que las picaduras de abeja casi no le hacen daño.",
+  "seconds": 5.538,
+  "voiceStart": 0.13,
+  "voiceEnd": 5.34,
+  "segments": 2,
+  "groups": 2,
+  "words": [
+   {
+    "text": "Mide",
+    "start": 0.13,
+    "end": 0.363
+   },
+   {
+    "text": "unos",
+    "start": 0.363,
+    "end": 0.596
+   },
+   {
+    "text": "cinco",
+    "start": 0.596,
+    "end": 0.871
+   },
+   {
+    "text": "centímetros.",
+    "start": 0.871,
+    "end": 1.4
+   },
+   {
+    "text": "Su",
+    "start": 2.1,
+    "end": 2.237
+   },
+   {
+    "text": "armadura",
+    "start": 2.237,
+    "end": 2.611
+   },
+   {
+    "text": "es",
+    "start": 2.611,
+    "end": 2.748
+   },
+   {
+    "text": "tan",
+    "start": 2.748,
+    "end": 2.925
+   },
+   {
+    "text": "gruesa",
+    "start": 2.925,
+    "end": 3.219
+   },
+   {
+    "text": "que",
+    "start": 3.219,
+    "end": 3.396
+   },
+   {
+    "text": "las",
+    "start": 3.396,
+    "end": 3.573
+   },
+   {
+    "text": "picaduras",
+    "start": 3.573,
+    "end": 3.985
+   },
+   {
+    "text": "de",
+    "start": 3.985,
+    "end": 4.123
+   },
+   {
+    "text": "abeja",
+    "start": 4.123,
+    "end": 4.378
+   },
+   {
+    "text": "casi",
+    "start": 4.378,
+    "end": 4.594
+   },
+   {
+    "text": "no",
+    "start": 4.594,
+    "end": 4.731
+   },
+   {
+    "text": "le",
+    "start": 4.731,
+    "end": 4.869
+   },
+   {
+    "text": "hacen",
+    "start": 4.869,
+    "end": 5.124
+   },
+   {
+    "text": "daño.",
+    "start": 5.124,
+    "end": 5.34
+   }
+  ]
+ },
+ "s3": {
+  "text": "Con sus mandíbulas, unos pocos avispones pueden acabar con una colmena entera en unas horas.",
+  "seconds": 4.296,
+  "voiceStart": 0.08,
+  "voiceEnd": 4.07,
+  "segments": 2,
+  "groups": 2,
+  "words": [
+   {
+    "text": "Con",
+    "start": 0.08,
+    "end": 0.242
+   },
+   {
+    "text": "sus",
+    "start": 0.242,
+    "end": 0.405
+   },
+   {
+    "text": "mandíbulas,",
+    "start": 0.405,
+    "end": 0.82
+   },
+   {
+    "text": "unos",
+    "start": 0.98,
+    "end": 1.198
+   },
+   {
+    "text": "pocos",
+    "start": 1.198,
+    "end": 1.455
+   },
+   {
+    "text": "avispones",
+    "start": 1.455,
+    "end": 1.871
+   },
+   {
+    "text": "pueden",
+    "start": 1.871,
+    "end": 2.168
+   },
+   {
+    "text": "acabar",
+    "start": 2.168,
+    "end": 2.466
+   },
+   {
+    "text": "con",
+    "start": 2.466,
+    "end": 2.644
+   },
+   {
+    "text": "una",
+    "start": 2.644,
+    "end": 2.822
+   },
+   {
+    "text": "colmena",
+    "start": 2.822,
+    "end": 3.159
+   },
+   {
+    "text": "entera",
+    "start": 3.159,
+    "end": 3.456
+   },
+   {
+    "text": "en",
+    "start": 3.456,
+    "end": 3.595
+   },
+   {
+    "text": "unas",
+    "start": 3.595,
+    "end": 3.812
+   },
+   {
+    "text": "horas.",
+    "start": 3.812,
+    "end": 4.07
+   }
+  ]
+ },
+ "s4": {
+  "text": "Pero la abeja japonesa tiene un truco. Cuando el avispón entra, cientos lo rodean.",
+  "seconds": 4.064,
+  "voiceStart": 0.07,
+  "voiceEnd": 3.92,
+  "segments": 3,
+  "groups": 3,
+  "words": [
+   {
+    "text": "Pero",
+    "start": 0.07,
+    "end": 0.274
+   },
+   {
+    "text": "la",
+    "start": 0.274,
+    "end": 0.404
+   },
+   {
+    "text": "abeja",
+    "start": 0.404,
+    "end": 0.645
+   },
+   {
+    "text": "japonesa",
+    "start": 0.645,
+    "end": 0.998
+   },
+   {
+    "text": "tiene",
+    "start": 0.998,
+    "end": 1.239
+   },
+   {
+    "text": "un",
+    "start": 1.239,
+    "end": 1.369
+   },
+   {
+    "text": "truco.",
+    "start": 1.369,
+    "end": 1.61
+   },
+   {
+    "text": "Cuando",
+    "start": 1.94,
+    "end": 2.197
+   },
+   {
+    "text": "el",
+    "start": 2.197,
+    "end": 2.317
+   },
+   {
+    "text": "avispón",
+    "start": 2.317,
+    "end": 2.607
+   },
+   {
+    "text": "entra,",
+    "start": 2.607,
+    "end": 2.83
+   },
+   {
+    "text": "cientos",
+    "start": 3.0,
+    "end": 3.401
+   },
+   {
+    "text": "lo",
+    "start": 3.401,
+    "end": 3.566
+   },
+   {
+    "text": "rodean.",
+    "start": 3.566,
+    "end": 3.92
+   }
+  ]
+ },
+ "s5": {
+  "text": "Forman una bola apretada y empiezan a vibrar los músculos de las alas. Sin volar.",
+  "seconds": 3.738,
+  "voiceStart": 0.13,
+  "voiceEnd": 3.6,
+  "segments": 2,
+  "groups": 2,
+  "words": [
+   {
+    "text": "Forman",
+    "start": 0.13,
+    "end": 0.4
+   },
+   {
+    "text": "una",
+    "start": 0.4,
+    "end": 0.561
+   },
+   {
+    "text": "bola",
+    "start": 0.561,
+    "end": 0.759
+   },
+   {
+    "text": "apretada",
+    "start": 0.759,
+    "end": 1.101
+   },
+   {
+    "text": "y",
+    "start": 1.101,
+    "end": 1.19
+   },
+   {
+    "text": "empiezan",
+    "start": 1.19,
+    "end": 1.532
+   },
+   {
+    "text": "a",
+    "start": 1.532,
+    "end": 1.622
+   },
+   {
+    "text": "vibrar",
+    "start": 1.622,
+    "end": 1.891
+   },
+   {
+    "text": "los",
+    "start": 1.891,
+    "end": 2.053
+   },
+   {
+    "text": "músculos",
+    "start": 2.053,
+    "end": 2.395
+   },
+   {
+    "text": "de",
+    "start": 2.395,
+    "end": 2.521
+   },
+   {
+    "text": "las",
+    "start": 2.521,
+    "end": 2.682
+   },
+   {
+    "text": "alas.",
+    "start": 2.682,
+    "end": 2.88
+   },
+   {
+    "text": "Sin",
+    "start": 3.12,
+    "end": 3.316
+   },
+   {
+    "text": "volar.",
+    "start": 3.316,
+    "end": 3.6
+   }
+  ]
+ },
+ "s6": {
+  "text": "Esa vibración sube el calor hasta unos cuarenta y seis grados. Las abejas lo aguantan. El avispón, no.",
+  "seconds": 5.503,
+  "voiceStart": 0.14,
+  "voiceEnd": 5.31,
+  "segments": 4,
+  "groups": 4,
+  "words": [
+   {
+    "text": "Esa",
+    "start": 0.14,
+    "end": 0.305
+   },
+   {
+    "text": "vibración",
+    "start": 0.305,
+    "end": 0.691
+   },
+   {
+    "text": "sube",
+    "start": 0.691,
+    "end": 0.893
+   },
+   {
+    "text": "el",
+    "start": 0.893,
+    "end": 1.022
+   },
+   {
+    "text": "calor",
+    "start": 1.022,
+    "end": 1.261
+   },
+   {
+    "text": "hasta",
+    "start": 1.261,
+    "end": 1.499
+   },
+   {
+    "text": "unos",
+    "start": 1.499,
+    "end": 1.701
+   },
+   {
+    "text": "cuarenta",
+    "start": 1.701,
+    "end": 2.051
+   },
+   {
+    "text": "y",
+    "start": 2.051,
+    "end": 2.142
+   },
+   {
+    "text": "seis",
+    "start": 2.142,
+    "end": 2.344
+   },
+   {
+    "text": "grados.",
+    "start": 2.344,
+    "end": 2.62
+   },
+   {
+    "text": "Las",
+    "start": 3.09,
+    "end": 3.257
+   },
+   {
+    "text": "abejas",
+    "start": 3.257,
+    "end": 3.536
+   },
+   {
+    "text": "lo",
+    "start": 3.536,
+    "end": 3.667
+   },
+   {
+    "text": "aguantan.",
+    "start": 3.667,
+    "end": 4.02
+   },
+   {
+    "text": "El",
+    "start": 4.37,
+    "end": 4.527
+   },
+   {
+    "text": "avispón,",
+    "start": 4.527,
+    "end": 4.91
+   },
+   {
+    "text": "no.",
+    "start": 5.1,
+    "end": 5.31
+   }
+  ]
+ },
+ "s7": {
+  "text": "Lo cocinan con puro calor. ¿Y el que no puede picarte ni aunque quiera? Está en el video completo.",
+  "seconds": 4.888,
+  "voiceStart": 0.15,
+  "voiceEnd": 4.65,
+  "segments": 3,
+  "groups": 3,
+  "words": [
+   {
+    "text": "Lo",
+    "start": 0.15,
+    "end": 0.301
+   },
+   {
+    "text": "cocinan",
+    "start": 0.301,
+    "end": 0.668
+   },
+   {
+    "text": "con",
+    "start": 0.668,
+    "end": 0.862
+   },
+   {
+    "text": "puro",
+    "start": 0.862,
+    "end": 1.099
+   },
+   {
+    "text": "calor.",
+    "start": 1.099,
+    "end": 1.38
+   },
+   {
+    "text": "¿Y",
+    "start": 1.7,
+    "end": 1.783
+   },
+   {
+    "text": "el",
+    "start": 1.783,
+    "end": 1.9
+   },
+   {
+    "text": "que",
+    "start": 1.9,
+    "end": 2.049
+   },
+   {
+    "text": "no",
+    "start": 2.049,
+    "end": 2.166
+   },
+   {
+    "text": "puede",
+    "start": 2.166,
+    "end": 2.382
+   },
+   {
+    "text": "picarte",
+    "start": 2.382,
+    "end": 2.665
+   },
+   {
+    "text": "ni",
+    "start": 2.665,
+    "end": 2.781
+   },
+   {
+    "text": "aunque",
+    "start": 2.781,
+    "end": 3.031
+   },
+   {
+    "text": "quiera?",
+    "start": 3.031,
+    "end": 3.28
+   },
+   {
+    "text": "Está",
+    "start": 3.62,
+    "end": 3.819
+   },
+   {
+    "text": "en",
+    "start": 3.819,
+    "end": 3.945
+   },
+   {
+    "text": "el",
+    "start": 3.945,
+    "end": 4.072
+   },
+   {
+    "text": "video",
+    "start": 4.072,
+    "end": 4.307
+   },
+   {
+    "text": "completo.",
+    "start": 4.307,
+    "end": 4.65
+   }
+  ]
+ }
+}

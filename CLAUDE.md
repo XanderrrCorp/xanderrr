@@ -57,6 +57,20 @@ Estado al 04-10-2026. El repositorio es PÚBLICO: nunca escribir claves, tokens 
 - OLA 2 (NO programar todavía): generador de ideas y títulos, Shorts automáticos de los mejores momentos, música de
   fondo con volumen automático bajo la voz, galería de ejemplos por estilo, mini tutoriales en video.
 
+## Shorts 3D y FÓRMULA DE SHORTS del dueño (01-11-2026: aplicar en TODO Short)
+- Proyecto en `shorts3d/` (Remotion + Three.js, código propio; ver shorts3d/LEEME.md). Hechos: avispón gigante
+  (de youtu.be/VvpIw8jRxJ4) y pantera negra (de youtu.be/DzRQZ-rZ5TY). Siempre: guion → aprobación → voz → cuadros
+  de revisión → video.
+- Fórmula: 1) Gancho 0–2 s: el dato más impactante, sin presentar; el animal en primer plano desde el primer
+  cuadro. 2) Tensión 2–6 s: pregunta o giro que obligue a quedarse. 3) Datos en escalada 6–30 s: tres datos, cada uno
+  más fuerte (qué es y dónde vive → qué hace o cómo ataca → el dato para contarle a alguien), cambio de imagen cada
+  1,5–2 s, frases cortas sin relleno. 4) Llamado a comentar 30–35 s: pregunta fácil («¿Te ha picado una? Cuéntame
+  dónde.»). 5) Puente al video largo 35–40 s: el Short queda incompleto a propósito («…está en el video completo») y
+  se pone el largo en «Video relacionado».
+- Reglas: no presentarse ni decir el nombre del canal; voz rápida y con energía; subtítulos grandes y animados
+  palabra por palabra; loop: la última frase engancha con la primera. Efectos siempre por debajo de la voz.
+  Marcar «contenido alterado o sintético» (voz clonada).
+
 ## Ramas y forma de entregar
 - Desarrollo: `claude/xandart-saas` (la «versión nueva» que instala). Producción: `claude/new-session-uq98jd`: NO tocar.
 - Antes de cada commit: `python -m pytest -q tests` (≈4 min, todo en verde). Si algo falla, no guardar.
