@@ -15,31 +15,31 @@ const CamRig: React.FC = () => {
   return null;
 };
 const pl = (id: string) => PLANOS.find((p) => p.id.startsWith(id))!;
-const NEGRO = '#2a231d', MANCHA_NEGRA = '#030303';
+const NEGRO = '#33323a', MANCHA_NEGRA = '#030303';
 const mixc = (a: string, b: string, t: number) => '#' + new THREE.Color(a).lerp(new THREE.Color(b), clamp(t)).getHexString();
 
 // ---------------- noche ----------------
 export const panteraNoche = (f: number) => {
   const p = planoAt(f);
-  let x = 0, walk = 0, walkAmt = 0, yaw = 0, light = 0.8, reveal = 0, sweepX: number | null = null, eyes = 1;
+  let x = 0, walk = 0, walkAmt = 0, yaw = 0, light = 1.3, reveal = 0, sweepX: number | null = null, eyes = 1;
   const id = p.id;
-  if (id.startsWith('P1-') || id.startsWith('P16')) { yaw = -0.25; light = 1.25; }
-  if (id.startsWith('P2')) light = 0.03;
-  if (id.startsWith('P3')) light = 0.25;
+  if (id.startsWith('P1-') || id.startsWith('P16')) { yaw = -0.25; light = 1.7; }
+  if (id.startsWith('P2')) light = 0.12;
+  if (id.startsWith('P3')) light = 0.75;
   if (id.startsWith('P8') || id.startsWith('P9')) {
     const a = pl('P8').from, b = pl('P9').to;
     x = lerp(0, 3.4, (f - a) / (b - a));
     walk = (f - a) * 0.32;
     walkAmt = 1;
-    light = id.startsWith('P8') ? lerp(0.8, 0.12, prog(f, a, pl('P8').to, 'inOut')) : 1.0;
+    light = id.startsWith('P8') ? lerp(1.3, 0.45, prog(f, a, pl('P8').to, 'inOut')) : 1.6;
   }
   if (id.startsWith('P11')) {
-    light = 0.28;
+    light = 0.65;
     sweepX = lerp(2.6, -3.0, prog(f, W(4, 3), W(4, 8), 'inOut'));
   }
-  if (id.startsWith('P12')) { light = 0.9; reveal = 1; }
-  if (id.startsWith('P13')) { light = 1.35; reveal = 1; }
-  if (id.startsWith('P14')) { light = 0.9; reveal = 0.7; yaw = lerp(-0.2, -0.85, prog(f, p.from, p.from + 12, 'out')); }
+  if (id.startsWith('P12')) { light = 1.5; reveal = 1; }
+  if (id.startsWith('P13')) { light = 1.9; reveal = 1; }
+  if (id.startsWith('P14')) { light = 1.6; reveal = 0.7; yaw = lerp(-0.2, -0.85, prog(f, p.from, p.from + 12, 'out')); }
   return {x, walk, walkAmt, yaw, light, reveal, sweepX, eyes};
 };
 
@@ -53,10 +53,10 @@ const Noche: React.FC<{f: number}> = ({f}) => {
   const L = s.light;
   return (
     <group>
-      <fog attach="fog" args={['#07101e', 10, 42]} />
-      <hemisphereLight args={['#5a78b8', '#0a0f08', 0.55 * L]} />
+      <fog attach="fog" args={['#1c3354', 16, 60]} />
+      <hemisphereLight args={['#8aa6dc', '#2a3220', 0.9 * L]} />
       <directionalLight position={[-10, 12, -9]} intensity={1.6 * Math.max(L, 0.35)} color="#aac4ff" castShadow shadow-mapSize={[1024, 1024]} />
-      <directionalLight position={[8, 6, 10]} intensity={0.9 * L} color="#ffdcae" />
+      <directionalLight position={[8, 6, 10]} intensity={1.5 * L} color="#e8eeff" />
       {s.sweepX !== null && <pointLight position={[s.sweepX, 2.7, 2.3]} intensity={30} distance={4.2} decay={1.6} color="#fff1d6" />}
       <mesh position={[-28, 12, -50]}>
         <icosahedronGeometry args={[4, 2]} />
@@ -64,7 +64,7 @@ const Noche: React.FC<{f: number}> = ({f}) => {
       </mesh>
       <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
         <circleGeometry args={[80, 24]} />
-        <meshStandardMaterial color="#13241a" flatShading />
+        <meshStandardMaterial color="#25432f" flatShading />
       </mesh>
       {trees.map((t, i) => (
         <group key={i} position={[t.x, 0, t.z]}>
@@ -115,7 +115,7 @@ const Pedestales: React.FC<{f: number}> = ({f}) => {
   const cats: [number, 'jaguar' | 'leopardo', string, string][] = [[-3.5, 'jaguar', '#c98f35', '#24160a'], [3.5, 'leopardo', '#dcaa50', '#2a1a0c']];
   return (
     <group position={P}>
-      <fog attach="fog" args={['#0d1626', 14, 40]} />
+      <fog attach="fog" args={['#2a3c60', 22, 70]} />
       <hemisphereLight args={['#b8cdf0', '#1a1410', 0.9]} />
       <directionalLight position={[4, 12, 9]} intensity={2.2} castShadow shadow-mapSize={[1024, 1024]} />
       <directionalLight position={[-6, 5, -8]} intensity={0.8} color="#9fc0ff" />
@@ -197,13 +197,13 @@ const Tortuga: React.FC<{f: number}> = ({f}) => {
   const crack = prog(f, bite, bite + 10, 'out');
   return (
     <group position={T}>
-      <fog attach="fog" args={['#07101e', 8, 30]} />
-      <hemisphereLight args={['#6f8cc8', '#0a0f08', 0.7]} />
+      <fog attach="fog" args={['#1c3354', 14, 50]} />
+      <hemisphereLight args={['#9ab4e4', '#2a3220', 1.2]} />
       <directionalLight position={[6, 9, 8]} intensity={1.8} color="#ffe2c0" castShadow shadow-mapSize={[1024, 1024]} />
       <directionalLight position={[-8, 6, -6]} intensity={1.2} color="#9fc0ff" />
       <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
         <circleGeometry args={[40, 20]} />
-        <meshStandardMaterial color="#1a2a1c" flatShading />
+        <meshStandardMaterial color="#2b4a33" flatShading />
       </mesh>
       <group position={[lunge, 0, 0]}>
         <Felino coat={NEGRO} spots="jaguar" spotBase={MANCHA_NEGRA} reveal={0.15} pitch={-0.5} jaw={jaw} yaw={0} tail={Math.sin(f / 15)} />

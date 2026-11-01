@@ -21,5 +21,7 @@ así que no se copió su código).
 
 ## Reglas aprendidas
 - Los efectos SIEMPRE por debajo de la voz (ganancia 0,45 y bajan al 40 % mientras habla).
+- Nada de sonidos de fondo continuos sintéticos (grillos, zumbidos): se oyen como un zumbido molesto.
+- Escenas de noche CLARAS: cielo azul medio, luz de relleno fuerte y pelaje gris carbón (no negro puro); solo un plano puede ser casi negro.
 - Los cortes salen de la voz real (`timing.ts`), no de los tiempos del guion.
 - Marcar «contenido alterado o sintético» al subir (la voz es clonada) y poner el largo en «Video relacionado».

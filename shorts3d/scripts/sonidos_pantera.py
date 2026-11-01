@@ -35,11 +35,5 @@ for k in range(9):
     x[m] += rng.standard_normal(m.sum()) * np.exp(-u * rng.uniform(60, 120)) * rng.uniform(0.4, 1)
 x += np.sin(2 * np.pi * 85 * n) * np.exp(-n * 14) * 0.8
 save("sfx/crujido.wav", x)
-# selva de noche: grillos y fondo
-D = 40; n = t(D); x = lp(rng.standard_normal(len(n)), 0.02) * 0.6
-for k in range(7):
-    fr = rng.uniform(4200, 5600); rate = rng.uniform(14, 22); off = rng.uniform(0, 3)
-    chirp = (np.sin(2 * np.pi * rate * n + off) > 0.6).astype(float) * (np.sin(2 * np.pi * 0.3 * n + k) > -0.2)
-    x += 0.12 * np.sin(2 * np.pi * fr * n) * lp(chirp, 0.01)
-save("selva_noche.wav", x)
+# (sin ambiente de selva: el grillo sintético sonaba como un zumbido durante todo el video)
 print("listo")

@@ -33,7 +33,7 @@ const voiceOn = (f: number) => {
   return n / 17;
 };
 const FONDO: Record<string, [string, string]> = {
-  noche: ['#0c1a33', '#02060c'], pedestales: ['#1b2a48', '#070b14'], pelo: ['#123040', '#04101a'], tortuga: ['#0c1a33', '#02060c'], vacio: ['#05070d', '#000000'],
+  noche: ['#2a4a7a', '#0e1a2c'], pedestales: ['#3a5280', '#141e33'], pelo: ['#24607a', '#0c2433'], tortuga: ['#2a4a7a', '#0e1a2c'], vacio: ['#05070d', '#000000'],
 };
 
 export const ShortPantera: React.FC = () => {
@@ -45,7 +45,7 @@ export const ShortPantera: React.FC = () => {
       <ThreeCanvas width={1080} height={1920} shadows flat gl={{antialias: true, alpha: true}} camera={{fov: 32, near: 0.05, far: 300, position: [5, 2, 5]}}>
         <World />
       </ThreeCanvas>
-      <AbsoluteFill style={{background: 'radial-gradient(ellipse at 50% 45%, rgba(0,0,0,0) 50%, rgba(0,0,0,0.55) 100%)'}} />
+      <AbsoluteFill style={{background: 'radial-gradient(ellipse at 50% 45%, rgba(0,0,0,0) 60%, rgba(0,0,0,0.3) 100%)'}} />
       <Overlay />
       {SCENES.map((s) => (
         <Sequence key={s.key} from={s.clipAt} layout="none">
@@ -57,7 +57,6 @@ export const ShortPantera: React.FC = () => {
           <Audio src={staticFile(`pantera/sfx/${c.src}.wav`)} volume={(fr) => c.vol * SFX_GAIN * lerp(1, 0.4, voiceOn(Math.round(c.at) + fr))} />
         </Sequence>
       ))}
-      <Audio src={staticFile('pantera/selva_noche.wav')} volume={(fr) => lerp(0.22, 0.1, voiceOn(fr))} />
       <Audio src={staticFile('audio/musica.wav')} volume={(fr) => lerp(0.3, 0.14, voiceOn(fr)) * Math.min(1, fr / 6)} />
     </AbsoluteFill>
   );
