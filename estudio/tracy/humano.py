@@ -347,9 +347,9 @@ def segmentar(oraciones: list[dict], duracion: float, marcas: dict[int, dict], h
         while i < len(unidades):
             dur = fin[i - 1] - ini[j]
             sig = fin[i] - ini[j]
-            if unidades[i]["rol"] in ABREN_CLIP and dur >= lo * 0.6:
+            if unidades[i]["rol"] in ABREN_CLIP and dur >= h["clip_min_s"]:
                 break                                         # lo que viene pide su propio clip
-            if dur >= objetivo or sig > h["clip_max_s"]:
+            if (dur >= objetivo and dur >= h["clip_min_s"]) or sig > h["clip_max_s"]:
                 break
             if sig - objetivo > objetivo - dur and dur >= lo:
                 break                                         # quedar cerca del objetivo

@@ -36,6 +36,7 @@ def test_cortes_variables_al_final_de_una_oracion_y_mas_rapidos_en_el_gancho():
     assert segs[0]["inicio"] == 0 and segs[-1]["fin"] == dur
     assert all(a["fin"] == b["inicio"] for a, b in zip(segs, segs[1:]))   # sin huecos
     assert all(s["duracion"] <= 30 for s in segs)
+    assert all(s["duracion"] >= H["clip_min_s"] for s in segs[:-1])          # nunca menos de 3 s (salvo el último)
     duraciones = [s["duracion"] for s in segs]
     assert statistics.pstdev(duraciones) > 1.5                               # nada de cortes cada X segundos
     gancho = [s["duracion"] for s in segs if s["inicio"] < 60]
