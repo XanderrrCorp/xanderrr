@@ -123,9 +123,11 @@ def png_grande(texto: str, estilo: int, destino: Path) -> Path:
     return destino
 
 
-def overlay_grande(entrada: str, base: str, salida: str, estilo: int, dur: float, barras: int) -> str:
-    """Filtro que pone el PNG grande (entrada [k:v]) sobre `base`, con su animación, en el tercio de arriba."""
-    a, b = GRANDE_EN_S, min(dur - 0.1, GRANDE_EN_S + GRANDE_DUR_S)
+def overlay_grande(entrada: str, base: str, salida: str, estilo: int, dur: float, barras: int, en: float = 0.0) -> str:
+    """Filtro que pone el PNG grande (entrada [k:v]) sobre `base`, con su animación, en el tercio de arriba. Entra
+    `en` segundos después del comienzo de la toma (cuando la voz dice su frase)."""
+    a = min(max(0.0, dur - 1.2), en + GRANDE_EN_S)
+    b = min(dur - 0.1, a + GRANDE_DUR_S)
     y0 = barras + 70
     fade = (f"[{entrada}]format=rgba,fade=t=in:st={a:.2f}:d=0.3:alpha=1,"
             f"fade=t=out:st={max(a, b - 0.35):.2f}:d=0.35:alpha=1[gr];")

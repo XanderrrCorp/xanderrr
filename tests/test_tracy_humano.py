@@ -64,6 +64,19 @@ def test_seminario_solo_en_autoridad_bajo_el_maximo_y_sin_patron():
     assert sum(p["whoosh"] for p in plan) < len(plan) / 2                        # sonidos escasos
 
 
+def test_el_texto_grande_sale_cuando_la_voz_dice_su_frase():
+    roles = {14: "regla"}
+    ors, marcas, dur = _oraciones(30, roles)
+    marcas[14]["grande"] = "REGLA 2: LO DIFÍCIL PRIMERO"
+    segs = humano.segmentar(ors, dur, marcas, H, "v3")
+    combo = {"musica": {}, "estilo_texto": 1, "transiciones": ["fundido"], "movimiento": "suave"}
+    inicios = {o["id"]: o["inicio"] for o in ors}
+    plan = humano.planificar(segs, marcas, dur, {**H, "escena_final_desde": 1.0}, combo, "v3", inicios)
+    toma = next(p for p in plan if 14 in p["oraciones"])
+    assert toma["grande"] == "REGLA 2: LO DIFÍCIL PRIMERO"
+    assert toma["grande_en"] == round(inicios[14] - toma["inicio"], 3)
+
+
 def test_cada_video_tiene_su_huella_y_no_repite_la_del_anterior(tmp_path, monkeypatch):
     monkeypatch.setattr(humano, "_archivo_huellas", lambda: tmp_path / "huellas.json")
     anteriores = [humano.huella("tracy", f"video-{k}", H) for k in range(12)]

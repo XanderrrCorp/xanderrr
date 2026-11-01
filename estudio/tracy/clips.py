@@ -27,8 +27,8 @@ from . import historial
 API_VIDEOS = "https://api.pexels.com/videos/search"
 LICENCIA = "Licencia de Pexels: uso gratis, también comercial; sin atribución obligatoria (pexels.com/license)"
 POR_PAGINA = 30
-EXTRA_HUMANO = ("rol", "seccion", "movimiento", "zoom", "transicion", "whoosh", "riser", "grande", "oraciones",
-                "keywords")
+EXTRA_HUMANO = ("rol", "seccion", "movimiento", "zoom", "transicion", "whoosh", "riser", "grande", "grande_en",
+                "oraciones", "keywords")
 GENERALES = ["business success", "people working", "city life", "nature landscape", "sunrise", "teamwork",
              "office", "walking"]
 

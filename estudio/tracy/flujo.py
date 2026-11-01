@@ -167,7 +167,8 @@ def preparar_humano(c: CarpetaProyecto, preset: dict, duracion: float, avisar=pr
     escribir_json(c.ruta / "huella_video.json", combo)
     marcas = {int(k): v for k, v in leer_json(c.ruta / "marcas_humano.json")["marcas"].items()}
     segs = leer_json(c.ruta / "segmentos.json")["segmentos"]
-    plan = humano.tomas(humano.planificar(segs, marcas, duracion, h, combo, c.ruta.name))
+    inicios = {o["id"]: o["inicio"] for o in leer_json(c.ruta / "audio" / "oraciones.json")["oraciones"]}
+    plan = humano.tomas(humano.planificar(segs, marcas, duracion, h, combo, c.ruta.name, inicios))
     escribir_json(c.ruta / "plan_visual.json", {"origen": "humano", "segmentos": _huella_segmentos(c), "plan": plan})
     sem = sum(1 for x in plan if x["type"] == "seminar")
     avisar(f"  plan: {sem} tomas del seminario, {len(plan) - sem} de stock o escena final")

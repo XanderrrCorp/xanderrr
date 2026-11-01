@@ -181,9 +181,9 @@ def comando_tramo(ffmpeg: str, clip: dict, subs: list[tuple[Path, float, float]]
     if humano and humano.get("grande"):
         from .montaje_humano import overlay_grande
 
-        png, estilo = humano["grande"]
+        png, estilo, en = humano["grande"]
         cmd += ["-loop", "1", "-t", f"{dur + 0.5:.3f}", "-i", str(png)]
-        filtro += ";" + overlay_grande(f"{primero + len(subs)}:v", salida_v, "gfin", estilo, dur, barras)
+        filtro += ";" + overlay_grande(f"{primero + len(subs)}:v", salida_v, "gfin", estilo, dur, barras, en)
         salida_v = "gfin"
     if barras:
         # franjas negras de cine arriba y abajo (encima de todo, menos los subtítulos que van al centro)
@@ -420,7 +420,7 @@ def _humano(carpeta: CarpetaProyecto, clips: list[dict], preset: dict, dir_t: Pa
         if c.get("grande") and c["tipo"] != "final":
             png = dir_g / f"g_{c['id']:04d}_{estilo}.png"
             png_grande(c["grande"], estilo, png)
-            grandes[c["id"]] = (png, estilo)
+            grandes[c["id"]] = (png, estilo, float(c.get("grande_en") or 0.0))
     return {"resaltar": {int(k): v.get("palabra") for k, v in marcas.items() if v.get("palabra")},
             "grandes": grandes, "color_calido": ajustes(preset)["color_calido"], "dir_subs": dir_t / "subs_humano"}
 

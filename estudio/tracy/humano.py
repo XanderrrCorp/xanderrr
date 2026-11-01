@@ -396,7 +396,7 @@ MOOD = {"gancho": "energetic", "regla": "inspiring", "frase_fuerte": "triumphant
 
 
 def planificar(segmentos: list[dict], marcas: dict[int, dict], duracion: float, h: dict, combo: dict,
-               semilla: str) -> list[dict]:
+               semilla: str, inicios: dict[int, float] | None = None) -> list[dict]:
     """Por clip: seminario, stock o escena final; palabras clave de lo que se dice; movimiento; transición de
     entrada; texto grande; sección (para la música) y si lleva whoosh o riser."""
     from .planificador import GENERICAS
@@ -411,12 +411,16 @@ def planificar(segmentos: list[dict], marcas: dict[int, dict], duracion: float, 
             kws += [k for k in (marcas.get(oid) or {}).get("keywords", []) if k not in kws]
         if len(kws) < 2:
             kws += [g for g in rng.sample(GENERICAS, 2) if g not in kws]
-        abre = marcas.get(s["oraciones"][0]) or {}
+        # el texto grande sale cuando la voz dice SU frase (aunque no sea la primera de la toma)
+        con_texto = next((oid for oid in s["oraciones"] if (marcas.get(oid) or {}).get("grande")
+                          and (marcas.get(oid) or {}).get("rol") in CON_TEXTO_GRANDE), None)
+        en = round(max(0.0, (inicios or {}).get(con_texto, s["inicio"]) - s["inicio"]), 3) if con_texto is not None else 0.0
         tipo = "final" if corte_final is not None and s["inicio"] >= corte_final - 1e-6 and plan else "stock"
         plan.append({"id": s["id"], "inicio": s["inicio"], "fin": s["fin"], "duracion": s["duracion"],
                      "type": tipo, "keywords": kws[:3], "mood": MOOD.get(s["rol"], "inspiring"), "rol": s["rol"],
                      "seccion": seccion(s, h, desde_cierre), "oraciones": s["oraciones"],
-                     "grande": abre.get("grande") if abre.get("rol") in CON_TEXTO_GRANDE else None})
+                     "grande": marcas[con_texto]["grande"] if con_texto is not None else None,
+                     "grande_en": en})
     # seminario: solo en momentos de autoridad, por prioridad, sin pasar el máximo de tiempo ni ir 3 seguidos
     clips = [p for p in plan if p["type"] != "final"]
     total = sum(p["duracion"] for p in clips) or 1.0
