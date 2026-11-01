@@ -70,6 +70,13 @@ Estado al 04-10-2026. El repositorio es PÚBLICO: nunca escribir claves, tokens 
 - Reglas: no presentarse ni decir el nombre del canal; voz rápida y con energía; subtítulos grandes y animados
   palabra por palabra; loop: la última frase engancha con la primera. Efectos siempre por debajo de la voz.
   Marcar «contenido alterado o sintético» (voz clonada).
+- INVITAR A SUSCRIBIRSE (01-11, el dueño): pausa de ~2 s justo ANTES del dato más fuerte («Y antes del más
+  peligroso… suscríbete.») con botón SUSCRIBIRSE animado (pasa a «Suscrito» + campanita) que aprieta la mascota.
+  No al final (ahí van la pregunta para comentar y el puente).
+- (01-11) Lo que funciona y lo que no: animales hechos con figuras 3D por código se ven de juguete (la pantera NO le
+  gustó); el avispón pasó por ser un insecto. Para animales: imágenes reales o las del video largo + clips de la
+  mascota (estilos/enciclopedia_mascota/assets/presentador/clips) + 3D/motion graphics solo para mapas, cámara,
+  pines, flechas, contadores y textos.
 
 ## Ramas y forma de entregar
 - Desarrollo: `claude/xandart-saas` (la «versión nueva» que instala). Producción: `claude/new-session-uq98jd`: NO tocar.
