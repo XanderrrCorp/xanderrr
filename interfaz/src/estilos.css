@@ -542,3 +542,20 @@ main { max-width: 1240px; margin: 0 auto; padding: 24px 28px 64px; }
 .tv-avance { font-size: 13px; color: var(--acento); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .tv-avance small { color: var(--tenue); font-weight: 400; }
 .tv-error { font-size: 13px; color: var(--rojo); }
+
+/* (01-11) Tracy, edición humana: revisión antes de exportar */
+.tr-tomas { display: grid; gap: 10px; margin: 12px 0; }
+.tr-toma { display: grid; grid-template-columns: 160px 1fr; gap: 12px; padding: 10px; border-radius: 12px;
+  border: 1px solid var(--linea); border-left-width: 5px; }
+.tr-toma img, .tr-sinmini { width: 160px; aspect-ratio: 16 / 9; object-fit: cover; border-radius: 8px; background: #000; }
+.tr-toma-info { display: grid; gap: 6px; min-width: 0; }
+.tr-toma-info input { max-width: 320px; }
+.tr-gancho { border-left-color: #ffb020; }
+.tr-venta { border-left-color: #e5484d; }
+.tr-cierre { border-left-color: #8e7cf3; }
+.tr-cuerpo { border-left-color: var(--linea); }
+.tr-check { display: flex; align-items: center; gap: 6px; }
+@media (max-width: 640px) {
+  .tr-toma { grid-template-columns: 1fr; }
+  .tr-toma img, .tr-sinmini { width: 100%; }
+}

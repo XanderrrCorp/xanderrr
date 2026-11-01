@@ -27,6 +27,8 @@ from . import historial
 API_VIDEOS = "https://api.pexels.com/videos/search"
 LICENCIA = "Licencia de Pexels: uso gratis, también comercial; sin atribución obligatoria (pexels.com/license)"
 POR_PAGINA = 30
+EXTRA_HUMANO = ("rol", "seccion", "movimiento", "zoom", "transicion", "whoosh", "riser", "grande", "oraciones",
+                "keywords")
 GENERALES = ["business success", "people working", "city life", "nature landscape", "sunrise", "teamwork",
              "office", "walking"]
 
@@ -222,16 +224,17 @@ def elegir_clips(carpeta: CarpetaProyecto, plan: list[dict], preset: dict, ffmpe
         fondo = elegir_fondo_final(canal, slug, {s["pexels_id"] for s in stock.values()}, avisar=avisar, sesion=sesion)
     clips = []
     for p in plan:
+        extra = {k: p[k] for k in EXTRA_HUMANO if k in p}      # (01-11) edición humana: cómo se monta cada toma
         if p["type"] == "final":
             # el mismo fondo corre en bucle continuo por toda la escena final
             desde = round((p["inicio"] - finales[0]["inicio"]) % max(1.0, fondo["duracion"] - 0.5), 3)
             clips.append({"id": p["id"], "tipo": "final", "archivo": fondo["archivo"], "desde": desde,
                           "duracion": p["duracion"], "inicio": p["inicio"], "fin": p["fin"],
-                          "pexels_id": fondo["pexels_id"]})
+                          "pexels_id": fondo["pexels_id"], **extra})
         elif p["type"] == "seminar":
             s = seminario[p["id"]]
             clips.append({"id": p["id"], "tipo": "seminario", "archivo": s["archivo"], "desde": s["inicio"],
-                          "duracion": p["duracion"], "inicio": p["inicio"], "fin": p["fin"]})
+                          "duracion": p["duracion"], "inicio": p["inicio"], "fin": p["fin"], **extra})
         else:
             s = stock[p["id"]]
             # un tramo al azar del clip de stock (así un clip largo no siempre muestra su comienzo)
@@ -239,7 +242,7 @@ def elegir_clips(carpeta: CarpetaProyecto, plan: list[dict], preset: dict, ffmpe
             desde = round(random.Random(f"{slug}|{p['id']}").uniform(0, holgura), 3) if holgura > 0 else 0.0
             clips.append({"id": p["id"], "tipo": "stock", "archivo": s["archivo"], "desde": desde,
                           "duracion": p["duracion"], "inicio": p["inicio"], "fin": p["fin"],
-                          "pexels_id": s["pexels_id"]})
+                          "pexels_id": s["pexels_id"], **extra})
     escribir_json(carpeta.ruta / "clips.json", {"clips": clips})
     lic = [{"segmento": pid, "pexels_id": s["pexels_id"], "url_origen": s["url_origen"], "autor": s["autor"],
             "busqueda": s["consulta"]} for pid, s in stock.items()]

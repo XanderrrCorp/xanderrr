@@ -32,7 +32,8 @@ def _estado(clave: str = CLAVE_CANAL) -> dict:
             "escena_final_desde": p["escena_final_desde"],
             "proporcion_seminario": p["proporcion_seminario"], "voz_id": p.get("voz_id"),
             "volumen_musica_db": p.get("volumen_musica_db"), "velocidad": p.get("velocidad"),
-            "seminario_s": p.get("seminario_s"), "barras_cine": p.get("barras_cine"), "whisper": _whisper_instalado()}
+            "seminario_s": p.get("seminario_s"), "barras_cine": p.get("barras_cine"), "whisper": _whisper_instalado(),
+            "humano": p["humano"]}
 
 
 def _whisper_instalado() -> bool:
@@ -73,6 +74,31 @@ def ajustar(a: Ajustes):
                           proporcion_seminario=a.proporcion_seminario, escena_final_desde=a.escena_final_desde,
                           velocidad=a.velocidad, volumen_musica_db=a.volumen_musica_db,
                           seminario_s=a.seminario_s, barras_cine=a.barras_cine)
+    except (RuntimeError, ValueError) as ex:
+        raise HTTPException(400, str(ex)) from ex
+    return _estado()
+
+
+class Humano(BaseModel):
+    """(01-11) Ajustes de la «Edición humana» (solo lo que llega se cambia)."""
+    activo: bool | None = None
+    fenix_max: float | None = Field(None, ge=0, le=0.6)
+    revisar_antes: bool | None = None
+    escena_final_desde: float | None = Field(None, ge=0.05, le=1)
+    carpeta_musica: str | None = None
+    velocidad_cierre: float | None = Field(None, ge=0.85, le=1)
+    suaves: float | None = Field(None, ge=0, le=0.5)
+    color_calido: bool | None = None
+
+
+@rutas.post("/humano")
+def ajustar_humano(h: Humano):
+    actual = dict(cargar_preset(CLAVE_CANAL)["humano"])
+    cambios = {k: v for k, v in h.model_dump().items() if v is not None}
+    if "carpeta_musica" in cambios:
+        cambios["carpeta_musica"] = _limpiar_ruta(cambios["carpeta_musica"]) or ""
+    try:
+        crear_canal_tracy(humano={**actual, **cambios})
     except (RuntimeError, ValueError) as ex:
         raise HTTPException(400, str(ex)) from ex
     return _estado()
@@ -119,6 +145,7 @@ class NuevoTracy(BaseModel):
     guion: str = Field(min_length=40)
     titulo: str = ""
     permiso: bool = False
+    prueba: bool = False            # (01-11) «Probar 3 minutos»: solo el comienzo del guion
 
 
 def _lanzar(c, permiso: bool = False):
@@ -144,7 +171,8 @@ def nuevo(n: NuevoTracy):
     if not est["whisper"]:
         raise HTTPException(400, "Falta Whisper (para los tiempos de la voz). Vuelve a correr «Instalar Xandart "
                                  "Nueva» y queda listo.")
-    c = crear_proyecto(n.guion.strip(), canal=CLAVE_CANAL, titulo=n.titulo.strip() or None)
+    prueba = cargar_preset(CLAVE_CANAL)["humano"]["prueba_s"] if n.prueba else None
+    c = crear_proyecto(n.guion.strip(), canal=CLAVE_CANAL, titulo=n.titulo.strip() or None, prueba_s=prueba)
     return _lanzar(c, n.permiso)
 
 
@@ -163,3 +191,64 @@ def seguir(slug: str, s: Seguir = Seguir()):
     if c.cargar().visual_mode != "stock":
         raise HTTPException(400, "Ese video no es del modo Tracy")
     return _lanzar(c, s.permiso)
+
+
+# ------------------------------------------------------------------ (01-11) revisión antes de exportar
+
+def _abrir(slug: str):
+    from ..proyecto import CarpetaProyecto
+
+    try:
+        c = CarpetaProyecto.abrir(slug)
+    except FileNotFoundError as ex:
+        raise HTTPException(404) from ex
+    if c.cargar().visual_mode != "stock":
+        raise HTTPException(400, "Ese video no es del modo Tracy")
+    return c
+
+
+@rutas.get("/videos/{slug}/revision")
+def ver_revision(slug: str):
+    from ..pipeline import ffmpeg
+    from .revision import ver
+
+    c = _abrir(slug)
+    if not (c.ruta / "clips.json").exists():
+        return {"pendiente": False, "clips": [], "reporte": None}
+    return ver(c, ffmpeg())
+
+
+class Cambio(BaseModel):
+    accion: str
+    texto: str | None = None
+
+
+@rutas.post("/videos/{slug}/revision/{clip_id}")
+def cambiar_toma(slug: str, clip_id: int, cambio: Cambio):
+    from ..pipeline import TRABAJOS, ffmpeg
+    from .preset import EXT_VIDEO
+    from .revision import cambiar
+
+    c = _abrir(slug)
+    t = TRABAJOS.get(c.ruta.name)
+    if t is not None and t.activo:
+        raise HTTPException(409, "Espera a que termine lo que está haciendo")
+    preset = cargar_preset(c.cargar().canal)
+    preset["clip_base"] = encontrar(preset["clip_base"], EXT_VIDEO) or preset["clip_base"]
+    try:
+        return cambiar(c, clip_id, cambio.accion, cambio.texto, preset=preset, ffmpeg=ffmpeg())
+    except ValueError as ex:
+        raise HTTPException(400, str(ex)) from ex
+
+
+@rutas.post("/videos/{slug}/exportar")
+def exportar_video(slug: str):
+    from .. import pipeline
+    from .flujo import exportar_y_entregar
+
+    c = _abrir(slug)
+    try:
+        pipeline.lanzar(c.ruta.name, "tracy", lambda t: exportar_y_entregar(c, t))
+    except RuntimeError as ex:
+        raise HTTPException(409, str(ex)) from ex
+    return pipeline.resumen(c)

@@ -413,6 +413,22 @@ Estado al 04-10-2026. El repositorio es PÚBLICO: nunca escribir claves, tokens 
   (títulos, miniatura, checklist). PENDIENTE: Mateo con el asistente (gasto, pedir permiso), elegir voz, tarjeta del día
   oscura (HECHA el 28-10: Estilo.tarjeta_capitulo «noche» → render._capitulo fondo oscuro, sin «CAPÍTULO N»), música de
   terror y corte antes de sustos, plantilla de miniatura propia. Prueba sin costo en scratchpad sob/prueba.py.
+- (01-11) TRACY «EDICIÓN HUMANA» (pedido del dueño por la revisión de contenido repetitivo de YouTube; plan aprobado
+  con «si», sin responder 3 dudas → por defecto: escena final solo en el cierre 0,9, música de una carpeta por sección,
+  guion de prueba propio). Preset Tracy bloque «humano» (tracy/humano.POR_DEFECTO, APAGADO por defecto: apagado = el
+  video de siempre, probado). tracy/humano.py: marcar (Claude liviano: rol por oración, keywords en inglés, palabra
+  amarilla, texto grande; respaldo por reglas; caché marcas_humano.json), retocar_audio (pausas 0,4-0,8 s tras frases
+  fuertes/revelación/pregunta y cierre con atempo 0,94 sobre voz.wav ya pagada; guarda voz_original.wav), huella del
+  video (música por sección, estilo de texto 1-4, pool de transiciones, movimiento; nunca igual al video anterior:
+  datos/tracy_huellas.json), segmentar (3-30 s por rol, siempre al inicio de una oración), planificar (Fénix solo en
+  cta/regla/cierre/frase fuerte, ≤ fenix_max 35 % del tiempo, nunca 3 seguidos; movimiento nunca repetido seguido;
+  corte seco casi siempre, fundido/destello ~15 %; whoosh escaso y riser antes de revelaciones), reporte
+  (reporte_edicion.json). tracy/montaje_humano.py: zoompan sobre imagen ×1,2 (acercar/alejar/paneo/fijo, 1,10 en
+  énfasis), color cálido en stock, destello, subtítulo blanco con palabra amarilla, texto grande animado (4 estilos),
+  pista de sfx y mezcla con música por sección (cruces de 1,5 s, ducking). tracy/revision.py + API /api/tracy/humano,
+  /videos/{slug}/revision[/{id}] (otro_stock, seminario, alargar, acortar, texto), /exportar; «Probar 3 minutos»
+  (NuevoTracy.prueba → humano.recortar_guion). Interfaz Tracy.tsx: tarjeta «Edición humana», botón de prueba, revisión
+  con gancho/venta/cierre marcados y reporte. tests/test_tracy_humano.py (incluye punta a punta).
 ## Pendiente
 - Preguntas sin responder del dueño: ¿en qué canal notó la voz lenta? (Peligro Tropical está en 1.3 en
   config/proveedores.json; Tracy en 1.0 por pedido suyo). ¿En qué momento sale «la tira de animales» sin sentido?

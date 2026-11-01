@@ -47,7 +47,8 @@ def trozos_subtitulo(oraciones: list[dict], duracion: float) -> list[dict]:
             corte = w["p"].endswith((",", ";", ":", ".", "?", "!", "…", "—"))
             siguiente = pal[k + 1]["p"] if not ultimo else ""
             if ultimo or corte or len(actual) >= MAX_PALABRAS or len(texto) + 1 + len(siguiente) > MAX_CARACTERES:
-                trozos.append({"texto": texto, "inicio": actual[0]["inicio"], "fin": actual[-1]["fin"]})
+                trozos.append({"texto": texto, "inicio": actual[0]["inicio"], "fin": actual[-1]["fin"],
+                               "oracion": o.get("id")})
                 actual = []
     # cada trozo se queda hasta que empieza el siguiente (sin parpadeos), como mucho 0,6 s de más
     for k, t in enumerate(trozos):
@@ -111,7 +112,8 @@ FUNDIDO_S = 0.4      # transición suave entre escenas (cross-fade)
 
 
 def comando_tramo(ffmpeg: str, clip: dict, subs: list[tuple[Path, float, float]], salida: Path,
-                  final: dict | None = None, barras: int = 0, previo: dict | None = None) -> list[str]:
+                  final: dict | None = None, barras: int = 0, previo: dict | None = None,
+                  humano: dict | None = None) -> list[str]:
     """`previo`: el clip de antes (stock o seminario). El tramo empieza fundiéndose desde la continuación
     de ese clip durante FUNDIDO_S: transición suave sin correr ningún tiempo (cada tramo dura lo mismo)."""
     """`final` (solo en la escena final): {"particulas", "voz", "presentador"?, "suscribete"?: (carpeta, en_s)}."""
@@ -152,7 +154,12 @@ def comando_tramo(ffmpeg: str, clip: dict, subs: list[tuple[Path, float, float]]
         filtro += f";[{actual}]null[v0]"
         primero = k
     else:
-        filtro = f"[0:v]{ESCALA}" + (",hue=s=0" if clip["tipo"] == "seminario" else "") + "[v0]"
+        filtro = f"[0:v]{ESCALA}" + (",hue=s=0" if clip["tipo"] == "seminario" else "")
+        if humano is not None:                # (01-11) edición humana: movimiento, color cálido, destello
+            from .montaje_humano import filtro_toma
+
+            filtro += filtro_toma(clip, n, humano.get("color_calido", True))
+        filtro += "[v0]"
         primero = 1
     if previo and previo["tipo"] in ("stock", "seminario") and dur > FUNDIDO_S + 0.3:
         sigue = previo["desde"] + (_cuadros(previo["fin"]) - _cuadros(previo["inicio"])) / FPS
@@ -171,6 +178,13 @@ def comando_tramo(ffmpeg: str, clip: dict, subs: list[tuple[Path, float, float]]
         filtro += (f";[v{j}][{primero + j}:v]overlay=x=(W-w)/2:y=(H-h)/2:"
                    f"enable='between(t,{a:.3f},{b:.3f})'[v{j + 1}]")
     salida_v = f"v{len(subs)}"
+    if humano and humano.get("grande"):
+        from .montaje_humano import overlay_grande
+
+        png, estilo = humano["grande"]
+        cmd += ["-loop", "1", "-t", f"{dur + 0.5:.3f}", "-i", str(png)]
+        filtro += ";" + overlay_grande(f"{primero + len(subs)}:v", salida_v, "gfin", estilo, dur, barras)
+        salida_v = "gfin"
     if barras:
         # franjas negras de cine arriba y abajo (encima de todo, menos los subtítulos que van al centro)
         filtro += (f";[{salida_v}]drawbox=x=0:y=0:w=iw:h={barras}:color=black:t=fill,"
@@ -181,8 +195,9 @@ def comando_tramo(ffmpeg: str, clip: dict, subs: list[tuple[Path, float, float]]
     return cmd
 
 
-def _subs_del_tramo(clip: dict, trozos: list[dict], carpeta: Path, color: str = "#FFE21F"
-                    ) -> list[tuple[Path, float, float]]:
+def _subs_del_tramo(clip: dict, trozos: list[dict], carpeta: Path, color: str = "#FFE21F",
+                    resaltar: dict | None = None) -> list[tuple[Path, float, float]]:
+    """`resaltar` (edición humana): {id de oración: palabra}; el subtítulo va blanco con esa palabra en amarillo."""
     a0, b0 = _cuadros(clip["inicio"]) / FPS, _cuadros(clip["fin"]) / FPS
     salida = []
     for k, t in enumerate(trozos):
@@ -190,7 +205,14 @@ def _subs_del_tramo(clip: dict, trozos: list[dict], carpeta: Path, color: str = 
         if b - a < 1 / FPS:
             continue
         png = carpeta / f"sub_{k:04d}.png"
-        if not png.exists():
+        if resaltar is not None:
+            from .montaje_humano import png_resaltado
+
+            palabra = resaltar.get(t.get("oracion"))
+            png = carpeta / f"sub_{k:04d}_{'r' if palabra else 'b'}.png"
+            if not png.exists():
+                png_resaltado(_limpiar_texto(t["texto"]), palabra, png)
+        elif not png.exists():
             png_subtitulo(_limpiar_texto(t["texto"]), png, color)
         salida.append((png, a - a0, b - a0))
     return salida
@@ -277,6 +299,7 @@ def ensamblar(carpeta: CarpetaProyecto, ffmpeg: str, avisar=print, progreso=None
     dir_s.mkdir(parents=True, exist_ok=True)
     hechos = [0]
     posicion = {c["id"]: k for k, c in enumerate(clips)}
+    humano = _humano(carpeta, clips, preset, dir_t)
     extra: dict = {}
     finales = [c for c in clips if c["tipo"] == "final"]
     if finales:
@@ -292,7 +315,8 @@ def ensamblar(carpeta: CarpetaProyecto, ffmpeg: str, avisar=print, progreso=None
 
     def hacer(clip: dict) -> Path:
         salida = dir_t / f"tramo_{clip['id']:04d}.mp4"
-        subs = _subs_del_tramo(clip, trozos, dir_s, color)
+        subs = _subs_del_tramo(clip, trozos, humano["dir_subs"] if humano else dir_s, color,
+                               humano["resaltar"] if humano else None)
         final = None
         if clip["tipo"] == "final":
             en = extra["momentos"].get(clip["id"])
@@ -302,7 +326,14 @@ def ensamblar(carpeta: CarpetaProyecto, ffmpeg: str, avisar=print, progreso=None
         _esperar_memoria()
         k = posicion[clip["id"]]
         previo = clips[k - 1] if k > 0 and not (clip["tipo"] == "final" and clips[k - 1]["tipo"] == "final") else None
-        r = subprocess.run(comando_tramo(ffmpeg, clip, subs, salida, final, barras, previo), capture_output=True, text=True,
+        de_toma = None
+        if humano:
+            # corte seco casi siempre: el fundido con la toma anterior solo donde el plan lo pidió
+            previo = previo if clip.get("transicion") == "fundido" else None
+            grande = humano["grandes"].get(clip["id"])
+            de_toma = {"color_calido": humano["color_calido"], "grande": grande}
+        r = subprocess.run(comando_tramo(ffmpeg, clip, subs, salida, final, barras, previo, de_toma),
+                           capture_output=True, text=True,
                            encoding="utf-8", errors="replace")
         if r.returncode != 0 or not salida.exists():
             raise RuntimeError(f"FFmpeg falló en el segmento {clip['id']}: {(r.stderr or '')[-400:]}")
@@ -322,6 +353,20 @@ def ensamblar(carpeta: CarpetaProyecto, ffmpeg: str, avisar=print, progreso=None
     final = dir_r / "final.mp4"
     tmp = dir_r / "final.tmp.mp4"
     voz = carpeta.ruta / "audio" / "voz.wav"
+    if humano:
+        # (01-11) edición humana: sonidos escasos y música por sección
+        from .montaje_humano import mezclar, pista_sfx, tramos_musica
+
+        huella_ruta = carpeta.ruta / "huella_video.json"
+        pistas = (leer_json(huella_ruta) if huella_ruta.exists() else {}).get("musica") or {}
+        sfx = pista_sfx(clips, duracion, ffmpeg, dir_t / "sfx_humano.wav")
+        tramos_m = tramos_musica(clips, pistas, musica, duracion)
+        avisar("Poniendo la narración, los sonidos y la música por sección…" if tramos_m else
+               "Poniendo la narración y los sonidos (sin música de fondo)…")
+        mezclar(ffmpeg, mudo, voz, sfx, tramos_m, volumen_musica_db, duracion, tmp)
+        os.replace(tmp, final)
+        srt(trozos, final.with_suffix(".srt"))
+        return final
     # único efecto de sonido: un swoosh en cada cambio de escena
     swoosh = pista_swoosh(cortes_de_escena(clips), duracion, ffmpeg, dir_t / "swoosh.wav")
     musica = Path(musica) if musica else None
@@ -355,6 +400,29 @@ def ensamblar(carpeta: CarpetaProyecto, ffmpeg: str, avisar=print, progreso=None
     os.replace(tmp, final)
     srt(trozos, final.with_suffix(".srt"))
     return final
+
+
+def _humano(carpeta: CarpetaProyecto, clips: list[dict], preset: dict, dir_t: Path) -> dict | None:
+    """(01-11) Si las tomas vienen de la edición humana: palabras a resaltar, textos grandes (en el estilo de la huella
+    del video) y si va el color cálido. None = el montaje de siempre."""
+    if not any("movimiento" in c for c in clips):
+        return None
+    from .humano import ajustes
+    from .montaje_humano import png_grande
+
+    marcas_ruta = carpeta.ruta / "marcas_humano.json"
+    marcas = leer_json(marcas_ruta)["marcas"] if marcas_ruta.exists() else {}
+    huella_ruta = carpeta.ruta / "huella_video.json"
+    estilo = int((leer_json(huella_ruta) if huella_ruta.exists() else {}).get("estilo_texto") or 1)
+    dir_g = dir_t / "grandes"
+    grandes = {}
+    for c in clips:
+        if c.get("grande") and c["tipo"] != "final":
+            png = dir_g / f"g_{c['id']:04d}_{estilo}.png"
+            png_grande(c["grande"], estilo, png)
+            grandes[c["id"]] = (png, estilo)
+    return {"resaltar": {int(k): v.get("palabra") for k, v in marcas.items() if v.get("palabra")},
+            "grandes": grandes, "color_calido": ajustes(preset)["color_calido"], "dir_subs": dir_t / "subs_humano"}
 
 
 def entregar(carpeta: CarpetaProyecto, final: Path) -> Path:

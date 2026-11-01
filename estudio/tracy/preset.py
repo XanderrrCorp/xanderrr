@@ -11,6 +11,7 @@ import re
 from typing import Any
 
 from ..config import leer_config
+from .humano import POR_DEFECTO as HUMANO_POR_DEFECTO
 
 CLAVE_CANAL = "tracy"
 NOMBRE_CANAL = "Canal Tracy"
@@ -35,6 +36,8 @@ POR_DEFECTO: dict[str, Any] = {
     "presentador": r"C:\Users\USUARIO\Videos\presentador tracy.png",
     "suscribete_cada_s": 60.0,
     "color_subtitulos": "#FFE21F",  # amarillo en todo el video
+    # (01-11) «Edición humana» (tracy/humano.py): apagada = el video sale como siempre
+    "humano": dict(HUMANO_POR_DEFECTO),
 }
 
 
@@ -60,7 +63,9 @@ def encontrar(ruta: str | None, extensiones: tuple[str, ...]) -> str | None:
 
 
 def preset_por_defecto() -> dict[str, Any]:
-    return {k: (list(v) if isinstance(v, list) else v) for k, v in POR_DEFECTO.items()}
+    import copy
+
+    return copy.deepcopy(POR_DEFECTO)
 
 
 # valores por defecto de antes que quedaron guardados en el canal sin que el dueño los eligiera: se toman
@@ -93,6 +98,9 @@ def completar(tracy: dict[str, Any] | None) -> dict[str, Any]:
     p["suscribete_cada_s"] = max(20.0, float(p["suscribete_cada_s"]))
     if not re.fullmatch(r"#[0-9A-Fa-f]{6}", str(p["color_subtitulos"])):
         p["color_subtitulos"] = POR_DEFECTO["color_subtitulos"]
+    from .humano import ajustes as ajustes_humano
+
+    p["humano"] = ajustes_humano(p)
     return p
 
 
