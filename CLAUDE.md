@@ -78,6 +78,22 @@ Estado al 04-10-2026. El repositorio es PÚBLICO: nunca escribir claves, tokens 
   mascota (estilos/enciclopedia_mascota/assets/presentador/clips) + 3D/motion graphics solo para mapas, cámara,
   pines, flechas, contadores y textos.
 
+## Canal de TERROR 3D (02-11-2026: ficha del dueño, aplicar en TODO Short de este canal)
+- Kit en `shorts3d/src/terror/` (composición `TerrorNiebla`). La ficha entera está en `src/terror/spec.ts`
+  (un número por regla) y `node scripts/revisar_terror.mjs` comprueba el montaje contra ella: 45–75 s (ideal 55–65),
+  35–45 planos, cada plano 1,2–1,6 s y NUNCA más de 2 s, plano general solo al inicio y en el clímax, el último plano
+  igual al primero (loop) y la cosa mirando a cámara durante el CTA. No se graba la voz si el revisor falla.
+- Estilo: low-poly nocturno (azules oscuros, niebla gris, luz naranja en ventanas y faroles); el monstruo SIEMPRE
+  más frío y pálido que los humanos. Cámara siempre en movimiento (push-in/paneo + flotación), contrapicado para
+  el monstruo, primer plano con zoom rápido en cada susto, POV desde la ventana y por encima del hombro.
+- Subtítulos palabra por palabra (Archivo Black blanca, contorno negro grueso): números en naranja y más grandes,
+  palabras de peligro en rojo (listas en spec.ts). Etiqueta arriba con personaje o lugar.
+- Mezcla: voz y música al mismo RMS (-20 dBFS) y la música a -15 dB en huecos / -18 dB bajo la voz; 0,4 s de pausa
+  en la voz y 0,5 s de silencio total de la música antes del giro, luego stinger. Screen shake en golpes, pasos,
+  rayos y giro; whoosh con desenfoque de movimiento en cada cambio de escena.
+- Guion en `src/terror/guion.json`: líneas → frases → tomas (tipo:foco). El montaje elige solo cuántos planos caben
+  y, si caben más de los propuestos, intercala el encuadre complementario.
+
 ## Ramas y forma de entregar
 - Desarrollo: `claude/xandart-saas` (la «versión nueva» que instala). Producción: `claude/new-session-uq98jd`: NO tocar.
 - Antes de cada commit: `python -m pytest -q tests` (≈4 min, todo en verde). Si algo falla, no guardar.

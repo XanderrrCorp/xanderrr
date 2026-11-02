@@ -12,6 +12,9 @@ así que no se copió su código).
   Colombia por departamentos (Natural Earth 1:10m, dominio público, simplificado en `departamentos.json`), rana del
   Cauca, escorpión del Tolima y víbora de Antioquia en 3D, botón de suscribirse, comentario y loop a la víbora.
   `DepartamentosPrevia` = la vista previa sin voz.
+- `src/terror`: canal de TERROR 3D, «La regla de la niebla» (composición `TerrorNiebla`, ~56 s, 40 planos). Es un KIT:
+  la ficha del canal vive en `spec.ts` y el guion en `guion.json`; montaje, cámara, subtítulos y mezcla salen de ahí.
+  Ver «Canal de terror» abajo.
 
 ## Cómo se arma uno
 1. Guion con la fórmula de Shorts → aprobación del dueño (y del costo de la voz).
@@ -29,3 +32,15 @@ así que no se copió su código).
 - Escenas de noche CLARAS: cielo azul medio, luz de relleno fuerte y pelaje gris carbón (no negro puro); solo un plano puede ser casi negro.
 - Los cortes salen de la voz real (`timing.ts`), no de los tiempos del guion.
 - Marcar «contenido alterado o sintético» al subir (la voz es clonada) y poner el largo en «Video relacionado».
+
+## Canal de terror (kit `src/terror`)
+1. Escribir `src/terror/guion.json`: líneas de voz (`giro: true` en la del giro, `cta: true` en la última), cada una
+   en frases cortas, cada frase con 1 o 2 tomas `{tipo, foco}` y, si toca, `etiqueta` y `efectos`
+   (`{palabra, sfx, shake, rayo, stinger}`: el efecto cae en el cuadro donde la voz dice esa palabra).
+   Tipos: general, contrapicado, cara (zoom rápido), ventana (POV), hombro, detalle, medio, final.
+2. `node scripts/revisar_terror.mjs` (con `LISTA=1` enseña cada plano): tiene que decir «cumple la ficha».
+   Sin voz grabada ensaya con la voz ESTIMADA a 2,7 palabras/s, así que se puede montar y mirar gratis.
+3. `python scripts/sonidos_terror.py` (música y efectos por código, gratis).
+4. Voz: `python scripts/voz_terror.py` (dice cuánto cobraría) → `--pagar` tras aprobar el guion. Mide las palabras
+   y escribe `src/terror/vo.json`; los cortes se recalculan solos con la voz real. Vuelve a pasar el revisor.
+5. Cuadros: `COMP=TerrorNiebla node scripts/cuadros.mjs 0,300,900 terror` y grabar como siempre (`TerrorNiebla`).

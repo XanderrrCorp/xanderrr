@@ -1,0 +1,518 @@
+{
+ "titulo": "La regla de la niebla",
+ "voz": {
+  "voice_id": "Spanish_PassionateWarrior",
+  "speed": 1.05,
+  "alternativas": [
+   "Spanish_ThoughtfulMan",
+   "Spanish_SincereTeen"
+  ]
+ },
+ "lineas": [
+  {
+   "key": "s1",
+   "frases": [
+    {
+     "texto": "En mi pueblo hay una regla muy simple:",
+     "etiqueta": "SAN JACINTO",
+     "tomas": [
+      {
+       "tipo": "general",
+       "foco": "calle"
+      },
+      {
+       "tipo": "detalle",
+       "foco": "ventana_fuera"
+      }
+     ]
+    },
+    {
+     "texto": "cuando baja la niebla, nadie abre la ventana.",
+     "tomas": [
+      {
+       "tipo": "general",
+       "foco": "cementerio"
+      },
+      {
+       "tipo": "medio",
+       "foco": "ventana_fuera"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "key": "s2",
+   "frases": [
+    {
+     "texto": "Tomás tenía doce años",
+     "etiqueta": "TOMÁS",
+     "tomas": [
+      {
+       "tipo": "medio",
+       "foco": "tomas"
+      }
+     ]
+    },
+    {
+     "texto": "y nunca creyó en esa regla.",
+     "tomas": [
+      {
+       "tipo": "cara",
+       "foco": "tomas"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "key": "s3",
+   "frases": [
+    {
+     "texto": "Esa noche, a las tres de la mañana,",
+     "efectos": [
+      {
+       "rayo": true,
+       "palabra": "noche"
+      }
+     ],
+     "tomas": [
+      {
+       "tipo": "detalle",
+       "foco": "reloj"
+      },
+      {
+       "tipo": "cara",
+       "foco": "tomas"
+      }
+     ]
+    },
+    {
+     "texto": "alguien golpeó su ventana.",
+     "efectos": [
+      {
+       "sfx": "golpe",
+       "palabra": "golpeó",
+       "shake": 0.7
+      }
+     ],
+     "tomas": [
+      {
+       "tipo": "medio",
+       "foco": "ventana_dentro"
+      },
+      {
+       "tipo": "detalle",
+       "foco": "golpe"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "key": "s4",
+   "frases": [
+    {
+     "texto": "Tres golpes. Lentos.",
+     "efectos": [
+      {
+       "sfx": "golpe",
+       "palabra": "Tres",
+       "shake": 0.6
+      },
+      {
+       "sfx": "golpe",
+       "palabra": "golpes.",
+       "shake": 0.6
+      },
+      {
+       "sfx": "golpe",
+       "palabra": "Lentos.",
+       "shake": 0.6
+      }
+     ],
+     "tomas": [
+      {
+       "tipo": "detalle",
+       "foco": "golpe"
+      },
+      {
+       "tipo": "cara",
+       "foco": "tomas"
+      }
+     ]
+    },
+    {
+     "texto": "Uno… dos… tres.",
+     "efectos": [
+      {
+       "sfx": "golpe",
+       "palabra": "Uno…",
+       "shake": 0.8
+      },
+      {
+       "sfx": "golpe",
+       "palabra": "dos…",
+       "shake": 0.8
+      },
+      {
+       "sfx": "golpe",
+       "palabra": "tres.",
+       "shake": 1
+      }
+     ],
+     "tomas": [
+      {
+       "tipo": "ventana",
+       "foco": "monstruo"
+      },
+      {
+       "tipo": "cara",
+       "foco": "tomas"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "key": "s5",
+   "frases": [
+    {
+     "texto": "Afuera, entre la niebla,",
+     "etiqueta": "LA COSA DE LA NIEBLA",
+     "tomas": [
+      {
+       "tipo": "ventana",
+       "foco": "calle"
+      }
+     ]
+    },
+    {
+     "texto": "había algo muy alto, muy pálido,",
+     "efectos": [
+      {
+       "sfx": "paso",
+       "palabra": "alto,",
+       "shake": 0.9
+      },
+      {
+       "sfx": "paso",
+       "palabra": "pálido,",
+       "shake": 0.9
+      }
+     ],
+     "tomas": [
+      {
+       "tipo": "contrapicado",
+       "foco": "monstruo"
+      },
+      {
+       "tipo": "contrapicado",
+       "foco": "cara_monstruo"
+      }
+     ]
+    },
+    {
+     "texto": "con los brazos demasiado largos.",
+     "tomas": [
+      {
+       "tipo": "contrapicado",
+       "foco": "brazos"
+      },
+      {
+       "tipo": "hombro",
+       "foco": "tomas"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "key": "s6",
+   "frases": [
+    {
+     "texto": "Entonces escuchó la voz de su madre, desde afuera:",
+     "tomas": [
+      {
+       "tipo": "cara",
+       "foco": "tomas"
+      },
+      {
+       "tipo": "ventana",
+       "foco": "monstruo"
+      }
+     ]
+    },
+    {
+     "texto": "«Tomás, ábreme. Tengo frío.»",
+     "tomas": [
+      {
+       "tipo": "contrapicado",
+       "foco": "cara_monstruo"
+      },
+      {
+       "tipo": "cara",
+       "foco": "tomas"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "key": "s7",
+   "frases": [
+    {
+     "texto": "Tomás se acercó a la ventana.",
+     "efectos": [
+      {
+       "sfx": "crujido",
+       "palabra": "acercó"
+      }
+     ],
+     "tomas": [
+      {
+       "tipo": "hombro",
+       "foco": "tomas"
+      },
+      {
+       "tipo": "medio",
+       "foco": "ventana_dentro"
+      }
+     ]
+    },
+    {
+     "texto": "Puso la mano en el cerrojo.",
+     "tomas": [
+      {
+       "tipo": "detalle",
+       "foco": "cerrojo"
+      },
+      {
+       "tipo": "cara",
+       "foco": "tomas"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "key": "s8",
+   "frases": [
+    {
+     "texto": "Contó hasta tres.",
+     "tomas": [
+      {
+       "tipo": "cara",
+       "foco": "tomas"
+      }
+     ]
+    },
+    {
+     "texto": "Uno. Dos.",
+     "efectos": [
+      {
+       "sfx": "latido",
+       "palabra": "Uno."
+      },
+      {
+       "sfx": "latido",
+       "palabra": "Dos."
+      }
+     ],
+     "tomas": [
+      {
+       "tipo": "detalle",
+       "foco": "cerrojo"
+      },
+      {
+       "tipo": "ventana",
+       "foco": "cara_monstruo"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "key": "s9",
+   "giro": true,
+   "frases": [
+    {
+     "texto": "Y una mano le tapó la boca.",
+     "efectos": [
+      {
+       "stinger": true,
+       "palabra": "Y",
+       "shake": 1.2
+      }
+     ],
+     "tomas": [
+      {
+       "tipo": "cara",
+       "foco": "tomas_boca"
+      },
+      {
+       "tipo": "hombro",
+       "foco": "madre"
+      }
+     ]
+    },
+    {
+     "texto": "Era su madre. Desde adentro.",
+     "etiqueta": "SU MADRE",
+     "tomas": [
+      {
+       "tipo": "cara",
+       "foco": "madre"
+      },
+      {
+       "tipo": "medio",
+       "foco": "cuarto"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "key": "s10",
+   "frases": [
+    {
+     "texto": "«No abras», le susurró.",
+     "tomas": [
+      {
+       "tipo": "cara",
+       "foco": "madre"
+      }
+     ]
+    },
+    {
+     "texto": "«Eso lleva una semana aprendiendo mi voz.»",
+     "tomas": [
+      {
+       "tipo": "ventana",
+       "foco": "monstruo"
+      },
+      {
+       "tipo": "contrapicado",
+       "foco": "cara_monstruo"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "key": "s11",
+   "frases": [
+    {
+     "texto": "La cosa dejó de golpear.",
+     "tomas": [
+      {
+       "tipo": "ventana",
+       "foco": "cara_monstruo"
+      }
+     ]
+    },
+    {
+     "texto": "Y sonrió.",
+     "efectos": [
+      {
+       "rayo": true,
+       "palabra": "sonrió.",
+       "shake": 1
+      },
+      {
+       "sfx": "grito",
+       "palabra": "sonrió."
+      }
+     ],
+     "tomas": [
+      {
+       "tipo": "contrapicado",
+       "foco": "sonrisa"
+      }
+     ]
+    }
+   ],
+   "cola": 0.55
+  },
+  {
+   "key": "s12",
+   "frases": [
+    {
+     "texto": "A la mañana siguiente,",
+     "etiqueta": "AL AMANECER",
+     "tomas": [
+      {
+       "tipo": "general",
+       "foco": "pueblo"
+      }
+     ]
+    },
+    {
+     "texto": "la casa de los vecinos tenía la ventana abierta…",
+     "efectos": [
+      {
+       "sfx": "puerta",
+       "palabra": "abierta…"
+      }
+     ],
+     "tomas": [
+      {
+       "tipo": "medio",
+       "foco": "vecinos"
+      },
+      {
+       "tipo": "detalle",
+       "foco": "vecinos_ventana"
+      }
+     ]
+    },
+    {
+     "texto": "y nadie adentro.",
+     "tomas": [
+      {
+       "tipo": "medio",
+       "foco": "vecinos"
+      }
+     ]
+    },
+    {
+     "texto": "Sus camas todavía estaban tibias.",
+     "tomas": [
+      {
+       "tipo": "detalle",
+       "foco": "vecinos_dentro"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "key": "s13",
+   "cta": true,
+   "frases": [
+    {
+     "texto": "Sígueme para la parte dos,",
+     "tomas": [
+      {
+       "tipo": "contrapicado",
+       "foco": "mira_camara"
+      }
+     ]
+    },
+    {
+     "texto": "porque esta noche vuelve la niebla…",
+     "tomas": [
+      {
+       "tipo": "cara",
+       "foco": "mira_camara"
+      },
+      {
+       "tipo": "final",
+       "foco": "calle"
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}
