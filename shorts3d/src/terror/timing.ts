@@ -40,8 +40,8 @@ export const ESCENAS: Escena[] = [];
   let t = 0;
   GUION.lineas.forEach((l, i) => {
     const m = VO[l.key];
-    const lead = (i === 0 ? 0.05 : 0.12) + (l.giro ? SPEC.pausaAntesDelGiro : 0);
-    const tail = (i === GUION.lineas.length - 1 ? 0.12 : 0.18) + (l.cola ?? 0); // «cola»: aire extra tras un golpe
+    const lead = (i === 0 ? 0.05 : SPEC.aireAntes) + (l.giro ? SPEC.pausaAntesDelGiro : 0);
+    const tail = (i === GUION.lineas.length - 1 ? 0.12 : SPEC.aireDespues) + (l.cola ?? 0); // «cola»: aire extra tras un golpe
     const from = Math.round(t * FPS);
     const clipAt = Math.round((t + lead - m.voiceStart) * FPS);
     t += lead + (m.voiceEnd - m.voiceStart) + tail;

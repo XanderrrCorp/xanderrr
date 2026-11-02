@@ -13,6 +13,7 @@ export const SPEC = {
   palabrasPorSegundo: 2.75, // ≈165 palabras por minuto en el video, pausas incluidas (como Rako: 160–170)
   ppmMin: 160, ppmMax: 170,
   pausaAntesDelGiro: 0.4,
+  aireAntes: 0.06, aireDespues: 0.1, // aire entre líneas: poco, para que el video quede en 160–170 palabras/min
   // AUDIO (dB relativos a la voz; voz y música salen normalizadas al mismo nivel, ver sonidos_terror.py)
   musicaBajoVozDb: -18, // mientras habla (ducking)
   musicaHuecoDb: -15, // en los huecos sin voz
