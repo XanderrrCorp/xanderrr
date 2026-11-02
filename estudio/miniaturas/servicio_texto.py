@@ -35,8 +35,15 @@ def _guardar(c: CarpetaProyecto, e: dict) -> None:
     escribir_json(carpeta(c) / "estado.json", e)
 
 
-def _config(c: CarpetaProyecto) -> tr.ConfigTexto:
-    return tr.cargar_config(c.cargar().canal)
+def canal_de_miniatura(c: CarpetaProyecto, e: dict | None = None) -> str:
+    """La plantilla que usa este video: la elegida en su página (p. ej. Tracy → «Código del Éxito Mujeres»)
+    o, si no eligió ninguna, la de su canal."""
+    elegido = (e if e is not None else _estado(c)).get("canal_miniatura")
+    return elegido if elegido and tr.es_de_texto(elegido) else c.cargar().canal
+
+
+def _config(c: CarpetaProyecto, e: dict | None = None) -> tr.ConfigTexto:
+    return tr.cargar_config(canal_de_miniatura(c, e))
 
 
 def duracion_video(c: CarpetaProyecto) -> float:
@@ -84,6 +91,10 @@ def _nuevo_fondo(c: CarpetaProyecto, cfg: tr.ConfigTexto, e: dict, t=None, permi
         libro = LibroCostos(c.ruta, ConfigCostos.cargar())
         tr.generar_fondo(cfg, destino, libro, permiso=permiso, proveedor=proveedor)
         e["fondo_origen"] = "generado"
+    elif cfg.modo_foto == "foto_completa":
+        elegido = tr.siguiente_foto(cfg, evitar=e.get("fondo_origen"))
+        tr._cubrir(Image.open(elegido).convert("RGB"), tr.W, tr.H).save(destino, quality=93)
+        e["fondo_origen"] = elegido.name
     else:
         elegido = tr.siguiente_fondo(cfg, evitar=e.get("fondo_origen"))
         tr._cubrir(Image.open(elegido).convert("RGB"), tr.W, tr.H).save(destino, quality=92)
@@ -94,7 +105,7 @@ def _render(c: CarpetaProyecto, cfg: tr.ConfigTexto, e: dict, indices: list[int]
     fondo = Image.open(carpeta(c) / "fondo.jpg").convert("RGB")
     paleta, acento = tr.color_de_acento(cfg, fondo, e.get("paleta"))
     e["paleta_usada"], e["acento"] = paleta, acento
-    retrato = tr.cargar_retrato(cfg)
+    retrato = tr.cargar_retrato(cfg) if cfg.modo_foto == "retrato" else None
     for i, o in enumerate(e["opciones"]):
         if indices is not None and i not in indices:
             continue
@@ -118,8 +129,8 @@ def _copiar_elegida(c: CarpetaProyecto, e: dict) -> None:
 
 def _producir(c: CarpetaProyecto, t, permiso: bool = False, ejecutar=None, proveedor=None) -> Path:
     """Claude propone una opción por fórmula → fondo nuevo para este video → una miniatura por opción."""
-    cfg = _config(c)
     e = _estado(c)
+    cfg = _config(c, e)
     t.avisar("Claude está escribiendo las opciones de texto…")
     t.progreso = 0.1
     duracion = tr.duracion_texto(duracion_video(c))
@@ -146,7 +157,7 @@ def editar(c: CarpetaProyecto, indice: int, texto: str) -> dict:
     lineas = tr.parsear(texto)                     # error de formato → se avisa y no se arma
     limpio = tr.formatear(lineas)
     e["opciones"][indice].update(texto=limpio, avisos=tr.revisar(limpio, titulo_real(c)), editada=True)
-    _render(c, _config(c), e, [indice])
+    _render(c, _config(c, e), e, [indice])
     _guardar(c, e)
     return e
 
@@ -159,7 +170,7 @@ def agregar(c: CarpetaProyecto, texto: str) -> dict:
     limpio = tr.formatear(tr.parsear(texto))
     e["opciones"].append({"formula": None, "texto": limpio, "avisos": tr.revisar(limpio, titulo_real(c)),
                           "editada": True})
-    _render(c, _config(c), e, [len(e["opciones"]) - 1])
+    _render(c, _config(c, e), e, [len(e["opciones"]) - 1])
     _guardar(c, e)
     return e
 
@@ -181,14 +192,14 @@ def paleta(c: CarpetaProyecto, valor: str) -> dict:
     e = _estado(c)
     e["paleta"] = valor
     if (carpeta(c) / "fondo.jpg").exists():
-        _render(c, _config(c), e)
+        _render(c, _config(c, e), e)
     _guardar(c, e)
     return e
 
 
 def _otro_fondo(c: CarpetaProyecto, t, generar: bool = False, permiso: bool = False, proveedor=None) -> Path:
-    cfg = _config(c)
     e = _estado(c)
+    cfg = _config(c, e)
     _nuevo_fondo(c, cfg, e, t, permiso=permiso, generar=generar, proveedor=proveedor)
     _render(c, cfg, e)
     _guardar(c, e)
@@ -197,8 +208,8 @@ def _otro_fondo(c: CarpetaProyecto, t, generar: bool = False, permiso: bool = Fa
 
 
 def estado(c: CarpetaProyecto) -> dict:
-    cfg = _config(c)
     e = _estado(c)
+    cfg = _config(c, e)
     libro = LibroCostos(c.ruta, ConfigCostos.cargar())
     gastado = sum(x.get("costo_cop", 0) for x in libro.entradas() if x.get("modulo") == "miniatura")
     from .generar import costo_por_imagen
@@ -206,9 +217,56 @@ def estado(c: CarpetaProyecto) -> dict:
     return {"layout": tr.LAYOUT, "carpeta": CARPETA, **e,
             "fondo": f"{CARPETA}/fondo.jpg" if (carpeta(c) / "fondo.jpg").exists() else None,
             "miniatura": f"{CARPETA}/miniatura.jpg" if (carpeta(c) / "miniatura.jpg").exists() else None,
-            "config": cfg.model_dump(), "tiene_retrato": tr.cargar_retrato(cfg) is not None,
+            "config": cfg.model_dump(), "canal_miniatura": cfg.canal, "plantillas": plantillas_de_texto(),
+            "tiene_retrato": (tr.cargar_retrato(cfg) is not None if cfg.modo_foto == "retrato"
+                              else bool(tr.fotos_disponibles(cfg))),
             "fondos_canal": tr.fondos_disponibles(cfg), "gastado": formato_cop(gastado),
             "precio_fondo_usd": round(costo_por_imagen(), 3), "version": int(time.time())}
+
+
+def plantillas_de_texto() -> list[dict]:
+    """Las plantillas de texto que se pueden elegir para un video (las de los canales con esta plantilla)."""
+    import os
+
+    from ..plataforma import almacen, contexto
+    from .plantilla import carpeta_canales
+
+    carpetas = []
+    esp = contexto.espacio_actual()
+    if esp and not os.environ.get("XANDART_CANALES"):
+        carpetas.append(almacen.raiz_espacio(esp) / "plantillas_miniatura")
+    carpetas.append(carpeta_canales())
+    vistos, salida = set(), []
+    for base in carpetas:
+        for d in sorted(base.glob("*")) if base.exists() else []:
+            clave = d.name
+            if clave in vistos:
+                continue
+            try:
+                if tr.es_de_texto(clave):
+                    vistos.add(clave)
+                    salida.append({"canal": clave, "nombre": tr.cargar_config(clave).nombre})
+            except Exception:  # noqa: BLE001 — una carpeta rara no impide ver las demás
+                continue
+    return salida
+
+
+def usar_plantilla(c: CarpetaProyecto, canal: str) -> dict:
+    """Cambia la plantilla de ESTE video (p. ej. a la del canal de mujeres). La foto/fondo se vuelve a
+    elegir de la nueva plantilla y las opciones ya escritas se rearman con ella (gratis)."""
+    if not tr.es_de_texto(canal):
+        raise ValueError("esa plantilla no existe")
+    e = _estado(c)
+    e["canal_miniatura"] = canal
+    e.pop("fondo_origen", None)
+    cfg = _config(c, e)
+    if e.get("opciones"):
+        _nuevo_fondo(c, cfg, e)
+        _render(c, cfg, e)
+    else:
+        (carpeta(c) / "fondo.jpg").unlink(missing_ok=True)
+    _guardar(c, e)
+    return e
 
 
 # ------------------------------------------------------------------ con cobro en créditos

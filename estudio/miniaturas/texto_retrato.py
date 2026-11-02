@@ -50,6 +50,7 @@ MAX_JPG = 2 * 1024 * 1024
 FUENTES = Path(__file__).resolve().parent.parent / "fuentes"
 FUENTE_TEXTO = FUENTES / "Anton-Regular.ttf"
 FUENTE_ROTULO = FUENTES / "Barlow-Light.ttf"
+FUENTE_LIMPIA = FUENTES / "BebasNeue-Regular.ttf"   # estilo «limpio»: letra alta y angosta, sin borde
 EXT_FONDO = (".jpg", ".jpeg", ".png", ".webp")
 
 # reglas del texto (planificador y revisión de lo que se escribe a mano)
@@ -73,6 +74,12 @@ class ConfigTexto(BaseModel):
     fuente_fondos: Literal["carpeta", "generar"] = "carpeta"
     carpeta_fondos: str = "fondos"         # dentro de la carpeta del canal
     prompt_fondo: str = PROMPT_FONDO
+    # (02-11, Código del Éxito Mujeres) foto completa (persona + fondo ya juntos) que rota entre varias poses,
+    # texto «limpio» (sin borde, centrado a la izquierda) y foto en blanco y negro. Lo de antes no cambia.
+    modo_foto: Literal["retrato", "foto_completa"] = "retrato"
+    estilo_texto: Literal["borde", "limpio"] = "borde"
+    blanco_negro: bool = False
+    foto_base: str | None = None           # la foto de referencia para pedir poses nuevas (dentro de fotos/)
 
     @field_validator("acento", "acento_calido")
     @classmethod
@@ -119,7 +126,8 @@ def guardar_config(cfg: ConfigTexto) -> Path:
 
 
 def cambiar_config(canal: str, cambios: dict) -> ConfigTexto:
-    permitidos = {"nombre", "acento", "acento_calido", "paleta", "rotulo", "fuente_fondos", "prompt_fondo"}
+    permitidos = {"nombre", "acento", "acento_calido", "paleta", "rotulo", "fuente_fondos", "prompt_fondo",
+                  "modo_foto", "estilo_texto", "blanco_negro"}
     datos = cargar_config(canal).model_dump()
     datos.update({k: v for k, v in cambios.items() if k in permitidos})
     cfg = ConfigTexto.model_validate(datos)
@@ -187,7 +195,7 @@ def fondos_disponibles(cfg: ConfigTexto) -> list[str]:
 
 
 def crear_canal(clave: str = "mentalidad-imparable", nombre: str = "Mentalidad Imparable",
-                rotulo: str = "") -> ConfigTexto:
+                rotulo: str = "", **extra) -> ConfigTexto:
     """Crea el canal (si no existe) con esta plantilla y deja 3 fondos dibujados con código. Lo que el
     canal ya tenga configurado no se toca."""
     from .plantilla import _validar
@@ -199,9 +207,10 @@ def crear_canal(clave: str = "mentalidad-imparable", nombre: str = "Mentalidad I
             raise ValueError(f"el canal «{clave}» ya tiene otra plantilla de miniatura")
         cfg = cargar_config(clave)
     else:
-        cfg = ConfigTexto(canal=clave, nombre=nombre, rotulo=rotulo)
+        cfg = ConfigTexto(canal=clave, nombre=nombre, rotulo=rotulo, **extra)
         guardar_config(cfg)
-    asegurar_fondos(cfg)
+    if cfg.modo_foto == "retrato":
+        asegurar_fondos(cfg)
     _registrar_canal(clave, nombre, cfg)
     return cfg
 
@@ -450,6 +459,112 @@ def generar_fondo(cfg: ConfigTexto, destino: Path, libro, permiso: bool = False,
     return destino
 
 
+# ------------------------------------------------------------------ fotos completas que rotan (modo «foto_completa»)
+
+CARPETA_FOTOS = "fotos"
+# poses y lugares para pedir fotos nuevas a partir de la foto base (cada pose con un fondo distinto)
+POSES_FOTO = [
+    ("brazos_cruzados", "arms crossed, confident half smile, looking straight at the camera",
+     "a modern office with large windows, softly out of focus"),
+    ("mano_barbilla", "one hand on his chin, thoughtful serious expression, looking at the camera",
+     "a cozy home library with wooden bookshelves, softly out of focus"),
+    ("manos_abiertas", "both hands open in front of his chest, explaining something, mouth slightly open as if talking",
+     "a city skyline at dusk seen through a window, softly out of focus"),
+    ("de_lado", "body turned three-quarters, head toward the camera, one index finger raised making a point",
+     "a calm green park with trees, softly out of focus"),
+    ("fondo_liso", "hands together in front of him, calm confident look at the camera",
+     "a plain dark grey studio backdrop with soft light"),
+]
+
+
+def carpeta_fotos(cfg: ConfigTexto) -> Path:
+    from .plantilla import _para_escribir
+
+    return _para_escribir(cfg.canal) / CARPETA_FOTOS
+
+
+def fotos_disponibles(cfg: ConfigTexto) -> list[str]:
+    c = carpeta_fotos(cfg)
+    return sorted(p.name for p in c.glob("*") if p.suffix.lower() in EXT_FONDO) if c.exists() else []
+
+
+def subir_foto(canal: str, datos: bytes, nombre: str) -> ConfigTexto:
+    """Una foto completa 16:9 (persona + fondo). La primera que se sube queda como base para las poses."""
+    cfg = cargar_config(canal)
+    im = _cubrir(Image.open(io.BytesIO(datos)).convert("RGB"), W, H)
+    base = re.sub(r"[^\w\-]+", "_", Path(nombre).stem).strip("_")[:40] or "foto"
+    carpeta = carpeta_fotos(cfg)
+    carpeta.mkdir(parents=True, exist_ok=True)
+    destino, k = carpeta / f"{base}.jpg", 2
+    while destino.exists():
+        destino, k = carpeta / f"{base}_{k}.jpg", k + 1
+    im.save(destino, quality=93)
+    if not cfg.foto_base or not (carpeta / cfg.foto_base).exists():
+        cfg.foto_base = destino.name
+        guardar_config(cfg)
+    return cfg
+
+
+def poses_que_faltan(cfg: ConfigTexto) -> list[tuple[str, str, str]]:
+    hechas = set(fotos_disponibles(cfg))
+    return [p for p in POSES_FOTO if f"pose_{p[0]}.jpg" not in hechas]
+
+
+def prompt_pose(pose: str, lugar: str) -> str:
+    return ("Use the reference photo. Same man: identical face, hair, age, suit and tie, same photographic quality. "
+            f"New pose: {pose}. Background: {lugar}. Chest-up framing; he stands on the RIGHT 40% of the frame and "
+            "the LEFT 55% is only background (no person, no objects in front), dark enough for big text. "
+            "Realistic photograph, 16:9, no text, no letters, no logos, no watermark.")
+
+
+def generar_poses(canal: str, permiso: bool = False, proveedor=None, avisar=print, cuantas: int | None = None,
+                  config_costos=None) -> list[str]:
+    """Pide a Google las poses que faltan, cada una con la foto base como referencia. Frena antes de gastar si
+    pasa el máximo; lo que ya está hecho no se vuelve a pedir. Devuelve las fotos nuevas."""
+    from ..config import ConfigCostos, leer_config
+    from ..costos import LibroCostos
+    from ..imagenes.proveedores import crear_proveedor
+    from ..personajes import _pedir
+    from .plantilla import _para_escribir
+
+    cfg = cargar_config(canal)
+    if not cfg.foto_base or not (carpeta_fotos(cfg) / cfg.foto_base).exists():
+        raise ValueError("primero sube la foto base (la miniatura sin texto)")
+    config_costos = config_costos or ConfigCostos.cargar()
+    proveedor = proveedor or crear_proveedor(config_costos, leer_config("proveedores.json")["imagenes"])
+    libro = LibroCostos(_para_escribir(cfg.canal), config_costos)
+    refs = [carpeta_fotos(cfg) / cfg.foto_base]
+    nuevas = []
+    for k, (ident, pose, lugar) in enumerate(poses_que_faltan(cfg)[:cuantas], 1):
+        pedido = prompt_pose(pose, lugar)
+        libro.autorizar(proveedor.estimar_usd(pedido, refs), permiso=permiso)
+        avisar(f"Google está haciendo la pose {k}: {ident.replace('_', ' ')}…")
+        r = _pedir(proveedor, pedido, refs, avisar)
+        libro.registrar(modulo="miniatura", proveedor=r.proveedor, modelo=r.modelo, unidades={"imagenes": 1},
+                        costo_usd=r.uso.costo_usd, detalle=f"miniatura · pose {ident}")
+        im = _cubrir(Image.open(io.BytesIO(r.png)).convert("RGB"), W, H)
+        if cfg.blanco_negro:
+            im = im.convert("L").convert("RGB")
+        nombre = f"pose_{ident}.jpg"
+        im.save(carpeta_fotos(cfg) / nombre, quality=93)
+        nuevas.append(nombre)
+    return nuevas
+
+
+def siguiente_foto(cfg: ConfigTexto, evitar: str | None = None) -> Path:
+    """La siguiente foto del canal, en rueda: nunca la misma en dos videos seguidos."""
+    nombres = fotos_disponibles(cfg)
+    if not nombres:
+        raise ValueError("este canal todavía no tiene fotos: sube la foto base en la plantilla del canal")
+    ruta = carpeta_fotos(cfg) / "rotacion.json"
+    ultimo = (leer_json(ruta) if ruta.exists() else {}).get("ultimo")
+    i = (nombres.index(ultimo) + 1) if ultimo in nombres else 0
+    candidatas = [nombres[(i + j) % len(nombres)] for j in range(len(nombres))]
+    elegido = next((n for n in candidatas if n not in (ultimo, evitar)), candidatas[0])
+    escribir_json(ruta, {"ultimo": elegido})
+    return carpeta_fotos(cfg) / elegido
+
+
 def paleta_del_fondo(fondo: Image.Image) -> Literal["fria", "calida"]:
     """Azul o morado → fría (turquesa). Negro, dorado o cálido → cálida (amarillo)."""
     peq = np.asarray(fondo.convert("RGB").resize((96, 54)), np.float32) / 255
@@ -525,8 +640,14 @@ def _medidas_texto(lineas: list[tuple[str, bool]], ancho_zona: float, alto_max: 
 def componer(fondo: Image.Image, texto: str, cfg: ConfigTexto, retrato: Image.Image | None,
              acento: str) -> Image.Image:
     lineas = parsear(texto)
-    img = _cubrir(fondo.convert("RGB"), W, H).convert("RGBA")
+    fondo = _cubrir(fondo.convert("RGB"), W, H)
+    if cfg.blanco_negro:
+        fondo = fondo.convert("L").convert("RGB")
+    img = fondo.convert("RGBA")
     img.alpha_composite(_degradado())
+    if cfg.estilo_texto == "limpio":
+        return _texto_limpio(img, lineas, cfg, acento, x1=(W * 0.61 if retrato is None
+                                                          else _poner_retrato(img, retrato.convert("RGBA"), acento) + 40))
     inicio_retrato = W
     if retrato is not None:
         inicio_retrato = _poner_retrato(img, retrato.convert("RGBA"), acento)
@@ -556,6 +677,45 @@ def componer(fondo: Image.Image, texto: str, cfg: ConfigTexto, retrato: Image.Im
         fr = _fuente(FUENTE_ROTULO, rot_tam)
         yr = y0 + caja_ref[1] + bloque + 22
         ImageDraw.Draw(img).text((x0, yr), cfg.rotulo, font=fr, fill=(255, 255, 255, 204))
+    return img.convert("RGB")
+
+
+def _texto_limpio(img: Image.Image, lineas: list[tuple[str, bool]], cfg: ConfigTexto, acento: str,
+                  x1: float) -> Image.Image:
+    """Como la miniatura del dueño (Código del Éxito Mujeres): letra alta y angosta, sin borde, una sombra suave,
+    cada línea centrada en la zona izquierda; las líneas en color van en el acento y las demás en blanco. Si
+    ninguna lleva color, se alternan: color, blanco, color…"""
+    if not any(c for _, c in lineas):
+        lineas = [(t, k % 2 == 0) for k, (t, _) in enumerate(lineas)]
+    x0, x1 = 80, min(x1, W * 0.61)
+    grueso = 2                                            # un poco más gruesa que la Bebas de fábrica
+    # cada línea con su propio tamaño (como la del dueño): alto de mayúscula ≈ 22 % de la miniatura, y si no
+    # cabe a lo ancho, se achica SOLO esa línea
+    alto_cap = H * 0.225 * (3 / max(3, len(lineas)))
+    ref = _fuente(FUENTE_LIMPIA, 300)
+    cap_ref = ref.getbbox("M")[3] - ref.getbbox("M")[1]
+    fuentes = []
+    for t, _ in lineas:
+        b = ref.getbbox(t)
+        tam = min(300 * alto_cap / cap_ref, 300 * (x1 - x0 - 2 * grueso) / max(1, b[2] - b[0]))
+        fuentes.append(_fuente(FUENTE_LIMPIA, tam))
+    caps = [f.getbbox("M") for f in fuentes]
+    hueco = alto_cap * 0.27
+    total = sum(c[3] - c[1] for c in caps) + hueco * (len(lineas) - 1)
+    y = H * 0.45 - total / 2                              # un poco más arriba del centro, como la del dueño
+    capa = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    sombra = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    dt, ds = ImageDraw.Draw(capa), ImageDraw.Draw(sombra)
+    for (linea, color), f, cap in zip(lineas, fuentes, caps):
+        b = f.getbbox(linea)
+        x = (x0 + x1) / 2 - (b[2] - b[0]) / 2 - b[0]
+        relleno = (_rgb(acento) if color else (255, 255, 255)) + (255,)
+        ds.text((x + 3, y - cap[1] + 6), linea, font=f, fill=(0, 0, 0, 200), stroke_width=grueso,
+                stroke_fill=(0, 0, 0, 200))
+        dt.text((x, y - cap[1]), linea, font=f, fill=relleno, stroke_width=grueso, stroke_fill=relleno)
+        y += cap[3] - cap[1] + hueco
+    img.alpha_composite(sombra.filter(ImageFilter.GaussianBlur(9)))
+    img.alpha_composite(capa)
     return img.convert("RGB")
 
 

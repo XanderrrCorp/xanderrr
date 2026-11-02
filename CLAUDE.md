@@ -429,6 +429,17 @@ Estado al 04-10-2026. El repositorio es PÚBLICO: nunca escribir claves, tokens 
   /videos/{slug}/revision[/{id}] (otro_stock, seminario, alargar, acortar, texto), /exportar; «Probar 3 minutos»
   (NuevoTracy.prueba → humano.recortar_guion). Interfaz Tracy.tsx: tarjeta «Edición humana», botón de prueba, revisión
   con gancho/venta/cierre marcados y reporte. tests/test_tracy_humano.py (incluye punta a punta).
+- (02-11) CÓDIGO DEL ÉXITO (MUJERES), miniatura: plantilla nueva «codigo-del-exito-mujeres» (local._canales_nuevos; la de
+  Tracy con «BRIAN TRACY» NO se tocó). ConfigTexto: modo_foto «foto_completa» (fotos/ con persona+fondo que rotan,
+  nunca la misma seguida: siguiente_foto), estilo_texto «limpio» (_texto_limpio: Bebas un poco gruesa, sin borde,
+  cada línea con su tamaño y centrada a la izquierda, amarillo/blanco/amarillo si no hay asteriscos; calcado de su
+  miniatura «MUJER / SEMANA 1 / PRIMERO TÚ»), blanco_negro, foto_base. Poses: generar_poses (Google con la foto base
+  de referencia, 5 poses con lugares distintos en POSES_FOTO, respeta el tope, no repite lo pagado; botón en la
+  plantilla del canal, ≈500-600 COP; aprobado por el dueño, advertido del riesgo de la cara real). En la página de la
+  miniatura de un video: «Plantilla de este video» (servicio_texto.usar_plantilla, estado canal_miniatura): así un
+  video de Tracy usa la de Mujeres. El guion lo escribe el dueño. Del plan de reglas de ese canal falta (sin
+  aprobar): títulos, descripción con la línea obligatoria, revisión del guion, control contra los últimos 5 videos,
+  máx. 5 palabras y «MUJER» 1 de cada 3 en el planificador.
 ## Pendiente
 - Preguntas sin responder del dueño: ¿en qué canal notó la voz lenta? (Peligro Tropical está en 1.3 en
   config/proveedores.json; Tracy en 1.0 por pedido suyo). ¿En qué momento sale «la tira de animales» sin sentido?

@@ -88,6 +88,10 @@ def _canales_nuevos(espacio: str | None) -> None:
             crear_canal("mentalidad-imparable", "Mentalidad Imparable")
             # el canal Tracy usa la misma plantilla, con «BRIAN TRACY» debajo del texto (pedido del dueño)
             crear_canal(CLAVE_CANAL, NOMBRE_CANAL, rotulo="BRIAN TRACY")
+            # (02-11) plantilla aparte para los videos de Tracy que van a «Código del Éxito (Mujeres)»: sin firma,
+            # foto completa en blanco y negro que rota entre poses y texto como su miniatura
+            crear_canal("codigo-del-exito-mujeres", "Código del Éxito Mujeres", modo_foto="foto_completa",
+                        estilo_texto="limpio", blanco_negro=True, paleta="calida", acento_calido="#FFD84D")
             from ..explica.canal import crear_canal as crear_explica
 
             crear_explica()                # El Calvo Explica (nombre provisional)

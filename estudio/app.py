@@ -1007,14 +1007,33 @@ def mini_texto_fondo(slug: str, p: MiniFondo = MiniFondo()):
     return _mini_lanzar(slug, "fondo", lambda t: servicio_texto.otro_fondo(c, t, p.generar, permiso=p.permiso))
 
 
+class MiniPlantilla(BaseModel):
+    canal: str
+
+
+@app.put("/api/videos/{slug}/miniatura/texto/plantilla")
+def mini_texto_plantilla(slug: str, p: MiniPlantilla):
+    """Qué plantilla usa ESTE video (p. ej. un video de Tracy con la de «Código del Éxito Mujeres»)."""
+    from .miniaturas import servicio_texto
+
+    _mini_texto_error(lambda: servicio_texto.usar_plantilla(_proyecto(slug), p.canal))
+    return _mini_estado(slug)
+
+
 @app.get("/api/canales/{canal}/miniatura")
 def plantilla_ver(canal: str):
     from .miniaturas import plantilla, texto_retrato
 
     if texto_retrato.es_de_texto(canal):
         cfg = texto_retrato.cargar_config(canal)
+        from .miniaturas.generar import costo_por_imagen
+
+        t = pipeline.TRABAJOS.get(f"{canal}~poses")
         return {**cfg.model_dump(), "tiene_retrato": texto_retrato.cargar_retrato(cfg) is not None,
-                "fondos": texto_retrato.fondos_disponibles(cfg)}
+                "fondos": texto_retrato.fondos_disponibles(cfg), "fotos": texto_retrato.fotos_disponibles(cfg),
+                "poses_faltan": len(texto_retrato.poses_que_faltan(cfg)),
+                "precio_pose_usd": round(costo_por_imagen(), 3),
+                "trabajo_poses": None if t is None else {"mensaje": t.mensaje, "activo": t.activo, "error": t.error}}
     return plantilla.cargar(canal).model_dump()
 
 
@@ -1069,6 +1088,44 @@ async def canal_texto_fondo(canal: str, archivo: UploadFile = File(...)):
         texto_retrato.subir_fondo(canal, await archivo.read(), archivo.filename or "fondo.jpg")
     except Exception as ex:  # noqa: BLE001
         raise HTTPException(400, f"No se pudo usar ese fondo: {ex}") from ex
+    return plantilla_ver(canal)
+
+
+@app.post("/api/canales/{canal}/miniatura/fotos")
+async def canal_texto_foto(canal: str, archivo: UploadFile = File(...)):
+    """Foto completa 16:9 (persona + fondo) para el modo «foto completa»; la primera es la base de las poses."""
+    from .miniaturas import texto_retrato
+
+    try:
+        texto_retrato.subir_foto(canal, await archivo.read(), archivo.filename or "foto.jpg")
+    except Exception as ex:  # noqa: BLE001
+        raise HTTPException(400, f"No se pudo usar esa foto: {ex}") from ex
+    return plantilla_ver(canal)
+
+
+class PedirPoses(BaseModel):
+    permiso: bool = False
+
+
+@app.post("/api/canales/{canal}/miniatura/poses")
+def canal_texto_poses(canal: str, p: PedirPoses = PedirPoses()):
+    """Google hace las poses que faltan a partir de la foto base (cuesta una imagen cada una)."""
+    from .miniaturas import texto_retrato
+
+    cfg = texto_retrato.cargar_config(canal)
+    if not cfg.foto_base:
+        raise HTTPException(400, "Primero sube la foto base (tu miniatura sin texto).")
+    if not texto_retrato.poses_que_faltan(cfg):
+        raise HTTPException(400, "Ya están todas las poses hechas.")
+
+    def hacer(t):
+        nuevas = texto_retrato.generar_poses(canal, permiso=p.permiso, avisar=t.avisar)
+        t.avisar(f"Listo: {len(nuevas)} poses nuevas")
+
+    try:
+        pipeline.lanzar(f"{canal}~poses", "poses", hacer)
+    except RuntimeError as ex:
+        raise HTTPException(409, str(ex)) from ex
     return plantilla_ver(canal)
 
 

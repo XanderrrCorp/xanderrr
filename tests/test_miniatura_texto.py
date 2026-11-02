@@ -255,3 +255,89 @@ def test_el_planificador_lee_el_guion_y_el_titulo_automatico_no_bloquea_el_tema(
     assert "levantarte temprano" in claude.pedidos[0] and "GUION DEL VIDEO" in claude.pedidos[0]
     assert "No repitas las palabras principales del título" not in claude.pedidos[0]
     assert not any("repite palabras del título" in a for o in st._estado(c)["opciones"] for a in o["avisos"])
+
+
+# ------------------------------------------------------------------ (02-11) Código del Éxito Mujeres
+
+def _foto_16x9(tono: int) -> bytes:
+    im = Image.new("RGB", (1280, 720), (tono, tono // 2, 30))
+    ImageDraw.Draw(im).ellipse((850, 120, 1150, 600), fill=(200, 180, 160))
+    b = io.BytesIO()
+    im.save(b, "JPEG")
+    return b.getvalue()
+
+
+def _mujeres():
+    return tr.crear_canal("codigo-del-exito-mujeres", "Código del Éxito Mujeres", modo_foto="foto_completa",
+                          estilo_texto="limpio", blanco_negro=True, paleta="calida", acento_calido="#FFD84D")
+
+
+def test_mujeres_fotos_que_rotan_sin_repetir_y_sin_fondos_de_codigo(canales):
+    cfg = _mujeres()
+    assert tr.fondos_disponibles(cfg) == []                 # no deja los fondos de red neuronal
+    with pytest.raises(ValueError, match="fotos"):
+        tr.siguiente_foto(cfg)
+    cfg = tr.subir_foto(cfg.canal, _foto_16x9(200), "base.jpg")
+    assert cfg.foto_base == "base.jpg"
+    for k in range(3):
+        tr.subir_foto(cfg.canal, _foto_16x9(60 + k * 40), f"pose{k}.jpg")
+    cfg = tr.cargar_config(cfg.canal)
+    assert cfg.foto_base == "base.jpg"                      # la base no cambia al subir más
+    vistas = [tr.siguiente_foto(cfg).name for _ in range(9)]
+    assert all(a != b for a, b in zip(vistas, vistas[1:]))
+    assert set(vistas) == set(tr.fotos_disponibles(cfg))
+
+
+def test_mujeres_texto_limpio_blanco_y_negro_y_sin_firma(canales):
+    cfg = _mujeres()
+    assert cfg.rotulo == ""
+    fondo = Image.open(io.BytesIO(_foto_16x9(200)))
+    img = tr.componer(fondo, "MUJER / SEMANA 1 / PRIMERO TÚ", cfg, None, cfg.acento_calido)
+    a = np.asarray(img).astype(int)
+    # la foto queda en blanco y negro: fuera del texto (a la derecha) no hay color
+    derecha = a[:, 900:]
+    assert np.abs(derecha[..., 0] - derecha[..., 2]).max() < 6
+    # sin asteriscos se alternan: amarillo, blanco, amarillo (hay amarillo y hay blanco a la izquierda)
+    izq = a[:, :800].reshape(-1, 3)
+    amarillo = ((izq[:, 0] > 230) & (izq[:, 1] > 190) & (izq[:, 2] < 120)).sum()
+    blanco = ((izq > 240).all(axis=1)).sum()
+    assert amarillo > 5000 and blanco > 5000
+    # la configuración de siempre no cambia
+    viejo = tr.crear_canal()
+    assert viejo.modo_foto == "retrato" and viejo.estilo_texto == "borde" and not viejo.blanco_negro
+
+
+class _Google:
+    def __init__(self):
+        self.pedidos = []
+
+    def estimar_usd(self, prompt, refs):
+        return 0.04
+
+    def generar(self, prompt, refs):
+        from types import SimpleNamespace
+
+        self.pedidos.append((prompt, [p.name for p in refs]))
+        b = io.BytesIO()
+        Image.new("RGB", (1024, 576), (120, 60, 30)).save(b, "PNG")
+        return SimpleNamespace(png=b.getvalue(), proveedor="simulado", modelo="x",
+                               uso=SimpleNamespace(costo_usd=0.04))
+
+
+def test_mujeres_poses_con_la_foto_base_y_sin_repetir_lo_pagado(canales):
+    cfg = _mujeres()
+    with pytest.raises(ValueError, match="foto base"):
+        tr.generar_poses(cfg.canal, proveedor=_Google())
+    tr.subir_foto(cfg.canal, _foto_16x9(200), "base.jpg")
+    g = _Google()
+    nuevas = tr.generar_poses(cfg.canal, proveedor=g, avisar=lambda *_: None, cuantas=2)
+    assert len(nuevas) == 2 and all(refs == ["base.jpg"] for _, refs in g.pedidos)
+    assert "no text" in g.pedidos[0][0]
+    foto = Image.open(tr.carpeta_fotos(cfg) / nuevas[0])
+    assert foto.size == (1280, 720)
+    a = np.asarray(foto.convert("RGB")).astype(int)
+    assert np.abs(a[..., 0] - a[..., 2]).max() < 6           # en blanco y negro, como la base
+    g2 = _Google()
+    tr.generar_poses(cfg.canal, proveedor=g2, avisar=lambda *_: None)
+    assert len(g2.pedidos) == len(tr.POSES_FOTO) - 2         # lo ya hecho no se vuelve a pedir
+    assert tr.poses_que_faltan(tr.cargar_config(cfg.canal)) == []
