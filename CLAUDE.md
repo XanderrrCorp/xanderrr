@@ -448,6 +448,10 @@ Estado al 04-10-2026. El repositorio es PÚBLICO: nunca escribir claves, tokens 
   la cola llama producir(revisar=False) (exporta sin parar a revisar; la página sí para si «revisar_antes»);
   revision «seminario» ya no se puede; paso_audio devuelve la duración con las pausas. Interfaz Tracy: sin
   interruptor ni barra del seminario. Proyectos a medias con segmentos viejos (sin «humano») siguen como antes.
+  (02-11) «Los clips stock duran máximo 3-4 minutos; el resto del video es la imagen con el fondo» (el dueño; la
+  edición humana la había dejado solo en el último 10 %): humano «stock_minutos» 3,5 (barra 1-8 min en la tarjeta
+  Edición humana) → planificar: escena final desde min(3,5 min, 90 % del video). Quitados de la página: fila del
+  video del seminario, barra de cortes del seminario y la barra vieja «escena final desde el %».
 ## Pendiente
 - Preguntas sin responder del dueño: ¿en qué canal notó la voz lenta? (Peligro Tropical está en 1.3 en
   config/proveedores.json; Tracy en 1.0 por pedido suyo). ¿En qué momento sale «la tira de animales» sin sentido?

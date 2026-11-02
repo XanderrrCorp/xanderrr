@@ -85,6 +85,7 @@ class Humano(BaseModel):
     fenix_max: float | None = Field(None, ge=0, le=0.6)
     revisar_antes: bool | None = None
     escena_final_desde: float | None = Field(None, ge=0.05, le=1)
+    stock_minutos: float | None = Field(None, ge=1, le=15)
     carpeta_musica: str | None = None
     velocidad_cierre: float | None = Field(None, ge=0.85, le=1)
     suaves: float | None = Field(None, ge=0, le=0.5)

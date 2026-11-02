@@ -16,7 +16,7 @@ interface EstadoTracy {
 // (01-11) «Edición humana»: cortes de duración variable, seminario solo en momentos de autoridad, movimiento,
 // texto con intención, música por sección y revisión antes de exportar. Apagada = el video de siempre.
 interface Humano {
-  activo: boolean; fenix_max: number; revisar_antes: boolean; escena_final_desde: number; carpeta_musica: string;
+  activo: boolean; fenix_max: number; revisar_antes: boolean; escena_final_desde: number; stock_minutos: number; carpeta_musica: string;
   velocidad_cierre: number; suaves: number; color_calido: boolean; prueba_s: number;
 }
 
@@ -116,33 +116,14 @@ export function Tracy() {
       {est && (
         <section className="rev-tarjeta">
           <h2>Archivos del canal</h2>
-          <Archivo titulo="Video del seminario" que="seminario" ruta={est.clip_base} existe={est.clip_existe}
-            ayuda="Déjalo en esa carpeta con ese nombre, o elígelo aquí." alCambiar={setEst} />
           <Archivo titulo="Música de fondo" que="musica" ruta={est.musica} existe={est.musica_existe}
             ayuda="Opcional: sin música, el video sale solo con la voz." alCambiar={setEst} />
           <Archivo titulo="Presentador de la escena final" que="presentador" ruta={est.presentador}
             existe={est.presentador_existe} ayuda="Una imagen (mejor PNG sin fondo). Va a la izquierda, en blanco y negro."
             alCambiar={setEst} />
-          <label className="campo">Cada corte del seminario dura {Math.round(est.seminario_s)} s; después van 1, 2 o los
-            clips de stock que hagan falta, y así se intercala hasta la escena final
-            <input type="range" min={3} max={12} step={1} defaultValue={est.seminario_s}
-              onMouseUp={(e) => ajustar({ seminario_s: +(e.target as HTMLInputElement).value })}
-              onTouchEnd={(e) => ajustar({ seminario_s: +(e.target as HTMLInputElement).value })}
-              onKeyUp={(e) => ajustar({ seminario_s: +(e.target as HTMLInputElement).value })} />
-          </label>
           <label className="campo tr-check">
             <span><input type="checkbox" checked={est.barras_cine}
               onChange={(e) => ajustar({ barras_cine: e.target.checked })} /> Barras negras de cine arriba y abajo</span>
-          </label>
-          <label className="campo">
-            {est.escena_final_desde >= 1 ? 'Sin escena final (clips hasta el final)'
-              : `La escena final empieza en el ${Math.round(est.escena_final_desde * 100)} % del video`}
-            <input type="range" min={0.1} max={1} step={0.05} defaultValue={est.escena_final_desde}
-              onMouseUp={(e) => ajustar({ escena_final_desde: +(e.target as HTMLInputElement).value })}
-              onTouchEnd={(e) => ajustar({ escena_final_desde: +(e.target as HTMLInputElement).value })}
-              onKeyUp={(e) => ajustar({ escena_final_desde: +(e.target as HTMLInputElement).value })} />
-            <span className="tenue pequeno">Fondo de naturaleza en blanco y negro con partículas, el presentador a un
-              lado, el botón Suscríbete y las ondas de la voz.</span>
           </label>
           <label className="campo">Velocidad de la voz: {est.velocidad.toFixed(2).replace('.', ',')}× (1 = normal)
             <input type="range" min={0.8} max={1.3} step={0.05} defaultValue={est.velocidad}
@@ -198,12 +179,11 @@ function EdicionHumana({ h, ajustar }: { h: Humano; ajustar: (c: Partial<Humano>
         y al final tu imagen con el fondo de naturaleza y las ondas de la voz. Cortes de duración variable, movimiento suave,
         la palabra clave en amarillo, textos grandes en las reglas y el CTA, y música por sección.</p>
       {h.activo && (<>
-        <label className="campo">
-          {h.escena_final_desde >= 1 ? 'Sin escena final' : `Escena final desde el ${Math.round(h.escena_final_desde * 100)} % del video`}
-          <input type="range" min={0.5} max={1} step={0.05} defaultValue={h.escena_final_desde}
-            onMouseUp={(e) => ajustar({ escena_final_desde: +(e.target as HTMLInputElement).value })}
-            onTouchEnd={(e) => ajustar({ escena_final_desde: +(e.target as HTMLInputElement).value })}
-            onKeyUp={(e) => ajustar({ escena_final_desde: +(e.target as HTMLInputElement).value })} />
+        <label className="campo">Clips de stock solo los primeros {String(h.stock_minutos).replace('.', ',')} minutos; el resto del video, la escena final
+          <input type="range" min={1} max={8} step={0.5} defaultValue={h.stock_minutos}
+            onMouseUp={(e) => ajustar({ stock_minutos: +(e.target as HTMLInputElement).value })}
+            onTouchEnd={(e) => ajustar({ stock_minutos: +(e.target as HTMLInputElement).value })}
+            onKeyUp={(e) => ajustar({ stock_minutos: +(e.target as HTMLInputElement).value })} />
         </label>
         <label className="campo tr-check">
           <span><input type="checkbox" checked={h.revisar_antes} onChange={(e) => ajustar({ revisar_antes: e.target.checked })} />

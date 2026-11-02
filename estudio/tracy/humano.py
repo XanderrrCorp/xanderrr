@@ -56,7 +56,9 @@ POR_DEFECTO = {
     "whoosh": 0.15,                # parte de los cortes secos con whoosh (los suaves siempre lo llevan)
     "riser": True,                 # sonido que sube antes de cada revelación
     "color_calido": True,          # el mismo tono cálido en todo el stock
-    "escena_final_desde": 0.9,     # la escena fija solo en el cierre (1 = sin escena final)
+    "escena_final_desde": 0.9,     # (videos cortos) la escena final empieza a más tardar aquí
+    "stock_minutos": 3.5,          # (02-11, el dueño) clips de stock solo los primeros 3-4 minutos; el resto, la
+                                   # escena final (imagen de Tracy, fondo de naturaleza y las ondas de la voz)
     "carpeta_musica": "",          # pistas con licencia: gancho*.mp3, cuerpo*.mp3, venta*.mp3, cierre*.mp3
     "revisar_antes": True,         # se detiene para revisar antes de exportar
     "prueba_s": 180.0,             # «Probar 3 minutos»
@@ -77,6 +79,7 @@ def ajustes(preset: dict) -> dict:
     h["suaves"] = max(0.0, min(0.5, float(h["suaves"])))
     h["whoosh"] = max(0.0, min(0.5, float(h["whoosh"])))
     h["escena_final_desde"] = max(0.05, min(1.0, float(h["escena_final_desde"])))
+    h["stock_minutos"] = max(1.0, min(15.0, float(h.get("stock_minutos") or POR_DEFECTO["stock_minutos"])))
     return h
 
 
@@ -404,7 +407,8 @@ def planificar(segmentos: list[dict], marcas: dict[int, dict], duracion: float, 
     from .planificador import GENERICAS
 
     rng = random.Random(f"{semilla}|plan")
-    corte_final = duracion * h["escena_final_desde"] if h["escena_final_desde"] < 1 else None
+    corte_final = (min(duracion * h["escena_final_desde"], 60 * h.get("stock_minutos", POR_DEFECTO["stock_minutos"]))
+                   if h["escena_final_desde"] < 1 else None)
     desde_cierre = next((s["inicio"] for s in segmentos if s["rol"] == "cierre"), None)
     plan = []
     for s in segmentos:

@@ -179,3 +179,18 @@ def test_video_con_edicion_humana_de_punta_a_punta(tmp_path, monkeypatch):
     assert sum(rep["efectos"]["movimientos"].values()) == rep["clips"]
     assert not revision.ver(c, ff)["pendiente"]
     assert (c.ruta / "huella_video.json").exists()
+
+
+def test_stock_solo_los_primeros_minutos_y_el_resto_escena_final():
+    """(02-11) el dueño: los clips de stock duran máximo 3-4 minutos; el resto del video es la escena final."""
+    ors, marcas, dur = _oraciones(150)                                    # ≈ 10 minutos de voz
+    assert dur > 400
+    segs = humano.segmentar(ors, dur, marcas, H, "v9")
+    combo = {"musica": {}, "estilo_texto": 1, "transiciones": ["fundido"], "movimiento": "suave"}
+    plan = humano.planificar(segs, marcas, dur, H, combo, "v9")
+    stock = [p for p in plan if p["type"] == "stock"]
+    finales = [p for p in plan if p["type"] == "final"]
+    assert stock and finales and not [p for p in plan if p["type"] == "seminar"]
+    assert max(p["inicio"] for p in stock) < 60 * H["stock_minutos"]
+    assert min(p["inicio"] for p in finales) >= 60 * H["stock_minutos"] - 1e-6
+    assert [p["type"] for p in plan] == ["stock"] * len(stock) + ["final"] * len(finales)   # primero stock, luego final
