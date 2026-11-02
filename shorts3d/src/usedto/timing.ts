@@ -39,8 +39,8 @@ export const CIERRE_S = 2.0;
   let t = 0;
   GUION.frases.forEach((fr, i) => {
     const k = KEYS[i], m = VO[k];
-    const lead = i === 0 ? 0.04 : 0.1;
-    const tail = 0.16;
+    const lead = i === 0 ? 0.04 : 0.13;
+    const tail = 0.2; // aire entre frases: deja la voz en 155–165 palabras/min
     const from = Math.round(t * FPS);
     const clipAt = Math.round((t + lead - m.voiceStart) * FPS);
     t += lead + (m.voiceEnd - m.voiceStart) + tail + (i === GUION.frases.length - 1 ? CIERRE_S : 0);

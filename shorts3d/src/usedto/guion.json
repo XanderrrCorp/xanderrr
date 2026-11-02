@@ -3,11 +3,12 @@
  "set": "Almacén de Nueva York, 1850: ladrillo, vigas de madera y latón",
  "voz": {
   "voice_id": "English_FriendlyPerson",
-  "speed": 1.0,
+  "speed": 0.84,
   "alternativas": [
    "English_magnetic_voiced_man",
    "English_Trustworth_Man"
-  ]
+  ],
+  "nota": "A 1,0 midió 206 ppm al hablar / 190 en el video; a 0,84 apunta a ~160."
  },
  "resaltar": [
   "Elisha",
