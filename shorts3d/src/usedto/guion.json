@@ -1,0 +1,312 @@
+{
+ "titulo": "Why Elevators Used to Fall",
+ "set": "Almacén de Nueva York, 1850: ladrillo, vigas de madera y latón",
+ "voz": {
+  "voice_id": "English_FriendlyPerson",
+  "speed": 1.0,
+  "alternativas": [
+   "English_magnetic_voiced_man",
+   "English_Trustworth_Man"
+  ]
+ },
+ "resaltar": [
+  "Elisha",
+  "Otis",
+  "Otis,",
+  "1852",
+  "1854",
+  "redundancy",
+  "New",
+  "York",
+  "governor"
+ ],
+ "frases": [
+  {
+   "texto": "Elevators used to hang from a single rope.",
+   "version": "cuerda",
+   "tomas": [
+    "orbita_inicio",
+    "cuerda_macro"
+   ],
+   "efectos": [
+    {
+     "sfx": "crujido",
+     "palabra": "rope."
+    }
+   ]
+  },
+  {
+   "texto": "If it snapped, everyone inside fell.",
+   "version": "cuerda",
+   "efectos": [
+    {
+     "evento": "rotura",
+     "palabra": "snapped,"
+    },
+    {
+     "sfx": "chasquido",
+     "palabra": "snapped,"
+    },
+    {
+     "sfx": "golpe",
+     "palabra": "fell.",
+     "retraso": 0.5
+    }
+   ],
+   "tomas": [
+    "cuerda_macro",
+    "caida"
+   ]
+  },
+  {
+   "texto": "So, builders switched to stronger iron wire rope.",
+   "version": "alambre",
+   "tomas": [
+    "cable_subida"
+   ],
+   "efectos": [
+    {
+     "sfx": "clic",
+     "palabra": "wire"
+    }
+   ]
+  },
+  {
+   "texto": "But, wire still wears out, and when it broke there was nothing to stop the fall.",
+   "version": "alambre",
+   "efectos": [
+    {
+     "evento": "desgaste",
+     "palabra": "wears"
+    },
+    {
+     "evento": "rotura",
+     "palabra": "broke"
+    },
+    {
+     "sfx": "chasquido",
+     "palabra": "broke"
+    },
+    {
+     "sfx": "golpe",
+     "palabra": "stop",
+     "retraso": 0.3
+    }
+   ],
+   "tomas": [
+    "cable_macro",
+    "caida"
+   ]
+  },
+  {
+   "texto": "So, in 1852, Elisha Otis added a safety brake.",
+   "version": "otis",
+   "tomas": [
+    "orbita_otis"
+   ],
+   "efectos": [
+    {
+     "sfx": "ding",
+     "palabra": "brake."
+    }
+   ]
+  },
+  {
+   "texto": "A steel spring sat on top of the car, held flat by the pull of the rope.",
+   "version": "otis",
+   "tomas": [
+    "muelle_macro",
+    "muelle_lado"
+   ]
+  },
+  {
+   "texto": "The rails on each side were covered in teeth.",
+   "version": "otis",
+   "tomas": [
+    "dientes"
+   ],
+   "efectos": [
+    {
+     "sfx": "trinquete",
+     "palabra": "teeth."
+    }
+   ]
+  },
+  {
+   "texto": "If the rope snapped, the spring snapped open and locked into the teeth.",
+   "version": "otis",
+   "efectos": [
+    {
+     "evento": "rotura",
+     "palabra": "snapped,"
+    },
+    {
+     "sfx": "chasquido",
+     "palabra": "snapped,"
+    },
+    {
+     "sfx": "resorte",
+     "palabra": "open"
+    },
+    {
+     "sfx": "clank",
+     "palabra": "locked"
+    }
+   ],
+   "tomas": [
+    "muelle_macro",
+    "traba_macro"
+   ]
+  },
+  {
+   "texto": "In 1854, Otis rode his own elevator in New York and had the rope cut in front of a crowd.",
+   "version": "otis_feria",
+   "efectos": [
+    {
+     "evento": "rotura",
+     "palabra": "cut"
+    },
+    {
+     "sfx": "hacha",
+     "palabra": "cut"
+    },
+    {
+     "sfx": "clank",
+     "palabra": "front"
+    }
+   ],
+   "tomas": [
+    "feria",
+    "cuerda_corte"
+   ]
+  },
+  {
+   "texto": "He didn't fall.",
+   "version": "otis_feria",
+   "tomas": [
+    "sombrero"
+   ],
+   "efectos": [
+    {
+     "sfx": "ding",
+     "palabra": "fall."
+    }
+   ]
+  },
+  {
+   "texto": "But, his brake only worked if the rope broke completely.",
+   "version": "motor",
+   "tomas": [
+    "muelle_lado"
+   ]
+  },
+  {
+   "texto": "If the motor failed and the car simply ran too fast, nothing caught it.",
+   "version": "motor",
+   "efectos": [
+    {
+     "evento": "embalado",
+     "palabra": "failed"
+    },
+    {
+     "sfx": "zumbido",
+     "palabra": "failed"
+    },
+    {
+     "sfx": "golpe",
+     "palabra": "caught"
+    }
+   ],
+   "tomas": [
+    "tambor",
+    "caida"
+   ]
+  },
+  {
+   "texto": "So, engineers added a spinning governor.",
+   "version": "regulador",
+   "tomas": [
+    "regulador"
+   ],
+   "efectos": [
+    {
+     "sfx": "giro",
+     "palabra": "spinning"
+    }
+   ]
+  },
+  {
+   "texto": "When the car goes too fast, the weights fly outward and trigger the brake.",
+   "version": "regulador",
+   "efectos": [
+    {
+     "evento": "embalado",
+     "palabra": "goes"
+    },
+    {
+     "evento": "bolas",
+     "palabra": "fly"
+    },
+    {
+     "evento": "freno",
+     "palabra": "trigger"
+    },
+    {
+     "sfx": "clank",
+     "palabra": "trigger"
+    }
+   ],
+   "tomas": [
+    "regulador_macro",
+    "traba_macro"
+   ]
+  },
+  {
+   "texto": "Finally, elevators stopped trusting any single part.",
+   "version": "moderno",
+   "tomas": [
+    "estante"
+   ]
+  },
+  {
+   "texto": "That is redundancy.",
+   "version": "moderno",
+   "tomas": [
+    "cables_moderno"
+   ],
+   "efectos": [
+    {
+     "sfx": "ding",
+     "palabra": "redundancy."
+    }
+   ]
+  },
+  {
+   "texto": "Today, your elevator hangs from several steel cables, and each one is strong enough to hold the car by itself.",
+   "version": "moderno",
+   "efectos": [
+    {
+     "evento": "cortes_modernos",
+     "palabra": "each"
+    },
+    {
+     "sfx": "chasquido",
+     "palabra": "each"
+    },
+    {
+     "sfx": "chasquido",
+     "palabra": "strong"
+    },
+    {
+     "sfx": "chasquido",
+     "palabra": "hold"
+    }
+   ],
+   "tomas": [
+    "cables_macro",
+    "cables_moderno",
+    "loop_final"
+   ]
+  }
+ ]
+}

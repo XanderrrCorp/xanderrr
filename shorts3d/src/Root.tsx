@@ -9,6 +9,8 @@ import {ShortDepartamentos} from './colombia/Short';
 import {TOTAL as TOTAL_D} from './colombia/timing';
 import {ShortTerror} from './terror/Short';
 import {TOTAL as TOTAL_T} from './terror/timing';
+import {ShortUsedTo} from './usedto/Short';
+import {TOTAL as TOTAL_U} from './usedto/timing';
 export const Root: React.FC = () => (
   <>
     <Composition id="AvisponGigante" component={Short} durationInFrames={TOTAL} fps={30} width={1080} height={1920} />
@@ -16,5 +18,6 @@ export const Root: React.FC = () => (
     <Composition id="Departamentos" component={ShortDepartamentos} durationInFrames={TOTAL_D} fps={30} width={1080} height={1920} />
     <Composition id="DepartamentosPrevia" component={MapaColombia} durationInFrames={TOTAL_COL} fps={30} width={1080} height={1920} />
     <Composition id="TerrorNiebla" component={ShortTerror} durationInFrames={TOTAL_T} fps={30} width={1080} height={1920} />
+    <Composition id="UsedToElevators" component={ShortUsedTo} durationInFrames={TOTAL_U} fps={30} width={1080} height={1920} />
   </>
 );

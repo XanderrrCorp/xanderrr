@@ -12,8 +12,10 @@
   "dependencies": {
     "@react-three/drei": "^9.114.0",
     "@react-three/fiber": "^8.17.10",
+    "@react-three/postprocessing": "^2.19.1",
     "@remotion/cli": "^4.0.539",
     "@remotion/three": "^4.0.539",
+    "postprocessing": "^6.36.4",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "remotion": "^4.0.539",
