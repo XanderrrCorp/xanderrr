@@ -10,7 +10,8 @@ export const SPEC = {
   planosMin: 35, planosMax: 45,
   planosPorFrase: [1, 2] as const,
   // VOZ
-  palabrasPorSegundo: 2.7, // ≈160 palabras por minuto
+  palabrasPorSegundo: 2.75, // ≈165 palabras por minuto en el video, pausas incluidas (como Rako: 160–170)
+  ppmMin: 160, ppmMax: 170,
   pausaAntesDelGiro: 0.4,
   // AUDIO (dB relativos a la voz; voz y música salen normalizadas al mismo nivel, ver sonidos_terror.py)
   musicaBajoVozDb: -18, // mientras habla (ducking)

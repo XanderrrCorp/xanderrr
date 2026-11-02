@@ -39,8 +39,8 @@ así que no se copió su código).
    (`{palabra, sfx, shake, rayo, stinger}`: el efecto cae en el cuadro donde la voz dice esa palabra).
    Tipos: general, contrapicado, cara (zoom rápido), ventana (POV), hombro, detalle, medio, final.
 2. `node scripts/revisar_terror.mjs` (con `LISTA=1` enseña cada plano): tiene que decir «cumple la ficha».
-   Sin voz grabada ensaya con la voz ESTIMADA a 2,7 palabras/s, así que se puede montar y mirar gratis.
+   Sin voz grabada ensaya con la voz ESTIMADA a ~165 palabras/min, así que se puede montar y mirar gratis.
 3. `python scripts/sonidos_terror.py` (música y efectos por código, gratis).
-4. Voz: `python scripts/voz_terror.py` (dice cuánto cobraría) → `--pagar` tras aprobar el guion. Mide las palabras
+4. Voz (la de Peligro Tropical, clonada, a velocidad 1,0 → ~165 palabras/min; a 1,3 iba a ~235): `python scripts/voz_terror.py` (dice cuánto cobraría) → `--pagar` tras aprobar el guion. Mide las palabras
    y escribe `src/terror/vo.json`; los cortes se recalculan solos con la voz real. Vuelve a pasar el revisor.
 5. Cuadros: `COMP=TerrorNiebla node scripts/cuadros.mjs 0,300,900 terror` y grabar como siempre (`TerrorNiebla`).

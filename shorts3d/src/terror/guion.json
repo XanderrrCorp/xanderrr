@@ -1,12 +1,10 @@
 {
  "titulo": "La regla de la niebla",
  "voz": {
-  "voice_id": "Spanish_PassionateWarrior",
-  "speed": 1.05,
-  "alternativas": [
-   "Spanish_ThoughtfulMan",
-   "Spanish_SincereTeen"
-  ]
+  "voice_id": "moss_audio_ebf2f8a2-b928-11f1-8f51-7270dd4a9232",
+  "nombre": "voz de Peligro Tropical (clonada)",
+  "speed": 1.0,
+  "nota": "A 1,3 esta voz habla a ~235 ppm (medido en los Shorts de la pantera, Colombia y el avispón). A 1,0 debería quedar en ~175 ppm al hablar y ~165 ppm en el video con las pausas (Rako: 160–170). Ajustar tras medir con voz_terror.py."
  },
  "lineas": [
   {

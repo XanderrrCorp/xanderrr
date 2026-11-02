@@ -25,7 +25,7 @@ if not pagar and not solo_medir:
 cobrados = 0
 for k in (faltan if pagar else []):
     body = {"model": "speech-2.6-hd", "text": lineas[k], "stream": False, "language_boost": "Spanish",
-            "voice_setting": {"voice_id": G["voz"]["voice_id"], "speed": G["voz"]["speed"], "vol": 1, "pitch": 0, "emotion": "fearful"},
+            "voice_setting": {"voice_id": G["voz"]["voice_id"], "speed": G["voz"]["speed"], "vol": 1, "pitch": 0},
             "audio_setting": {"sample_rate": 32000, "bitrate": 128000, "format": "mp3", "channel": 1}}
     req = urllib.request.Request("https://api.minimax.io/v1/t2a_v2", data=json.dumps(body).encode(),
                                  headers={"Content-Type": "application/json", "Authorization": "Bearer " + os.environ.get("MINIMAX_API_KEY", "x")})
@@ -78,5 +78,5 @@ def medir(k, txt):
 res = {k: medir(k, t) for k, t in lineas.items() if (VO / f"{k}.wav").exists()}
 OUT.write_text(json.dumps(res, ensure_ascii=False, indent=1), encoding="utf-8")
 pal = sum(len(r["words"]) for r in res.values()); hab = sum(r["voiceEnd"] - r["voiceStart"] for r in res.values())
-print(f"medidas {len(res)}/{len(lineas)} líneas · {pal / max(hab, 1e-6):.2f} palabras/s al hablar (la ficha pide ~2,7 en total, ~2,9 al hablar)")
+print(f"medidas {len(res)}/{len(lineas)} líneas · {pal / max(hab, 1e-6) * 60:.0f} palabras/min al hablar (la ficha pide 160–170 en el video con pausas, ~175 al hablar; el revisor da la cifra final)")
 if cobrados: print("caracteres cobrados:", cobrados)

@@ -1,5 +1,5 @@
 // Línea de tiempo del Short de terror. Los cortes salen de la VOZ REAL (vo.json, que escribe
-// scripts/voz_terror.py). Mientras no haya voz grabada, cada línea se ESTIMA a 2,7 palabras/s
+// scripts/voz_terror.py). Mientras no haya voz grabada, cada línea se ESTIMA a ~165 palabras/min
 // para poder ensayar el montaje sin pagar nada; la composición dice cuál de los dos usa.
 import guionJson from './guion.json';
 import vo from './vo.json';
@@ -21,7 +21,7 @@ const estimar = (texto: string): Medida => {
   const palabras = texto.split(/\s+/).filter(Boolean);
   const peso = (p: string) => p.replace(/[^\p{L}\p{N}]/gu, '').length + 2.2;
   const pausa = (p: string) => (/[.…:?!»]$/.test(p) ? 0.34 : /,$/.test(p) ? 0.16 : 0);
-  const k = 0.335 / 7.4; // una palabra media (5,2 letras) dura ~0,33 s: con las pausas sale ~2,7 palabras/s
+  const k = 0.325 / 7.4; // una palabra media (5,2 letras) dura ~0,325 s: con las pausas sale ~165 palabras/min
   let t = 0.1;
   const words = palabras.map((p) => {
     const w = {text: p, start: +t.toFixed(3), end: +(t + peso(p) * k).toFixed(3)};

@@ -88,6 +88,8 @@ Estado al 04-10-2026. El repositorio es PÚBLICO: nunca escribir claves, tokens 
   el monstruo, primer plano con zoom rápido en cada susto, POV desde la ventana y por encima del hombro.
 - Subtítulos palabra por palabra (Archivo Black blanca, contorno negro grueso): números en naranja y más grandes,
   palabras de peligro en rojo (listas en spec.ts). Etiqueta arriba con personaje o lugar.
+- Voz (02-11, el dueño): la de PELIGRO TROPICAL (clonada) a 160–170 palabras/min como Rako → speed 1,0 en
+  guion.json (a 1,3 mide ~235 ppm). El revisor avisa si la voz grabada sale fuera de 160–170.
 - Mezcla: voz y música al mismo RMS (-20 dBFS) y la música a -15 dB en huecos / -18 dB bajo la voz; 0,4 s de pausa
   en la voz y 0,5 s de silencio total de la música antes del giro, luego stinger. Screen shake en golpes, pasos,
   rayos y giro; whoosh con desenfoque de movimiento en cada cambio de escena.
