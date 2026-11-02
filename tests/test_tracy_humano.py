@@ -45,18 +45,13 @@ def test_cortes_variables_al_final_de_una_oracion_y_mas_rapidos_en_el_gancho():
     assert any(s["abre"] == "regla" for s in segs)                           # la regla abre su propio clip
 
 
-def test_seminario_solo_en_autoridad_bajo_el_maximo_y_sin_patron():
+def test_sin_seminario_movimiento_y_cortes_variados():
     roles = {k: "regla" for k in (15, 22, 29)} | {k: "frase_fuerte" for k in (18, 25, 33)} | {36: "cta", 39: "cierre"}
     ors, marcas, dur = _oraciones(40, roles)
     segs = humano.segmentar(ors, dur, marcas, H, "v2")
     combo = {"musica": {}, "estilo_texto": 2, "transiciones": ["fundido", "destello"], "movimiento": "suave"}
     plan = humano.planificar(segs, marcas, dur, {**H, "escena_final_desde": 1.0}, combo, "v2")
-    sem = [p for p in plan if p["type"] == "seminar"]
-    assert sem and all(p["rol"] in humano.PRIORIDAD_FENIX for p in sem)
-    assert sum(p["duracion"] for p in sem) <= H["fenix_max"] * dur + 1e-6
-    tipos = [p["type"] for p in plan]
-    assert "seminar,seminar,seminar" not in ",".join(tipos)
-    assert tipos != (["seminar", "stock"] * len(tipos))[:len(tipos)]            # no es Fénix, stock, Fénix, stock…
+    assert not [p for p in plan if p["type"] == "seminar"]       # (02-11) el dueño: nunca más el seminario
     movs = [p["movimiento"] for p in plan]
     assert all(a != b for a, b in zip(movs, movs[1:]))                          # nunca el mismo dos veces seguidas
     suaves = [p for p in plan if p["transicion"] != "corte"]
@@ -90,12 +85,12 @@ def test_prueba_de_tres_minutos_solo_toma_el_comienzo():
     assert guion.startswith(corto) and 30 * 13.5 * 0.7 < len(corto) <= 30 * 13.5 + 60
 
 
-def test_apagada_el_preset_sigue_igual():
+def test_siempre_prendida_y_sin_seminario_aunque_el_preset_diga_otra_cosa():
     from estudio.tracy.preset import completar
 
-    p = completar(None)
-    assert p["humano"]["activo"] is False and not humano.activo(p)
-    assert humano.activo(completar({"humano": {"activo": True}}))
+    assert humano.activo(completar(None))
+    viejo = completar({"humano": {"activo": False, "fenix_max": 0.35}})   # lo que el dueño tenía guardado
+    assert humano.activo(viejo) and humano.ajustes(viejo)["fenix_max"] == 0.0
 
 
 # ------------------------------------------------------------------ de punta a punta

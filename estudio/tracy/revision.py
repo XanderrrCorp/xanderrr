@@ -87,7 +87,7 @@ def cambiar(c: CarpetaProyecto, clip_id: int, accion: str, texto: str | None = N
     elif accion in ("alargar", "acortar"):
         _mover_corte(c, clips, k, +1 if accion == "alargar" else -1)
     elif accion == "seminario":
-        _a_seminario(c, clips, k, preset or {}, ffmpeg)
+        raise ValueError("El seminario ya no se usa en los videos (pedido tuyo): elige «Otro clip» en su lugar")
     elif accion == "otro_stock":
         _otro_stock(c, clips, k, sesion)
     else:

@@ -157,7 +157,7 @@ interface ConfigCompleta extends Config {
   trabajo_poses?: { mensaje: string; activo: boolean; error: string | null } | null;
 }
 
-function ConfigCanal({ canal, alCambiar }: { canal: string; alCambiar: () => void }) {
+export function ConfigCanal({ canal, alCambiar }: { canal: string; alCambiar: () => void }) {
   const [c, setC] = useState<ConfigCompleta | null>(null);
   const [aviso, setAviso] = useState('');
   const [v, setV] = useState(() => Date.now());
@@ -169,7 +169,7 @@ function ConfigCanal({ canal, alCambiar }: { canal: string; alCambiar: () => voi
     const id = window.setTimeout(() => { leer(); setV(Date.now()); }, 3000);
     return () => window.clearTimeout(id);
   }, [c, haciendoPoses, leer]);
-  if (!c) return null;
+  if (!c) return aviso ? <div className="rev-error">{aviso}</div> : null;
   const pedirPoses = async () => {
     const n = c.poses_faltan || 0;
     if (!window.confirm(`Google hace ${n} poses nuevas a partir de tu foto base (≈ ${(n * (c.precio_pose_usd || 0)).toFixed(2)} USD en total). ¿Seguir?`)) return;

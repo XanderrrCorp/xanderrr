@@ -45,8 +45,8 @@ ESTILOS_TEXTO = (1, 2, 3, 4)
 POOLS_TRANSICION = (("fundido",), ("destello",), ("fundido", "destello"))
 
 POR_DEFECTO = {
-    "activo": False,               # el interruptor «Edición humana»
-    "fenix_max": 0.35,             # máximo del tiempo con el seminario
+    "activo": True,                # (02-11, el dueño) SIEMPRE prendida, también en la cola de la semana
+    "fenix_max": 0.0,              # (02-11, el dueño) nunca más tramos del seminario: solo stock y la escena final
     "clip_min_s": 3.0,
     "clip_max_s": 30.0,
     "gancho_s": 60.0,              # el gancho: cortes más rápidos
@@ -65,8 +65,10 @@ POR_DEFECTO = {
 
 def ajustes(preset: dict) -> dict:
     h = {**POR_DEFECTO, **(preset.get("humano") or {})}
-    h["activo"] = bool(h["activo"])
-    h["fenix_max"] = max(0.0, min(0.6, float(h["fenix_max"])))
+    # (02-11, el dueño: «agrega la edición humana siempre» y «quita los fragmentos del seminario, no lo pongas más
+    # nunca»): aunque el preset guardado diga otra cosa, la edición humana va prendida y sin seminario
+    h["activo"] = True
+    h["fenix_max"] = 0.0
     h["clip_min_s"] = max(2.0, min(10.0, float(h["clip_min_s"])))
     h["clip_max_s"] = max(h["clip_min_s"] + 2, min(30.0, float(h["clip_max_s"])))
     lo, hi = (float(x) for x in h["pausa_s"])
@@ -421,6 +423,8 @@ def planificar(segmentos: list[dict], marcas: dict[int, dict], duracion: float, 
                      "seccion": seccion(s, h, desde_cierre), "oraciones": s["oraciones"],
                      "grande": marcas[con_texto]["grande"] if con_texto is not None else None,
                      "grande_en": en})
+    if corte_final is not None and len(plan) > 1 and not any(p["type"] == "final" for p in plan):
+        plan[-1]["type"] = "final"                        # el video siempre cierra con la imagen de Tracy (el dueño)
     # seminario: solo en momentos de autoridad, por prioridad, sin pasar el máximo de tiempo ni ir 3 seguidos
     clips = [p for p in plan if p["type"] != "final"]
     total = sum(p["duracion"] for p in clips) or 1.0

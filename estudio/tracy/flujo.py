@@ -61,11 +61,15 @@ def paso_audio(c: CarpetaProyecto, proveedor: str | None = None, permiso: bool =
     al = alinear(c, transcriptor or transcriptor_para(proveedor), avisar=avisar)
     from . import humano
 
+    duracion = r["duracion"]
     if humano.activo(preset):
         segs = segmentar_humano(c, preset, avisar=avisar, ejecutar=ejecutar_claude, retocar=True)
+        from ..config import leer_json
+
+        duracion = float(leer_json(c.ruta / "segmentos.json")["duracion"])   # con las pausas naturales ya puestas
     else:
         segs = segmentar_proyecto(c, preset)
-    return {"duracion": r["duracion"], "bloques": len(r["bloques"]), "costo_usd": r["costo_usd"],
+    return {"duracion": duracion, "bloques": len(r["bloques"]), "costo_usd": r["costo_usd"],
             "oraciones": len(al["oraciones"]), "confianza": al["confianza"], "segmentos": segs}
 
 
@@ -102,7 +106,8 @@ def segmentar_humano(c: CarpetaProyecto, preset: dict, avisar=print, ejecutar=No
 
 # ------------------------------------------------------------------ fase 2: visuales y ensamblaje
 
-def paso_visual(c: CarpetaProyecto, avisar=print, ejecutar=None, sesion=None, progreso=None) -> dict:
+def paso_visual(c: CarpetaProyecto, avisar=print, ejecutar=None, sesion=None, progreso=None,
+                revisar: bool = True) -> dict:
     """Plan visual (Claude) → clips (Pexels + seminario, sin repetir) → video con subtítulos."""
     import requests
 
@@ -124,7 +129,7 @@ def paso_visual(c: CarpetaProyecto, avisar=print, ejecutar=None, sesion=None, pr
     duracion = float(leer_json(c.ruta / "segmentos.json")["duracion"])
     if humano.activo(preset) and leer_json(c.ruta / "segmentos.json").get("humano"):
         r = preparar_humano(c, preset, duracion, avisar=avisar, sesion=sesion or requests)
-        if humano.ajustes(preset)["revisar_antes"] and not (c.ruta / "revision_aprobada.json").exists():
+        if revisar and humano.ajustes(preset)["revisar_antes"] and not (c.ruta / "revision_aprobada.json").exists():
             avisar("Listo para revisar: mira el gancho, la venta y el cierre, y luego dale «Exportar».")
             return {"final": None, "revision": True, **r}
         return {**exportar(c, preset, avisar=avisar, progreso=progreso), **r}
@@ -229,9 +234,10 @@ def exportar_y_entregar(c: CarpetaProyecto, t) -> Path:
 
 
 def producir(c: CarpetaProyecto, t, proveedor: str | None = None, permiso: bool = False, ejecutar=None,
-             sesion=None, voz=None, transcriptor=None) -> Path:
+             sesion=None, voz=None, transcriptor=None, revisar: bool = True) -> Path:
     """Todo el video Tracy de una vez (lo que corre el botón de la página). Reanudable: la voz,
-    Whisper, el plan y las descargas ya hechas no se repiten."""
+    Whisper, el plan y las descargas ya hechas no se repiten. revisar=False (la cola de la semana): sin parar a
+    revisar, se exporta de una."""
     from ..plataforma import cobro
     from .ensamblar import entregar
 
@@ -252,7 +258,7 @@ def producir(c: CarpetaProyecto, t, proveedor: str | None = None, permiso: bool 
     def avance(x: float) -> None:
         t.progreso = 0.5 + 0.45 * x
 
-    r = paso_visual(c, avisar=t.avisar, ejecutar=ejecutar, sesion=sesion, progreso=avance)
+    r = paso_visual(c, avisar=t.avisar, ejecutar=ejecutar, sesion=sesion, progreso=avance, revisar=revisar)
     if r.get("revision"):
         t.paso, t.progreso = "revision", 1.0
         t.avisar("Listo para revisar antes de exportar")

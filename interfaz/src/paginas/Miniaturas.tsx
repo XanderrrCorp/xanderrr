@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { api, archivo, type VideoLista } from '../api';
+import { api, archivo, esDueno, type VideoLista } from '../api';
+import { ConfigCanal } from './MiniaturaTexto';
 import { Costo } from '../componentes/Costo';
 import { Esqueleto, Vacio } from '../componentes/Estados';
 import { Icono } from '../componentes/Icono';
@@ -9,11 +10,12 @@ import { Icono } from '../componentes/Icono';
 export function Miniaturas() {
   const [videos, setVideos] = useState<VideoLista[] | null>(null);
   useEffect(() => { api<VideoLista[]>('/api/v2/videos').then(setVideos).catch(() => setVideos([])); }, []);
-  const conGuion = (videos ?? []).filter((v) => v.pasos.guionista === 'completo');
+  const conGuion = (videos ?? []).filter((v) => v.pasos.guionista === 'completo' || !!v.video);
   return (
     <div className="pagina">
       <div className="seccion-cab" style={{ marginTop: 0 }}><h1>Miniaturas</h1><Costo accion="miniatura" /></div>
       <p className="tenue">Elige el video. La miniatura se arma con su guion: textos, personajes y fondo.</p>
+      {esDueno() && <ConfigCanal canal="codigo-del-exito-mujeres" alCambiar={() => undefined} />}
       {videos === null ? <Esqueleto tarjetas={4} /> : conGuion.length === 0 ? (
         <Vacio icono="miniatura" titulo="Primero un video con guion" texto="Las miniaturas salen del guion del video."
           accion={<Link to="/producir" className="boton-primario"><Icono nombre="chispa" tam={16} />Crear un video</Link>} />

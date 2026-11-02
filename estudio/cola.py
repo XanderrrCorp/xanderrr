@@ -178,7 +178,7 @@ def _funcion(x: dict):
     if x["tipo"] == "tracy":
         from .tracy.flujo import producir
 
-        return "tracy", lambda t: producir(c, t, permiso=x["permiso"])
+        return "tracy", lambda t: producir(c, t, permiso=x["permiso"], revisar=False)   # la cola no para a revisar
 
     def todo(t):
         estados = {k: v.estado for k, v in c.cargar().pasos.items()}

@@ -439,7 +439,15 @@ Estado al 04-10-2026. El repositorio es PÚBLICO: nunca escribir claves, tokens 
   miniatura de un video: «Plantilla de este video» (servicio_texto.usar_plantilla, estado canal_miniatura): así un
   video de Tracy usa la de Mujeres. El guion lo escribe el dueño. Del plan de reglas de ese canal falta (sin
   aprobar): títulos, descripción con la línea obligatoria, revisión del guion, control contra los últimos 5 videos,
-  máx. 5 palabras y «MUJER» 1 de cada 3 en el planificador.
+  máx. 5 palabras y «MUJER» 1 de cada 3 en el planificador. La plantilla también se ve en /miniaturas (solo dueño),
+  sin abrir un video; /miniaturas ahora lista también los videos terminados (Tracy no marca «guionista»).
+- (02-11) TRACY: EDICIÓN HUMANA SIEMPRE Y SIN SEMINARIO (el dueño: «agrega la edición humana siempre así sea en la
+  cola» y «quita los fragmentos del seminario, no lo pongas más nunca: solo stock y después la imagen de Tracy con
+  fondo de naturaleza y la estela de audio»): humano.ajustes fuerza activo=True y fenix_max=0 aunque el preset
+  guardado diga otra cosa; planificar siempre cierra con la escena final (si ningún clip llega al 90 %, el último);
+  la cola llama producir(revisar=False) (exporta sin parar a revisar; la página sí para si «revisar_antes»);
+  revision «seminario» ya no se puede; paso_audio devuelve la duración con las pausas. Interfaz Tracy: sin
+  interruptor ni barra del seminario. Proyectos a medias con segmentos viejos (sin «humano») siguen como antes.
 ## Pendiente
 - Preguntas sin responder del dueño: ¿en qué canal notó la voz lenta? (Peligro Tropical está en 1.3 en
   config/proveedores.json; Tracy en 1.0 por pedido suyo). ¿En qué momento sale «la tira de animales» sin sentido?

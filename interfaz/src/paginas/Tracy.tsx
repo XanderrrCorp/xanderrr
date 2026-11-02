@@ -194,20 +194,10 @@ function EdicionHumana({ h, ajustar }: { h: Humano; ajustar: (c: Partial<Humano>
   return (
     <section className="rev-tarjeta">
       <h2>Edición humana</h2>
-      <label className="campo tr-check">
-        <span><input type="checkbox" checked={h.activo} onChange={(e) => ajustar({ activo: e.target.checked })} /> Usar la
-          edición humana en los videos nuevos</span>
-        <span className="tenue pequeno">Cortes de duración variable al final de cada frase, el seminario solo en los momentos
-          de autoridad, movimiento suave, la palabra clave en amarillo, textos grandes en las reglas y el CTA, música por
-          sección y una revisión antes de exportar. Apagada, el video sale como siempre.</span>
-      </label>
+      <p className="tenue pequeno">Siempre prendida, también en la cola de la semana: solo clips de stock (nunca el seminario)
+        y al final tu imagen con el fondo de naturaleza y las ondas de la voz. Cortes de duración variable, movimiento suave,
+        la palabra clave en amarillo, textos grandes en las reglas y el CTA, y música por sección.</p>
       {h.activo && (<>
-        <label className="campo">El seminario ocupa como mucho el {Math.round(h.fenix_max * 100)} % del video
-          <input type="range" min={0.1} max={0.6} step={0.05} defaultValue={h.fenix_max}
-            onMouseUp={(e) => ajustar({ fenix_max: +(e.target as HTMLInputElement).value })}
-            onTouchEnd={(e) => ajustar({ fenix_max: +(e.target as HTMLInputElement).value })}
-            onKeyUp={(e) => ajustar({ fenix_max: +(e.target as HTMLInputElement).value })} />
-        </label>
         <label className="campo">
           {h.escena_final_desde >= 1 ? 'Sin escena final' : `Escena final desde el ${Math.round(h.escena_final_desde * 100)} % del video`}
           <input type="range" min={0.5} max={1} step={0.05} defaultValue={h.escena_final_desde}
@@ -217,7 +207,7 @@ function EdicionHumana({ h, ajustar }: { h: Humano; ajustar: (c: Partial<Humano>
         </label>
         <label className="campo tr-check">
           <span><input type="checkbox" checked={h.revisar_antes} onChange={(e) => ajustar({ revisar_antes: e.target.checked })} />
-            {' '}Detenerse para revisar antes de exportar</span>
+            {' '}Detenerse para revisar antes de exportar (la cola de la semana nunca se detiene)</span>
         </label>
         <label className="campo tr-check">
           <span><input type="checkbox" checked={h.color_calido} onChange={(e) => ajustar({ color_calido: e.target.checked })} />
@@ -275,7 +265,6 @@ function RevisionTracy({ slug, r, alCambiar, exportar }: {
               {x.tipo !== 'final' && (
                 <div className="fila-botones">
                   <button className="boton-borde pequeno" disabled={ocupado !== null} onClick={() => accion(x.id, 'otro_stock')}>Otro clip de stock</button>
-                  {x.tipo !== 'seminario' && <button className="boton-borde pequeno" disabled={ocupado !== null} onClick={() => accion(x.id, 'seminario')}>Usar el seminario</button>}
                   <button className="boton-borde pequeno" disabled={ocupado !== null} onClick={() => accion(x.id, 'acortar')}>− Más corta</button>
                   <button className="boton-borde pequeno" disabled={ocupado !== null} onClick={() => accion(x.id, 'alargar')}>+ Más larga</button>
                   {ocupado === x.id && <span className="tenue pequeno">Cambiando…</span>}

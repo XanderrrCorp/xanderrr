@@ -188,7 +188,7 @@ def test_video_tracy_de_punta_a_punta(tmp_path, monkeypatch):
     c = crear_proyecto(guion, titulo="Prueba Tracy fase dos")
     t = Trabajo("tracy")
     pex = _Pexels(clip.read_bytes())
-    destino = producir(c, t, proveedor="simulado", ejecutar=_claude_simulado, sesion=pex)
+    destino = producir(c, t, proveedor="simulado", ejecutar=_claude_simulado, sesion=pex, revisar=False)
 
     final = c.ruta / "render" / "final.mp4"
     assert final.exists() and destino.exists() and final.with_suffix(".srt").exists()
@@ -196,11 +196,11 @@ def test_video_tracy_de_punta_a_punta(tmp_path, monkeypatch):
     assert duracion_video(final, ff) == pytest.approx(voz, abs=0.15)          # imagen y voz del mismo largo
     info = subprocess.run([ff, "-hide_banner", "-i", str(final)], capture_output=True, text=True).stderr
     assert "1920x1080" in info and info.count("Audio:") == 1                  # 1080p y una sola pista de audio
-    assert "música de fondo" in " ".join(t.registro)
+    assert "música" in " ".join(t.registro) and "sin música" not in " ".join(t.registro)
 
     plan = json.loads((c.ruta / "plan_visual.json").read_text(encoding="utf-8"))
     tipos = [p["type"] for p in plan["plan"]]
-    assert plan["origen"] == "claude" and _max_racha(tipos) <= 2
+    assert plan["origen"] == "humano" and "seminar" not in tipos     # (02-11) siempre edición humana, sin seminario
     clips = json.loads((c.ruta / "clips.json").read_text(encoding="utf-8"))["clips"]
     stock = [x["pexels_id"] for x in clips if x["tipo"] == "stock"]
     assert len(stock) == len(set(stock)) and "999999" not in stock          # sin repetir y nunca el de 720p
@@ -212,13 +212,11 @@ def test_video_tracy_de_punta_a_punta(tmp_path, monkeypatch):
     assert (c.ruta / "render" / "tracy" / "presentador.png").exists()
     lic = json.loads((c.ruta / "stock_licencias.json").read_text(encoding="utf-8"))
     assert "Pexels" in lic["licencia"] and len(lic["clips"]) == len(stock) + 1
-    from estudio.config import ConfigCostos
-    assert any(e["modulo"] == "tracy_planificador" for e in c.libro(ConfigCostos.cargar()).entradas())
 
     # rehacer: el plan y las descargas no se vuelven a pedir
     llamadas = []
     antes = len(pex.busquedas)
-    producir(c, Trabajo("tracy"), proveedor="simulado", ejecutar=lambda *a, **k: llamadas.append(1), sesion=pex)
+    producir(c, Trabajo("tracy"), proveedor="simulado", ejecutar=lambda *a, **k: llamadas.append(1), sesion=pex, revisar=False)
     assert llamadas == [] and len(pex.busquedas) >= antes
 
 
