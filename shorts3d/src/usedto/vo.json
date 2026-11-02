@@ -1,1 +1,1053 @@
-{}
+{
+ "f1": {
+  "text": "Elevators used to hang from a single rope.",
+  "seconds": 2.345,
+  "voiceStart": 0.17,
+  "voiceEnd": 2.2,
+  "words": [
+   {
+    "text": "Elevators",
+    "start": 0.17,
+    "end": 0.633
+   },
+   {
+    "text": "used",
+    "start": 0.633,
+    "end": 0.876
+   },
+   {
+    "text": "to",
+    "start": 0.876,
+    "end": 1.031
+   },
+   {
+    "text": "hang",
+    "start": 1.031,
+    "end": 1.273
+   },
+   {
+    "text": "from",
+    "start": 1.273,
+    "end": 1.516
+   },
+   {
+    "text": "a",
+    "start": 1.516,
+    "end": 1.626
+   },
+   {
+    "text": "single",
+    "start": 1.626,
+    "end": 1.957
+   },
+   {
+    "text": "rope.",
+    "start": 1.957,
+    "end": 2.2
+   }
+  ]
+ },
+ "f2": {
+  "text": "If it snapped, everyone inside fell.",
+  "seconds": 2.473,
+  "voiceStart": 0.17,
+  "voiceEnd": 2.29,
+  "words": [
+   {
+    "text": "If",
+    "start": 0.17,
+    "end": 0.33
+   },
+   {
+    "text": "it",
+    "start": 0.33,
+    "end": 0.491
+   },
+   {
+    "text": "snapped,",
+    "start": 0.491,
+    "end": 0.88
+   },
+   {
+    "text": "everyone",
+    "start": 1.21,
+    "end": 1.666
+   },
+   {
+    "text": "inside",
+    "start": 1.666,
+    "end": 2.026
+   },
+   {
+    "text": "fell.",
+    "start": 2.026,
+    "end": 2.29
+   }
+  ]
+ },
+ "f3": {
+  "text": "So, builders switched to stronger iron wire rope.",
+  "seconds": 3.111,
+  "voiceStart": 0.23,
+  "voiceEnd": 2.99,
+  "words": [
+   {
+    "text": "So,",
+    "start": 0.23,
+    "end": 0.51
+   },
+   {
+    "text": "builders",
+    "start": 0.9,
+    "end": 1.309
+   },
+   {
+    "text": "switched",
+    "start": 1.309,
+    "end": 1.719
+   },
+   {
+    "text": "to",
+    "start": 1.719,
+    "end": 1.87
+   },
+   {
+    "text": "stronger",
+    "start": 1.87,
+    "end": 2.279
+   },
+   {
+    "text": "iron",
+    "start": 2.279,
+    "end": 2.516
+   },
+   {
+    "text": "wire",
+    "start": 2.516,
+    "end": 2.753
+   },
+   {
+    "text": "rope.",
+    "start": 2.753,
+    "end": 2.99
+   }
+  ]
+ },
+ "f4": {
+  "text": "But, wire still wears out, and when it broke there was nothing to stop the fall.",
+  "seconds": 5.41,
+  "voiceStart": 0.17,
+  "voiceEnd": 5.21,
+  "words": [
+   {
+    "text": "But,",
+    "start": 0.17,
+    "end": 0.434
+   },
+   {
+    "text": "wire",
+    "start": 0.434,
+    "end": 0.756
+   },
+   {
+    "text": "still",
+    "start": 0.756,
+    "end": 1.137
+   },
+   {
+    "text": "wears",
+    "start": 1.137,
+    "end": 1.518
+   },
+   {
+    "text": "out,",
+    "start": 1.518,
+    "end": 1.782
+   },
+   {
+    "text": "and",
+    "start": 1.782,
+    "end": 2.045
+   },
+   {
+    "text": "when",
+    "start": 2.045,
+    "end": 2.368
+   },
+   {
+    "text": "it",
+    "start": 2.368,
+    "end": 2.573
+   },
+   {
+    "text": "broke",
+    "start": 2.573,
+    "end": 2.954
+   },
+   {
+    "text": "there",
+    "start": 2.954,
+    "end": 3.335
+   },
+   {
+    "text": "was",
+    "start": 3.335,
+    "end": 3.598
+   },
+   {
+    "text": "nothing",
+    "start": 3.598,
+    "end": 4.097
+   },
+   {
+    "text": "to",
+    "start": 4.097,
+    "end": 4.302
+   },
+   {
+    "text": "stop",
+    "start": 4.302,
+    "end": 4.624
+   },
+   {
+    "text": "the",
+    "start": 4.624,
+    "end": 4.888
+   },
+   {
+    "text": "fall.",
+    "start": 4.888,
+    "end": 5.21
+   }
+  ]
+ },
+ "f5": {
+  "text": "So, in 1852, Elisha Otis added a safety brake.",
+  "seconds": 4.598,
+  "voiceStart": 0.16,
+  "voiceEnd": 4.3,
+  "words": [
+   {
+    "text": "So,",
+    "start": 0.16,
+    "end": 0.46
+   },
+   {
+    "text": "in",
+    "start": 1.03,
+    "end": 1.466
+   },
+   {
+    "text": "1852,",
+    "start": 1.466,
+    "end": 2.15
+   },
+   {
+    "text": "Elisha",
+    "start": 2.58,
+    "end": 2.938
+   },
+   {
+    "text": "Otis",
+    "start": 2.938,
+    "end": 3.201
+   },
+   {
+    "text": "added",
+    "start": 3.201,
+    "end": 3.512
+   },
+   {
+    "text": "a",
+    "start": 3.512,
+    "end": 3.631
+   },
+   {
+    "text": "safety",
+    "start": 3.631,
+    "end": 3.989
+   },
+   {
+    "text": "brake.",
+    "start": 3.989,
+    "end": 4.3
+   }
+  ]
+ },
+ "f6": {
+  "text": "A steel spring sat on top of the car, held flat by the pull of the rope.",
+  "seconds": 4.087,
+  "voiceStart": 0.17,
+  "voiceEnd": 3.89,
+  "words": [
+   {
+    "text": "A",
+    "start": 0.17,
+    "end": 0.266
+   },
+   {
+    "text": "steel",
+    "start": 0.266,
+    "end": 0.517
+   },
+   {
+    "text": "spring",
+    "start": 0.517,
+    "end": 0.806
+   },
+   {
+    "text": "sat",
+    "start": 0.806,
+    "end": 0.98
+   },
+   {
+    "text": "on",
+    "start": 0.98,
+    "end": 1.115
+   },
+   {
+    "text": "top",
+    "start": 1.115,
+    "end": 1.288
+   },
+   {
+    "text": "of",
+    "start": 1.288,
+    "end": 1.423
+   },
+   {
+    "text": "the",
+    "start": 1.423,
+    "end": 1.597
+   },
+   {
+    "text": "car,",
+    "start": 1.597,
+    "end": 1.77
+   },
+   {
+    "text": "held",
+    "start": 2.38,
+    "end": 2.599
+   },
+   {
+    "text": "flat",
+    "start": 2.599,
+    "end": 2.817
+   },
+   {
+    "text": "by",
+    "start": 2.817,
+    "end": 2.956
+   },
+   {
+    "text": "the",
+    "start": 2.956,
+    "end": 3.135
+   },
+   {
+    "text": "pull",
+    "start": 3.135,
+    "end": 3.354
+   },
+   {
+    "text": "of",
+    "start": 3.354,
+    "end": 3.493
+   },
+   {
+    "text": "the",
+    "start": 3.493,
+    "end": 3.671
+   },
+   {
+    "text": "rope.",
+    "start": 3.671,
+    "end": 3.89
+   }
+  ]
+ },
+ "f7": {
+  "text": "The rails on each side were covered in teeth.",
+  "seconds": 2.345,
+  "voiceStart": 0.15,
+  "voiceEnd": 2.03,
+  "words": [
+   {
+    "text": "The",
+    "start": 0.15,
+    "end": 0.321
+   },
+   {
+    "text": "rails",
+    "start": 0.321,
+    "end": 0.568
+   },
+   {
+    "text": "on",
+    "start": 0.568,
+    "end": 0.701
+   },
+   {
+    "text": "each",
+    "start": 0.701,
+    "end": 0.91
+   },
+   {
+    "text": "side",
+    "start": 0.91,
+    "end": 1.118
+   },
+   {
+    "text": "were",
+    "start": 1.118,
+    "end": 1.327
+   },
+   {
+    "text": "covered",
+    "start": 1.327,
+    "end": 1.65
+   },
+   {
+    "text": "in",
+    "start": 1.65,
+    "end": 1.783
+   },
+   {
+    "text": "teeth.",
+    "start": 1.783,
+    "end": 2.03
+   }
+  ]
+ },
+ "f8": {
+  "text": "If the rope snapped, the spring snapped open and locked into the teeth.",
+  "seconds": 3.75,
+  "voiceStart": 0.18,
+  "voiceEnd": 3.35,
+  "words": [
+   {
+    "text": "If",
+    "start": 0.18,
+    "end": 0.296
+   },
+   {
+    "text": "the",
+    "start": 0.296,
+    "end": 0.445
+   },
+   {
+    "text": "rope",
+    "start": 0.445,
+    "end": 0.628
+   },
+   {
+    "text": "snapped,",
+    "start": 0.628,
+    "end": 0.91
+   },
+   {
+    "text": "the",
+    "start": 1.36,
+    "end": 1.524
+   },
+   {
+    "text": "spring",
+    "start": 1.524,
+    "end": 1.798
+   },
+   {
+    "text": "snapped",
+    "start": 1.798,
+    "end": 2.109
+   },
+   {
+    "text": "open",
+    "start": 2.109,
+    "end": 2.309
+   },
+   {
+    "text": "and",
+    "start": 2.309,
+    "end": 2.474
+   },
+   {
+    "text": "locked",
+    "start": 2.474,
+    "end": 2.748
+   },
+   {
+    "text": "into",
+    "start": 2.748,
+    "end": 2.948
+   },
+   {
+    "text": "the",
+    "start": 2.948,
+    "end": 3.113
+   },
+   {
+    "text": "teeth.",
+    "start": 3.113,
+    "end": 3.35
+   }
+  ]
+ },
+ "f9": {
+  "text": "In 1854, Otis rode his own elevator in New York and had the rope cut in front of a crowd.",
+  "seconds": 5.283,
+  "voiceStart": 0.17,
+  "voiceEnd": 4.91,
+  "words": [
+   {
+    "text": "In",
+    "start": 0.17,
+    "end": 0.339
+   },
+   {
+    "text": "1854,",
+    "start": 0.339,
+    "end": 0.605
+   },
+   {
+    "text": "Otis",
+    "start": 0.605,
+    "end": 0.871
+   },
+   {
+    "text": "rode",
+    "start": 0.871,
+    "end": 1.137
+   },
+   {
+    "text": "his",
+    "start": 1.137,
+    "end": 1.355
+   },
+   {
+    "text": "own",
+    "start": 1.355,
+    "end": 1.573
+   },
+   {
+    "text": "elevator",
+    "start": 1.573,
+    "end": 2.032
+   },
+   {
+    "text": "in",
+    "start": 2.032,
+    "end": 2.201
+   },
+   {
+    "text": "New",
+    "start": 2.201,
+    "end": 2.419
+   },
+   {
+    "text": "York",
+    "start": 2.419,
+    "end": 2.685
+   },
+   {
+    "text": "and",
+    "start": 2.685,
+    "end": 2.903
+   },
+   {
+    "text": "had",
+    "start": 2.903,
+    "end": 3.12
+   },
+   {
+    "text": "the",
+    "start": 3.12,
+    "end": 3.338
+   },
+   {
+    "text": "rope",
+    "start": 3.338,
+    "end": 3.604
+   },
+   {
+    "text": "cut",
+    "start": 3.604,
+    "end": 3.822
+   },
+   {
+    "text": "in",
+    "start": 3.822,
+    "end": 3.991
+   },
+   {
+    "text": "front",
+    "start": 3.991,
+    "end": 4.305
+   },
+   {
+    "text": "of",
+    "start": 4.305,
+    "end": 4.475
+   },
+   {
+    "text": "a",
+    "start": 4.475,
+    "end": 4.596
+   },
+   {
+    "text": "crowd.",
+    "start": 4.596,
+    "end": 4.91
+   }
+  ]
+ },
+ "f10": {
+  "text": "He didn't fall.",
+  "seconds": 1.103,
+  "voiceStart": 0.2,
+  "voiceEnd": 0.87,
+  "words": [
+   {
+    "text": "He",
+    "start": 0.2,
+    "end": 0.351
+   },
+   {
+    "text": "didn't",
+    "start": 0.351,
+    "end": 0.632
+   },
+   {
+    "text": "fall.",
+    "start": 0.632,
+    "end": 0.87
+   }
+  ]
+ },
+ "f11": {
+  "text": "But, his brake only worked if the rope broke completely.",
+  "seconds": 3.669,
+  "voiceStart": 0.14,
+  "voiceEnd": 3.39,
+  "words": [
+   {
+    "text": "But,",
+    "start": 0.14,
+    "end": 0.42
+   },
+   {
+    "text": "his",
+    "start": 1.14,
+    "end": 1.322
+   },
+   {
+    "text": "brake",
+    "start": 1.322,
+    "end": 1.586
+   },
+   {
+    "text": "only",
+    "start": 1.586,
+    "end": 1.809
+   },
+   {
+    "text": "worked",
+    "start": 1.809,
+    "end": 2.113
+   },
+   {
+    "text": "if",
+    "start": 2.113,
+    "end": 2.255
+   },
+   {
+    "text": "the",
+    "start": 2.255,
+    "end": 2.437
+   },
+   {
+    "text": "rope",
+    "start": 2.437,
+    "end": 2.66
+   },
+   {
+    "text": "broke",
+    "start": 2.66,
+    "end": 2.924
+   },
+   {
+    "text": "completely.",
+    "start": 2.924,
+    "end": 3.39
+   }
+  ]
+ },
+ "f12": {
+  "text": "If the motor failed and the car simply ran too fast, nothing caught it.",
+  "seconds": 3.831,
+  "voiceStart": 0.17,
+  "voiceEnd": 3.54,
+  "words": [
+   {
+    "text": "If",
+    "start": 0.17,
+    "end": 0.301
+   },
+   {
+    "text": "the",
+    "start": 0.301,
+    "end": 0.469
+   },
+   {
+    "text": "motor",
+    "start": 0.469,
+    "end": 0.712
+   },
+   {
+    "text": "failed",
+    "start": 0.712,
+    "end": 0.993
+   },
+   {
+    "text": "and",
+    "start": 0.993,
+    "end": 1.161
+   },
+   {
+    "text": "the",
+    "start": 1.161,
+    "end": 1.329
+   },
+   {
+    "text": "car",
+    "start": 1.329,
+    "end": 1.497
+   },
+   {
+    "text": "simply",
+    "start": 1.497,
+    "end": 1.778
+   },
+   {
+    "text": "ran",
+    "start": 1.778,
+    "end": 1.946
+   },
+   {
+    "text": "too",
+    "start": 1.946,
+    "end": 2.114
+   },
+   {
+    "text": "fast,",
+    "start": 2.114,
+    "end": 2.32
+   },
+   {
+    "text": "nothing",
+    "start": 3.01,
+    "end": 3.241
+   },
+   {
+    "text": "caught",
+    "start": 3.241,
+    "end": 3.445
+   },
+   {
+    "text": "it.",
+    "start": 3.445,
+    "end": 3.54
+   }
+  ]
+ },
+ "f13": {
+  "text": "So, engineers added a spinning governor.",
+  "seconds": 2.856,
+  "voiceStart": 0.21,
+  "voiceEnd": 2.58,
+  "words": [
+   {
+    "text": "So,",
+    "start": 0.21,
+    "end": 0.51
+   },
+   {
+    "text": "engineers",
+    "start": 1.06,
+    "end": 1.475
+   },
+   {
+    "text": "added",
+    "start": 1.475,
+    "end": 1.731
+   },
+   {
+    "text": "a",
+    "start": 1.731,
+    "end": 1.83
+   },
+   {
+    "text": "spinning",
+    "start": 1.83,
+    "end": 2.205
+   },
+   {
+    "text": "governor.",
+    "start": 2.205,
+    "end": 2.58
+   }
+  ]
+ },
+ "f14": {
+  "text": "When the car goes too fast, the weights fly outward and trigger the brake.",
+  "seconds": 4.214,
+  "voiceStart": 0.17,
+  "voiceEnd": 3.83,
+  "words": [
+   {
+    "text": "When",
+    "start": 0.17,
+    "end": 0.422
+   },
+   {
+    "text": "the",
+    "start": 0.422,
+    "end": 0.628
+   },
+   {
+    "text": "car",
+    "start": 0.628,
+    "end": 0.833
+   },
+   {
+    "text": "goes",
+    "start": 0.833,
+    "end": 1.085
+   },
+   {
+    "text": "too",
+    "start": 1.085,
+    "end": 1.291
+   },
+   {
+    "text": "fast,",
+    "start": 1.291,
+    "end": 1.542
+   },
+   {
+    "text": "the",
+    "start": 1.542,
+    "end": 1.748
+   },
+   {
+    "text": "weights",
+    "start": 1.748,
+    "end": 2.137
+   },
+   {
+    "text": "fly",
+    "start": 2.137,
+    "end": 2.343
+   },
+   {
+    "text": "outward",
+    "start": 2.343,
+    "end": 2.732
+   },
+   {
+    "text": "and",
+    "start": 2.732,
+    "end": 2.938
+   },
+   {
+    "text": "trigger",
+    "start": 2.938,
+    "end": 3.327
+   },
+   {
+    "text": "the",
+    "start": 3.327,
+    "end": 3.533
+   },
+   {
+    "text": "brake.",
+    "start": 3.533,
+    "end": 3.83
+   }
+  ]
+ },
+ "f15": {
+  "text": "Finally, elevators stopped trusting any single part.",
+  "seconds": 3.796,
+  "voiceStart": 0.18,
+  "voiceEnd": 3.49,
+  "words": [
+   {
+    "text": "Finally,",
+    "start": 0.18,
+    "end": 0.64
+   },
+   {
+    "text": "elevators",
+    "start": 1.27,
+    "end": 1.777
+   },
+   {
+    "text": "stopped",
+    "start": 1.777,
+    "end": 2.187
+   },
+   {
+    "text": "trusting",
+    "start": 2.187,
+    "end": 2.645
+   },
+   {
+    "text": "any",
+    "start": 2.645,
+    "end": 2.863
+   },
+   {
+    "text": "single",
+    "start": 2.863,
+    "end": 3.225
+   },
+   {
+    "text": "part.",
+    "start": 3.225,
+    "end": 3.49
+   }
+  ]
+ },
+ "f16": {
+  "text": "That is redundancy.",
+  "seconds": 1.312,
+  "voiceStart": 0.16,
+  "voiceEnd": 1.07,
+  "words": [
+   {
+    "text": "That",
+    "start": 0.16,
+    "end": 0.404
+   },
+   {
+    "text": "is",
+    "start": 0.404,
+    "end": 0.56
+   },
+   {
+    "text": "redundancy.",
+    "start": 0.56,
+    "end": 1.07
+   }
+  ]
+ },
+ "f17": {
+  "text": "Today, your elevator hangs from several steel cables, and each one is strong enough to hold the car by itself.",
+  "seconds": 6.397,
+  "voiceStart": 0.14,
+  "voiceEnd": 6.35,
+  "words": [
+   {
+    "text": "Today,",
+    "start": 0.14,
+    "end": 0.482
+   },
+   {
+    "text": "your",
+    "start": 0.482,
+    "end": 0.772
+   },
+   {
+    "text": "elevator",
+    "start": 0.772,
+    "end": 1.271
+   },
+   {
+    "text": "hangs",
+    "start": 1.271,
+    "end": 1.614
+   },
+   {
+    "text": "from",
+    "start": 1.614,
+    "end": 1.903
+   },
+   {
+    "text": "several",
+    "start": 1.903,
+    "end": 2.35
+   },
+   {
+    "text": "steel",
+    "start": 2.35,
+    "end": 2.692
+   },
+   {
+    "text": "cables,",
+    "start": 2.692,
+    "end": 3.087
+   },
+   {
+    "text": "and",
+    "start": 3.087,
+    "end": 3.324
+   },
+   {
+    "text": "each",
+    "start": 3.324,
+    "end": 3.613
+   },
+   {
+    "text": "one",
+    "start": 3.613,
+    "end": 3.85
+   },
+   {
+    "text": "is",
+    "start": 3.85,
+    "end": 4.034
+   },
+   {
+    "text": "strong",
+    "start": 4.034,
+    "end": 4.429
+   },
+   {
+    "text": "enough",
+    "start": 4.429,
+    "end": 4.824
+   },
+   {
+    "text": "to",
+    "start": 4.824,
+    "end": 5.008
+   },
+   {
+    "text": "hold",
+    "start": 5.008,
+    "end": 5.297
+   },
+   {
+    "text": "the",
+    "start": 5.297,
+    "end": 5.534
+   },
+   {
+    "text": "car",
+    "start": 5.534,
+    "end": 5.771
+   },
+   {
+    "text": "by",
+    "start": 5.771,
+    "end": 5.955
+   },
+   {
+    "text": "itself.",
+    "start": 5.955,
+    "end": 6.35
+   }
+  ]
+ }
+}
