@@ -1739,7 +1739,8 @@ def mezclar_audio(raiz: Path, edl: dict, ffmpeg: str | None = None) -> np.ndarra
         mezcla[i:i + len(x)] += x[: total - i]
     usados = []
     voz = mezcla.copy()
-    musica = edl["pistas"].get("musica") or []
+    animado = (edl.get("audio") or {}).get("animado")
+    musica = [] if animado else (edl["pistas"].get("musica") or [])   # la capa animada trae su propia música
     if musica and ffmpeg:
         mezcla += _mezclar_musica(musica, voz, total, ffmpeg, usados)
     for s in edl["pistas"]["sfx"]:
@@ -1766,6 +1767,10 @@ def mezclar_audio(raiz: Path, edl: dict, ffmpeg: str | None = None) -> np.ndarra
         if i < 0:
             x, i = x[-i:], 0
         mezcla[i:i + len(x)] += x[: max(0, total - i)]
+    if animado and animado.get("frases"):
+        from .pt_animado.audio import capa as capa_audio
+
+        mezcla = capa_audio.mezclar_para_render(voz, SR, mezcla - voz, animado)
     mezclar_audio.usados = usados
     return mezcla
 

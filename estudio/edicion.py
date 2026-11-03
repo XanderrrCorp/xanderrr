@@ -1265,6 +1265,11 @@ def construir_edl(carpeta: CarpetaProyecto) -> dict:
                       "voz": [{"inicio": 0, "archivo": "audio/voz.wav"}], "musica": musica, "sfx": pistas_sfx},
            "historial": [{"version": 1, "autor": "director_edicion_reglas", "cambio": "primera EDL",
                           "razon": "Construida desde las intenciones, la voz real y direccion.json"}]}
+    if not vertical:                    # (03-11) capa de audio animada: solo Peligro Tropical y si está prendida
+        from .pt_animado.audio import capa as capa_audio
+
+        if capa_audio.activa(proyecto.canal):
+            edl["audio"]["animado"] = {"frases": capa_audio.frases_de_escenas(escenas), "semilla": proyecto.semilla}
     EDL.model_validate(edl)
     escribir_json(carpeta.ruta / "edl.json", edl)
     return edl
