@@ -1,0 +1,73 @@
+{
+ "titulo": "De la gallina más mansa al animal de granja que más gente manda al hospital",
+ "animales": [
+  "gallina",
+  "ganso",
+  "chivo",
+  "cerdo",
+  "toro",
+  "caballo"
+ ],
+ "frases": [
+  {
+   "seccion": "gancho",
+   "intencion": "gancho",
+   "texto": "En una granja hay un animal que manda más gente al hospital que cualquier serpiente."
+  },
+  {
+   "seccion": "gancho",
+   "intencion": "gancho",
+   "texto": "Y casi todos lo hemos acariciado."
+  },
+  {
+   "seccion": "gancho",
+   "intencion": "llamado_accion",
+   "texto": "Vamos de la gallina más mansa hasta él. Antes de seguir: ¿cuál crees que es? ¿El toro, el cerdo o el caballo? Escríbelo ya."
+  },
+  {
+   "seccion": "nivel_1",
+   "intencion": "explicacion",
+   "texto": "Nivel uno: la gallina. Lo peor que te hace es un picotazo en el dedo cuando le sacas los huevos."
+  },
+  {
+   "seccion": "nivel_2",
+   "intencion": "explicacion",
+   "texto": "Nivel dos: el ganso. Parece de cuento, pero tiene la lengua llena de puntas, y cuando te persigue corre más de lo que crees."
+  },
+  {
+   "seccion": "nivel_3",
+   "intencion": "tension_creciente",
+   "texto": "Nivel tres: el chivo. Agacha la cabeza, toma impulso y te embiste justo cuando no estás mirando."
+  },
+  {
+   "seccion": "nivel_4",
+   "intencion": "amenaza",
+   "texto": "Nivel cuatro: el cerdo. Uno grande pasa de doscientos kilos, y su mordida puede romperte un hueso."
+  },
+  {
+   "seccion": "nivel_5",
+   "intencion": "amenaza",
+   "texto": "Nivel cinco: el toro. Media tonelada que no avisa. En muchos países es el que más muertes causa en el campo."
+  },
+  {
+   "seccion": "nivel_6",
+   "intencion": "revelacion",
+   "texto": "Pero espera. El que más gente manda al hospital no es el toro."
+  },
+  {
+   "seccion": "nivel_6",
+   "intencion": "revelacion",
+   "texto": "Es el caballo. Una patada suya puede romperte las costillas, y la mayoría de accidentes vienen de una caída desde su lomo."
+  },
+  {
+   "seccion": "cierre",
+   "intencion": "giro",
+   "texto": "El animal más peligroso de la granja es el que más confianza nos da."
+  },
+  {
+   "seccion": "cierre",
+   "intencion": "llamado_accion",
+   "texto": "¿Te ha tumbado un caballo alguna vez? Cuéntamelo en los comentarios."
+  }
+ ]
+}

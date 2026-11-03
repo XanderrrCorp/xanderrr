@@ -495,6 +495,11 @@ Estado al 04-10-2026. El repositorio es PÚBLICO: nunca escribir claves, tokens 
   con charco cálido de noche, hamaca, sombrero vueltiao, reloj y ventilador que se mueven, radio, tapete, canasto).
   Finca (pt/finca.ts): platanera, cafetos, gallinas, tendedero, carretilla, canecas, leña, cayenas, tanque; casa con
   postigos, jardineras, materas colgantes y banca. Técnicas, no copias. FALTA: subir selva y río a ese nivel y volver a sacar los 8 clips (en la nube ~1 h c/u).
+  (03-11) El dueño: los videos de Peligro Tropical son GENERALES, no de Colombia (no decir «colombiano» en los guiones).
+  Prueba lista en estudio/pt_animado/prueba: voz.mp3 + frases.json (voz ya pagada de la Fase 1, 43 s, mapaná) y
+  guion_granja.json + dudas_granja.md (idea del dueño «De la gallina más mansa al animal de granja que más gente manda al
+  hospital», 6 animales, sin voz todavía: ~20 COP, falta permiso). scripts/clips.mjs ya sirve en Windows (gl angle, lista en
+  archivo .json). La conexión Remote Control a su PC no ofrece carpetas a la nube aunque la app está al día.
   Fase 4 PREPARADA, sin enganchar: estudio/pt_animado/plan.py (dónde va cada plantilla y sus claves, escenario y luz
   por palabras del guion; tests/test_pt_plan_animado.py). Falta: Node/Remotion en su PC (instalador), imágenes del
   animal con Gemini (fondo liso → recorte), clips a assets/animaciones + EDL, y su visto bueno de las Fases 1-3.

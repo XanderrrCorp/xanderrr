@@ -1,0 +1,103 @@
+{
+ "duracion": 43.41,
+ "frases": [
+  {
+   "seccion": "gancho",
+   "intencion": "gancho",
+   "texto": "En Colombia, el animal que más gente manda al hospital no es un jaguar ni un tiburón.",
+   "ini": 0.0,
+   "fin": 3.794
+  },
+  {
+   "seccion": "gancho",
+   "intencion": "gancho",
+   "texto": "Es una serpiente que cabe en una bota.",
+   "ini": 4.074,
+   "fin": 5.66
+  },
+  {
+   "seccion": "capitulo",
+   "intencion": "explicacion",
+   "texto": "Imagina que vas caminando por una finca al amanecer.",
+   "ini": 6.26,
+   "fin": 8.546
+  },
+  {
+   "seccion": "capitulo",
+   "intencion": "explicacion",
+   "texto": "El café está listo, los pájaros cantan, y tus botas de caucho pisan el barro del potrero.",
+   "ini": 8.826,
+   "fin": 13.555
+  },
+  {
+   "seccion": "capitulo",
+   "intencion": "explicacion",
+   "texto": "Todo está en calma.",
+   "ini": 13.835,
+   "fin": 14.562
+  },
+  {
+   "seccion": "capitulo",
+   "intencion": "tension_creciente",
+   "texto": "Pero entre el pasto y las hojas secas, a un paso de tu pie, hay algo que no se mueve.",
+   "ini": 14.842,
+   "fin": 18.355
+  },
+  {
+   "seccion": "capitulo",
+   "intencion": "amenaza",
+   "texto": "Tiene manchas en forma de equis. Es la mapaná, la talla equis.",
+   "ini": 18.634,
+   "fin": 21.822
+  },
+  {
+   "seccion": "capitulo",
+   "intencion": "amenaza",
+   "texto": "Tu corazón se acelera. Hasta los zancudos dejan de zumbar.",
+   "ini": 22.102,
+   "fin": 24.748
+  },
+  {
+   "seccion": "capitulo",
+   "intencion": "revelacion",
+   "texto": "Y cuando la pisas, muerde.",
+   "ini": 25.028,
+   "fin": 26.4
+  },
+  {
+   "seccion": "capitulo",
+   "intencion": "explicacion",
+   "texto": "Verás, su veneno no va directo al corazón.",
+   "ini": 27.5,
+   "fin": 29.581
+  },
+  {
+   "seccion": "capitulo",
+   "intencion": "explicacion",
+   "texto": "Va a la sangre, y le quita al cuerpo la capacidad de taparse a sí mismo.",
+   "ini": 29.861,
+   "fin": 33.225
+  },
+  {
+   "seccion": "capitulo",
+   "intencion": "explicacion",
+   "texto": "Por eso, en el campo, cada minuto cuenta.",
+   "ini": 33.505,
+   "fin": 35.677
+  },
+  {
+   "seccion": "cierre",
+   "intencion": "giro",
+   "texto": "Y lo más irónico: la mapaná no te estaba buscando. Tú la pisaste primero.",
+   "ini": 36.277,
+   "fin": 39.977
+  },
+  {
+   "seccion": "cierre",
+   "intencion": "llamado_accion",
+   "texto": "¿Tú la habrías visto antes de pisarla? Te leo en los comentarios.",
+   "ini": 40.257,
+   "fin": 43.13
+  }
+ ]
+}
