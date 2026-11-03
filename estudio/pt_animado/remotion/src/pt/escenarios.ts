@@ -5,6 +5,7 @@ import * as THREE from "three";
 import { twoTone } from "./shade";
 import { NOINK } from "./ink";
 import * as P from "./pintura";
+import { construirSala } from "./sala";
 
 export type NombreEscenario = "casa" | "finca" | "selva" | "rio";
 export const ESCENARIOS: NombreEscenario[] = ["casa", "finca", "selva", "rio"];
@@ -289,37 +290,8 @@ export function construir(nombre: NombreEscenario, noche = false): Escena {
     animar = (t) => { aguaT.offset.x = t * 0.035; };
     return { root, animar, actor: vacio, animal: [2.0, -0.8], cam: { pos: [0.3, 2.0, 6.6], look: [0.3, 0.8, -1], fov: 40 }, interior: false };
   }
-  // casa por dentro: cuarto abierto hacia la cámara
-  const W = 7, D = 6, H = 3;
-  const suelo = malla(new THREE.PlaneGeometry(W, D + 4), lam("#ffffff", P.baldosa([3.5, 5])), false);
-  suelo.rotation.x = -Math.PI / 2; suelo.position.z = -D / 2 + 2; root.add(suelo);
-  const paredMat = lam("#ffffff", P.pared([2, 1], "#3a6fa0"));
-  const fondo = malla(new THREE.PlaneGeometry(W, H), paredMat, false); fondo.position.set(0, H / 2, -D + 1); root.add(fondo);
-  for (const s of [-1, 1]) {
-    const lado = malla(new THREE.PlaneGeometry(D + 3, H), paredMat, false);
-    lado.position.set(s * W / 2, H / 2, -D / 2 + 1.5); lado.rotation.y = -s * Math.PI / 2; root.add(lado);
-  }
-  const madera = lam("#ffffff", P.madera([1, 1], "#6a4428"));
-  for (let i = 0; i < 5; i++) { const v = malla(new THREE.BoxGeometry(W, 0.16, 0.2), madera, false); v.position.set(0, H - 0.2, -D + 1.6 + i * 1.6); root.add(v); }
-  const techo = malla(new THREE.PlaneGeometry(W, D + 4), lam("#ffffff", P.madera([6, 2], "#5a3a22")), false);
-  techo.rotation.x = Math.PI / 2; techo.position.set(0, H, -D / 2 + 2); root.add(techo);
-  const puerta = malla(new THREE.BoxGeometry(1.0, 2.1, 0.08), madera); puerta.position.set(-2.2, 1.05, -D + 1.05); root.add(puerta);
-  // ventana con la luz de afuera (brilla: bloom)
-  const vent = new THREE.Mesh(new THREE.PlaneGeometry(1.4, 1.1), new THREE.MeshBasicMaterial({ color: noche ? "#3a4f8a" : new THREE.Color(1.6, 1.5, 1.2), toneMapped: true }));
-  vent.position.set(1.6, 1.7, -D + 1.02); root.add(vent);
-  for (const [x, y, w, h] of [[1.6, 2.28, 1.6, 0.1], [1.6, 1.12, 1.6, 0.1], [0.85, 1.7, 0.1, 1.2], [2.35, 1.7, 0.1, 1.2], [1.6, 1.7, 0.06, 1.1]] as const) {
-    const m = malla(new THREE.BoxGeometry(w, h, 0.1), madera, false); m.position.set(x, y, -D + 1.06); root.add(m);
-  }
-  const mesa = new THREE.Group();
-  const tabla = malla(new THREE.BoxGeometry(1.6, 0.08, 0.9), madera); tabla.position.y = 0.78; mesa.add(tabla);
-  for (const [x, z] of [[-0.7, -0.35], [0.7, -0.35], [-0.7, 0.35], [0.7, 0.35]]) { const p = malla(new THREE.BoxGeometry(0.08, 0.78, 0.08), madera); p.position.set(x, 0.39, z); mesa.add(p); }
-  mesa.position.set(-1.6, 0, -2.6); root.add(mesa);
-  for (const x of [-2.4, -0.8]) { const s = malla(new THREE.BoxGeometry(0.45, 0.06, 0.45), madera); s.position.set(x, 0.46, -2.0); root.add(s); const e = malla(new THREE.BoxGeometry(0.45, 0.6, 0.06), madera); e.position.set(x, 0.76, -1.8); root.add(e); }
-  const matera = malla(new THREE.CylinderGeometry(0.28, 0.2, 0.5, 10), lam("#b5583a")); matera.position.set(2.8, 0.25, -3.8); root.add(matera);
-  const planta = arbusto(r, 0.7); planta.position.set(2.8, 0.45, -3.8); root.add(planta);
-  const cuadro = malla(new THREE.BoxGeometry(0.7, 0.5, 0.04), lam("#d9a441")); cuadro.position.set(-0.3, 1.9, -D + 1.03); root.add(cuadro);
-  const olla = malla(new THREE.CylinderGeometry(0.18, 0.15, 0.2, 10), lam("#3a3a3a")); olla.position.set(-1.9, 0.92, -2.6); root.add(olla);
-  // en la casa las paredes no tapan el sol (luz de estudio, estilizada)
-  root.traverse((o) => { if ((o as THREE.Mesh).isMesh && o !== suelo) (o as THREE.Mesh).castShadow = o.parent === mesa || o === matera; });
+  // casa por dentro: sala colombiana con mucha utilería (sala.ts)
+  const sala = construirSala(noche);
+  root.add(sala.root); animar = sala.animar;
   return { root, animar, actor: vacio, animal: [1.6, -0.6], cam: { pos: [0.2, 1.5, 5.2], look: [0.2, 1.05, -1], fov: 42 }, interior: true };
 }

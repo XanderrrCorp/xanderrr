@@ -8,7 +8,7 @@ export const ANISO = (getInputProps() as { vista?: boolean }).vista ? 1 : 8;
 
 export const rnd = (seed: number) => { let s = seed >>> 0 || 1; return () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296); };
 
-const tex = (w: number, h: number, draw: (g: CanvasRenderingContext2D, r: () => number) => void, seed = 1, repeat: [number, number] = [1, 1], alpha = false) => {
+export const tex = (w: number, h: number, draw: (g: CanvasRenderingContext2D, r: () => number) => void, seed = 1, repeat: [number, number] = [1, 1], alpha = false) => {
   const c = document.createElement("canvas");
   c.width = w; c.height = h;
   const g = c.getContext("2d")!;

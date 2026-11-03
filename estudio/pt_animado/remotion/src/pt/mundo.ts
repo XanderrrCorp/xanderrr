@@ -143,12 +143,12 @@ export class Mundo {
     scene.fog = this.fog; scene.background = null;
     TONE.uLitCol.value.set(...L.lit); TONE.uShadeCol.value.set(...L.shade); TONE.uShadeLift.value.set(...L.lift);
     TONE.uLambert.value = L.lambert; TONE.uSideK.value = L.sideK; TONE.uTerm.value = L.term; TONE.uSat.value = this.luzNombre === "noche" ? 0.55 : 1.08;
-    if (this.esc.interior && this.luzNombre === "noche") { TONE.uLitCol.value.set(0.5, 0.4, 0.3); TONE.uShadeCol.value.set(0.16, 0.13, 0.13); } // bombillo cálido adentro
+    if (this.esc.interior && this.luzNombre === "noche") { TONE.uLitCol.value.set(0.62, 0.7, 1.15); TONE.uShadeCol.value.set(0.22, 0.25, 0.48); TONE.uSat.value = 0.85; } // luna azul adentro; la lámpara pone su charco cálido (sala.ts)
     CHAR.uCharTint.value.set(...L.charTint); CHAR.uCharShade.value = L.charShade; CHAR.uGrad.value = L.charGrad; CHAR.uBodyGrad.value = L.bodyGrad; CHAR.uSideTint.value.set(...L.sideTint);
     CARD_K.uPx.value = alto / 1080;
     // el explorador y el animal se oscurecen con la luz de la escena (la tarjeta normaliza el tinte: sin esto de noche brillan)
     CARD_K.uNorm.value = this.luzNombre === "dia" ? 0.7 : 0.15; // de noche/amanecer el color de la luz sí tiñe al explorador
-    CARD_K.uGain.value = (this.luzNombre === "noche" ? 0.2 : this.luzNombre === "amanecer" ? 0.75 : 1.03) * (1 - 0.55 * Math.min(1, s.frio));
+    CARD_K.uGain.value = (this.luzNombre === "noche" ? (this.esc.interior ? 0.5 : 0.2) : this.luzNombre === "amanecer" ? 0.75 : 1.03) * (1 - 0.55 * Math.min(1, s.frio));
     this.hemi.color.set(L.sky); this.hemi.groundColor.set(L.ground); this.hemi.intensity = L.hemiI;
     // sol relativo a la cámara (az desde el eje de la cámara), congelado por toma
     const fwd = new THREE.Vector3(); cam.getWorldDirection(fwd); fwd.y = 0; fwd.normalize();
