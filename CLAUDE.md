@@ -471,6 +471,23 @@ Estado al 04-10-2026. El repositorio es PÚBLICO: nunca escribir claves, tokens 
   PENDIENTE: música (cuando la mande); integrar este motor a Xandart (el dueño: «me interesa»; Claude arma el plan de
   escenas desde el guion eligiendo entre ~40 tipos, revisión antes de armar, Shorts con ganchos a aprobar) — mostrarle
   el plan y esperar visto bueno; Shorts de los otros 2 videos si los pide.
+- (03-11) PELIGRO TROPICAL ANIMADO (spec larga del dueño en 4 fases; él aprueba cada fase; solo canal animales-peligrosos;
+  NO tocar Tracy ni otros canales). Base: skill «Claude Animated Shorts» (MIT, copia de piezas en estudio/pt_animado con
+  su licencia; los frames de referencia de la skill son privados: nunca subirlos). FASE 1 hecha: estudio/pt_animado/audio
+  (dsp/instruments/sfx_gen de la skill + capa.py): secciones desde la intención (hook drone+pulso, tranquilo marimba+
+  guitarra, peligro se desafina, SILENCIO en la palabra de la mordida, veneno pulso+latidos, remate una nota), efectos
+  por palabra clave, música que baja bajo la voz, -14 LUFS / ≤-1 dBTP. Palabras: Whisper si está; si no, repartidas por
+  letras. Enganche: edicion.construir_edl marca edl.audio.animado (frases) si capa.activa(canal) → render.mezclar_audio
+  la usa en vez de la música de biblioteca. APAGADA (capa.PRENDIDA_POR_DEFECTO=False) hasta que el dueño la apruebe
+  escuchando el video de prueba; luego True. scipy agregado a pyproject. Prueba: tests/test_pt_audio_animado.py.
+  FASES 2-3 (en curso): estudio/pt_animado/remotion (Remotion 4.0.290 + three; node_modules NO va al repo):
+  pt/toon.ts (de la skill + EXPLORADOR: sombrero caqui, camisa con bolsillo, morral café, botas de caucho negras),
+  pt/escenarios.ts (casa por dentro, finca con potrero/cerca/casa de teja, selva, río; TODO por código: Kenney está
+  bloqueado en la nube), pt/luces.ts (amanecer, dia, noche + «frio» en sustos), pt/mundo.ts, pt/Toma.tsx (tinta →
+  lente → bloom → NEUTRAL → gradación; píxeles escalan con lado corto/1080), pt/camara.ts, Plantillas.tsx (Intro,
+  Encuentro, Transicion con medidor, Cierre con globo). Render en la nube: scripts/fotos.mjs / clips.mjs con
+  headless_shell de /opt/pw-browsers y gl swangle; TMPDIR en el scratchpad. QA: scripts/short_qa.py. Animal de prueba
+  = serpiente dibujada por código (en producción: Gemini). Fase 4 (integración, Gemini, Node en su PC) sin empezar.
 ## Pendiente
 - Preguntas sin responder del dueño: ¿en qué canal notó la voz lenta? (Peligro Tropical está en 1.3 en
   config/proveedores.json; Tracy en 1.0 por pedido suyo). ¿En qué momento sale «la tira de animales» sin sentido?

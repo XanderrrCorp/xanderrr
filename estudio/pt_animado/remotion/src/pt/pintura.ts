@@ -27,10 +27,10 @@ const manchas = (g: CanvasRenderingContext2D, r: () => number, w: number, h: num
 };
 
 export const pasto = (rep: [number, number], seco = 0) => tex(512, 512, (g, r) => {
-  g.fillStyle = seco ? "#8f9a4c" : "#5f9a3c"; g.fillRect(0, 0, 512, 512);
-  manchas(g, r, 512, 512, seco ? ["#a5a55a", "#7b8a40", "#b3a866"] : ["#6fae44", "#4f8a34", "#7cb84e", "#5a9038"], 220, 10, 46);
+  g.fillStyle = seco ? "#6a8440" : "#4a8434"; g.fillRect(0, 0, 512, 512);
+  manchas(g, r, 512, 512, seco ? ["#7a9248", "#5a7a36", "#8a8a52"] : ["#55913c", "#3d742c", "#62a042", "#47803a"], 120, 14, 50, 0.18);
   g.lineCap = "round";
-  for (let i = 0; i < 1400; i++) { // briznas cortas
+  for (let i = 0; i < 400; i++) { // briznas cortas
     const x = r() * 512, y = r() * 512, l = 4 + r() * 9;
     g.strokeStyle = r() < 0.5 ? "rgba(40,80,25,.35)" : "rgba(150,200,90,.35)"; g.lineWidth = 1.4;
     g.beginPath(); g.moveTo(x, y); g.lineTo(x + (r() - 0.5) * 3, y - l); g.stroke();
@@ -59,9 +59,9 @@ export const teja = (rep: [number, number]) => tex(512, 512, (g, r) => {
 }, 13, rep);
 
 /** pared encalada con zócalo de color (casa campesina colombiana) */
-export const pared = (rep: [number, number], zocalo = "#2f7f8f") => tex(512, 512, (g, r) => {
-  g.fillStyle = "#f1ead8"; g.fillRect(0, 0, 512, 512);
-  manchas(g, r, 512, 512, ["#e4dac2", "#f8f3e6", "#d9ceb2"], 120, 8, 60, 0.35);
+export const pared = (rep: [number, number], zocalo = "#2f7f8f", base = "#f1ead8") => tex(512, 512, (g, r) => {
+  g.fillStyle = base; g.fillRect(0, 0, 512, 512);
+  manchas(g, r, 512, 512, ["#000000", "#ffffff"], 40, 8, 60, 0.04);
   g.fillStyle = zocalo; g.fillRect(0, 400, 512, 112);
   g.fillStyle = "rgba(0,0,0,.18)"; g.fillRect(0, 400, 512, 6);
   manchas(g, r, 512, 112, ["#000000"], 30, 4, 18, 0.06);
@@ -71,7 +71,7 @@ export const pared = (rep: [number, number], zocalo = "#2f7f8f") => tex(512, 512
 export const baldosa = (rep: [number, number]) => tex(512, 512, (g, r) => {
   const n = 4, s = 512 / n;
   for (let j = 0; j < n; j++) for (let i = 0; i < n; i++) {
-    g.fillStyle = (i + j) % 2 ? "#b5583a" : "#d9c9a8"; g.fillRect(i * s, j * s, s, s);
+    g.fillStyle = (i + j) % 2 ? "#9c5a40" : "#d6c8a8"; g.fillRect(i * s, j * s, s, s);
     manchas(g, r, s, s, ["#000000"], 0, 1, 1);
   }
   g.strokeStyle = "rgba(60,30,20,.6)"; g.lineWidth = 4;
@@ -86,8 +86,8 @@ export const madera = (rep: [number, number], base = "#8a5a34") => tex(256, 512,
 }, 16, rep);
 
 export const agua = (rep: [number, number], noche = false) => tex(512, 512, (g, r) => {
-  g.fillStyle = noche ? "#1d3550" : "#4d8a8a"; g.fillRect(0, 0, 512, 512);
-  manchas(g, r, 512, 512, noche ? ["#26456a", "#162a40"] : ["#5a9c96", "#3e7a7e", "#6aa89a"], 120, 12, 60, 0.4);
+  g.fillStyle = noche ? "#1d3550" : "#3f86a6"; g.fillRect(0, 0, 512, 512);
+  manchas(g, r, 512, 512, noche ? ["#26456a", "#162a40"] : ["#4a94b0", "#357a98", "#5aa2b8"], 120, 12, 60, 0.4);
   g.lineCap = "round";
   for (let i = 0; i < 160; i++) { const x = r() * 512, y = r() * 512, l = 10 + r() * 40; g.strokeStyle = `rgba(230,245,240,${0.15 + r() * 0.3})`; g.lineWidth = 2; g.beginPath(); g.moveTo(x, y); g.quadraticCurveTo(x + l / 2, y - 3, x + l, y); g.stroke(); }
 }, 17, rep);

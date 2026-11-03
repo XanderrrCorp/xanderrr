@@ -18,6 +18,8 @@ export type Escena = {
   /** cámara base: posición y punto al que mira */
   cam: { pos: [number, number, number]; look: [number, number, number]; fov: number };
   interior: boolean;
+  /** niebla propia del escenario (la selva: verde y cerrada); se mezcla con la de la luz */
+  niebla?: { color: string; cerca: number; lejos: number };
 };
 
 const lam = (color: THREE.ColorRepresentation, map?: THREE.Texture, extra: THREE.MeshLambertMaterialParameters = {}) =>
@@ -31,7 +33,8 @@ const malla = (geo: THREE.BufferGeometry, mat: THREE.Material, sombra = true) =>
   return m;
 };
 /** tarjeta con transparencia: fuera de la tinta del mundo, con sombra recortada */
-const tarjeta = (geo: THREE.BufferGeometry, mat: THREE.MeshLambertMaterial) => {
+const tarjeta = (geo: THREE.BufferGeometry, mat: THREE.MeshLambertMaterial, normalArriba = true) => {
+  if (normalArriba) { const n = geo.attributes.normal as THREE.BufferAttribute; for (let i = 0; i < n.count; i++) n.setXYZ(i, 0, 1, 0); }
   const m = malla(geo, mat);
   m.customDepthMaterial = new THREE.MeshDepthMaterial({ depthPacking: THREE.RGBADepthPacking, map: mat.map, alphaTest: 0.5 });
   m.layers.set(NOINK);
@@ -51,7 +54,7 @@ const jitter = (geo: THREE.BufferGeometry, r: () => number, k: number) => {
   return geo;
 };
 
-const VERDES = ["#3f7f34", "#4f9a3c", "#2f6a2c", "#5aa040", "#467f2a"];
+const VERDES = ["#3f7a2a", "#4a8a30", "#356f26", "#468a2c"];
 
 export function arbol(r: () => number, alto = 6, verdes = VERDES): THREE.Group {
   const g = new THREE.Group();
@@ -60,7 +63,8 @@ export function arbol(r: () => number, alto = 6, verdes = VERDES): THREE.Group {
   const n = 3 + Math.floor(r() * 3);
   for (let i = 0; i < n; i++) {
     const rad = alto * (0.2 + r() * 0.12);
-    const copa = malla(jitter(new THREE.IcosahedronGeometry(rad, 2), r, 0.25), lam(verdes[Math.floor(r() * verdes.length)]));
+    const copa = malla(jitter(new THREE.IcosahedronGeometry(rad, 4), r, 0.06), lam(verdes[Math.floor(r() * verdes.length)]));
+    copa.receiveShadow = false;
     copa.position.set((r() - 0.5) * alto * 0.35, alto * (0.62 + r() * 0.25), (r() - 0.5) * alto * 0.3);
     copa.scale.y = 0.8;
     g.add(copa);
@@ -95,7 +99,8 @@ export function palma(r: () => number, alto = 8): THREE.Group {
 export function arbusto(r: () => number, tam = 1): THREE.Group {
   const g = new THREE.Group();
   for (let i = 0; i < 3; i++) {
-    const b = malla(jitter(new THREE.IcosahedronGeometry(tam * (0.5 + r() * 0.3), 1), r, 0.3), lam(VERDES[Math.floor(r() * VERDES.length)]));
+    const b = malla(jitter(new THREE.IcosahedronGeometry(tam * (0.5 + r() * 0.3), 2), r, 0.15), lam(VERDES[Math.floor(r() * VERDES.length)]));
+    b.receiveShadow = false;
     b.position.set((r() - 0.5) * tam, tam * 0.4, (r() - 0.5) * tam * 0.6); b.scale.y = 0.75;
     g.add(b);
   }
@@ -121,11 +126,12 @@ export function mata(r: () => number, ancho = 1.2, alto = 0.9, tipo: "pasto" | "
   return g;
 }
 
-export function montanas(r: () => number, z = -230, color = "#5f8a6a", n = 7): THREE.Group {
+export function montanas(r: () => number, z = -230, color = "#8fa88a", n = 7): THREE.Group {
   const g = new THREE.Group();
   for (let i = 0; i < n; i++) {
-    const h = 40 + r() * 50, m = malla(jitter(new THREE.ConeGeometry(h * 1.4, h, 9, 3), r, 0.18), lam(color), false);
-    m.position.set(-260 + (i / (n - 1)) * 520 + (r() - 0.5) * 50, h / 2 - 4, z - r() * 80);
+    const h = 35 + r() * 35, m = malla(new THREE.ConeGeometry(h * 1.3, h, 4, 1), lam(color, undefined, { fog: false }), false);
+    m.receiveShadow = false; m.castShadow = false; m.rotation.y = Math.PI / 4 + (r() - 0.5) * 0.3;
+    m.position.set(-300 + (i / (n - 1)) * 600 + (r() - 0.5) * 60, h / 2 - 3, z - r() * 60);
     g.add(m);
   }
   return g;
@@ -158,23 +164,24 @@ function cerca(desde: [number, number], hasta: [number, number]): THREE.Group {
     poste.position.set(x0 + (x1 - x0) * t, 0.7, z0 + (z1 - z0) * t); poste.rotation.z = (Math.sin(i * 7.3) * 0.06);
     g.add(poste);
   }
-  for (const y of [0.45, 0.8, 1.15]) {
-    const a = malla(new THREE.CylinderGeometry(0.012, 0.012, L, 4), alambre, false);
-    a.position.set((x0 + x1) / 2, y, (z0 + z1) / 2); a.rotation.z = Math.PI / 2; a.rotation.y = -Math.atan2(z1 - z0, x1 - x0);
+  void alambre;
+  for (const y of [0.55, 1.05]) { // cerca de varas de madera
+    const a = malla(new THREE.BoxGeometry(0.07, 0.12, L), madera, false);
+    a.position.set((x0 + x1) / 2, y, (z0 + z1) / 2); a.rotation.y = Math.PI / 2 - Math.atan2(z1 - z0, x1 - x0);
     g.add(a);
   }
   return g;
 }
 
 /** casa campesina de bahareque encalado, zócalo de color, techo de teja a dos aguas y corredor */
-function casaTeja(zocalo = "#2f7f8f"): THREE.Group {
+function casaTeja(zocalo = "#b5583a", base = "#e8a070"): THREE.Group {
   const g = new THREE.Group(), W = 8, D = 5.5, H = 2.8;
-  const paredMat = lam("#ffffff", P.pared([2, 1], zocalo));
+  const paredMat = lam("#ffffff", P.pared([2, 1], zocalo, base));
   const cuerpo = malla(new THREE.BoxGeometry(W, H, D), paredMat);
   cuerpo.position.y = H / 2; g.add(cuerpo);
   const tri = new THREE.Shape([new THREE.Vector2(-D / 2, 0), new THREE.Vector2(D / 2, 0), new THREE.Vector2(0, 1.6)]);
   for (const s of [-1, 1]) {
-    const m = malla(new THREE.ShapeGeometry(tri), lam("#efe6d0"));
+    const m = malla(new THREE.ShapeGeometry(tri), lam(base));
     m.position.set(s * W / 2, H, 0); m.rotation.y = s * Math.PI / 2; g.add(m);
   }
   const tejaMat = lam("#ffffff", P.teja([3, 2]), { side: THREE.DoubleSide }), largo = Math.hypot(D / 2 + 1.5, 1.6 + 0.45);
@@ -221,20 +228,31 @@ export function construir(nombre: NombreEscenario, noche = false): Escena {
     for (let i = 0; i < 4; i++) { const p = palma(r, 8 + r() * 4); p.position.set(r() < 0.5 ? -18 - r() * 10 : 14 + r() * 14, 0, -8 - r() * 16); root.add(p); }
     for (let i = 0; i < 26; i++) { const m = mata(r, 1.0, 0.7); m.position.set(-25 + r() * 50, 0, 2.2 + r() * 6); root.add(m); }
     for (let i = 0; i < 18; i++) { const m = mata(r, 1.2, 0.9); m.position.set(-30 + r() * 60, 0, -1.4 - r() * 4); root.add(m); }
-    root.add(montanas(r, -200, "#5d8a64")); root.add(montanas(r, -320, "#7a9a8a", 6));
+    root.add(montanas(r, -200, "#7f9a62")); root.add(montanas(r, -320, "#a8a0c0", 6));
     cielo(root, r);
     return { root, animar, actor: vacio, animal: [2.2, 0.4], cam: { pos: [0.5, 1.55, 7.2], look: [0.3, 1.0, 0], fov: 38 }, interior: false };
   }
   if (nombre === "selva") {
     root.add(piso(P.pasto([90, 90])));
     root.add(camino(r, 1.3, 90, 0.2, 0.6));
-    for (let i = 0; i < 46; i++) {
-      const z = -3 - r() * 40, x = -40 + r() * 80;
-      const a = r() < 0.35 ? palma(r, 9 + r() * 5) : arbol(r, 9 + r() * 8, ["#2f6a2c", "#3a7a30", "#24572a", "#467f2a"]);
-      a.position.set(x, 0, z); root.add(a);
+    // dosel: copas altas que tapan casi todo el cielo
+    for (let i = 0; i < 110; i++) {
+      const d = malla(jitter(new THREE.IcosahedronGeometry(5 + r() * 4, 3), r, 0.08), lam(["#2f6a22", "#3a7a2a", "#285c1f"][Math.floor(r() * 3)]), true);
+      d.receiveShadow = false; d.scale.y = 0.6; d.position.set(-45 + r() * 90, 8 + r() * 6, -4 - r() * 36); root.add(d);
+    }
+    for (let i = 0; i < 70; i++) {
+      const z = -2.5 - r() * 32, x = -40 + r() * 80;
+      const a = r() < 0.35 ? palma(r, 9 + r() * 5) : arbol(r, 9 + r() * 8, ["#2f6a22", "#3a7a2a", "#285c1f", "#468a2c"]);
+      a.position.set(x, 0, z); a.scale.set(1.8, 1, 1.8); root.add(a);
     }
     for (let i = 0; i < 70; i++) { const m = mata(r, 1.6 + r(), 1.4 + r(), "helecho"); m.position.set(-30 + r() * 60, 0, -1.2 - r() * 10); root.add(m); }
     for (let i = 0; i < 30; i++) { const m = mata(r, 1.4, 1.0, r() < 0.5 ? "helecho" : "pasto"); m.position.set(-25 + r() * 50, 0, 2 + r() * 6); root.add(m); }
+    // segundo piso del monte: copas medianas y matas altas que cierran el hueco entre troncos
+    for (let i = 0; i < 70; i++) {
+      const d = malla(jitter(new THREE.IcosahedronGeometry(1.6 + r() * 1.6, 3), r, 0.08), lam(["#3a7a2a", "#2f6a22", "#468a2c"][Math.floor(r() * 3)]));
+      d.receiveShadow = false; d.position.set(-40 + r() * 80, 3 + r() * 4, -3 - r() * 22); root.add(d);
+    }
+    for (let i = 0; i < 40; i++) { const m = mata(r, 3 + r() * 2, 2.5 + r() * 1.5, "helecho"); m.position.set(-30 + r() * 60, 0, -2.5 - r() * 12); root.add(m); }
     // bejucos que cuelgan
     for (let i = 0; i < 14; i++) {
       const x = -15 + r() * 30, z = -2 - r() * 8, c = new THREE.CatmullRomCurve3([new THREE.Vector3(x, 12, z), new THREE.Vector3(x + 0.5, 7, z + 0.3), new THREE.Vector3(x + 0.2, 3 + r() * 3, z)]);
@@ -248,27 +266,28 @@ export function construir(nombre: NombreEscenario, noche = false): Escena {
       root.add(h); hojas.push(h);
     }
     animar = (t) => hojas.forEach((h, i) => { h.rotation.z = (i % 2 ? -0.5 : 0.5) + 0.04 * Math.sin(t * 1.3 + i); });
-    return { root, animar, actor: vacio, animal: [2.0, 0.3], cam: { pos: [0.4, 1.5, 6.4], look: [0.3, 1.1, 0], fov: 40 }, interior: false };
+    return { root, animar, actor: vacio, animal: [2.0, 0.3], cam: { pos: [0.4, 1.45, 6.4], look: [0.3, 1.0, 0], fov: 40 }, interior: false, niebla: { color: "#2f5a2a", cerca: 20, lejos: 140 } };
   }
   if (nombre === "rio") {
     root.add(piso(P.pasto([90, 90])));
     const orilla = malla(new THREE.PlaneGeometry(200, 4.5), lam("#ffffff", P.barro([40, 1])), false);
-    orilla.rotation.x = -Math.PI / 2; orilla.position.set(0, 0.012, -1.5); root.add(orilla);
+    orilla.rotation.x = -Math.PI / 2; orilla.position.set(0, 0.012, -0.6); root.add(orilla);
     const aguaT = P.agua([30, 4], noche);
     const agua = malla(new THREE.PlaneGeometry(200, 22), lam("#ffffff", aguaT), false);
-    agua.rotation.x = -Math.PI / 2; agua.position.set(0, -0.12, -14.5); root.add(agua);
+    agua.rotation.x = -Math.PI / 2; agua.position.set(0, -0.06, -13.6); root.add(agua);
     const bajo = malla(new THREE.PlaneGeometry(200, 22), lam("#2f4a4a"), false); bajo.rotation.x = -Math.PI / 2; bajo.position.set(0, -0.6, -14.5); root.add(bajo);
     // el piso no tapa el agua: lo recortamos dejando la franja del río
-    (root.children[0] as THREE.Mesh).geometry = new THREE.PlaneGeometry(200, 60); root.children[0].position.z = 26;
+    (root.children[0] as THREE.Mesh).geometry = new THREE.PlaneGeometry(200, 60); root.children[0].position.z = 27.2;
     const lejos = piso(P.pasto([60, 30])); lejos.geometry = new THREE.PlaneGeometry(200, 100); lejos.position.z = -75.5; root.add(lejos);
-    for (let i = 0; i < 14; i++) { const ro = roca(r, 0.3 + r() * 0.6); ro.position.x = -14 + r() * 28; ro.position.z = -3.2 - r() * 1.3; root.add(ro); }
-    for (let i = 0; i < 22; i++) { const m = mata(r, 1.0, 1.3); m.position.set(-20 + r() * 40, 0, -2.8 - r() * 0.8); root.add(m); }
-    for (let i = 0; i < 20; i++) { const a = r() < 0.5 ? palma(r, 9 + r() * 4) : arbol(r, 8 + r() * 6); a.position.set(-60 + r() * 120, 0, -27 - r() * 14); root.add(a); }
+    for (let i = 0; i < 10; i++) { const ro = roca(r, 0.3 + r() * 0.5); ro.position.x = -14 + r() * 28; ro.position.z = -2.6 - r() * 0.4; root.add(ro); }
+    for (let i = 0; i < 10; i++) { const m = mata(r, 1.0, 1.0); m.position.set(-20 + r() * 40, 0, -2.5 - r() * 0.3); root.add(m); }
+    for (let i = 0; i < 26; i++) { const a = arbol(r, 7 + r() * 6); a.position.set(-60 + r() * 120, 0, -27 - r() * 14); root.add(a); }
+    const banda = piso(P.pasto([30, 3])); banda.geometry = new THREE.PlaneGeometry(200, 8); banda.position.set(0, 0.01, -28); (banda.material as THREE.MeshLambertMaterial).color.set("#b8c8a8"); root.add(banda);
     for (let i = 0; i < 16; i++) { const m = mata(r, 1.1, 0.8); m.position.set(-20 + r() * 40, 0, 2 + r() * 5); root.add(m); }
-    root.add(montanas(r, -190, "#4f7f68"));
+    root.add(montanas(r, -190, "#7f9a62")); root.add(montanas(r, -300, "#a8a0c0", 6));
     cielo(root, r);
     animar = (t) => { aguaT.offset.x = t * 0.035; };
-    return { root, animar, actor: vacio, animal: [2.0, -1.2], cam: { pos: [0.3, 1.5, 6.6], look: [0.3, 1.0, -1], fov: 40 }, interior: false };
+    return { root, animar, actor: vacio, animal: [2.0, -0.8], cam: { pos: [0.3, 2.0, 6.6], look: [0.3, 0.8, -1], fov: 40 }, interior: false };
   }
   // casa por dentro: cuarto abierto hacia la cámara
   const W = 7, D = 6, H = 3;
@@ -281,7 +300,9 @@ export function construir(nombre: NombreEscenario, noche = false): Escena {
     lado.position.set(s * W / 2, H / 2, -D / 2 + 1.5); lado.rotation.y = -s * Math.PI / 2; root.add(lado);
   }
   const madera = lam("#ffffff", P.madera([1, 1], "#6a4428"));
-  for (let i = 0; i < 5; i++) { const v = malla(new THREE.BoxGeometry(W, 0.16, 0.2), madera, false); v.position.set(0, H - 0.08, -D + 1.6 + i * 1.6); root.add(v); }
+  for (let i = 0; i < 5; i++) { const v = malla(new THREE.BoxGeometry(W, 0.16, 0.2), madera, false); v.position.set(0, H - 0.2, -D + 1.6 + i * 1.6); root.add(v); }
+  const techo = malla(new THREE.PlaneGeometry(W, D + 4), lam("#ffffff", P.madera([6, 2], "#5a3a22")), false);
+  techo.rotation.x = Math.PI / 2; techo.position.set(0, H, -D / 2 + 2); root.add(techo);
   const puerta = malla(new THREE.BoxGeometry(1.0, 2.1, 0.08), madera); puerta.position.set(-2.2, 1.05, -D + 1.05); root.add(puerta);
   // ventana con la luz de afuera (brilla: bloom)
   const vent = new THREE.Mesh(new THREE.PlaneGeometry(1.4, 1.1), new THREE.MeshBasicMaterial({ color: noche ? "#3a4f8a" : new THREE.Color(1.6, 1.5, 1.2), toneMapped: true }));

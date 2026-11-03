@@ -9,7 +9,7 @@ type C3 = [number, number, number];
 export const LUCES: Record<NombreLuz, LightPreset> = {
   dia: {
     az: 70, el: 50,
-    lit: [1.58, 1.52, 1.34], shade: [0.3, 0.31, 0.37], lift: [0.05, 0.07, 0.1], lambert: 0.35, sideK: 0.84, term: 0.2,
+    lit: [1.58, 1.52, 1.34], shade: [0.42, 0.44, 0.4], lift: [0.05, 0.06, 0.04], lambert: 0.35, sideK: 0.84, term: 0.2,
     charTint: [1.0, 0.95, 0.92], charShade: 0.86, charGrad: 0.07, bodyGrad: 0.2, sideTint: [0.92, 0.92, 0.96],
     blob: [0.6, 0.6, 0.56], actorShadow: true,
     top: "#3f86d4", hor: "#c6dcea", skyCurve: [0.0, 0.5, 0.6], fog: "#c2d8e4", fogNear: 30, fogFar: 320, sunDisc: "#000000",
@@ -17,17 +17,17 @@ export const LUCES: Record<NombreLuz, LightPreset> = {
     bias: -0.00025, normalBias: 0.015,
   },
   amanecer: {
-    az: 18, el: 9,
-    lit: [1.55, 0.86, 0.42], shade: [0.17, 0.17, 0.3], lift: [0.05, 0.06, 0.15], lambert: 0.35, sideK: 0.82, term: 0.08,
+    az: 58, el: 12,
+    lit: [1.55, 0.95, 0.55], shade: [0.42, 0.33, 0.32], lift: [0.06, 0.04, 0.03], lambert: 0.35, sideK: 0.82, term: 0.08,
     charTint: [1.0, 0.84, 0.66], charShade: 0.88, charGrad: 0.1, bodyGrad: 0.25, sideTint: [0.86, 0.82, 0.95],
     blob: [0.74, 0.72, 0.86], actorShadow: true,
-    top: "#7a6aa6", hor: "#ffcf96", skyCurve: [0.05, 0.6, 1.0], fog: "#f4c3a0", fogNear: 40, fogFar: 340, sunDisc: "#ffd9a8",
-    sunCol: "#ffb877", sunI: 5.0, sky: "#e8c0bc", ground: "#8a7a60", hemiI: 0.5,
+    top: "#7a6aa6", hor: "#ffcf96", skyCurve: [0.05, 0.6, 1.0], fog: "#f2b98f", fogNear: 50, fogFar: 380, sunDisc: "#ffd9a8",
+    sunCol: "#ffb877", sunI: 5.0, sky: "#f6c89a", ground: "#8a7a50", hemiI: 0.5,
     bias: -0.0006, normalBias: 0.03,
   },
   noche: {
     az: 120, el: 32,
-    lit: [0.42, 0.55, 0.95], shade: [0.09, 0.11, 0.22], lift: [0.03, 0.05, 0.12], lambert: 0.4, sideK: 0.8, term: 0.15,
+    lit: [0.34, 0.4, 0.6], shade: [0.1, 0.11, 0.17], lift: [0.03, 0.05, 0.12], lambert: 0.4, sideK: 0.8, term: 0.15,
     charTint: [0.66, 0.76, 1.0], charShade: 0.8, charGrad: 0.1, bodyGrad: 0.25, sideTint: [0.8, 0.85, 1.0],
     blob: [0.55, 0.58, 0.7], actorShadow: true,
     top: "#0a1230", hor: "#2c3f6e", skyCurve: [0.0, 0.5, 0.8], fog: "#22335c", fogNear: 12, fogFar: 170, sunDisc: "#000000",

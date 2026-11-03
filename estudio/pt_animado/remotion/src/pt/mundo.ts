@@ -34,6 +34,19 @@ function cieloMat() {
   });
 }
 
+/** recorta los bordes transparentes de la imagen del animal */
+function recortar(img: HTMLImageElement | HTMLCanvasElement): HTMLCanvasElement {
+  const w = img.width, h = img.height, c = document.createElement("canvas"); c.width = w; c.height = h;
+  const g = c.getContext("2d")!; g.drawImage(img, 0, 0);
+  const d = g.getImageData(0, 0, w, h).data;
+  let x0 = w, y0 = h, x1 = 0, y1 = 0;
+  for (let y = 0; y < h; y += 2) for (let x = 0; x < w; x += 2) if (d[(y * w + x) * 4 + 3] > 40) { x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y); }
+  if (x1 <= x0 || y1 <= y0) return c;
+  const m = 6, o = document.createElement("canvas"); o.width = x1 - x0 + 2 * m; o.height = y1 - y0 + m;
+  o.getContext("2d")!.drawImage(c, x0 - m, y0 - m, o.width, o.height, 0, 0, o.width, o.height);
+  return o;
+}
+
 export class Mundo {
   root = new THREE.Group();
   esc: Escena;
@@ -78,7 +91,8 @@ export class Mundo {
     return b;
   }
 
-  ponerAnimal(img: HTMLImageElement | HTMLCanvasElement) {
+  ponerAnimal(img0: HTMLImageElement | HTMLCanvasElement) {
+    const img = recortar(img0); // sin márgenes transparentes: la base del animal toca el piso
     const t = new THREE.Texture(img); t.colorSpace = THREE.SRGBColorSpace; t.needsUpdate = true; t.anisotropy = 8;
     const asp = img.width / img.height;
     const mat = cardShade(new THREE.MeshLambertMaterial({ map: t, alphaTest: 0.4, side: THREE.DoubleSide, transparent: false }));
@@ -118,15 +132,24 @@ export class Mundo {
     untone(L.top, m.uniforms.top.value); untone(L.hor, m.uniforms.hor.value);
     this.cielo.position.copy(cam.position);
     this.fog.color.copy(untone(L.fog)); this.fog.near = L.fogNear; this.fog.far = L.fogFar;
+    const nb = this.esc.niebla;
+    if (nb) { // la selva: niebla verde y cerrada, oscurecida con la luz
+      const k = this.luzNombre === "noche" ? 0.35 : this.luzNombre === "amanecer" ? 0.8 : 1;
+      this.fog.color.lerp(untone(nb.color), 0.7 * k); this.fog.near = Math.min(L.fogNear, nb.cerca); this.fog.far = Math.min(L.fogFar, nb.lejos);
+    }
     scene.fog = this.fog; scene.background = null;
     TONE.uLitCol.value.set(...L.lit); TONE.uShadeCol.value.set(...L.shade); TONE.uShadeLift.value.set(...L.lift);
-    TONE.uLambert.value = L.lambert; TONE.uSideK.value = L.sideK; TONE.uTerm.value = L.term; TONE.uSat.value = this.luzNombre === "noche" ? 0.85 : 1.08;
+    TONE.uLambert.value = L.lambert; TONE.uSideK.value = L.sideK; TONE.uTerm.value = L.term; TONE.uSat.value = this.luzNombre === "noche" ? 0.55 : 1.08;
+    if (this.esc.interior && this.luzNombre === "noche") { TONE.uLitCol.value.set(0.5, 0.4, 0.3); TONE.uShadeCol.value.set(0.16, 0.13, 0.13); } // bombillo cálido adentro
     CHAR.uCharTint.value.set(...L.charTint); CHAR.uCharShade.value = L.charShade; CHAR.uGrad.value = L.charGrad; CHAR.uBodyGrad.value = L.bodyGrad; CHAR.uSideTint.value.set(...L.sideTint);
     CARD_K.uPx.value = alto / 1080;
+    // el explorador y el animal se oscurecen con la luz de la escena (la tarjeta normaliza el tinte: sin esto de noche brillan)
+    CARD_K.uNorm.value = this.luzNombre === "dia" ? 0.7 : 0.15; // de noche/amanecer el color de la luz sí tiñe al explorador
+    CARD_K.uGain.value = (this.luzNombre === "noche" ? 0.2 : this.luzNombre === "amanecer" ? 0.75 : 1.03) * (1 - 0.55 * Math.min(1, s.frio));
     this.hemi.color.set(L.sky); this.hemi.groundColor.set(L.ground); this.hemi.intensity = L.hemiI;
     // sol relativo a la cámara (az desde el eje de la cámara), congelado por toma
     const fwd = new THREE.Vector3(); cam.getWorldDirection(fwd); fwd.y = 0; fwd.normalize();
-    const az = (L.az * Math.PI) / 180, el = (L.el * Math.PI) / 180;
+    const az = ((this.esc.interior ? 150 : L.az) * Math.PI) / 180, el = ((this.esc.interior ? Math.max(L.el, 35) : L.el) * Math.PI) / 180; // adentro: luz desde la cámara
     const right = new THREE.Vector3().crossVectors(fwd, new THREE.Vector3(0, 1, 0));
     const dir = fwd.clone().multiplyScalar(Math.cos(az)).add(right.multiplyScalar(Math.sin(az))).multiplyScalar(Math.cos(el)).setY(Math.sin(el)).normalize();
     const centro = new THREE.Vector3(s.actor.x, 0, s.actor.z);

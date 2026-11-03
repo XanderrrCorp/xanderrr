@@ -32,7 +32,7 @@ if au:
     e = run("ffmpeg", "-i", vid, "-map", "0:a:0", "-af", "silencedetect=n=-45dB:d=0.3", "-f", "null", "-").stderr
     R.append("SILENCES " + ("; ".join(l.split("] ")[-1] for l in e.splitlines() if "silence_" in l) or "none"))
 
-W, H = 180, 320
+W, H = (180, 320) if int(v["height"]) > int(v["width"]) else (320, 180)  # PT: también 16:9
 raw = subprocess.run(["ffmpeg", "-v", "error", "-i", vid, "-vf", f"scale={W}:{H}:flags=area", "-f", "rawvideo", "-pix_fmt", "rgb24", "-"], capture_output=True).stdout
 F = np.frombuffer(raw, np.uint8).reshape(-1, H, W, 3)
 n = len(F)
@@ -66,7 +66,7 @@ for s in shots or [{"id": 0, "a": 0, "b": n}]:
 np.savez(os.path.join(out, "perframe.npz"), diff=diff, **stats)
 
 # 2 s contact sheets, 10 x 6 frames of 108x192 each
-cw, ch = 108, 192
+cw, ch = (108, 192) if H > W else (192, 108)
 for k in range(0, n, 60):
     S = Image.new("RGB", (cw * 10, ch * 6), "black"); d = ImageDraw.Draw(S)
     for j in range(min(60, n - k)):

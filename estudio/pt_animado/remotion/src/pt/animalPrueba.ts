@@ -7,7 +7,7 @@ export function serpientePrueba(): HTMLCanvasElement {
   const g = c.getContext("2d")!;
   g.lineCap = "round"; g.lineJoin = "round";
   const cuerpo: [number, number][] = [];
-  for (let i = 0; i <= 60; i++) { const t = i / 60; cuerpo.push([140 + t * 760, 690 - 40 * Math.sin(t * 9) * (1 - t) - t * t * 300]); }
+  for (let i = 0; i <= 60; i++) { const t = i / 60; cuerpo.push([140 + t * 760, 690 - 18 * Math.sin(t * 9) * (1 - t) - Math.max(0, t - 0.7) ** 2 * 2200]); }
   const trazo = (w: number, col: string) => { g.strokeStyle = col; g.lineWidth = w; g.beginPath(); cuerpo.forEach(([x, y], i) => (i ? g.lineTo(x, y) : g.moveTo(x, y))); g.stroke(); };
   trazo(118, INK); trazo(96, "#8a6a3a");
   // equis del dibujo (talla equis)

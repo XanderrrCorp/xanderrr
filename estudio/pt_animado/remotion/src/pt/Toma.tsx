@@ -47,7 +47,7 @@ const Inner: React.FC<{ escenario: NombreEscenario; luz: NombreLuz; plan: Plan; 
   const mundo = useMemo(() => new Mundo(escenario, luz, animal), [escenario, luz, animal]);
   const fx = useMemo(() => {
     const g = new GradeEffect(GRADES[luz === "amanecer" ? "golden" : "day"], luz === "noche" ? 0.5 : luz === "amanecer" ? 0.6 : 0.8);
-    return { ink: new InkPass(scene, camera as THREE.PerspectiveCamera), lens: new LensBlur({ maxCoC: 24, nearScale: 1.2 }), bloom: makeBloom(Math.min(width, height)),
+    return { ink: new InkPass(scene, camera as THREE.PerspectiveCamera, { strength: 0.32, widthNear: 2.6, widthFar: 1.6, creaseScale: 0.5, angleLo: 55, angleHi: 70 }) /* mundo casi sin tinta, como la muestra; el personaje lleva la suya */, lens: new LensBlur({ maxCoC: 24, nearScale: 1.2 }), bloom: makeBloom(Math.min(width, height)),
       tone: new ToneMappingEffect({ mode: ToneMappingMode.NEUTRAL }), grade: g };
   }, [camera, scene, luz, width, height]);
   useEffect(() => () => fx.ink.dispose(), [fx]);
