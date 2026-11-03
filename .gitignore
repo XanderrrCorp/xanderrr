@@ -1,0 +1,6 @@
+proyectos/*/voz/
+proyectos/*/escenas/
+proyectos/*/fotos/
+proyectos/*/*.mp4
+proyectos/*/*.wav
+__pycache__/

@@ -1,0 +1,854 @@
+{
+ "titulo": "7 Cosas que una Mujer Inteligente Ya No Compra",
+ "velocidad_voz": 1.05,
+ "musica": true,
+ "escenas": [
+  {
+   "texto": "Trescientos sesenta dólares.",
+   "tipo": "dinero",
+   "p": {
+    "cifra": "$360",
+    "etiqueta": "al año",
+    "cara": "wide",
+    "en": 0.05
+   }
+  },
+  {
+   "texto": "Eso es lo que yo pagaba al año por cosas que ni sabía que estaba pagando.",
+   "tipo": "habla",
+   "p": {
+    "fondo": "sala",
+    "pose": "phone",
+    "cara": "meh",
+    "ines": "centro"
+   }
+  },
+  {
+   "texto": "Y no, no era una cartera de marca ni un viaje. Eran cositas.",
+   "tipo": "tachar",
+   "p": {
+    "items": [
+     "Cartera de marca",
+     "Viaje"
+    ],
+    "titulo": "NO ERA ESTO"
+   }
+  },
+  {
+   "texto": "Cinco dólares aquí, diez allá, un \"total, es poquito\" cada semana.",
+   "tipo": "habla",
+   "p": {
+    "palabra": "\"es poquito\"",
+    "color": "terra",
+    "pose": "hip"
+   }
+  },
+  {
+   "texto": "El día que me senté con mi libreta a sumar todo, casi me caigo de la silla.",
+   "tipo": "habla",
+   "p": {
+    "pose": "cry",
+    "cara": "wide",
+    "palabra": "¡¿QUÉ?!",
+    "color": "rojo"
+   }
+  },
+  {
+   "texto": "Y te lo digo desde ya: no era que yo fuera desordenada. Es que muchas de estas cosas están diseñadas para que no te des cuenta.",
+   "tipo": "habla",
+   "p": {
+    "pose": "point",
+    "cara": "normal",
+    "palabra": "DISEÑADAS",
+    "sub": "para que no te des cuenta",
+    "color": "rojo"
+   }
+  },
+  {
+   "texto": "Hoy te cuento las siete cosas que una mujer inteligente ya no compra, aunque casi todas seguimos pagándolas cada mes.",
+   "tipo": "titulo",
+   "p": {
+    "lineas": [
+     "7 COSAS",
+     "QUE YA",
+     "NO COMPRO"
+    ],
+    "colores": [
+     "negro",
+     "negro",
+     "terra"
+    ]
+   }
+  },
+  {
+   "texto": "La número cinco tiene que ver con el color rosado y te va a dar rabia.",
+   "tipo": "habla",
+   "p": {
+    "palabra": "#5 ROSADO",
+    "color": [
+     225,
+     90,
+     150
+    ],
+    "pose": "hip"
+   }
+  },
+  {
+   "texto": "Y la número siete es la que más dinero te quita sin que lo notes, así que quédate hasta el final.",
+   "tipo": "habla",
+   "p": {
+    "palabra": "#7",
+    "sub": "la que más dinero te quita",
+    "color": "terra",
+    "pose": "point"
+   }
+  },
+  {
+   "texto": "Si a ti también te toca hacer magia con el sueldo, suscríbete. Aquí hacemos las cuentas que nadie te muestra, con números de verdad y sin regaños.",
+   "tipo": "suscribete",
+   "p": {
+    "remate": "Aquí hacemos las cuentas que nadie te muestra."
+   }
+  },
+  {
+   "texto": "Antes de empezar, algo rápido. Todo lo práctico de este canal lo junté en una libreta: La Libreta de Inés. Es un plan de treinta días para encontrar las fugas de tu dinero: las suscripciones, las comisiones y lo que de verdad te cuesta una cuota.",
+   "tipo": "libreta",
+   "p": {
+    "donde": "Enlace en la descripción"
+   }
+  },
+  {
+   "texto": "El enlace está en la descripción. Si te sirve, está ahí. No vuelvo a hablar de eso. Seguimos.",
+   "tipo": "habla",
+   "p": {
+    "pose": "hip",
+    "cara": "meh",
+    "ines": "centro"
+   }
+  },
+  {
+   "texto": "Número uno: las suscripciones fantasma.",
+   "tipo": "numero",
+   "p": {
+    "n": 1,
+    "titulo": "Las suscripciones fantasma"
+   }
+  },
+  {
+   "texto": "Vamos a hacer un ejercicio. Abre tu celular, entra a la tienda de aplicaciones y busca la parte de suscripciones. Te espero.",
+   "tipo": "habla",
+   "p": {
+    "pose": "phone",
+    "cara": "normal",
+    "palabra": "TE ESPERO…",
+    "color": "gris"
+   }
+  },
+  {
+   "texto": "¿Ya? Bueno, si eres como yo, encontraste por lo menos una que no reconoces. Yo encontré tres.",
+   "tipo": "habla",
+   "p": {
+    "pose": "hip",
+    "palabra": "3",
+    "color": "rojo",
+    "tam": 220
+   }
+  },
+  {
+   "texto": "Una aplicación de ejercicio que abrí dos veces, en enero, con toda la ilusión. Una plataforma de series que solo veía la persona con la que ya no vivo. Y una nube para guardar fotos que, oh sorpresa, ya estaban guardadas en mi celular.",
+   "tipo": "telefono",
+   "p": {
+    "app": "Suscripciones",
+    "cobros": [
+     [
+      "App de ejercicio",
+      "$9,99"
+     ],
+     [
+      "Series",
+      "$14,99"
+     ],
+     [
+      "Nube de fotos",
+      "$4,99"
+     ]
+    ]
+   }
+  },
+  {
+   "texto": "Nueve noventa y nueve, catorce noventa y nueve y cuatro noventa y nueve. Suena a poco, ¿verdad? Treinta dólares al mes.",
+   "tipo": "dinero",
+   "p": {
+    "cifra": "$30",
+    "etiqueta": "al mes… suena a poco",
+    "color": "negro",
+    "cara": "meh"
+   }
+  },
+  {
+   "texto": "Pero haz la cuenta conmigo: treinta por doce son trescientos sesenta dólares al año. Trescientos sesenta dólares por cosas que no usaba.",
+   "tipo": "cuenta",
+   "p": {
+    "partes": [
+     "$30",
+     "× 12",
+     "= $360"
+    ],
+    "etiqueta": "por cosas que no usaba"
+   }
+  },
+  {
+   "texto": "Y aquí está la trampa. Casi todas empiezan con una prueba gratis. Te piden la tarjeta \"solo para verificar\", y la prueba se renueva sola.",
+   "tipo": "habla",
+   "p": {
+    "palabra": "PRUEBA GRATIS*",
+    "sub": "*se renueva sola",
+    "color": "morado",
+    "pose": "point"
+   }
+  },
+  {
+   "texto": "Cancelar casi nunca es un botón grande y bonito. Es un camino escondido de cuatro pantallas. Eso no es casualidad. Es el negocio.",
+   "tipo": "comparar",
+   "p": {
+    "izq": [
+     "SUSCRIBIRTE",
+     "1 botón grande"
+    ],
+    "der": [
+     "CANCELAR",
+     "4 pantallas escondidas"
+    ]
+   }
+  },
+  {
+   "texto": "Lo que hace una mujer inteligente es muy simple: una vez al mes, el mismo día que paga el alquiler, revisa sus suscripciones. La que no usó en treinta días, se cancela.",
+   "tipo": "habla",
+   "p": {
+    "pose": "present",
+    "cara": "normal",
+    "palabra": "1 VEZ AL MES",
+    "sub": "la que no usaste en 30 días, se cancela",
+    "color": "verde"
+   }
+  },
+  {
+   "texto": "Si la extraña, la vuelve a contratar. Spoiler: casi nunca la extraña.",
+   "tipo": "habla",
+   "p": {
+    "pose": "hip",
+    "cara": "meh",
+    "palabra": "SPOILER:",
+    "sub": "casi nunca la extrañas",
+    "color": "terra"
+   }
+  },
+  {
+   "texto": "Número dos: la garantía extendida.",
+   "tipo": "numero",
+   "p": {
+    "n": 2,
+    "titulo": "La garantía extendida"
+   }
+  },
+  {
+   "texto": "Esta es mi favorita porque me la vendieron con cara de favor. Vas a comprar un televisor, una licuadora, un celular, y justo cuando vas a pagar, aparece la pregunta: \"¿Le agregamos la garantía extendida? Para que esté tranquila\".",
+   "tipo": "habla",
+   "p": {
+    "pose": "hip",
+    "cara": "meh",
+    "palabra": "\"¿Para que esté tranquila?\"",
+    "color": "morado",
+    "tam": 90
+   }
+  },
+  {
+   "texto": "Y tú, que ya estás gastando, dices que sí, porque te da miedo que se dañe.",
+   "tipo": "habla",
+   "p": {
+    "pose": "cry",
+    "cara": "wide",
+    "ines": "centro"
+   }
+  },
+  {
+   "texto": "Pero mira lo que casi nadie te explica. Muchos productos ya vienen con la garantía del fabricante, que cubre justo los primeros meses, que es cuando más fallan los aparatos con defectos de fábrica.",
+   "tipo": "comparar",
+   "p": {
+    "izq": [
+     "EXTENDIDA",
+     "La pagas aparte"
+    ],
+    "der": [
+     "DE FÁBRICA",
+     "Ya viene incluida"
+    ]
+   }
+  },
+  {
+   "texto": "Y la garantía extendida puede costar una buena parte del precio del producto. Para la tienda es de las cosas que más ganancia le dejan, porque la mayoría de la gente nunca la usa.",
+   "tipo": "habla",
+   "p": {
+    "pose": "point",
+    "palabra": "CASI NADIE LA USA",
+    "color": "rojo"
+   }
+  },
+  {
+   "texto": "La regla de una mujer inteligente: antes de aceptarla, pregunta qué cubre que no cubra ya la del fabricante.",
+   "tipo": "habla",
+   "p": {
+    "pose": "present",
+    "cara": "normal",
+    "palabra": "¿QUÉ CUBRE",
+    "sub": "que no cubra ya la de fábrica?",
+    "color": "verde"
+   }
+  },
+  {
+   "texto": "Y si el aparato es barato, mejor guarda ese dinero en tu sobre de imprevistos. Si algún día se daña, lo pagas de ahí. Y si no se daña, ese dinero sigue siendo tuyo.",
+   "tipo": "habla",
+   "p": {
+    "pose": "hip",
+    "cara": "happy",
+    "palabra": "SIGUE SIENDO TUYO",
+    "color": "verde"
+   }
+  },
+  {
+   "texto": "Número tres: las cuotas para cosas pequeñas.",
+   "tipo": "numero",
+   "p": {
+    "n": 3,
+    "titulo": "Las cuotas para cosas pequeñas"
+   }
+  },
+  {
+   "texto": "Esto me pasó con Gloria. Gloria es mi nevera. Es del 2008 y hace ruidos que parecen de película de terror.",
+   "tipo": "gloria",
+   "p": {
+    "tiembla": false
+   }
+  },
+  {
+   "texto": "Un día hizo un \"brrrr\" tan fuerte que yo dije: se acabó, me compro una nueva.",
+   "tipo": "gloria",
+   "p": {
+    "cartel": "BRRRRR",
+    "cara": "wide"
+   }
+  },
+  {
+   "texto": "Y en la tienda me dijeron la frase mágica: \"Llévesela en cuotas, son apenas treinta y cinco dólares al mes\".",
+   "tipo": "habla",
+   "p": {
+    "pose": "phone",
+    "palabra": "$35 al mes",
+    "sub": "\"son apenas…\"",
+    "color": "verde"
+   }
+  },
+  {
+   "texto": "Treinta y cinco dólares al mes. Fácil. Hasta que haces lo que hice yo en la libreta: treinta y cinco por treinta y seis meses. Mil doscientos sesenta dólares, por una nevera que de contado costaba ochocientos.",
+   "tipo": "cuenta",
+   "p": {
+    "partes": [
+     "$35",
+     "× 36",
+     "= $1.260"
+    ],
+    "etiqueta": "de contado costaba $800"
+   }
+  },
+  {
+   "texto": "Cuatrocientos sesenta dólares más, solo por pagarla a pedacitos.",
+   "tipo": "dinero",
+   "p": {
+    "cifra": "+$460",
+    "etiqueta": "solo por pagarla a pedacitos",
+    "cara": "wide",
+    "nota": "Ejemplo ilustrativo"
+   }
+  },
+  {
+   "texto": "Y el problema no es una cuota. Es que las cuotas se acumulan sin que te des cuenta. La del celular, la del sofá, la de la nevera, la de esos zapatos que estaban en oferta.",
+   "tipo": "tachar",
+   "p": {
+    "items": [
+     "Cuota del celular",
+     "Cuota del sofá",
+     "Cuota de la nevera",
+     "Cuota de los zapatos"
+    ],
+    "tachar": false,
+    "titulo": "LAS CUOTAS"
+   }
+  },
+  {
+   "texto": "Cada una sola parece nada. Juntas, son un segundo alquiler.",
+   "tipo": "habla",
+   "p": {
+    "palabra": "UN SEGUNDO",
+    "sub": "alquiler",
+    "color": "rojo",
+    "pose": "cry",
+    "cara": "wide"
+   }
+  },
+  {
+   "texto": "¿Sabes cómo terminó lo de Gloria? Llamé a un técnico. Ciento ochenta dólares, y Gloria sigue viva, haciendo ruido, pero viva.",
+   "tipo": "gloria",
+   "p": {
+    "cartel": "Arreglo: $180",
+    "color": "verde",
+    "tiembla": false,
+    "cara": "happy"
+   }
+  },
+  {
+   "texto": "Ciento ochenta contra mil doscientos sesenta. No hay que ser economista.",
+   "tipo": "comparar",
+   "p": {
+    "izq": [
+     "CUOTAS",
+     "$1.260"
+    ],
+    "der": [
+     "TÉCNICO",
+     "$180"
+    ]
+   }
+  },
+  {
+   "texto": "La regla aquí es esta: si no lo puedes pagar de contado, pregúntate si de verdad lo necesitas hoy. Y si lo vas a pagar en cuotas, que sea sin intereses, por poco tiempo y por algo que dure más que las cuotas.",
+   "tipo": "tachar",
+   "p": {
+    "items": [
+     "Sin intereses",
+     "Por poco tiempo",
+     "Que dure más que las cuotas"
+    ],
+    "tachar": false,
+    "titulo": "SI ES EN CUOTAS"
+   }
+  },
+  {
+   "texto": "Y ahora, una cosa rápida: suscríbete para más trampas como estas. O no, y sigue pagando la garantía extendida de tu licuadora. Tú verás.",
+   "tipo": "suscribete",
+   "p": {
+    "remate": "…o sigue pagando la garantía de tu licuadora."
+   }
+  },
+  {
+   "texto": "Número cuatro: el café de todos los días.",
+   "tipo": "numero",
+   "p": {
+    "n": 4,
+    "titulo": "El café de todos los días"
+   }
+  },
+  {
+   "texto": "Ya sé, ya sé. Ya me vas a decir que el café es sagrado. Y tienes razón. No te voy a decir que dejes de tomarte tu café. Te voy a decir que lo veas en la libreta.",
+   "tipo": "habla",
+   "p": {
+    "pose": "present",
+    "cara": "happy",
+    "palabra": "EL CAFÉ ES SAGRADO",
+    "color": "terra",
+    "tam": 90
+   }
+  },
+  {
+   "texto": "Un café de cafetería cuesta, digamos, tres dólares con cincuenta. Uno al día, de lunes a viernes, son unos setenta y siete dólares al mes.",
+   "tipo": "cuenta",
+   "p": {
+    "partes": [
+     "$3,50",
+     "× 22 días",
+     "= $77"
+    ],
+    "etiqueta": "al mes",
+    "color": "negro"
+   }
+  },
+  {
+   "texto": "Más de novecientos dólares al año. Casi lo mismo que la nevera de Gloria.",
+   "tipo": "dinero",
+   "p": {
+    "desde": 0,
+    "hasta": 924,
+    "pre": "$",
+    "etiqueta": "al año en café",
+    "cara": "wide"
+   }
+  },
+  {
+   "texto": "La diferencia entre una mujer inteligente y las demás no es que ella no se tome el café. Es que lo elige. Se toma el de la cafetería los viernes, con calma, sentada, disfrutándolo.",
+   "tipo": "habla",
+   "p": {
+    "pose": "hip",
+    "cara": "happy",
+    "palabra": "LO ELIGE",
+    "sub": "viernes de cafetería",
+    "color": "verde"
+   }
+  },
+  {
+   "texto": "Y el resto de la semana lo prepara en casa y lo lleva en su termo. Así el café deja de ser un gasto automático y vuelve a ser un gusto.",
+   "tipo": "comparar",
+   "p": {
+    "izq": [
+     "AUTOMÁTICO",
+     "Cafetería todos los días"
+    ],
+    "der": [
+     "UN GUSTO",
+     "Termo + viernes de cafetería"
+    ]
+   }
+  },
+  {
+   "texto": "Número cinco, la que te prometí. El impuesto rosado.",
+   "tipo": "numero",
+   "p": {
+    "n": 5,
+    "titulo": "El impuesto rosado"
+   }
+  },
+  {
+   "texto": "Esta me da rabia de verdad. ¿Te has fijado que muchas veces la máquina de afeitar rosada cuesta más que la azul? ¿O que el champú \"para mujer\" cuesta más que el normal, aunque tenga casi los mismos ingredientes? No es tu imaginación.",
+   "tipo": "comparar",
+   "p": {
+    "izq": [
+     "ROSADA",
+     "Cuesta más"
+    ],
+    "der": [
+     "AZUL",
+     "Hace lo mismo"
+    ]
+   }
+  },
+  {
+   "texto": "En Nueva York, una oficina de protección al consumidor comparó cientos de productos casi iguales, uno para hombre y otro para mujer. Encontró que, en promedio, los de mujer costaban alrededor de un siete por ciento más.",
+   "tipo": "dinero",
+   "p": {
+    "cifra": "+7%",
+    "etiqueta": "más caros los productos \"para mujer\"",
+    "nota": "Fuente: Dpto. de Asuntos del Consumidor de Nueva York, 2015"
+   }
+  },
+  {
+   "texto": "Mismo producto, distinto color, distinto precio.",
+   "tipo": "titulo",
+   "p": {
+    "lineas": [
+     "MISMO PRODUCTO",
+     "DISTINTO PRECIO"
+    ],
+    "colores": [
+     "negro",
+     "rojo"
+    ],
+    "tam": 130
+   }
+  },
+  {
+   "texto": "La regla aquí es divertida: compra por lo que hace el producto, no por el color. La máquina azul afeita igual de bien. El desodorante neutro funciona igual.",
+   "tipo": "habla",
+   "p": {
+    "pose": "present",
+    "cara": "normal",
+    "palabra": "COMPRA POR",
+    "sub": "lo que hace, no por el color",
+    "color": "verde"
+   }
+  },
+  {
+   "texto": "Y si un producto rosado es más caro, ya sabes que estás pagando el empaque, no el resultado.",
+   "tipo": "habla",
+   "p": {
+    "pose": "hip",
+    "palabra": "PAGAS EL EMPAQUE",
+    "color": [
+     225,
+     90,
+     150
+    ]
+   }
+  },
+  {
+   "texto": "Número seis: las comisiones del banco.",
+   "tipo": "numero",
+   "p": {
+    "n": 6,
+    "titulo": "Las comisiones del banco"
+   }
+  },
+  {
+   "texto": "Esta es silenciosa. Cuota de manejo de la tarjeta, cobro por sacar dinero en un cajero de otro banco, cobro por mantener la cuenta, cobro por recibir el extracto en papel.",
+   "tipo": "telefono",
+   "p": {
+    "app": "Mi Banco",
+    "cobros": [
+     [
+      "Cuota de manejo",
+      "-$4,00"
+     ],
+     [
+      "Cajero de otro banco",
+      "-$3,50"
+     ],
+     [
+      "Mantenimiento cuenta",
+      "-$2,50"
+     ],
+     [
+      "Extracto en papel",
+      "-$1,90"
+     ]
+    ]
+   }
+  },
+  {
+   "texto": "Tres dólares aquí, cinco allá. Y como sale directo de la cuenta, nunca lo ves.",
+   "tipo": "habla",
+   "p": {
+    "pose": "phone",
+    "cara": "meh",
+    "palabra": "NUNCA LO VES",
+    "color": "gris"
+   }
+  },
+  {
+   "texto": "Revisa tu extracto del último mes y busca todo lo que diga comisión o cuota. Yo encontré casi doce dólares en un solo mes.",
+   "tipo": "telefono",
+   "p": {
+    "app": "Mi Banco",
+    "cobros": [
+     [
+      "Cuota de manejo",
+      "-$4,00"
+     ],
+     [
+      "Cajero de otro banco",
+      "-$3,50"
+     ],
+     [
+      "Mantenimiento cuenta",
+      "-$2,50"
+     ],
+     [
+      "Extracto en papel",
+      "-$1,90"
+     ]
+    ],
+    "total": "Total: $11,90",
+    "marca": 0
+   }
+  },
+  {
+   "texto": "Ciento cuarenta y cuatro dólares al año por nada. Por dejar que el banco me cobrara por guardarme el dinero.",
+   "tipo": "dinero",
+   "p": {
+    "cifra": "$144",
+    "etiqueta": "al año por guardar mi dinero",
+    "cara": "wide"
+   }
+  },
+  {
+   "texto": "La mujer inteligente hace tres cosas: compara bancos y cuentas sin cuota de manejo, saca efectivo solo en los cajeros de su banco y, cuando le cobran algo que no entiende, llama y pregunta.",
+   "tipo": "tachar",
+   "p": {
+    "items": [
+     "Cuenta sin cuota de manejo",
+     "Cajeros de su banco",
+     "Llama y pregunta"
+    ],
+    "tachar": false,
+    "titulo": "3 COSAS"
+   }
+  },
+  {
+   "texto": "A veces, solo por preguntar, te lo devuelven.",
+   "tipo": "habla",
+   "p": {
+    "pose": "phone",
+    "cara": "happy",
+    "palabra": "TE LO DEVUELVEN",
+    "color": "verde"
+   }
+  },
+  {
+   "texto": "Y número siete, la que más dinero te quita sin que lo notes: la comida que terminas botando.",
+   "tipo": "numero",
+   "p": {
+    "n": 7,
+    "titulo": "La comida que terminas botando"
+   }
+  },
+  {
+   "texto": "Las ofertas de dos por uno de cosas que se dañan. La lechuga que compraste con toda la intención de comer sano. El queso que encontraste al fondo de la nevera, ya con vida propia.",
+   "tipo": "gloria",
+   "p": {
+    "cartel": "¿Y ESTE QUESO?",
+    "color": "morado",
+    "tiembla": false,
+    "cara": "wide"
+   }
+  },
+  {
+   "texto": "Según un informe de la ONU sobre desperdicio de alimentos, en los hogares se botan en promedio unos setenta y nueve kilos de comida por persona al año.",
+   "tipo": "dinero",
+   "p": {
+    "cifra": "79 kg",
+    "etiqueta": "de comida botada por persona al año",
+    "nota": "Fuente: PNUMA, Índice de Desperdicio de Alimentos 2024"
+   }
+  },
+  {
+   "texto": "Setenta y nueve kilos. Eso es más o menos una bolsa grande del súper cada semana o dos, directo a la basura. Y cada kilo de esos lo pagaste tú.",
+   "tipo": "habla",
+   "p": {
+    "pose": "cry",
+    "cara": "wide",
+    "palabra": "LO PAGASTE TÚ",
+    "color": "rojo"
+   }
+  },
+  {
+   "texto": "La regla de una mujer inteligente: antes de ir al supermercado, mira primero lo que ya tienes. Planea las comidas de la semana con lo que hay.",
+   "tipo": "gloria",
+   "p": {
+    "cartel": "PRIMERO MIRA",
+    "color": "verde",
+    "tiembla": false,
+    "cara": "normal",
+    "pose": "point"
+   }
+  },
+  {
+   "texto": "Y compra el dos por uno solo si de verdad te vas a comer los dos. Si no, no es una oferta. Es una trampa con descuento.",
+   "tipo": "titulo",
+   "p": {
+    "lineas": [
+     "NO ES OFERTA",
+     "ES TRAMPA",
+     "CON DESCUENTO"
+    ],
+    "colores": [
+     "negro",
+     "rojo",
+     "negro"
+    ],
+    "tam": 130
+   }
+  },
+  {
+   "texto": "Vamos a repasar rápido. Una mujer inteligente ya no paga suscripciones fantasma. No compra garantías que repiten la del fabricante. No llena su vida de cuotas pequeñas.",
+   "tipo": "tachar",
+   "p": {
+    "items": [
+     "Suscripciones fantasma",
+     "Garantía extendida",
+     "Cuotas pequeñas"
+    ],
+    "titulo": "YA NO COMPRO"
+   }
+  },
+  {
+   "texto": "Elige su café en vez de pagarlo en automático. No paga el impuesto rosado. Revisa las comisiones del banco. Y no compra comida para botarla.",
+   "tipo": "tachar",
+   "p": {
+    "items": [
+     "Café automático",
+     "Impuesto rosado",
+     "Comisiones del banco",
+     "Comida para botar"
+    ],
+    "titulo": "YA NO COMPRO"
+   }
+  },
+  {
+   "texto": "No tienes que cambiar todo mañana. Yo empezaría por tres cosas esta misma semana.",
+   "tipo": "habla",
+   "p": {
+    "pose": "present",
+    "cara": "normal",
+    "palabra": "EMPIEZA POR 3",
+    "color": "terra"
+   }
+  },
+  {
+   "texto": "Primero, revisa tus suscripciones hoy, antes de dormir. Segundo, busca en tu extracto todo lo que diga comisión. Y tercero, antes de tu próxima ida al súper, abre la nevera y haz la lista con lo que ya hay.",
+   "tipo": "tachar",
+   "p": {
+    "items": [
+     "Hoy: revisa suscripciones",
+     "Busca \"comisión\" en el extracto",
+     "Lista del súper con lo que hay"
+    ],
+    "tachar": false,
+    "titulo": "ESTA SEMANA"
+   }
+  },
+  {
+   "texto": "¿Y sabes qué es lo bonito? Que ese dinero que dejas de botar no desaparece. Se queda contigo. Y ahí sí, gástalo en lo que de verdad te importa, sin culpa.",
+   "tipo": "habla",
+   "p": {
+    "pose": "hip",
+    "cara": "happy",
+    "palabra": "SE QUEDA CONTIGO",
+    "color": "verde",
+    "fondo": "sala"
+   }
+  },
+  {
+   "texto": "Y ahora cuéntame tú en los comentarios: ¿cuál de estas siete ya dejaste de comprar? ¿O cuál te acabas de dar cuenta de que sigues pagando? Yo leo todos los comentarios.",
+   "tipo": "pregunta",
+   "p": {
+    "frase": "¿Cuál de las 7 ya dejaste de comprar?"
+   }
+  },
+  {
+   "texto": "Si te sirvió, suscríbete y activa la campanita. Y mándale este video a tu hermana, a tu amiga o a tu mamá, esa que tiene cuatro plataformas y no ve ninguna. Le vas a hacer un favor.",
+   "tipo": "suscribete",
+   "p": {
+    "remate": "Mándaselo a la que tiene 4 plataformas y no ve ninguna.",
+    "cara": "happy"
+   }
+  },
+  {
+   "texto": "Y si quieres hacer las cuentas conmigo, la libreta está en la descripción.",
+   "tipo": "libreta",
+   "p": {
+    "donde": "Enlace en la descripción"
+   }
+  },
+  {
+   "texto": "Gloria, por cierto, te manda saludos. Sigue viva, sigue haciendo ruido, y es la única en esta casa que no se compra nada.",
+   "tipo": "gloria",
+   "p": {
+    "cartel": "¡Hola!",
+    "color": "terra",
+    "cara": "happy"
+   }
+  },
+  {
+   "texto": "El dinero sí alcanza. Cuando haces las cuentas.",
+   "tipo": "titulo",
+   "p": {
+    "lineas": [
+     "EL DINERO SÍ ALCANZA.",
+     "CUANDO HACES LAS CUENTAS."
+    ],
+    "colores": [
+     "negro",
+     "terra"
+    ],
+    "tam": 110
+   },
+   "min": 3.5
+  }
+ ]
+}
