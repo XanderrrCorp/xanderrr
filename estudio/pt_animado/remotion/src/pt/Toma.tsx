@@ -2,7 +2,7 @@
 // gradación). El plan da el Estado de cada cuadro; las medidas en píxeles escalan con el lado corto / 1080.
 import React, { useEffect, useMemo, useState } from "react";
 import * as THREE from "three";
-import { AbsoluteFill, continueRender, delayRender, useCurrentFrame, useVideoConfig } from "remotion";
+import { AbsoluteFill, continueRender, delayRender, getInputProps, useCurrentFrame, useVideoConfig } from "remotion";
 import { ThreeCanvas } from "@remotion/three";
 import { useThree } from "@react-three/fiber";
 import { EffectComposer } from "@react-three/postprocessing";
@@ -14,6 +14,11 @@ import { Mundo, Estado } from "./mundo";
 import { NombreEscenario } from "./escenarios";
 import { NombreLuz } from "./luces";
 import { serpientePrueba } from "./animalPrueba";
+
+/** vista previa liviana (render en la nube sin tarjeta de video): sin MSAA, sin lente ni bloom, sombras más chicas */
+export const VISTA = !!(getInputProps() as { vista?: boolean }).vista;
+
+const PRUEBA = getInputProps() as { sinTinta?: boolean; sinSombra?: boolean };
 
 export type Desenfoque = { foco?: [number, number, number]; cInf: number };
 export type Plan = (f: number) => Estado & { dof?: Desenfoque };
@@ -53,7 +58,7 @@ const Inner: React.FC<{ escenario: NombreEscenario; luz: NombreLuz; plan: Plan; 
   useEffect(() => () => fx.ink.dispose(), [fx]);
   const post = useMemo(() => (
     <EffectComposer multisampling={4}>
-      <primitive object={fx.ink} dispose={null} />
+      {PRUEBA.sinTinta ? <></> : <primitive object={fx.ink} dispose={null} />}
       <primitive object={fx.lens.pre} dispose={null} />
       <primitive object={fx.lens.main} dispose={null} />
       <primitive object={fx.bloom} dispose={null} />
@@ -62,13 +67,15 @@ const Inner: React.FC<{ escenario: NombreEscenario; luz: NombreLuz; plan: Plan; 
     </EffectComposer>
   ), [fx]);
   const cam = camera as THREE.PerspectiveCamera;
+  if ((getInputProps() as { medir?: boolean }).medir) console.log("[pt] cuadro", f, performance.now().toFixed(0));
   const s = plan(f);
   const look = mundo.update(s, cam, scene, Math.min(width, height));
   noInkFallback(mundo.root);
   const fwd = new THREE.Vector3(); cam.getWorldDirection(fwd);
   const foco = s.dof?.foco ? new THREE.Vector3(...s.dof.foco) : look;
   fx.lens.focus = Math.max(0.3, foco.clone().sub(cam.position).dot(fwd));
-  fx.lens.cInf = s.dof?.cInf ?? 0;
+  fx.lens.cInf = VISTA ? 0 : s.dof?.cInf ?? 0;
+  fx.bloom.intensity = VISTA ? 0 : 0.5;
   return (<><primitive object={mundo.root} dispose={null} />{post}</>);
 };
 
@@ -78,7 +85,7 @@ export const Toma: React.FC<{ escenario: NombreEscenario; luz: NombreLuz; plan: 
   if (!img) return null;
   return (
     <AbsoluteFill>
-      <ThreeCanvas width={width} height={height} shadows gl={{ antialias: false, stencil: false, powerPreference: "high-performance" }} camera={{ fov: 40, near: 0.1, far: 2000 }}>
+      <ThreeCanvas width={width} height={height} shadows={!PRUEBA.sinSombra} gl={{ antialias: false, stencil: false, powerPreference: "high-performance" }} camera={{ fov: 40, near: 0.1, far: 2000 }}>
         <Inner escenario={escenario} luz={luz} plan={plan} animal={img} />
       </ThreeCanvas>
     </AbsoluteFill>

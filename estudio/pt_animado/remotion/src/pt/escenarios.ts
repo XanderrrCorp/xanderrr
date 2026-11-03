@@ -63,7 +63,7 @@ export function arbol(r: () => number, alto = 6, verdes = VERDES): THREE.Group {
   const n = 3 + Math.floor(r() * 3);
   for (let i = 0; i < n; i++) {
     const rad = alto * (0.2 + r() * 0.12);
-    const copa = malla(jitter(new THREE.IcosahedronGeometry(rad, 4), r, 0.06), lam(verdes[Math.floor(r() * verdes.length)]));
+    const copa = malla(jitter(new THREE.IcosahedronGeometry(rad, 2), r, 0.06), lam(verdes[Math.floor(r() * verdes.length)]));
     copa.receiveShadow = false;
     copa.position.set((r() - 0.5) * alto * 0.35, alto * (0.62 + r() * 0.25), (r() - 0.5) * alto * 0.3);
     copa.scale.y = 0.8;
@@ -237,7 +237,7 @@ export function construir(nombre: NombreEscenario, noche = false): Escena {
     root.add(camino(r, 1.3, 90, 0.2, 0.6));
     // dosel: copas altas que tapan casi todo el cielo
     for (let i = 0; i < 110; i++) {
-      const d = malla(jitter(new THREE.IcosahedronGeometry(5 + r() * 4, 3), r, 0.08), lam(["#2f6a22", "#3a7a2a", "#285c1f"][Math.floor(r() * 3)]), true);
+      const d = malla(jitter(new THREE.IcosahedronGeometry(5 + r() * 4, 2), r, 0.08), lam(["#2f6a22", "#3a7a2a", "#285c1f"][Math.floor(r() * 3)]), true);
       d.receiveShadow = false; d.scale.y = 0.6; d.position.set(-45 + r() * 90, 8 + r() * 6, -4 - r() * 36); root.add(d);
     }
     for (let i = 0; i < 70; i++) {
@@ -249,7 +249,7 @@ export function construir(nombre: NombreEscenario, noche = false): Escena {
     for (let i = 0; i < 30; i++) { const m = mata(r, 1.4, 1.0, r() < 0.5 ? "helecho" : "pasto"); m.position.set(-25 + r() * 50, 0, 2 + r() * 6); root.add(m); }
     // segundo piso del monte: copas medianas y matas altas que cierran el hueco entre troncos
     for (let i = 0; i < 70; i++) {
-      const d = malla(jitter(new THREE.IcosahedronGeometry(1.6 + r() * 1.6, 3), r, 0.08), lam(["#3a7a2a", "#2f6a22", "#468a2c"][Math.floor(r() * 3)]));
+      const d = malla(jitter(new THREE.IcosahedronGeometry(1.6 + r() * 1.6, 1), r, 0.08), lam(["#3a7a2a", "#2f6a22", "#468a2c"][Math.floor(r() * 3)]));
       d.receiveShadow = false; d.position.set(-40 + r() * 80, 3 + r() * 4, -3 - r() * 22); root.add(d);
     }
     for (let i = 0; i < 40; i++) { const m = mata(r, 3 + r() * 2, 2.5 + r() * 1.5, "helecho"); m.position.set(-30 + r() * 60, 0, -2.5 - r() * 12); root.add(m); }

@@ -2,6 +2,7 @@
 // cardshade.ts) + animal (tarjeta 2D con contorno de tinta, iluminada por la escena, con sombra de contacto).
 // Todo es función pura del estado de cada cuadro (Estado): mismo cuadro → misma imagen.
 import * as THREE from "three";
+import { getInputProps } from "remotion";
 import { TONE, CHAR, untone } from "./shade";
 import { cardShade, blobMaterial, CARD_K } from "./cardshade";
 import { NOINK } from "./ink";
@@ -21,6 +22,7 @@ export type Estado = {
   actor: EstadoActor; animal?: EstadoAnimal; frio: number; t: number;
 };
 
+const VISTA_SOMBRA = (getInputProps() as { vista?: boolean }).vista ? 1024 : 2048;
 const ALTO_TARJETA = 2.3; // m: alto de la tarjeta de 600x1000 (el explorador mide ~1,75 m con sombrero)
 const K = 1.6;            // resolución del dibujo (960x1600)
 
@@ -61,13 +63,14 @@ export class Mundo {
 
   constructor(escenario: NombreEscenario, luzNombre: NombreLuz, animalImg?: HTMLImageElement | HTMLCanvasElement | null) {
     this.luzNombre = luzNombre;
+    if ((getInputProps() as { medir?: boolean }).medir) console.log("[pt] Mundo nuevo", performance.now().toFixed(0));
     this.esc = construir(escenario, luzNombre === "noche");
     this.root.add(this.esc.root);
     this.cielo = new THREE.Mesh(new THREE.SphereGeometry(900, 32, 16), cieloMat());
     this.cielo.layers.set(NOINK); this.cielo.renderOrder = -1;
     this.root.add(this.cielo, this.hemi, this.sol, this.sol.target);
     this.sol.castShadow = true;
-    this.sol.shadow.mapSize.set(2048, 2048);
+    this.sol.shadow.mapSize.set(VISTA_SOMBRA, VISTA_SOMBRA);
     const sc = this.sol.shadow.camera; sc.left = -16; sc.right = 16; sc.top = 16; sc.bottom = -16; sc.near = 1; sc.far = 120;
     // explorador
     const c = document.createElement("canvas"); c.width = 600 * K; c.height = 1000 * K;
@@ -93,7 +96,7 @@ export class Mundo {
 
   ponerAnimal(img0: HTMLImageElement | HTMLCanvasElement) {
     const img = recortar(img0); // sin márgenes transparentes: la base del animal toca el piso
-    const t = new THREE.Texture(img); t.colorSpace = THREE.SRGBColorSpace; t.needsUpdate = true; t.anisotropy = 8;
+    const t = new THREE.Texture(img); t.colorSpace = THREE.SRGBColorSpace; t.needsUpdate = true; t.anisotropy = (getInputProps() as { vista?: boolean }).vista ? 1 : 8;
     const asp = img.width / img.height;
     const mat = cardShade(new THREE.MeshLambertMaterial({ map: t, alphaTest: 0.4, side: THREE.DoubleSide, transparent: false }));
     const geo = new THREE.PlaneGeometry(asp, 1); geo.translate(0, 0.5, 0);

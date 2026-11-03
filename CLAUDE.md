@@ -487,7 +487,11 @@ Estado al 04-10-2026. El repositorio es PÚBLICO: nunca escribir claves, tokens 
   lente → bloom → NEUTRAL → gradación; píxeles escalan con lado corto/1080), pt/camara.ts, Plantillas.tsx (Intro,
   Encuentro, Transicion con medidor, Cierre con globo). Render en la nube: scripts/fotos.mjs / clips.mjs con
   headless_shell de /opt/pw-browsers y gl swangle; TMPDIR en el scratchpad. QA: scripts/short_qa.py. Animal de prueba
-  = serpiente dibujada por código (en producción: Gemini). Fase 4 (integración, Gemini, Node en su PC) sin empezar.
+  = serpiente dibujada por código (en producción: Gemini). Verificador Opus de la Fase 2: 2 rondas (5,5 → 7/10 contra
+  su muestra): el mundo casi sin tinta (como la muestra), casa durazno con cerca de varas, montañas triangulares.
+  Fase 4 PREPARADA, sin enganchar: estudio/pt_animado/plan.py (dónde va cada plantilla y sus claves, escenario y luz
+  por palabras del guion; tests/test_pt_plan_animado.py). Falta: Node/Remotion en su PC (instalador), imágenes del
+  animal con Gemini (fondo liso → recorte), clips a assets/animaciones + EDL, y su visto bueno de las Fases 1-3.
 ## Pendiente
 - Preguntas sin responder del dueño: ¿en qué canal notó la voz lenta? (Peligro Tropical está en 1.3 en
   config/proveedores.json; Tracy en 1.0 por pedido suyo). ¿En qué momento sale «la tira de animales» sin sentido?

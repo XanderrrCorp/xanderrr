@@ -1,6 +1,10 @@
 // Texturas pintadas por código (Canvas2D), diseño propio de Peligro Tropical: pasto, barro, teja, pared encalada con
 // zócalo, baldosa, madera, agua, piedra, y tarjetas con transparencia (pasto, helecho, hoja grande).
 import * as THREE from "three";
+import { getInputProps } from "remotion";
+
+/** filtrado anisotrópico: caro sin tarjeta de video (vista previa en la nube = 1) */
+export const ANISO = (getInputProps() as { vista?: boolean }).vista ? 1 : 8;
 
 export const rnd = (seed: number) => { let s = seed >>> 0 || 1; return () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296); };
 
@@ -13,7 +17,7 @@ const tex = (w: number, h: number, draw: (g: CanvasRenderingContext2D, r: () => 
   t.colorSpace = THREE.SRGBColorSpace;
   t.wrapS = t.wrapT = repeat[0] === 1 && repeat[1] === 1 && alpha ? THREE.ClampToEdgeWrapping : THREE.RepeatWrapping;
   t.repeat.set(repeat[0], repeat[1]);
-  t.anisotropy = 8;
+  t.anisotropy = ANISO;
   return t;
 };
 
