@@ -17,6 +17,8 @@ export type PropsPlantilla = {
   claves: Record<string, number>; expresion?: Expr;
   /** solo TRANSICIÓN: nivel de peligro 0-10 al que sube el medidor */
   nivel?: number;
+  /** alto del animal en metros (serpiente 0,85; toro o caballo ~1,6) */
+  altoAnimal?: number;
 };
 
 const LARGO: Record<Tipo, number> = { intro: 10, encuentro: 8, transicion: 4, cierre: 12 };
@@ -68,7 +70,7 @@ function planIntro(p: PropsPlantilla): { plan: Plan; flash: number } {
     const cam = camaraEn(claves, f, p.formato);
     cam.pos = sumar(cam.pos, golpe(f, [susto], 0.07));
     const vis = f < revela ? 0 : Math.min(1, (f - revela) / 6);
-    return { cam, actor, animal: { x: ax[0], z: ax[1], alto: 0.9, visible: vis, bote: Math.sin((f - revela) * 0.6) * Math.max(0, 1 - (f - revela) / 15) }, frio, t: f / FPS, dof };
+    return { cam, actor, animal: { x: ax[0], z: ax[1], alto: p.altoAnimal ?? 0.9, visible: vis, bote: Math.sin((f - revela) * 0.6) * Math.max(0, 1 - (f - revela) / 15) }, frio, t: f / FPS, dof };
   };
   void F;
   return { plan, flash };
@@ -77,7 +79,8 @@ function planIntro(p: PropsPlantilla): { plan: Plan; flash: number } {
 // --------------------------------------------------------------------------------------------- ENCUENTRO
 function planEncuentro(p: PropsPlantilla): Plan {
   const c = p.claves, aparece = antes(c.aparece ?? 2.2), reaccion = antes(c.reaccion ?? 3.6), muerde = antes(c.muerde ?? 5.4);
-  const ax: [number, number] = [1.6, -0.3];
+  const alto = p.altoAnimal ?? 0.85, extra = Math.max(0, alto - 0.85);
+  const ax: [number, number] = [1.6 + extra * 0.9, -0.3 - extra * 1.2]; // los grandes, un poco más lejos y a un lado
   return (f) => {
     const w = caminar(f, 0, aparece, -2.4);
     const actor: EstadoActor = { x: w.x, z: 0, vista: f < aparece + 4 ? "lado" : "frente", expr: "neutral", fase: w.fase, modo: w.andando ? "march" : "stand", parpadeo: parpadeo(f) };
@@ -94,7 +97,7 @@ function planEncuentro(p: PropsPlantilla): Plan {
     const cam = camaraEn(claves, f, p.formato);
     cam.pos = sumar(cam.pos, golpe(f, [muerde], 0.08));
     const t = (f - aparece) / 8, pop = f < aparece ? 0 : t < 1 ? suave(t) * 1.12 : 1 + 0.12 * Math.exp(-(f - aparece - 8) / 4) * Math.cos((f - aparece - 8) * 0.7);
-    return { cam, actor, animal: { x: ax[0], z: ax[1], alto: 0.85, visible: pop }, frio, t: f / FPS, dof };
+    return { cam, actor, animal: { x: ax[0], z: ax[1], alto, visible: pop }, frio, t: f / FPS, dof };
   };
 }
 
