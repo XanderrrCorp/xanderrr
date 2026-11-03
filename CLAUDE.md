@@ -452,6 +452,25 @@ Estado al 04-10-2026. El repositorio es PÚBLICO: nunca escribir claves, tokens 
   edición humana la había dejado solo en el último 10 %): humano «stock_minutos» 3,5 (barra 1-8 min en la tarjeta
   Edición humana) → planificar: escena final desde min(3,5 min, 90 % del video). Quitados de la página: fila del
   video del seminario, barra de cortes del seminario y la barra vieja «escena final desde el %».
+- (02/03-11) CÓDIGO DEL ÉXITO (MUJERES) ANIMADO, fuera de Xandart: motor en estudio/animado/ (leer LEEME.md). Hechos
+  3 videos largos (todo por código, sin stock): «Estándares altos» (13:28, tabla de 5 filas), «7 cosas… después de
+  los 40» (16:22, barra COSA N DE 8) y «Dejar de perseguir» (14:48, camino de 6 paradas); + 4 Shorts verticales del
+  primero (ganchos aprobados) y SEO. Voz MiniMax voz_id del canal Tracy, velocidad 1.15 (el dueño: «habla muy lento»
+  a 0.95), un audio por segmento; El Profesor (capas del dueño, boca con Rhubarb Lip Sync «-r phonetic» por segmento)
+  en gancho/CTA/cierre/presentación de cada punto, brazo a la sien en frases fuertes, pose «apuntar» en la pantalla
+  final (20 s: huecos punteados de video y suscripción + botón UNIRME «El círculo de las dueñas»); personajes.py
+  (mismo estilo, sin caras reales); barra de progreso genérica (seccion en escenas, cabe con 8); sfx del dueño por
+  eventos (-12 a -22 dB), música de musica/ con ducking (NO puesta: está en su PC, 143 MB; se le pidió VLC → MP3 o
+  Remote Control, que no apareció), master -14 LUFS / -1 dBTP; capítulos automáticos, descripcion_final.txt,
+  pantalla_final.txt, 3 miniaturas por video (terciopelo + objeto por código, sin foto ni firma). Movimiento (el
+  dueño: «escenas estáticas >10 s»): escenas ≤9 s (plan.dividir_largas mete frase/tipografía de lo que dice la voz),
+  cámara 10 % + golpe de zoom cada 3,5 s + barrido de luz; qc_movimiento.py: 0 tramos quietos ≥3 s. Guion: el dueño
+  lo escribe (en el 1.º pidió mejorarlo: «Eso ya no lo acepto» eran 5 palabras → «Ya no lo acepto»). Reglas del canal
+  mujeres: nunca «| Brian Tracy» en títulos, leyenda obligatoria en la descripción, marcar contenido sintético, sin
+  emojis en pantalla (salen cuadritos). Los guiones, contenido.py, voces y videos estaban en el scratchpad (se pierden).
+  PENDIENTE: música (cuando la mande); integrar este motor a Xandart (el dueño: «me interesa»; Claude arma el plan de
+  escenas desde el guion eligiendo entre ~40 tipos, revisión antes de armar, Shorts con ganchos a aprobar) — mostrarle
+  el plan y esperar visto bueno; Shorts de los otros 2 videos si los pide.
 ## Pendiente
 - Preguntas sin responder del dueño: ¿en qué canal notó la voz lenta? (Peligro Tropical está en 1.3 en
   config/proveedores.json; Tracy en 1.0 por pedido suyo). ¿En qué momento sale «la tira de animales» sin sentido?
