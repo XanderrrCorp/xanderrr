@@ -6,6 +6,7 @@ import { twoTone } from "./shade";
 import { NOINK } from "./ink";
 import * as P from "./pintura";
 import { construirSala } from "./sala";
+import * as F from "./finca";
 
 export type NombreEscenario = "casa" | "finca" | "selva" | "rio";
 export const ESCENARIOS: NombreEscenario[] = ["casa", "finca", "selva", "rio"];
@@ -195,10 +196,10 @@ function casaTeja(zocalo = "#b5583a", base = "#e8a070"): THREE.Group {
   const madera = lam("#ffffff", P.madera([1, 1], "#6a4428"));
   const puerta = malla(new THREE.BoxGeometry(1.0, 2.0, 0.08), madera);
   puerta.position.set(-1.2, 1.0, D / 2 + 0.03); g.add(puerta);
-  for (const x of [1.4, 3.0]) {
-    const v = malla(new THREE.BoxGeometry(0.9, 0.9, 0.08), lam("#2a3a44")); v.position.set(x, 1.6, D / 2 + 0.03); g.add(v);
-    const marco = malla(new THREE.BoxGeometry(1.1, 0.12, 0.14), madera); marco.position.set(x, 1.1, D / 2 + 0.06); g.add(marco);
-  }
+  for (const x of [1.4, 3.0]) { const v = F.ventanaCasa(); v.position.set(x, 1.6, D / 2 + 0.03); g.add(v); }
+  const ba = F.banca(); ba.position.set(2.2, 0, D / 2 + 0.55); g.add(ba);
+  for (const [x, c] of [[-2.6, "#c4592e"], [0.6, "#2f6fd0"], [3.6, "#e3a33a"]] as const) { const m = F.materaColgante(c); m.position.set(x, H - 0.55, D / 2 + 1.25); g.add(m); }
+  const viga = malla(new THREE.BoxGeometry(W, 0.14, 0.14), madera); viga.position.set(0, H - 0.05, D / 2 + 1.3); g.add(viga);
   for (const x of [-W / 2 + 0.3, 0, W / 2 - 0.3]) { // horcones del corredor
     const p = malla(new THREE.CylinderGeometry(0.09, 0.11, H, 6), madera); p.position.set(x, H / 2, D / 2 + 1.3); g.add(p);
   }
@@ -229,6 +230,16 @@ export function construir(nombre: NombreEscenario, noche = false): Escena {
     for (let i = 0; i < 4; i++) { const p = palma(r, 8 + r() * 4); p.position.set(r() < 0.5 ? -18 - r() * 10 : 14 + r() * 14, 0, -8 - r() * 16); root.add(p); }
     for (let i = 0; i < 26; i++) { const m = mata(r, 1.0, 0.7); m.position.set(-25 + r() * 50, 0, 2.2 + r() * 6); root.add(m); }
     for (let i = 0; i < 18; i++) { const m = mata(r, 1.2, 0.9); m.position.set(-30 + r() * 60, 0, -1.4 - r() * 4); root.add(m); }
+    // utilería de finca (finca.ts)
+    for (const [x, z] of [[4.6, -6.2], [-3.6, -7.8], [6.8, -9.5], [-9.5, -6.5]]) { const pl = F.platanera(r, 3 + r()); pl.position.set(x, 0, z); root.add(pl); }
+    for (let i = 0; i < 12; i++) { const c = F.cafeto(r); c.position.set(6 + (i % 4) * 1.4, 0, -7 - Math.floor(i / 4) * 1.5); root.add(c); }
+    for (const [x, z, col] of [[-2.3, 1.3, "#f3efe4"], [-1.5, 2.2, "#b8642e"], [3.3, 1.7, "#f3efe4"], [-3.4, 2.6, "#2a2a2a"]] as const) { const gl = F.gallina(col, r); gl.position.set(x, 0, z); root.add(gl); }
+    const ta = F.tanque(); ta.position.set(-2.2, 0, -10.5); root.add(ta);
+    const te = F.tendedero(); te.position.set(2.8, 0, -9); te.rotation.y = -0.15; root.add(te);
+    const ca = F.carretilla(); ca.position.set(-4.3, 0, -2.2); ca.rotation.y = 0.6; root.add(ca);
+    const cn = F.canecas(); cn.position.set(-2.9, 0, -3.3); root.add(cn);
+    const le = F.lena(); le.position.set(4.2, 0, -3.4); le.rotation.y = -0.3; root.add(le);
+    for (const [x, z] of [[-5.6, -3.4], [6.0, -3.6], [-7.5, -9.0]]) { const cy = F.cayena(r); cy.position.set(x, 0, z); root.add(cy); }
     root.add(montanas(r, -200, "#7f9a62")); root.add(montanas(r, -320, "#a8a0c0", 6));
     cielo(root, r);
     return { root, animar, actor: vacio, animal: [2.2, 0.4], cam: { pos: [0.5, 1.55, 7.2], look: [0.3, 1.0, 0], fov: 38 }, interior: false };

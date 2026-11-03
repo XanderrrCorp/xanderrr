@@ -493,7 +493,8 @@ Estado al 04-10-2026. El repositorio es PÚBLICO: nunca escribir claves, tokens 
   look «casi sin tinta» de la muestra): Toma.tsx usa los valores de tinta de la skill; la casa ahora es pt/sala.ts (sala
   colombiana con mucha utilería por código: papel de colgadura, zócalo, cuadros propios, cortinas con pliegues, lámpara
   con charco cálido de noche, hamaca, sombrero vueltiao, reloj y ventilador que se mueven, radio, tapete, canasto).
-  Técnicas, no copias. FALTA: subir finca, selva y río a ese nivel y volver a sacar los 8 clips (en la nube ~1 h c/u).
+  Finca (pt/finca.ts): platanera, cafetos, gallinas, tendedero, carretilla, canecas, leña, cayenas, tanque; casa con
+  postigos, jardineras, materas colgantes y banca. Técnicas, no copias. FALTA: subir selva y río a ese nivel y volver a sacar los 8 clips (en la nube ~1 h c/u).
   Fase 4 PREPARADA, sin enganchar: estudio/pt_animado/plan.py (dónde va cada plantilla y sus claves, escenario y luz
   por palabras del guion; tests/test_pt_plan_animado.py). Falta: Node/Remotion en su PC (instalador), imágenes del
   animal con Gemini (fondo liso → recorte), clips a assets/animaciones + EDL, y su visto bueno de las Fases 1-3.
