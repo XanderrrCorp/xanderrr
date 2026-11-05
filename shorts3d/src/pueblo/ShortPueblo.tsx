@@ -6,7 +6,7 @@ import {useThree} from '@react-three/fiber';
 import * as THREE from 'three';
 import {montar, Montaje} from './montaje';
 import {SPEC, dB, limpio} from './spec';
-import {Luz} from './Pueblo';
+import {Mirada} from './look/mirada';
 import {FUENTE} from './fuente';
 import type {Episodio, Cam} from './tipos';
 import {clamp, lerp, prog, sp} from '../anim';
@@ -25,7 +25,7 @@ const Camara: React.FC<{mt: Montaje}> = ({mt}) => {
 const Mundo: React.FC<{ep: Episodio; mt: Montaje}> = ({ep, mt}) => {
   const f = useCurrentFrame();
   const e = ep.escenas[mt.escenaEn(f).id];
-  return (<><Camara mt={mt} /><Luz noche={e.noche} interior={e.interior} />{e.render(mt.ctx(f))}</>);
+  return (<><Mirada cam={mt.planoEn(f).cam} noche={e.noche} interior={e.interior} />{e.render(mt.ctx(f))}</>);
 };
 /** punch-in del 5 % en los golpes (se queda hasta el final del plano) */
 const punch = (mt: Montaje, f: number) => {
@@ -146,7 +146,7 @@ export const crearShort = (ep: Episodio) => {
     return (
       <AbsoluteFill style={{background: SPEC.color.cielo}}>
         <AbsoluteFill style={{transform: `scale(${pk})`}}>
-          <ThreeCanvas width={SPEC.ancho} height={SPEC.alto} shadows gl={{antialias: true}} camera={{fov: 40, near: 0.05, far: 200, position: [0, 5, 20]}}>
+          <ThreeCanvas width={SPEC.ancho} height={SPEC.alto} shadows gl={{antialias: false, stencil: false, powerPreference: 'high-performance', toneMappingExposure: 1.0}} camera={{fov: 40, near: 0.05, far: 800, position: [0, 5, 20]}}>
             <Mundo ep={ep} mt={mt} />
           </ThreeCanvas>
         </AbsoluteFill>

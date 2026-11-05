@@ -107,6 +107,12 @@ Estado al 04-10-2026. El repositorio es PÚBLICO: nunca escribir claves, tokens 
   BASURERO x=-200, OFICINA z=200 (los hijos de un set van en coordenadas RELATIVAS; cámaras y «cabezas» en absolutas).
 - Guion: líneas {id, escena, texto, habla?, quien? (globo), clave?, sfx?, golpe?, tensa? (música tensa)}. Las líneas
   marcadas «propuesta» las escribí yo para llegar a 1:45 (el guion del dueño daba 1:25): esperar su visto bueno.
+- (05-11) SKILL «cartoon-3d-short» del dueño (MIT; código en `shorts3d/src/skill_cartoon/`, instrucciones en
+  `.claude/skills/cartoon-3d-short/`; sus frames de referencia NO se suben). Decisión del dueño: los 6 usan los FONDOS y
+  SONIDOS de la skill; personajes 2D de la skill (toon.ts) en los ep 2, 6 y 4; bloques 3D BRILLANTES (plástico con
+  barniz, «muy Roblox») en 5, 1 y 3. `src/pueblo/look/mirada.tsx` conecta la skill: dos tonos, sol relativo a la
+  cámara, cielo, nubes, tinta, desenfoque (Cam.dof/foco), bloom, tono NEUTRAL, gradación + ajuste de NOCHE propio.
+  El relleno desde la cámara solo ilumina a los personajes de plástico (el mundo de dos tonos lo ignora).
 - `node scripts/revisar_pueblo.mjs` (EP=5) comprueba la ficha; `python scripts/sonidos_pueblo.py` (gratis);
   `EP=5 python scripts/voz_pueblo.py --pagar` (cobra, pedir permiso). Render en la nube ~1,8 s/cuadro.
 

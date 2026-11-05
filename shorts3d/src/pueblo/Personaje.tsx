@@ -13,8 +13,9 @@ export type Ropa = {
   bufanda?: string; mochila?: string; delantal?: string; banda?: string; bigote?: string; barriga?: boolean;
   falda?: string; coletas?: boolean; lentes?: boolean; corbata?: string; pijama?: boolean;
 };
+/** plástico brillante de juguete: barniz (clearcoat) con reflejos del entorno */
 const Mate: React.FC<{c: string; o?: number}> = ({c, o = 1}) => (
-  <meshStandardMaterial color={c} roughness={0.55} metalness={0} transparent={o < 1} opacity={o} depthWrite={o > 0.5} />
+  <meshPhysicalMaterial color={c} roughness={0.32} metalness={0} clearcoat={1} clearcoatRoughness={0.12} envMapIntensity={0.9} transparent={o < 1} opacity={o} depthWrite={o > 0.5} />
 );
 const Caja: React.FC<{p: V3; s: V3; c: string; o?: number; r?: V3}> = ({p, s, c, o, r}) => (
   <mesh position={p} rotation={r} castShadow={o === undefined || o > 0.5}>

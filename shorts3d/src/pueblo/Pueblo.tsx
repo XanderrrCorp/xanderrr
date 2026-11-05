@@ -8,11 +8,15 @@ import {SPEC} from './spec';
 import {fuenteLista} from './fuente';
 import type {V3} from './tipos';
 import {rnd} from '../anim';
+import {matMundo} from './look/mirada';
+import {grassHD, cobbleHD, roofHD, stoneHD, rep, planksHD} from '../skill_cartoon/bridge/paint';
+const T = {pasto: () => rep(grassHD(), 18, 18), plaza: () => rep(cobbleHD(), 6, 6), camino: () => rep(stoneHD(), 2, 8), madera: () => rep(planksHD(), 2, 2)};
 
 const C = SPEC.color;
-export const M: React.FC<{c: string; e?: string; ei?: number}> = ({c, e, ei}) => <meshStandardMaterial color={c} roughness={0.6} flatShading emissive={e ?? '#000'} emissiveIntensity={ei ?? 0} />;
-export const Caja: React.FC<{p: V3; s: V3; c: string; r?: V3; e?: string; ei?: number}> = ({p, s, c, r, e, ei}) => (
-  <mesh position={p} rotation={r} castShadow receiveShadow><boxGeometry args={s} /><M c={c} e={e} ei={ei} /></mesh>
+/** material del mundo: el Lambert de dos tonos de la skill (sombra fría, luz cálida), con textura pintada opcional */
+export const M: React.FC<{c: string; e?: string; ei?: number; map?: THREE.Texture}> = ({c, e, ei, map}) => <primitive object={matMundo(c, {e, ei, map})} attach="material" />;
+export const Caja: React.FC<{p: V3; s: V3; c: string; r?: V3; e?: string; ei?: number; sombra?: boolean; map?: THREE.Texture}> = ({p, s, c, r, e, ei, sombra = true, map}) => (
+  <mesh position={p} rotation={r} castShadow={sombra} receiveShadow><boxGeometry args={s} /><M c={c} e={e} ei={ei} map={map} /></mesh>
 );
 export const Techo: React.FC<{p: V3; w: number; d: number; h: number; c: string; rot?: number}> = ({p, w, d, h, c, rot = 0}) => (
   <mesh position={p} rotation={[0, rot, 0]} castShadow>
@@ -25,7 +29,7 @@ export const DosAguas: React.FC<{p: V3; w: number; d: number; h: number; c: stri
     const s = new THREE.Shape(); s.moveTo(-w / 2 - 0.25, 0); s.lineTo(w / 2 + 0.25, 0); s.lineTo(0, h); s.closePath();
     const g = new THREE.ExtrudeGeometry(s, {depth: d + 0.4, bevelEnabled: false}); g.translate(0, 0, -(d + 0.4) / 2); return g;
   }, [w, d, h]);
-  return <mesh geometry={geo} position={p} castShadow><M c={c} /></mesh>;
+  return <mesh geometry={geo} position={p} castShadow><M c="#ffffff" map={roofHD(c)} /></mesh>;
 };
 
 // ---------- carteles con letras (Montserrat) ----------
@@ -148,10 +152,10 @@ export const Pueblo: React.FC<{f: number; noche?: boolean; hora?: number; sinCas
   }), []);
   return (
     <group>
-      <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow><circleGeometry args={[60, 48]} /><M c={C.pasto} /></mesh>
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.02, 0]} receiveShadow><circleGeometry args={[9.5, 40]} /><M c={C.plaza} /></mesh>
+      <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow><circleGeometry args={[60, 48]} /><M c="#ffffff" map={T.pasto()} /></mesh>
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.02, 0]} receiveShadow><circleGeometry args={[9.5, 40]} /><M c="#ffffff" map={T.plaza()} /></mesh>
       {[0, Math.PI / 2, Math.PI, -Math.PI / 2].map((r) => (
-        <mesh key={r} rotation={[-Math.PI / 2, 0, r]} position={[Math.sin(r) * 17, 0.015, Math.cos(r) * 17]} receiveShadow><planeGeometry args={[3.2, 16]} /><M c={C.camino} /></mesh>
+        <mesh key={r} rotation={[-Math.PI / 2, 0, r]} position={[Math.sin(r) * 17, 0.015, Math.cos(r) * 17]} receiveShadow><planeGeometry args={[3.2, 16]} /><M c="#ffffff" map={T.camino()} /></mesh>
       ))}
       <Fuente f={f} />
       <TorreReloj hora={hora} noche={noche} />
@@ -217,10 +221,10 @@ export const CUARTO: V3 = [200, 0, 0];
 /** cuarto de un niño: cama, ventana, armario, lámpara. Se ve desde +z (pared frontal abierta). */
 export const Cuarto: React.FC<{noche?: boolean; vacio?: boolean; pared?: string; luzLampara?: boolean; children?: React.ReactNode}> = ({noche, vacio, pared = '#ffd6e0', luzLampara = true, children}) => (
   <group position={CUARTO}>
-    <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow><planeGeometry args={[8, 7]} /><M c="#c98a5a" /></mesh>
-    <Caja p={[0, 1.6, -3.5]} s={[8, 3.2, 0.2]} c={pared} />
-    <Caja p={[-4, 1.6, 0]} s={[0.2, 3.2, 7]} c={pared} />
-    <Caja p={[4, 1.6, 0]} s={[0.2, 3.2, 7]} c={pared} />
+    <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow><planeGeometry args={[8, 7]} /><M c="#e0a070" map={T.madera()} /></mesh>
+    <Caja p={[0, 1.6, -3.5]} s={[8, 3.2, 0.2]} c={pared} sombra={false} />
+    <Caja p={[-4, 1.6, 0]} s={[0.2, 3.2, 7]} c={pared} sombra={false} />
+    <Caja p={[4, 1.6, 0]} s={[0.2, 3.2, 7]} c={pared} sombra={false} />
     {/* ventana con la noche o el día afuera */}
     <group position={[1.6, 1.8, -3.39]}>
       <mesh><planeGeometry args={[1.6, 1.3]} /><meshBasicMaterial color={noche ? '#28407e' : '#8fd3ff'} /></mesh>
@@ -284,10 +288,10 @@ export const OFICINA: V3 = [0, 0, 200];
 /** oficina del alcalde: escritorio, bandera, retrato, ventana a la plaza */
 export const Oficina: React.FC<{children?: React.ReactNode}> = ({children}) => (
   <group position={OFICINA}>
-    <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow><planeGeometry args={[9, 7]} /><M c="#7f5539" /></mesh>
-    <Caja p={[0, 1.7, -3.5]} s={[9, 3.4, 0.2]} c="#e9d8a6" />
-    <Caja p={[-4.5, 1.7, 0]} s={[0.2, 3.4, 7]} c="#e9d8a6" />
-    <Caja p={[4.5, 1.7, 0]} s={[0.2, 3.4, 7]} c="#e9d8a6" />
+    <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow><planeGeometry args={[9, 7]} /><M c="#b07a50" map={T.madera()} /></mesh>
+    <Caja p={[0, 1.7, -3.5]} s={[9, 3.4, 0.2]} c="#e9d8a6" sombra={false} />
+    <Caja p={[-4.5, 1.7, 0]} s={[0.2, 3.4, 7]} c="#e9d8a6" sombra={false} />
+    <Caja p={[4.5, 1.7, 0]} s={[0.2, 3.4, 7]} c="#e9d8a6" sombra={false} />
     <Caja p={[0, 0.4, -1.5]} s={[3, 0.8, 1.3]} c="#6f4518" />
     <Caja p={[0, 0.82, -1.5]} s={[3.1, 0.06, 1.4]} c="#8b5e34" />
     <Caja p={[0, 0.65, -2.6]} s={[1, 1.3, 0.8]} c="#9d0208" />
