@@ -2,7 +2,7 @@
 import type React from 'react';
 import type * as THREE from 'three';
 export type V3 = [number, number, number];
-export type Hablante = 'narrador' | 'nino' | 'nina' | 'bruno' | 'adulto' | 'criatura';
+export type Hablante = 'narrador' | 'nino' | 'nina' | 'bruno' | 'adulto' | 'criatura' | 'abuela';
 export type Linea = {
   id: string; texto: string; escena: string;
   habla?: Hablante; quien?: string; // quien = personaje sobre el que sale el globo

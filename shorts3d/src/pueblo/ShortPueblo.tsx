@@ -1,6 +1,6 @@
 // La composición compartida de «En este pueblo…». Cada episodio le pasa su guion y sus escenas.
 import React, {useLayoutEffect} from 'react';
-import {AbsoluteFill, Audio, Sequence, staticFile, useCurrentFrame} from 'remotion';
+import {AbsoluteFill, Audio, Sequence, getInputProps, staticFile, useCurrentFrame} from 'remotion';
 import {ThreeCanvas} from '@remotion/three';
 import {useThree} from '@react-three/fiber';
 import * as THREE from 'three';
@@ -50,7 +50,7 @@ const trozosDe = (ep: Episodio, mt: Montaje) => {
     l.m.words.forEach((w) => {
       const prev = cur[cur.length - 1];
       if (cur.length && (cur.length >= 4 || (cur.length >= 2 && /[.,…?!:]$/.test(prev.t)))) { out.push(cur); cur = []; }
-      cur.push({t: w.text.replace(/[—«»"]/g, ''), s: l.clipAt + w.start * FPS, e: l.clipAt + w.end * FPS, clave: cl.has(limpio(w.text)) || /\d/.test(w.text)});
+      cur.push({t: w.text.replace(/[—«»"“”]/g, ''), s: l.clipAt + w.start * FPS, e: l.clipAt + w.end * FPS, clave: cl.has(limpio(w.text)) || /\d/.test(w.text)});
     });
     if (cur.length) out.push(cur);
     return out;
@@ -86,7 +86,7 @@ const Globo: React.FC<{ep: Episodio; mt: Montaje; f: number}> = ({ep, mt, f}) =>
   if (v.z > 1) return null;
   x = Math.max(320, Math.min(760, x)); y = Math.max(260, Math.min(1150, y));
   const a = sp(f, l.from + 1, 11, 0.5);
-  const txt = l.texto.replace(/^—\s*/, '').replace(/^«|»$/g, '');
+  const txt = l.texto.replace(/^—\s*/, '').replace(/\s*—\s*(gritó|dijo|susurró).*$/, '').replace(/^«|»$/g, '');
   return (
     <div style={{position: 'absolute', left: x, top: y, transform: `translate(-50%, -100%) scale(${clamp(a, 0, 1.1)})`, transformOrigin: '50% 100%'}}>
       <div style={{background: '#fff', color: '#111', fontFamily: FUENTE, fontWeight: 800, fontSize: 60, lineHeight: 1.12, padding: '24px 34px', borderRadius: 34,
@@ -125,6 +125,8 @@ const CTA: React.FC<{mt: Montaje; f: number}> = ({mt, f}) => {
   );
 };
 
+/** previas rápidas: inputProps {dpr: 0.5} dibuja el lienzo 3D de verdad a la mitad (R3F no baja de 1 por sí solo) */
+const dprPrevia = () => (getInputProps() as {dpr?: number}).dpr;
 // ---------- audio ----------
 const SFX_GAIN = 0.5;
 export const crearShort = (ep: Episodio) => {
@@ -146,7 +148,7 @@ export const crearShort = (ep: Episodio) => {
     return (
       <AbsoluteFill style={{background: SPEC.color.cielo}}>
         <AbsoluteFill style={{transform: `scale(${pk})`}}>
-          <ThreeCanvas width={SPEC.ancho} height={SPEC.alto} shadows gl={{antialias: false, stencil: false, powerPreference: 'high-performance', toneMappingExposure: 1.0}} camera={{fov: 40, near: 0.05, far: 800, position: [0, 5, 20]}}>
+          <ThreeCanvas width={SPEC.ancho} height={SPEC.alto} {...(dprPrevia() ? {dpr: dprPrevia()} : {})} shadows gl={{antialias: false, stencil: false, powerPreference: 'high-performance', toneMappingExposure: 1.0}} camera={{fov: 40, near: 0.05, far: 800, position: [0, 5, 20]}}>
             <Mundo ep={ep} mt={mt} />
           </ThreeCanvas>
         </AbsoluteFill>

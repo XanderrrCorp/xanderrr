@@ -7,7 +7,7 @@ export const SPEC = {
   punchIn: 1.05, // zoom del 5 % en los golpes
   reglaAntesDe: 2.0, // la regla del pueblo va en los primeros 2 s
   // tono de la voz para los diálogos (un solo narrador): más agudo para niños, más grave para Don Bruno
-  tono: {narrador: 0, nino: 4, nina: 5, bruno: -5, adulto: -2, criatura: -7},
+  tono: {narrador: 0, nino: 4, nina: 5, bruno: -5, adulto: -2, criatura: -7, abuela: 3},
   musicaBajoVozDb: -18, musicaHuecoDb: -14,
   sub: {tam: 82, trazo: 18, y: 1330, blanco: '#FFFFFF', amarillo: '#FFD400', contorno: '#000000'},
   color: {

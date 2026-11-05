@@ -11,13 +11,13 @@ para regrabar una, borra su .mp3 en public/pueblo/ep{EP}/vo/.
 """
 import json, os, re, subprocess, sys, urllib.request, wave, pathlib
 EP = os.environ.get("EP", "5")
-TONO = {"narrador": 0, "nino": 4, "nina": 5, "bruno": -5, "adulto": -2, "criatura": -7}  # igual que spec.ts
+TONO = {"narrador": 0, "nino": 4, "nina": 5, "bruno": -5, "adulto": -2, "criatura": -7, "abuela": 3}  # igual que spec.ts
 import numpy as np
 P = pathlib.Path(__file__).resolve().parent.parent
 G = json.loads((P / f"src/pueblo/ep{EP}/guion.json").read_text(encoding="utf-8"))
 VO = P / f"public/pueblo/ep{EP}/vo"; VO.mkdir(parents=True, exist_ok=True)
 OUT = P / f"src/pueblo/ep{EP}/vo.json"
-limpia = lambda x: re.sub(r"[—«»]", "", x).strip()
+limpia = lambda x: re.sub(r"\s+", " ", re.sub(r"[—«»\"“”→]", "", x)).strip()
 lineas = {l["id"]: limpia(l["texto"]) for l in G["lineas"]}
 tono = {l["id"]: TONO.get(l.get("habla", "narrador"), 0) for l in G["lineas"]}
 pagar, solo_medir = "--pagar" in sys.argv, "--medir" in sys.argv

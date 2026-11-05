@@ -70,4 +70,7 @@ for i, f0 in enumerate([659, 523, 587, 392]):
 S("campanas", out)
 S("cuerda", serie(lambda: np.sin(2 * np.pi * 2200 * t(0.03)) * np.exp(-t(0.03) * 120), 10, 0.06))
 n = t(1.2); S("rascar", serie(lambda: rng.standard_normal(int(0.18 * SR)) * np.sin(np.pi * t(0.18) / 0.18) * 0.6, 4, 0.28))
+n = t(0.12); S("clic", np.sin(2 * np.pi * 2600 * n) * np.exp(-n * 80) + rng.standard_normal(len(n)) * np.exp(-n * 200) * 0.4)
+n = t(0.55); S("altavoz", np.clip(3 * (np.sign(np.sin(2 * np.pi * 740 * n)) * 0.6 + np.sin(2 * np.pi * 1480 * n) * 0.4) * (1 + 0.5 * np.sin(2 * np.pi * 30 * n)), -1, 1) * np.minimum(1, n / 0.01) * np.exp(-np.maximum(0, n - 0.4) * 30))
+n = t(0.6); S("chispa", rng.standard_normal(len(n)) * np.exp(-n * 9) * (rng.random(len(n)) > 0.7) + np.sin(2 * np.pi * np.cumsum(900 * np.exp(-n * 5)) / SR) * np.exp(-n * 6) * 0.5)
 print("sonidos del pueblo listos en", P)

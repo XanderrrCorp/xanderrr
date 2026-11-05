@@ -1,1 +1,1373 @@
-{}
+{
+ "l01": {
+  "text": "En este pueblo, si un niño llora de noche, sus juguetes despiertan.",
+  "seconds": 4.18,
+  "voiceStart": 0.17,
+  "voiceEnd": 4.09,
+  "words": [
+   {
+    "text": "En",
+    "start": 0.17,
+    "end": 0.363
+   },
+   {
+    "text": "este",
+    "start": 0.363,
+    "end": 0.667
+   },
+   {
+    "text": "pueblo,",
+    "start": 0.667,
+    "end": 1.081
+   },
+   {
+    "text": "si",
+    "start": 1.081,
+    "end": 1.274
+   },
+   {
+    "text": "un",
+    "start": 1.274,
+    "end": 1.467
+   },
+   {
+    "text": "niño",
+    "start": 1.467,
+    "end": 1.771
+   },
+   {
+    "text": "llora",
+    "start": 1.771,
+    "end": 2.13
+   },
+   {
+    "text": "de",
+    "start": 2.13,
+    "end": 2.323
+   },
+   {
+    "text": "noche,",
+    "start": 2.323,
+    "end": 2.682
+   },
+   {
+    "text": "sus",
+    "start": 2.682,
+    "end": 2.931
+   },
+   {
+    "text": "juguetes",
+    "start": 2.931,
+    "end": 3.455
+   },
+   {
+    "text": "despiertan.",
+    "start": 3.455,
+    "end": 4.09
+   }
+  ]
+ },
+ "l02": {
+  "text": "Los dinosaurios patrullan debajo de la cama.",
+  "seconds": 3.413,
+  "voiceStart": 0.18,
+  "voiceEnd": 3.18,
+  "words": [
+   {
+    "text": "Los",
+    "start": 0.18,
+    "end": 0.464
+   },
+   {
+    "text": "dinosaurios",
+    "start": 0.464,
+    "end": 1.254
+   },
+   {
+    "text": "patrullan",
+    "start": 1.254,
+    "end": 1.917
+   },
+   {
+    "text": "debajo",
+    "start": 1.917,
+    "end": 2.391
+   },
+   {
+    "text": "de",
+    "start": 2.391,
+    "end": 2.612
+   },
+   {
+    "text": "la",
+    "start": 2.612,
+    "end": 2.833
+   },
+   {
+    "text": "cama.",
+    "start": 2.833,
+    "end": 3.18
+   }
+  ]
+ },
+ "l03": {
+  "text": "Las muñecas cierran el armario con cinta.",
+  "seconds": 2.601,
+  "voiceStart": 0.18,
+  "voiceEnd": 2.36,
+  "words": [
+   {
+    "text": "Las",
+    "start": 0.18,
+    "end": 0.4
+   },
+   {
+    "text": "muñecas",
+    "start": 0.4,
+    "end": 0.817
+   },
+   {
+    "text": "cierran",
+    "start": 0.817,
+    "end": 1.233
+   },
+   {
+    "text": "el",
+    "start": 1.233,
+    "end": 1.405
+   },
+   {
+    "text": "armario",
+    "start": 1.405,
+    "end": 1.821
+   },
+   {
+    "text": "con",
+    "start": 1.821,
+    "end": 2.042
+   },
+   {
+    "text": "cinta.",
+    "start": 2.042,
+    "end": 2.36
+   }
+  ]
+ },
+ "l04": {
+  "text": "Los soldaditos hacen guardia en la ventana.",
+  "seconds": 2.38,
+  "voiceStart": 0.17,
+  "voiceEnd": 2.33,
+  "words": [
+   {
+    "text": "Los",
+    "start": 0.17,
+    "end": 0.379
+   },
+   {
+    "text": "soldaditos",
+    "start": 0.379,
+    "end": 0.913
+   },
+   {
+    "text": "hacen",
+    "start": 0.913,
+    "end": 1.215
+   },
+   {
+    "text": "guardia",
+    "start": 1.215,
+    "end": 1.61
+   },
+   {
+    "text": "en",
+    "start": 1.61,
+    "end": 1.773
+   },
+   {
+    "text": "la",
+    "start": 1.773,
+    "end": 1.935
+   },
+   {
+    "text": "ventana.",
+    "start": 1.935,
+    "end": 2.33
+   }
+  ]
+ },
+ "l05": {
+  "text": "Por eso aquí los papás lloran a escondidas, para no despertar a los juguetes de sus hijos.",
+  "seconds": 4.69,
+  "voiceStart": 0.16,
+  "voiceEnd": 4.39,
+  "words": [
+   {
+    "text": "Por",
+    "start": 0.16,
+    "end": 0.347
+   },
+   {
+    "text": "eso",
+    "start": 0.347,
+    "end": 0.533
+   },
+   {
+    "text": "aquí",
+    "start": 0.533,
+    "end": 0.762
+   },
+   {
+    "text": "los",
+    "start": 0.762,
+    "end": 0.948
+   },
+   {
+    "text": "papás",
+    "start": 0.948,
+    "end": 1.218
+   },
+   {
+    "text": "lloran",
+    "start": 1.218,
+    "end": 1.529
+   },
+   {
+    "text": "a",
+    "start": 1.529,
+    "end": 1.633
+   },
+   {
+    "text": "escondidas,",
+    "start": 1.633,
+    "end": 2.11
+   },
+   {
+    "text": "para",
+    "start": 2.33,
+    "end": 2.554
+   },
+   {
+    "text": "no",
+    "start": 2.554,
+    "end": 2.697
+   },
+   {
+    "text": "despertar",
+    "start": 2.697,
+    "end": 3.125
+   },
+   {
+    "text": "a",
+    "start": 3.125,
+    "end": 3.227
+   },
+   {
+    "text": "los",
+    "start": 3.227,
+    "end": 3.411
+   },
+   {
+    "text": "juguetes",
+    "start": 3.411,
+    "end": 3.799
+   },
+   {
+    "text": "de",
+    "start": 3.799,
+    "end": 3.941
+   },
+   {
+    "text": "sus",
+    "start": 3.941,
+    "end": 4.125
+   },
+   {
+    "text": "hijos.",
+    "start": 4.125,
+    "end": 4.39
+   }
+  ]
+ },
+ "l06": {
+  "text": "Nos mudamos un lunes y nadie nos avisó.",
+  "seconds": 2.682,
+  "voiceStart": 0.12,
+  "voiceEnd": 2.55,
+  "words": [
+   {
+    "text": "Nos",
+    "start": 0.12,
+    "end": 0.374
+   },
+   {
+    "text": "mudamos",
+    "start": 0.374,
+    "end": 0.855
+   },
+   {
+    "text": "un",
+    "start": 0.855,
+    "end": 1.052
+   },
+   {
+    "text": "lunes",
+    "start": 1.052,
+    "end": 1.42
+   },
+   {
+    "text": "y",
+    "start": 1.42,
+    "end": 1.561
+   },
+   {
+    "text": "nadie",
+    "start": 1.561,
+    "end": 1.928
+   },
+   {
+    "text": "nos",
+    "start": 1.928,
+    "end": 2.183
+   },
+   {
+    "text": "avisó.",
+    "start": 2.183,
+    "end": 2.55
+   }
+  ]
+ },
+ "l07": {
+  "text": "Me llamo Max. En la mudanza perdí todos mis juguetes.",
+  "seconds": 3.622,
+  "voiceStart": 0.13,
+  "voiceEnd": 3.45,
+  "words": [
+   {
+    "text": "Me",
+    "start": 0.13,
+    "end": 0.333
+   },
+   {
+    "text": "llamo",
+    "start": 0.333,
+    "end": 0.709
+   },
+   {
+    "text": "Max.",
+    "start": 0.709,
+    "end": 0.97
+   },
+   {
+    "text": "En",
+    "start": 1.31,
+    "end": 1.486
+   },
+   {
+    "text": "la",
+    "start": 1.486,
+    "end": 1.662
+   },
+   {
+    "text": "mudanza",
+    "start": 1.662,
+    "end": 2.09
+   },
+   {
+    "text": "perdí",
+    "start": 2.09,
+    "end": 2.418
+   },
+   {
+    "text": "todos",
+    "start": 2.418,
+    "end": 2.745
+   },
+   {
+    "text": "mis",
+    "start": 2.745,
+    "end": 2.972
+   },
+   {
+    "text": "juguetes.",
+    "start": 2.972,
+    "end": 3.45
+   }
+  ]
+ },
+ "l08": {
+  "text": "Mi cuarto estaba vacío. Y la primera noche, lloré.",
+  "seconds": 3.878,
+  "voiceStart": 0.16,
+  "voiceEnd": 3.58,
+  "words": [
+   {
+    "text": "Mi",
+    "start": 0.16,
+    "end": 0.359
+   },
+   {
+    "text": "cuarto",
+    "start": 0.359,
+    "end": 0.785
+   },
+   {
+    "text": "estaba",
+    "start": 0.785,
+    "end": 1.211
+   },
+   {
+    "text": "vacío.",
+    "start": 1.211,
+    "end": 1.58
+   },
+   {
+    "text": "Y",
+    "start": 1.94,
+    "end": 2.066
+   },
+   {
+    "text": "la",
+    "start": 2.066,
+    "end": 2.243
+   },
+   {
+    "text": "primera",
+    "start": 2.243,
+    "end": 2.672
+   },
+   {
+    "text": "noche,",
+    "start": 2.672,
+    "end": 3.0
+   },
+   {
+    "text": "lloré.",
+    "start": 3.16,
+    "end": 3.58
+   }
+  ]
+ },
+ "l09": {
+  "text": "Pero no tenía juguetes que despertaran.",
+  "seconds": 2.601,
+  "voiceStart": 0.15,
+  "voiceEnd": 2.4,
+  "words": [
+   {
+    "text": "Pero",
+    "start": 0.15,
+    "end": 0.445
+   },
+   {
+    "text": "no",
+    "start": 0.445,
+    "end": 0.632
+   },
+   {
+    "text": "tenía",
+    "start": 0.632,
+    "end": 0.98
+   },
+   {
+    "text": "juguetes",
+    "start": 0.98,
+    "end": 1.489
+   },
+   {
+    "text": "que",
+    "start": 1.489,
+    "end": 1.73
+   },
+   {
+    "text": "despertaran.",
+    "start": 1.73,
+    "end": 2.4
+   }
+  ]
+ },
+ "l10": {
+  "text": "Y en el armario, algo se movió.",
+  "seconds": 2.426,
+  "voiceStart": 0.18,
+  "voiceEnd": 2.21,
+  "words": [
+   {
+    "text": "Y",
+    "start": 0.18,
+    "end": 0.305
+   },
+   {
+    "text": "en",
+    "start": 0.305,
+    "end": 0.48
+   },
+   {
+    "text": "el",
+    "start": 0.48,
+    "end": 0.655
+   },
+   {
+    "text": "armario,",
+    "start": 0.655,
+    "end": 1.08
+   },
+   {
+    "text": "algo",
+    "start": 1.45,
+    "end": 1.72
+   },
+   {
+    "text": "se",
+    "start": 1.72,
+    "end": 1.891
+   },
+   {
+    "text": "movió.",
+    "start": 1.891,
+    "end": 2.21
+   }
+  ]
+ },
+ "l11": {
+  "text": "Al día siguiente fui al basurero del pueblo a buscar algo, lo que fuera.",
+  "seconds": 4.435,
+  "voiceStart": 0.16,
+  "voiceEnd": 4.2,
+  "words": [
+   {
+    "text": "Al",
+    "start": 0.16,
+    "end": 0.341
+   },
+   {
+    "text": "día",
+    "start": 0.341,
+    "end": 0.574
+   },
+   {
+    "text": "siguiente",
+    "start": 0.574,
+    "end": 1.118
+   },
+   {
+    "text": "fui",
+    "start": 1.118,
+    "end": 1.351
+   },
+   {
+    "text": "al",
+    "start": 1.351,
+    "end": 1.533
+   },
+   {
+    "text": "basurero",
+    "start": 1.533,
+    "end": 2.025
+   },
+   {
+    "text": "del",
+    "start": 2.025,
+    "end": 2.258
+   },
+   {
+    "text": "pueblo",
+    "start": 2.258,
+    "end": 2.646
+   },
+   {
+    "text": "a",
+    "start": 2.646,
+    "end": 2.776
+   },
+   {
+    "text": "buscar",
+    "start": 2.776,
+    "end": 3.164
+   },
+   {
+    "text": "algo,",
+    "start": 3.164,
+    "end": 3.449
+   },
+   {
+    "text": "lo",
+    "start": 3.449,
+    "end": 3.63
+   },
+   {
+    "text": "que",
+    "start": 3.63,
+    "end": 3.863
+   },
+   {
+    "text": "fuera.",
+    "start": 3.863,
+    "end": 4.2
+   }
+  ]
+ },
+ "l12": {
+  "text": "Encontré un conejo viejo. Le faltaba un ojo y tenía una oreja rota.",
+  "seconds": 5.712,
+  "voiceStart": 0.19,
+  "voiceEnd": 5.53,
+  "words": [
+   {
+    "text": "Encontré",
+    "start": 0.19,
+    "end": 0.89
+   },
+   {
+    "text": "un",
+    "start": 0.89,
+    "end": 1.148
+   },
+   {
+    "text": "conejo",
+    "start": 1.148,
+    "end": 1.7
+   },
+   {
+    "text": "viejo.",
+    "start": 1.7,
+    "end": 2.179
+   },
+   {
+    "text": "Le",
+    "start": 2.179,
+    "end": 2.436
+   },
+   {
+    "text": "faltaba",
+    "start": 2.436,
+    "end": 3.063
+   },
+   {
+    "text": "un",
+    "start": 3.063,
+    "end": 3.32
+   },
+   {
+    "text": "ojo",
+    "start": 3.32,
+    "end": 3.652
+   },
+   {
+    "text": "y",
+    "start": 3.652,
+    "end": 3.836
+   },
+   {
+    "text": "tenía",
+    "start": 3.836,
+    "end": 4.315
+   },
+   {
+    "text": "una",
+    "start": 4.315,
+    "end": 4.646
+   },
+   {
+    "text": "oreja",
+    "start": 4.646,
+    "end": 5.125
+   },
+   {
+    "text": "rota.",
+    "start": 5.125,
+    "end": 5.53
+   }
+  ]
+ },
+ "l13": {
+  "text": "Lo cosí como pude.",
+  "seconds": 1.614,
+  "voiceStart": 0.18,
+  "voiceEnd": 1.37,
+  "words": [
+   {
+    "text": "Lo",
+    "start": 0.18,
+    "end": 0.388
+   },
+   {
+    "text": "cosí",
+    "start": 0.388,
+    "end": 0.716
+   },
+   {
+    "text": "como",
+    "start": 0.716,
+    "end": 1.043
+   },
+   {
+    "text": "pude.",
+    "start": 1.043,
+    "end": 1.37
+   }
+  ]
+ },
+ "l14": {
+  "text": "Esa noche lloré otra vez… y el conejo abrió su único ojo.",
+  "seconds": 5.12,
+  "voiceStart": 0.1,
+  "voiceEnd": 4.87,
+  "words": [
+   {
+    "text": "Esa",
+    "start": 0.1,
+    "end": 0.446
+   },
+   {
+    "text": "noche",
+    "start": 0.446,
+    "end": 0.946
+   },
+   {
+    "text": "lloré",
+    "start": 0.946,
+    "end": 1.446
+   },
+   {
+    "text": "otra",
+    "start": 1.446,
+    "end": 1.87
+   },
+   {
+    "text": "vez…",
+    "start": 1.87,
+    "end": 2.216
+   },
+   {
+    "text": "y",
+    "start": 2.216,
+    "end": 2.408
+   },
+   {
+    "text": "el",
+    "start": 2.408,
+    "end": 2.677
+   },
+   {
+    "text": "conejo",
+    "start": 2.677,
+    "end": 3.254
+   },
+   {
+    "text": "abrió",
+    "start": 3.254,
+    "end": 3.754
+   },
+   {
+    "text": "su",
+    "start": 3.754,
+    "end": 4.024
+   },
+   {
+    "text": "único",
+    "start": 4.024,
+    "end": 4.524
+   },
+   {
+    "text": "ojo.",
+    "start": 4.524,
+    "end": 4.87
+   }
+  ]
+ },
+ "l15": {
+  "text": "Se paró frente al armario. Y el armario se calmó.",
+  "seconds": 3.878,
+  "voiceStart": 0.1,
+  "voiceEnd": 3.64,
+  "words": [
+   {
+    "text": "Se",
+    "start": 0.1,
+    "end": 0.271
+   },
+   {
+    "text": "paró",
+    "start": 0.271,
+    "end": 0.539
+   },
+   {
+    "text": "frente",
+    "start": 0.539,
+    "end": 0.905
+   },
+   {
+    "text": "al",
+    "start": 0.905,
+    "end": 1.075
+   },
+   {
+    "text": "armario.",
+    "start": 1.075,
+    "end": 1.49
+   },
+   {
+    "text": "Y",
+    "start": 2.34,
+    "end": 2.473
+   },
+   {
+    "text": "el",
+    "start": 2.473,
+    "end": 2.658
+   },
+   {
+    "text": "armario",
+    "start": 2.658,
+    "end": 3.109
+   },
+   {
+    "text": "se",
+    "start": 3.109,
+    "end": 3.295
+   },
+   {
+    "text": "calmó.",
+    "start": 3.295,
+    "end": 3.64
+   }
+  ]
+ },
+ "l16": {
+  "text": "Los juguetes del pueblo le decían el Tuerto. Era una leyenda.",
+  "seconds": 3.796,
+  "voiceStart": 0.17,
+  "voiceEnd": 3.55,
+  "words": [
+   {
+    "text": "Los",
+    "start": 0.17,
+    "end": 0.382
+   },
+   {
+    "text": "juguetes",
+    "start": 0.382,
+    "end": 0.829
+   },
+   {
+    "text": "del",
+    "start": 0.829,
+    "end": 1.041
+   },
+   {
+    "text": "pueblo",
+    "start": 1.041,
+    "end": 1.394
+   },
+   {
+    "text": "le",
+    "start": 1.394,
+    "end": 1.559
+   },
+   {
+    "text": "decían",
+    "start": 1.559,
+    "end": 1.912
+   },
+   {
+    "text": "el",
+    "start": 1.912,
+    "end": 2.077
+   },
+   {
+    "text": "Tuerto.",
+    "start": 2.077,
+    "end": 2.43
+   },
+   {
+    "text": "Era",
+    "start": 2.57,
+    "end": 2.822
+   },
+   {
+    "text": "una",
+    "start": 2.822,
+    "end": 3.074
+   },
+   {
+    "text": "leyenda.",
+    "start": 3.074,
+    "end": 3.55
+   }
+  ]
+ },
+ "l17": {
+  "text": "Antes de llegar al basurero, había cuidado a cientos de niños… y a uno más que a todos.",
+  "seconds": 6.142,
+  "voiceStart": 0.16,
+  "voiceEnd": 5.82,
+  "words": [
+   {
+    "text": "Antes",
+    "start": 0.16,
+    "end": 0.469
+   },
+   {
+    "text": "de",
+    "start": 0.469,
+    "end": 0.635
+   },
+   {
+    "text": "llegar",
+    "start": 0.635,
+    "end": 0.992
+   },
+   {
+    "text": "al",
+    "start": 0.992,
+    "end": 1.158
+   },
+   {
+    "text": "basurero,",
+    "start": 1.158,
+    "end": 1.61
+   },
+   {
+    "text": "había",
+    "start": 1.95,
+    "end": 2.315
+   },
+   {
+    "text": "cuidado",
+    "start": 2.315,
+    "end": 2.792
+   },
+   {
+    "text": "a",
+    "start": 2.792,
+    "end": 2.932
+   },
+   {
+    "text": "cientos",
+    "start": 2.932,
+    "end": 3.409
+   },
+   {
+    "text": "de",
+    "start": 3.409,
+    "end": 3.605
+   },
+   {
+    "text": "niños…",
+    "start": 3.605,
+    "end": 3.97
+   },
+   {
+    "text": "y",
+    "start": 4.38,
+    "end": 4.511
+   },
+   {
+    "text": "a",
+    "start": 4.511,
+    "end": 4.642
+   },
+   {
+    "text": "uno",
+    "start": 4.642,
+    "end": 4.877
+   },
+   {
+    "text": "más",
+    "start": 4.877,
+    "end": 5.113
+   },
+   {
+    "text": "que",
+    "start": 5.113,
+    "end": 5.349
+   },
+   {
+    "text": "a",
+    "start": 5.349,
+    "end": 5.48
+   },
+   {
+    "text": "todos.",
+    "start": 5.48,
+    "end": 5.82
+   }
+  ]
+ },
+ "l18": {
+  "text": "En el escritorio de Don Bruno había una foto: él, de niño, abrazando a mi conejo.",
+  "seconds": 5.41,
+  "voiceStart": 0.16,
+  "voiceEnd": 5.19,
+  "words": [
+   {
+    "text": "En",
+    "start": 0.16,
+    "end": 0.328
+   },
+   {
+    "text": "el",
+    "start": 0.328,
+    "end": 0.495
+   },
+   {
+    "text": "escritorio",
+    "start": 0.495,
+    "end": 1.046
+   },
+   {
+    "text": "de",
+    "start": 1.046,
+    "end": 1.213
+   },
+   {
+    "text": "Don",
+    "start": 1.213,
+    "end": 1.429
+   },
+   {
+    "text": "Bruno",
+    "start": 1.429,
+    "end": 1.74
+   },
+   {
+    "text": "había",
+    "start": 1.74,
+    "end": 2.051
+   },
+   {
+    "text": "una",
+    "start": 2.051,
+    "end": 2.267
+   },
+   {
+    "text": "foto:",
+    "start": 2.267,
+    "end": 2.53
+   },
+   {
+    "text": "él,",
+    "start": 2.79,
+    "end": 3.08
+   },
+   {
+    "text": "de",
+    "start": 3.26,
+    "end": 3.482
+   },
+   {
+    "text": "niño,",
+    "start": 3.482,
+    "end": 3.83
+   },
+   {
+    "text": "abrazando",
+    "start": 4.07,
+    "end": 4.56
+   },
+   {
+    "text": "a",
+    "start": 4.56,
+    "end": 4.677
+   },
+   {
+    "text": "mi",
+    "start": 4.677,
+    "end": 4.84
+   },
+   {
+    "text": "conejo.",
+    "start": 4.84,
+    "end": 5.19
+   }
+  ]
+ },
+ "l19": {
+  "text": "Lo tiré cuando crecí. Me dio vergüenza.",
+  "seconds": 2.984,
+  "voiceStart": 0.19,
+  "voiceEnd": 2.72,
+  "words": [
+   {
+    "text": "Lo",
+    "start": 0.19,
+    "end": 0.397
+   },
+   {
+    "text": "tiré",
+    "start": 0.397,
+    "end": 0.722
+   },
+   {
+    "text": "cuando",
+    "start": 0.722,
+    "end": 1.166
+   },
+   {
+    "text": "crecí.",
+    "start": 1.166,
+    "end": 1.55
+   },
+   {
+    "text": "Me",
+    "start": 1.79,
+    "end": 1.966
+   },
+   {
+    "text": "dio",
+    "start": 1.966,
+    "end": 2.192
+   },
+   {
+    "text": "vergüenza.",
+    "start": 2.192,
+    "end": 2.72
+   }
+  ]
+ },
+ "l20": {
+  "text": "Don Bruno empezó a llorar. Y el conejo abrió su ojo… por él.",
+  "seconds": 4.69,
+  "voiceStart": 0.18,
+  "voiceEnd": 4.44,
+  "words": [
+   {
+    "text": "Don",
+    "start": 0.18,
+    "end": 0.385
+   },
+   {
+    "text": "Bruno",
+    "start": 0.385,
+    "end": 0.682
+   },
+   {
+    "text": "empezó",
+    "start": 0.682,
+    "end": 1.024
+   },
+   {
+    "text": "a",
+    "start": 1.024,
+    "end": 1.138
+   },
+   {
+    "text": "llorar.",
+    "start": 1.138,
+    "end": 1.48
+   },
+   {
+    "text": "Y",
+    "start": 1.97,
+    "end": 2.107
+   },
+   {
+    "text": "el",
+    "start": 2.107,
+    "end": 2.298
+   },
+   {
+    "text": "conejo",
+    "start": 2.298,
+    "end": 2.708
+   },
+   {
+    "text": "abrió",
+    "start": 2.708,
+    "end": 3.063
+   },
+   {
+    "text": "su",
+    "start": 3.063,
+    "end": 3.254
+   },
+   {
+    "text": "ojo…",
+    "start": 3.254,
+    "end": 3.5
+   },
+   {
+    "text": "por",
+    "start": 4.07,
+    "end": 4.278
+   },
+   {
+    "text": "él.",
+    "start": 4.278,
+    "end": 4.44
+   }
+  ]
+ },
+ "l21": {
+  "text": "Ahora lo cuidamos los dos. Una semana en mi casa, una semana en la alcaldía.",
+  "seconds": 5.201,
+  "voiceStart": 0.17,
+  "voiceEnd": 5.06,
+  "words": [
+   {
+    "text": "Ahora",
+    "start": 0.17,
+    "end": 0.489
+   },
+   {
+    "text": "lo",
+    "start": 0.489,
+    "end": 0.661
+   },
+   {
+    "text": "cuidamos",
+    "start": 0.661,
+    "end": 1.128
+   },
+   {
+    "text": "los",
+    "start": 1.128,
+    "end": 1.349
+   },
+   {
+    "text": "dos.",
+    "start": 1.349,
+    "end": 1.57
+   },
+   {
+    "text": "Una",
+    "start": 1.98,
+    "end": 2.206
+   },
+   {
+    "text": "semana",
+    "start": 2.206,
+    "end": 2.582
+   },
+   {
+    "text": "en",
+    "start": 2.582,
+    "end": 2.758
+   },
+   {
+    "text": "mi",
+    "start": 2.758,
+    "end": 2.934
+   },
+   {
+    "text": "casa,",
+    "start": 2.934,
+    "end": 3.21
+   },
+   {
+    "text": "una",
+    "start": 3.56,
+    "end": 3.797
+   },
+   {
+    "text": "semana",
+    "start": 3.797,
+    "end": 4.192
+   },
+   {
+    "text": "en",
+    "start": 4.192,
+    "end": 4.376
+   },
+   {
+    "text": "la",
+    "start": 4.376,
+    "end": 4.56
+   },
+   {
+    "text": "alcaldía.",
+    "start": 4.56,
+    "end": 5.06
+   }
+  ]
+ },
+ "l22": {
+  "text": "Y si no te suscribes… el armario de tu cuarto se va a quedar sin guardia.",
+  "seconds": 5.074,
+  "voiceStart": 0.17,
+  "voiceEnd": 4.82,
+  "words": [
+   {
+    "text": "Y",
+    "start": 0.17,
+    "end": 0.309
+   },
+   {
+    "text": "si",
+    "start": 0.309,
+    "end": 0.504
+   },
+   {
+    "text": "no",
+    "start": 0.504,
+    "end": 0.7
+   },
+   {
+    "text": "te",
+    "start": 0.7,
+    "end": 0.895
+   },
+   {
+    "text": "suscribes…",
+    "start": 0.895,
+    "end": 1.48
+   },
+   {
+    "text": "el",
+    "start": 2.09,
+    "end": 2.259
+   },
+   {
+    "text": "armario",
+    "start": 2.259,
+    "end": 2.67
+   },
+   {
+    "text": "de",
+    "start": 2.67,
+    "end": 2.839
+   },
+   {
+    "text": "tu",
+    "start": 2.839,
+    "end": 3.008
+   },
+   {
+    "text": "cuarto",
+    "start": 3.008,
+    "end": 3.37
+   },
+   {
+    "text": "se",
+    "start": 3.37,
+    "end": 3.54
+   },
+   {
+    "text": "va",
+    "start": 3.54,
+    "end": 3.709
+   },
+   {
+    "text": "a",
+    "start": 3.709,
+    "end": 3.829
+   },
+   {
+    "text": "quedar",
+    "start": 3.829,
+    "end": 4.192
+   },
+   {
+    "text": "sin",
+    "start": 4.192,
+    "end": 4.409
+   },
+   {
+    "text": "guardia.",
+    "start": 4.409,
+    "end": 4.82
+   }
+  ]
+ }
+}

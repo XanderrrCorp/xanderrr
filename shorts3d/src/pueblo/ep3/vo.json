@@ -1,0 +1,1467 @@
+{
+ "l01": {
+  "text": "En este pueblo, tu sombra hace lo que realmente quieres hacer.",
+  "seconds": 3.866,
+  "voiceStart": 0.11,
+  "voiceEnd": 3.69,
+  "words": [
+   {
+    "text": "En",
+    "start": 0.11,
+    "end": 0.301
+   },
+   {
+    "text": "este",
+    "start": 0.301,
+    "end": 0.601
+   },
+   {
+    "text": "pueblo,",
+    "start": 0.601,
+    "end": 1.01
+   },
+   {
+    "text": "tu",
+    "start": 1.24,
+    "end": 1.412
+   },
+   {
+    "text": "sombra",
+    "start": 1.412,
+    "end": 1.779
+   },
+   {
+    "text": "hace",
+    "start": 1.779,
+    "end": 2.048
+   },
+   {
+    "text": "lo",
+    "start": 2.048,
+    "end": 2.22
+   },
+   {
+    "text": "que",
+    "start": 2.22,
+    "end": 2.44
+   },
+   {
+    "text": "realmente",
+    "start": 2.44,
+    "end": 2.955
+   },
+   {
+    "text": "quieres",
+    "start": 2.955,
+    "end": 3.371
+   },
+   {
+    "text": "hacer.",
+    "start": 3.371,
+    "end": 3.69
+   }
+  ]
+ },
+ "l02": {
+  "text": "El señor dice: Qué rico tu pastel… y su sombra lo escupe.",
+  "seconds": 4.168,
+  "voiceStart": 0.1,
+  "voiceEnd": 3.92,
+  "words": [
+   {
+    "text": "El",
+    "start": 0.1,
+    "end": 0.281
+   },
+   {
+    "text": "señor",
+    "start": 0.281,
+    "end": 0.616
+   },
+   {
+    "text": "dice:",
+    "start": 0.616,
+    "end": 0.9
+   },
+   {
+    "text": "Qué",
+    "start": 1.39,
+    "end": 1.626
+   },
+   {
+    "text": "rico",
+    "start": 1.626,
+    "end": 1.914
+   },
+   {
+    "text": "tu",
+    "start": 1.914,
+    "end": 2.097
+   },
+   {
+    "text": "pastel…",
+    "start": 2.097,
+    "end": 2.49
+   },
+   {
+    "text": "y",
+    "start": 2.63,
+    "end": 2.762
+   },
+   {
+    "text": "su",
+    "start": 2.762,
+    "end": 2.946
+   },
+   {
+    "text": "sombra",
+    "start": 2.946,
+    "end": 3.341
+   },
+   {
+    "text": "lo",
+    "start": 3.341,
+    "end": 3.525
+   },
+   {
+    "text": "escupe.",
+    "start": 3.525,
+    "end": 3.92
+   }
+  ]
+ },
+ "l03": {
+  "text": "La profe dice: Qué buen dibujo… y su sombra lo tira a la basura.",
+  "seconds": 4.888,
+  "voiceStart": 0.18,
+  "voiceEnd": 4.66,
+  "words": [
+   {
+    "text": "La",
+    "start": 0.18,
+    "end": 0.361
+   },
+   {
+    "text": "profe",
+    "start": 0.361,
+    "end": 0.696
+   },
+   {
+    "text": "dice:",
+    "start": 0.696,
+    "end": 0.98
+   },
+   {
+    "text": "Qué",
+    "start": 1.52,
+    "end": 1.749
+   },
+   {
+    "text": "buen",
+    "start": 1.749,
+    "end": 2.029
+   },
+   {
+    "text": "dibujo…",
+    "start": 2.029,
+    "end": 2.41
+   },
+   {
+    "text": "y",
+    "start": 2.96,
+    "end": 3.078
+   },
+   {
+    "text": "su",
+    "start": 3.078,
+    "end": 3.243
+   },
+   {
+    "text": "sombra",
+    "start": 3.243,
+    "end": 3.598
+   },
+   {
+    "text": "lo",
+    "start": 3.598,
+    "end": 3.763
+   },
+   {
+    "text": "tira",
+    "start": 3.763,
+    "end": 4.022
+   },
+   {
+    "text": "a",
+    "start": 4.022,
+    "end": 4.141
+   },
+   {
+    "text": "la",
+    "start": 4.141,
+    "end": 4.306
+   },
+   {
+    "text": "basura.",
+    "start": 4.306,
+    "end": 4.66
+   }
+  ]
+ },
+ "l04": {
+  "text": "Las parejas se toman de la mano, pero sus sombras miran a otro lado.",
+  "seconds": 3.901,
+  "voiceStart": 0.18,
+  "voiceEnd": 3.69,
+  "words": [
+   {
+    "text": "Las",
+    "start": 0.18,
+    "end": 0.393
+   },
+   {
+    "text": "parejas",
+    "start": 0.393,
+    "end": 0.797
+   },
+   {
+    "text": "se",
+    "start": 0.797,
+    "end": 0.963
+   },
+   {
+    "text": "toman",
+    "start": 0.963,
+    "end": 1.271
+   },
+   {
+    "text": "de",
+    "start": 1.271,
+    "end": 1.437
+   },
+   {
+    "text": "la",
+    "start": 1.437,
+    "end": 1.603
+   },
+   {
+    "text": "mano,",
+    "start": 1.603,
+    "end": 1.864
+   },
+   {
+    "text": "pero",
+    "start": 1.864,
+    "end": 2.125
+   },
+   {
+    "text": "sus",
+    "start": 2.125,
+    "end": 2.338
+   },
+   {
+    "text": "sombras",
+    "start": 2.338,
+    "end": 2.741
+   },
+   {
+    "text": "miran",
+    "start": 2.741,
+    "end": 3.05
+   },
+   {
+    "text": "a",
+    "start": 3.05,
+    "end": 3.168
+   },
+   {
+    "text": "otro",
+    "start": 3.168,
+    "end": 3.429
+   },
+   {
+    "text": "lado.",
+    "start": 3.429,
+    "end": 3.69
+   }
+  ]
+ },
+ "l05": {
+  "text": "Por eso todos caminan a mediodía, cuando la sombra es más pequeñita.",
+  "seconds": 4.214,
+  "voiceStart": 0.15,
+  "voiceEnd": 4.1,
+  "words": [
+   {
+    "text": "Por",
+    "start": 0.15,
+    "end": 0.38
+   },
+   {
+    "text": "eso",
+    "start": 0.38,
+    "end": 0.61
+   },
+   {
+    "text": "todos",
+    "start": 0.61,
+    "end": 0.942
+   },
+   {
+    "text": "caminan",
+    "start": 0.942,
+    "end": 1.377
+   },
+   {
+    "text": "a",
+    "start": 1.377,
+    "end": 1.504
+   },
+   {
+    "text": "mediodía,",
+    "start": 1.504,
+    "end": 1.99
+   },
+   {
+    "text": "cuando",
+    "start": 2.26,
+    "end": 2.633
+   },
+   {
+    "text": "la",
+    "start": 2.633,
+    "end": 2.807
+   },
+   {
+    "text": "sombra",
+    "start": 2.807,
+    "end": 3.18
+   },
+   {
+    "text": "es",
+    "start": 3.18,
+    "end": 3.354
+   },
+   {
+    "text": "más",
+    "start": 3.354,
+    "end": 3.578
+   },
+   {
+    "text": "pequeñita.",
+    "start": 3.578,
+    "end": 4.1
+   }
+  ]
+ },
+ "l06": {
+  "text": "Y en las tardes las sombras se pelean entre ellas en el piso.",
+  "seconds": 4.841,
+  "voiceStart": 0.13,
+  "voiceEnd": 4.62,
+  "words": [
+   {
+    "text": "Y",
+    "start": 0.13,
+    "end": 0.296
+   },
+   {
+    "text": "en",
+    "start": 0.296,
+    "end": 0.529
+   },
+   {
+    "text": "las",
+    "start": 0.529,
+    "end": 0.828
+   },
+   {
+    "text": "tardes",
+    "start": 0.828,
+    "end": 1.327
+   },
+   {
+    "text": "las",
+    "start": 1.327,
+    "end": 1.627
+   },
+   {
+    "text": "sombras",
+    "start": 1.627,
+    "end": 2.192
+   },
+   {
+    "text": "se",
+    "start": 2.192,
+    "end": 2.425
+   },
+   {
+    "text": "pelean",
+    "start": 2.425,
+    "end": 2.924
+   },
+   {
+    "text": "entre",
+    "start": 2.924,
+    "end": 3.356
+   },
+   {
+    "text": "ellas",
+    "start": 3.356,
+    "end": 3.789
+   },
+   {
+    "text": "en",
+    "start": 3.789,
+    "end": 4.021
+   },
+   {
+    "text": "el",
+    "start": 4.021,
+    "end": 4.254
+   },
+   {
+    "text": "piso.",
+    "start": 4.254,
+    "end": 4.62
+   }
+  ]
+ },
+ "l07": {
+  "text": "Nos mudamos un lunes y nadie nos avisó.",
+  "seconds": 2.926,
+  "voiceStart": 0.19,
+  "voiceEnd": 2.65,
+  "words": [
+   {
+    "text": "Nos",
+    "start": 0.19,
+    "end": 0.447
+   },
+   {
+    "text": "mudamos",
+    "start": 0.447,
+    "end": 0.934
+   },
+   {
+    "text": "un",
+    "start": 0.934,
+    "end": 1.134
+   },
+   {
+    "text": "lunes",
+    "start": 1.134,
+    "end": 1.506
+   },
+   {
+    "text": "y",
+    "start": 1.506,
+    "end": 1.649
+   },
+   {
+    "text": "nadie",
+    "start": 1.649,
+    "end": 2.021
+   },
+   {
+    "text": "nos",
+    "start": 2.021,
+    "end": 2.278
+   },
+   {
+    "text": "avisó.",
+    "start": 2.278,
+    "end": 2.65
+   }
+  ]
+ },
+ "l08": {
+  "text": "Yo me llamo Lucas, y nunca digo lo que siento.",
+  "seconds": 3.239,
+  "voiceStart": 0.16,
+  "voiceEnd": 2.97,
+  "words": [
+   {
+    "text": "Yo",
+    "start": 0.16,
+    "end": 0.363
+   },
+   {
+    "text": "me",
+    "start": 0.363,
+    "end": 0.566
+   },
+   {
+    "text": "llamo",
+    "start": 0.566,
+    "end": 0.943
+   },
+   {
+    "text": "Lucas,",
+    "start": 0.943,
+    "end": 1.32
+   },
+   {
+    "text": "y",
+    "start": 1.48,
+    "end": 1.604
+   },
+   {
+    "text": "nunca",
+    "start": 1.604,
+    "end": 1.927
+   },
+   {
+    "text": "digo",
+    "start": 1.927,
+    "end": 2.2
+   },
+   {
+    "text": "lo",
+    "start": 2.2,
+    "end": 2.374
+   },
+   {
+    "text": "que",
+    "start": 2.374,
+    "end": 2.598
+   },
+   {
+    "text": "siento.",
+    "start": 2.598,
+    "end": 2.97
+   }
+  ]
+ },
+ "l09": {
+  "text": "Cuando papá me preguntaba si me gustaba el pueblo nuevo, yo decía sí…",
+  "seconds": 4.795,
+  "voiceStart": 0.2,
+  "voiceEnd": 4.56,
+  "words": [
+   {
+    "text": "Cuando",
+    "start": 0.2,
+    "end": 0.639
+   },
+   {
+    "text": "papá",
+    "start": 0.639,
+    "end": 0.961
+   },
+   {
+    "text": "me",
+    "start": 0.961,
+    "end": 1.166
+   },
+   {
+    "text": "preguntaba",
+    "start": 1.166,
+    "end": 1.839
+   },
+   {
+    "text": "si",
+    "start": 1.839,
+    "end": 2.043
+   },
+   {
+    "text": "me",
+    "start": 2.043,
+    "end": 2.248
+   },
+   {
+    "text": "gustaba",
+    "start": 2.248,
+    "end": 2.746
+   },
+   {
+    "text": "el",
+    "start": 2.746,
+    "end": 2.951
+   },
+   {
+    "text": "pueblo",
+    "start": 2.951,
+    "end": 3.39
+   },
+   {
+    "text": "nuevo,",
+    "start": 3.39,
+    "end": 3.77
+   },
+   {
+    "text": "yo",
+    "start": 3.77,
+    "end": 3.975
+   },
+   {
+    "text": "decía",
+    "start": 3.975,
+    "end": 4.355
+   },
+   {
+    "text": "sí…",
+    "start": 4.355,
+    "end": 4.56
+   }
+  ]
+ },
+ "l10": {
+  "text": "y mi sombra se sentaba en una esquina, abrazando sus rodillas.",
+  "seconds": 3.68,
+  "voiceStart": 0.1,
+  "voiceEnd": 3.59,
+  "words": [
+   {
+    "text": "y",
+    "start": 0.1,
+    "end": 0.231
+   },
+   {
+    "text": "mi",
+    "start": 0.231,
+    "end": 0.415
+   },
+   {
+    "text": "sombra",
+    "start": 0.415,
+    "end": 0.808
+   },
+   {
+    "text": "se",
+    "start": 0.808,
+    "end": 0.992
+   },
+   {
+    "text": "sentaba",
+    "start": 0.992,
+    "end": 1.438
+   },
+   {
+    "text": "en",
+    "start": 1.438,
+    "end": 1.622
+   },
+   {
+    "text": "una",
+    "start": 1.622,
+    "end": 1.858
+   },
+   {
+    "text": "esquina,",
+    "start": 1.858,
+    "end": 2.304
+   },
+   {
+    "text": "abrazando",
+    "start": 2.304,
+    "end": 2.855
+   },
+   {
+    "text": "sus",
+    "start": 2.855,
+    "end": 3.091
+   },
+   {
+    "text": "rodillas.",
+    "start": 3.091,
+    "end": 3.59
+   }
+  ]
+ },
+ "l11": {
+  "text": "En la escuela se burlaban de mí y yo me reía. Mi sombra lloraba.",
+  "seconds": 4.04,
+  "voiceStart": 0.19,
+  "voiceEnd": 3.83,
+  "words": [
+   {
+    "text": "En",
+    "start": 0.19,
+    "end": 0.362
+   },
+   {
+    "text": "la",
+    "start": 0.362,
+    "end": 0.534
+   },
+   {
+    "text": "escuela",
+    "start": 0.534,
+    "end": 0.951
+   },
+   {
+    "text": "se",
+    "start": 0.951,
+    "end": 1.123
+   },
+   {
+    "text": "burlaban",
+    "start": 1.123,
+    "end": 1.59
+   },
+   {
+    "text": "de",
+    "start": 1.59,
+    "end": 1.761
+   },
+   {
+    "text": "mí",
+    "start": 1.761,
+    "end": 1.933
+   },
+   {
+    "text": "y",
+    "start": 1.933,
+    "end": 2.056
+   },
+   {
+    "text": "yo",
+    "start": 2.056,
+    "end": 2.228
+   },
+   {
+    "text": "me",
+    "start": 2.228,
+    "end": 2.4
+   },
+   {
+    "text": "reía.",
+    "start": 2.4,
+    "end": 2.67
+   },
+   {
+    "text": "Mi",
+    "start": 2.88,
+    "end": 3.051
+   },
+   {
+    "text": "sombra",
+    "start": 3.051,
+    "end": 3.416
+   },
+   {
+    "text": "lloraba.",
+    "start": 3.416,
+    "end": 3.83
+   }
+  ]
+ },
+ "l12": {
+  "text": "Lo raro era Don Bruno. Siempre sonreía, siempre daba discursos…",
+  "seconds": 5.422,
+  "voiceStart": 0.13,
+  "voiceEnd": 5.16,
+  "words": [
+   {
+    "text": "Lo",
+    "start": 0.13,
+    "end": 0.397
+   },
+   {
+    "text": "raro",
+    "start": 0.397,
+    "end": 0.816
+   },
+   {
+    "text": "era",
+    "start": 0.816,
+    "end": 1.159
+   },
+   {
+    "text": "Don",
+    "start": 1.159,
+    "end": 1.502
+   },
+   {
+    "text": "Bruno.",
+    "start": 1.502,
+    "end": 1.997
+   },
+   {
+    "text": "Siempre",
+    "start": 1.997,
+    "end": 2.645
+   },
+   {
+    "text": "sonreía,",
+    "start": 2.645,
+    "end": 3.293
+   },
+   {
+    "text": "siempre",
+    "start": 3.293,
+    "end": 3.941
+   },
+   {
+    "text": "daba",
+    "start": 3.941,
+    "end": 4.36
+   },
+   {
+    "text": "discursos…",
+    "start": 4.36,
+    "end": 5.16
+   }
+  ]
+ },
+ "l13": {
+  "text": "y su sombra siempre estaba llorando.",
+  "seconds": 2.438,
+  "voiceStart": 0.13,
+  "voiceEnd": 2.29,
+  "words": [
+   {
+    "text": "y",
+    "start": 0.13,
+    "end": 0.268
+   },
+   {
+    "text": "su",
+    "start": 0.268,
+    "end": 0.462
+   },
+   {
+    "text": "sombra",
+    "start": 0.462,
+    "end": 0.878
+   },
+   {
+    "text": "siempre",
+    "start": 0.878,
+    "end": 1.348
+   },
+   {
+    "text": "estaba",
+    "start": 1.348,
+    "end": 1.764
+   },
+   {
+    "text": "llorando.",
+    "start": 1.764,
+    "end": 2.29
+   }
+  ]
+ },
+ "l14": {
+  "text": "Una noche seguí a su sombra hasta la estación del tren.",
+  "seconds": 3.367,
+  "voiceStart": 0.19,
+  "voiceEnd": 3.12,
+  "words": [
+   {
+    "text": "Una",
+    "start": 0.19,
+    "end": 0.408
+   },
+   {
+    "text": "noche",
+    "start": 0.408,
+    "end": 0.723
+   },
+   {
+    "text": "seguí",
+    "start": 0.723,
+    "end": 1.038
+   },
+   {
+    "text": "a",
+    "start": 1.038,
+    "end": 1.159
+   },
+   {
+    "text": "su",
+    "start": 1.159,
+    "end": 1.328
+   },
+   {
+    "text": "sombra",
+    "start": 1.328,
+    "end": 1.691
+   },
+   {
+    "text": "hasta",
+    "start": 1.691,
+    "end": 2.006
+   },
+   {
+    "text": "la",
+    "start": 2.006,
+    "end": 2.176
+   },
+   {
+    "text": "estación",
+    "start": 2.176,
+    "end": 2.636
+   },
+   {
+    "text": "del",
+    "start": 2.636,
+    "end": 2.854
+   },
+   {
+    "text": "tren.",
+    "start": 2.854,
+    "end": 3.12
+   }
+  ]
+ },
+ "l15": {
+  "text": "Se quedó mirando un cartel viejo: SE BUSCA PANADERO  CIUDAD GRANDE.",
+  "seconds": 4.528,
+  "voiceStart": 0.15,
+  "voiceEnd": 4.34,
+  "words": [
+   {
+    "text": "Se",
+    "start": 0.15,
+    "end": 0.326
+   },
+   {
+    "text": "quedó",
+    "start": 0.326,
+    "end": 0.653
+   },
+   {
+    "text": "mirando",
+    "start": 0.653,
+    "end": 1.08
+   },
+   {
+    "text": "un",
+    "start": 1.08,
+    "end": 1.256
+   },
+   {
+    "text": "cartel",
+    "start": 1.256,
+    "end": 1.633
+   },
+   {
+    "text": "viejo:",
+    "start": 1.633,
+    "end": 1.96
+   },
+   {
+    "text": "SE",
+    "start": 2.27,
+    "end": 2.48
+   },
+   {
+    "text": "BUSCA",
+    "start": 2.48,
+    "end": 2.87
+   },
+   {
+    "text": "PANADERO",
+    "start": 2.87,
+    "end": 3.44
+   },
+   {
+    "text": "CIUDAD",
+    "start": 3.44,
+    "end": 3.89
+   },
+   {
+    "text": "GRANDE.",
+    "start": 3.89,
+    "end": 4.34
+   }
+  ]
+ },
+ "l16": {
+  "text": "Don Bruno nunca quiso ser alcalde. Quería hacer pan. Su papá lo obligó.",
+  "seconds": 5.236,
+  "voiceStart": 0.17,
+  "voiceEnd": 4.99,
+  "words": [
+   {
+    "text": "Don",
+    "start": 0.17,
+    "end": 0.413
+   },
+   {
+    "text": "Bruno",
+    "start": 0.413,
+    "end": 0.765
+   },
+   {
+    "text": "nunca",
+    "start": 0.765,
+    "end": 1.116
+   },
+   {
+    "text": "quiso",
+    "start": 1.116,
+    "end": 1.467
+   },
+   {
+    "text": "ser",
+    "start": 1.467,
+    "end": 1.711
+   },
+   {
+    "text": "alcalde.",
+    "start": 1.711,
+    "end": 2.17
+   },
+   {
+    "text": "Quería",
+    "start": 2.57,
+    "end": 2.988
+   },
+   {
+    "text": "hacer",
+    "start": 2.988,
+    "end": 3.349
+   },
+   {
+    "text": "pan.",
+    "start": 3.349,
+    "end": 3.6
+   },
+   {
+    "text": "Su",
+    "start": 3.9,
+    "end": 4.091
+   },
+   {
+    "text": "papá",
+    "start": 4.091,
+    "end": 4.39
+   },
+   {
+    "text": "lo",
+    "start": 4.39,
+    "end": 4.581
+   },
+   {
+    "text": "obligó.",
+    "start": 4.581,
+    "end": 4.99
+   }
+  ]
+ },
+ "l17": {
+  "text": "Señor, su sombra quiere hacer pan.",
+  "seconds": 2.705,
+  "voiceStart": 0.17,
+  "voiceEnd": 2.48,
+  "words": [
+   {
+    "text": "Señor,",
+    "start": 0.17,
+    "end": 0.7
+   },
+   {
+    "text": "su",
+    "start": 0.97,
+    "end": 1.149
+   },
+   {
+    "text": "sombra",
+    "start": 1.149,
+    "end": 1.533
+   },
+   {
+    "text": "quiere",
+    "start": 1.533,
+    "end": 1.917
+   },
+   {
+    "text": "hacer",
+    "start": 1.917,
+    "end": 2.25
+   },
+   {
+    "text": "pan.",
+    "start": 2.25,
+    "end": 2.48
+   }
+  ]
+ },
+ "l18": {
+  "text": "Todo el pueblo se quedó callado. Y entonces Don Bruno dijo la verdad:",
+  "seconds": 4.214,
+  "voiceStart": 0.11,
+  "voiceEnd": 4.1,
+  "words": [
+   {
+    "text": "Todo",
+    "start": 0.11,
+    "end": 0.365
+   },
+   {
+    "text": "el",
+    "start": 0.365,
+    "end": 0.527
+   },
+   {
+    "text": "pueblo",
+    "start": 0.527,
+    "end": 0.874
+   },
+   {
+    "text": "se",
+    "start": 0.874,
+    "end": 1.036
+   },
+   {
+    "text": "quedó",
+    "start": 1.036,
+    "end": 1.337
+   },
+   {
+    "text": "callado.",
+    "start": 1.337,
+    "end": 1.73
+   },
+   {
+    "text": "Y",
+    "start": 1.92,
+    "end": 2.058
+   },
+   {
+    "text": "entonces",
+    "start": 2.058,
+    "end": 2.582
+   },
+   {
+    "text": "Don",
+    "start": 2.582,
+    "end": 2.831
+   },
+   {
+    "text": "Bruno",
+    "start": 2.831,
+    "end": 3.189
+   },
+   {
+    "text": "dijo",
+    "start": 3.189,
+    "end": 3.493
+   },
+   {
+    "text": "la",
+    "start": 3.493,
+    "end": 3.686
+   },
+   {
+    "text": "verdad:",
+    "start": 3.686,
+    "end": 4.1
+   }
+  ]
+ },
+ "l19": {
+  "text": "Odio ser alcalde.",
+  "seconds": 1.591,
+  "voiceStart": 0.19,
+  "voiceEnd": 1.38,
+  "words": [
+   {
+    "text": "Odio",
+    "start": 0.19,
+    "end": 0.544
+   },
+   {
+    "text": "ser",
+    "start": 0.544,
+    "end": 0.833
+   },
+   {
+    "text": "alcalde.",
+    "start": 0.833,
+    "end": 1.38
+   }
+  ]
+ },
+ "l20": {
+  "text": "Su sombra se levantó y empezó a bailar.",
+  "seconds": 2.659,
+  "voiceStart": 0.15,
+  "voiceEnd": 2.38,
+  "words": [
+   {
+    "text": "Su",
+    "start": 0.15,
+    "end": 0.332
+   },
+   {
+    "text": "sombra",
+    "start": 0.332,
+    "end": 0.72
+   },
+   {
+    "text": "se",
+    "start": 0.72,
+    "end": 0.902
+   },
+   {
+    "text": "levantó",
+    "start": 0.902,
+    "end": 1.343
+   },
+   {
+    "text": "y",
+    "start": 1.343,
+    "end": 1.472
+   },
+   {
+    "text": "empezó",
+    "start": 1.472,
+    "end": 1.861
+   },
+   {
+    "text": "a",
+    "start": 1.861,
+    "end": 1.991
+   },
+   {
+    "text": "bailar.",
+    "start": 1.991,
+    "end": 2.38
+   }
+  ]
+ },
+ "l21": {
+  "text": "Así que yo también lo dije:",
+  "seconds": 1.73,
+  "voiceStart": 0.14,
+  "voiceEnd": 1.56,
+  "words": [
+   {
+    "text": "Así",
+    "start": 0.14,
+    "end": 0.353
+   },
+   {
+    "text": "que",
+    "start": 0.353,
+    "end": 0.566
+   },
+   {
+    "text": "yo",
+    "start": 0.566,
+    "end": 0.732
+   },
+   {
+    "text": "también",
+    "start": 0.732,
+    "end": 1.134
+   },
+   {
+    "text": "lo",
+    "start": 1.134,
+    "end": 1.3
+   },
+   {
+    "text": "dije:",
+    "start": 1.3,
+    "end": 1.56
+   }
+  ]
+ },
+ "l22": {
+  "text": "Papá… extraño mi casa.",
+  "seconds": 2.798,
+  "voiceStart": 0.19,
+  "voiceEnd": 2.53,
+  "words": [
+   {
+    "text": "Papá…",
+    "start": 0.19,
+    "end": 0.68
+   },
+   {
+    "text": "extraño",
+    "start": 1.43,
+    "end": 1.964
+   },
+   {
+    "text": "mi",
+    "start": 1.964,
+    "end": 2.184
+   },
+   {
+    "text": "casa.",
+    "start": 2.184,
+    "end": 2.53
+   }
+  ]
+ },
+ "l23": {
+  "text": "Papá me abrazó. Y por primera vez, nuestras sombras también.",
+  "seconds": 4.214,
+  "voiceStart": 0.17,
+  "voiceEnd": 3.97,
+  "words": [
+   {
+    "text": "Papá",
+    "start": 0.17,
+    "end": 0.48
+   },
+   {
+    "text": "me",
+    "start": 0.48,
+    "end": 0.677
+   },
+   {
+    "text": "abrazó.",
+    "start": 0.677,
+    "end": 1.1
+   },
+   {
+    "text": "Y",
+    "start": 1.47,
+    "end": 1.586
+   },
+   {
+    "text": "por",
+    "start": 1.586,
+    "end": 1.796
+   },
+   {
+    "text": "primera",
+    "start": 1.796,
+    "end": 2.191
+   },
+   {
+    "text": "vez,",
+    "start": 2.191,
+    "end": 2.4
+   },
+   {
+    "text": "nuestras",
+    "start": 2.68,
+    "end": 3.142
+   },
+   {
+    "text": "sombras",
+    "start": 3.142,
+    "end": 3.556
+   },
+   {
+    "text": "también.",
+    "start": 3.556,
+    "end": 3.97
+   }
+  ]
+ },
+ "l24": {
+  "text": "Ahora Don Bruno hace el mejor pan del pueblo.",
+  "seconds": 3.413,
+  "voiceStart": 0.18,
+  "voiceEnd": 3.19,
+  "words": [
+   {
+    "text": "Ahora",
+    "start": 0.18,
+    "end": 0.575
+   },
+   {
+    "text": "Don",
+    "start": 0.575,
+    "end": 0.849
+   },
+   {
+    "text": "Bruno",
+    "start": 0.849,
+    "end": 1.244
+   },
+   {
+    "text": "hace",
+    "start": 1.244,
+    "end": 1.579
+   },
+   {
+    "text": "el",
+    "start": 1.579,
+    "end": 1.791
+   },
+   {
+    "text": "mejor",
+    "start": 1.791,
+    "end": 2.187
+   },
+   {
+    "text": "pan",
+    "start": 2.187,
+    "end": 2.46
+   },
+   {
+    "text": "del",
+    "start": 2.46,
+    "end": 2.734
+   },
+   {
+    "text": "pueblo.",
+    "start": 2.734,
+    "end": 3.19
+   }
+  ]
+ },
+ "l25": {
+  "text": "Y tu sombra ya le dio like… te falta a ti.",
+  "seconds": 2.845,
+  "voiceStart": 0.17,
+  "voiceEnd": 2.62,
+  "words": [
+   {
+    "text": "Y",
+    "start": 0.17,
+    "end": 0.289
+   },
+   {
+    "text": "tu",
+    "start": 0.289,
+    "end": 0.455
+   },
+   {
+    "text": "sombra",
+    "start": 0.455,
+    "end": 0.812
+   },
+   {
+    "text": "ya",
+    "start": 0.812,
+    "end": 0.978
+   },
+   {
+    "text": "le",
+    "start": 0.978,
+    "end": 1.145
+   },
+   {
+    "text": "dio",
+    "start": 1.145,
+    "end": 1.359
+   },
+   {
+    "text": "like…",
+    "start": 1.359,
+    "end": 1.62
+   },
+   {
+    "text": "te",
+    "start": 1.94,
+    "end": 2.089
+   },
+   {
+    "text": "falta",
+    "start": 2.089,
+    "end": 2.365
+   },
+   {
+    "text": "a",
+    "start": 2.365,
+    "end": 2.471
+   },
+   {
+    "text": "ti.",
+    "start": 2.471,
+    "end": 2.62
+   }
+  ]
+ }
+}

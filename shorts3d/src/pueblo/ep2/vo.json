@@ -1,0 +1,1516 @@
+{
+ "l01": {
+  "text": "En este pueblo, a las 3:33 de la mañana, todos deben estar dormidos.",
+  "seconds": 4.69,
+  "voiceStart": 0.17,
+  "voiceEnd": 4.5,
+  "words": [
+   {
+    "text": "En",
+    "start": 0.17,
+    "end": 0.382
+   },
+   {
+    "text": "este",
+    "start": 0.382,
+    "end": 0.715
+   },
+   {
+    "text": "pueblo,",
+    "start": 0.715,
+    "end": 1.169
+   },
+   {
+    "text": "a",
+    "start": 1.169,
+    "end": 1.321
+   },
+   {
+    "text": "las",
+    "start": 1.321,
+    "end": 1.593
+   },
+   {
+    "text": "3:33",
+    "start": 1.593,
+    "end": 1.866
+   },
+   {
+    "text": "de",
+    "start": 1.866,
+    "end": 2.078
+   },
+   {
+    "text": "la",
+    "start": 2.078,
+    "end": 2.29
+   },
+   {
+    "text": "mañana,",
+    "start": 2.29,
+    "end": 2.744
+   },
+   {
+    "text": "todos",
+    "start": 2.744,
+    "end": 3.137
+   },
+   {
+    "text": "deben",
+    "start": 3.137,
+    "end": 3.531
+   },
+   {
+    "text": "estar",
+    "start": 3.531,
+    "end": 3.925
+   },
+   {
+    "text": "dormidos.",
+    "start": 3.925,
+    "end": 4.5
+   }
+  ]
+ },
+ "l02": {
+  "text": "Porque a esa hora algo pasa casa por casa, abriendo las puertas de los cuartos.",
+  "seconds": 4.69,
+  "voiceStart": 0.16,
+  "voiceEnd": 4.32,
+  "words": [
+   {
+    "text": "Porque",
+    "start": 0.16,
+    "end": 0.558
+   },
+   {
+    "text": "a",
+    "start": 0.558,
+    "end": 0.691
+   },
+   {
+    "text": "esa",
+    "start": 0.691,
+    "end": 0.93
+   },
+   {
+    "text": "hora",
+    "start": 0.93,
+    "end": 1.222
+   },
+   {
+    "text": "algo",
+    "start": 1.222,
+    "end": 1.515
+   },
+   {
+    "text": "pasa",
+    "start": 1.515,
+    "end": 1.807
+   },
+   {
+    "text": "casa",
+    "start": 1.807,
+    "end": 2.099
+   },
+   {
+    "text": "por",
+    "start": 2.099,
+    "end": 2.338
+   },
+   {
+    "text": "casa,",
+    "start": 2.338,
+    "end": 2.63
+   },
+   {
+    "text": "abriendo",
+    "start": 2.83,
+    "end": 3.193
+   },
+   {
+    "text": "las",
+    "start": 3.193,
+    "end": 3.365
+   },
+   {
+    "text": "puertas",
+    "start": 3.365,
+    "end": 3.69
+   },
+   {
+    "text": "de",
+    "start": 3.69,
+    "end": 3.823
+   },
+   {
+    "text": "los",
+    "start": 3.823,
+    "end": 3.995
+   },
+   {
+    "text": "cuartos.",
+    "start": 3.995,
+    "end": 4.32
+   }
+  ]
+ },
+ "l03": {
+  "text": "Por eso aquí la gente se acuesta a las 8.",
+  "seconds": 2.473,
+  "voiceStart": 0.16,
+  "voiceEnd": 2.3,
+  "words": [
+   {
+    "text": "Por",
+    "start": 0.16,
+    "end": 0.369
+   },
+   {
+    "text": "eso",
+    "start": 0.369,
+    "end": 0.579
+   },
+   {
+    "text": "aquí",
+    "start": 0.579,
+    "end": 0.835
+   },
+   {
+    "text": "la",
+    "start": 0.835,
+    "end": 0.997
+   },
+   {
+    "text": "gente",
+    "start": 0.997,
+    "end": 1.3
+   },
+   {
+    "text": "se",
+    "start": 1.3,
+    "end": 1.463
+   },
+   {
+    "text": "acuesta",
+    "start": 1.463,
+    "end": 1.858
+   },
+   {
+    "text": "a",
+    "start": 1.858,
+    "end": 1.974
+   },
+   {
+    "text": "las",
+    "start": 1.974,
+    "end": 2.184
+   },
+   {
+    "text": "8.",
+    "start": 2.184,
+    "end": 2.3
+   }
+  ]
+ },
+ "l04": {
+  "text": "Los guardias de noche duermen parados, como caballos.",
+  "seconds": 3.32,
+  "voiceStart": 0.16,
+  "voiceEnd": 3.04,
+  "words": [
+   {
+    "text": "Los",
+    "start": 0.16,
+    "end": 0.367
+   },
+   {
+    "text": "guardias",
+    "start": 0.367,
+    "end": 0.805
+   },
+   {
+    "text": "de",
+    "start": 0.805,
+    "end": 0.967
+   },
+   {
+    "text": "noche",
+    "start": 0.967,
+    "end": 1.266
+   },
+   {
+    "text": "duermen",
+    "start": 1.266,
+    "end": 1.658
+   },
+   {
+    "text": "parados,",
+    "start": 1.658,
+    "end": 2.05
+   },
+   {
+    "text": "como",
+    "start": 2.24,
+    "end": 2.533
+   },
+   {
+    "text": "caballos.",
+    "start": 2.533,
+    "end": 3.04
+   }
+  ]
+ },
+ "l05": {
+  "text": "El panadero amasa sonámbulo.",
+  "seconds": 1.962,
+  "voiceStart": 0.13,
+  "voiceEnd": 1.82,
+  "words": [
+   {
+    "text": "El",
+    "start": 0.13,
+    "end": 0.327
+   },
+   {
+    "text": "panadero",
+    "start": 0.327,
+    "end": 0.862
+   },
+   {
+    "text": "amasa",
+    "start": 0.862,
+    "end": 1.228
+   },
+   {
+    "text": "sonámbulo.",
+    "start": 1.228,
+    "end": 1.82
+   }
+  ]
+ },
+ "l06": {
+  "text": "Y los bebés no lloran, porque ya aprendieron.",
+  "seconds": 2.856,
+  "voiceStart": 0.18,
+  "voiceEnd": 2.62,
+  "words": [
+   {
+    "text": "Y",
+    "start": 0.18,
+    "end": 0.286
+   },
+   {
+    "text": "los",
+    "start": 0.286,
+    "end": 0.477
+   },
+   {
+    "text": "bebés",
+    "start": 0.477,
+    "end": 0.753
+   },
+   {
+    "text": "no",
+    "start": 0.753,
+    "end": 0.902
+   },
+   {
+    "text": "lloran,",
+    "start": 0.902,
+    "end": 1.22
+   },
+   {
+    "text": "porque",
+    "start": 1.54,
+    "end": 1.885
+   },
+   {
+    "text": "ya",
+    "start": 1.885,
+    "end": 2.046
+   },
+   {
+    "text": "aprendieron.",
+    "start": 2.046,
+    "end": 2.62
+   }
+  ]
+ },
+ "l07": {
+  "text": "En la mañana solo quedan huellas enormes en el jardín y las cobijas… bien estiraditas.",
+  "seconds": 6.014,
+  "voiceStart": 0.1,
+  "voiceEnd": 5.94,
+  "words": [
+   {
+    "text": "En",
+    "start": 0.1,
+    "end": 0.321
+   },
+   {
+    "text": "la",
+    "start": 0.321,
+    "end": 0.542
+   },
+   {
+    "text": "mañana",
+    "start": 0.542,
+    "end": 1.015
+   },
+   {
+    "text": "solo",
+    "start": 1.015,
+    "end": 1.363
+   },
+   {
+    "text": "quedan",
+    "start": 1.363,
+    "end": 1.836
+   },
+   {
+    "text": "huellas",
+    "start": 1.836,
+    "end": 2.373
+   },
+   {
+    "text": "enormes",
+    "start": 2.373,
+    "end": 2.91
+   },
+   {
+    "text": "en",
+    "start": 2.91,
+    "end": 3.13
+   },
+   {
+    "text": "el",
+    "start": 3.13,
+    "end": 3.351
+   },
+   {
+    "text": "jardín",
+    "start": 3.351,
+    "end": 3.825
+   },
+   {
+    "text": "y",
+    "start": 3.825,
+    "end": 3.983
+   },
+   {
+    "text": "las",
+    "start": 3.983,
+    "end": 4.267
+   },
+   {
+    "text": "cobijas…",
+    "start": 4.267,
+    "end": 4.804
+   },
+   {
+    "text": "bien",
+    "start": 4.804,
+    "end": 5.151
+   },
+   {
+    "text": "estiraditas.",
+    "start": 5.151,
+    "end": 5.94
+   }
+  ]
+ },
+ "l08": {
+  "text": "Nos mudamos un lunes y nadie nos avisó.",
+  "seconds": 2.473,
+  "voiceStart": 0.16,
+  "voiceEnd": 2.26,
+  "words": [
+   {
+    "text": "Nos",
+    "start": 0.16,
+    "end": 0.38
+   },
+   {
+    "text": "mudamos",
+    "start": 0.38,
+    "end": 0.795
+   },
+   {
+    "text": "un",
+    "start": 0.795,
+    "end": 0.966
+   },
+   {
+    "text": "lunes",
+    "start": 0.966,
+    "end": 1.283
+   },
+   {
+    "text": "y",
+    "start": 1.283,
+    "end": 1.405
+   },
+   {
+    "text": "nadie",
+    "start": 1.405,
+    "end": 1.723
+   },
+   {
+    "text": "nos",
+    "start": 1.723,
+    "end": 1.943
+   },
+   {
+    "text": "avisó.",
+    "start": 1.943,
+    "end": 2.26
+   }
+  ]
+ },
+ "l09": {
+  "text": "Yo me llamo Mía, y siempre me cuesta dormir.",
+  "seconds": 2.856,
+  "voiceStart": 0.17,
+  "voiceEnd": 2.58,
+  "words": [
+   {
+    "text": "Yo",
+    "start": 0.17,
+    "end": 0.331
+   },
+   {
+    "text": "me",
+    "start": 0.331,
+    "end": 0.493
+   },
+   {
+    "text": "llamo",
+    "start": 0.493,
+    "end": 0.792
+   },
+   {
+    "text": "Mía,",
+    "start": 0.792,
+    "end": 1.0
+   },
+   {
+    "text": "y",
+    "start": 1.4,
+    "end": 1.5
+   },
+   {
+    "text": "siempre",
+    "start": 1.5,
+    "end": 1.84
+   },
+   {
+    "text": "me",
+    "start": 1.84,
+    "end": 1.98
+   },
+   {
+    "text": "cuesta",
+    "start": 1.98,
+    "end": 2.28
+   },
+   {
+    "text": "dormir.",
+    "start": 2.28,
+    "end": 2.58
+   }
+  ]
+ },
+ "l10": {
+  "text": "La primera noche, a las 3:30, seguía con los ojos abiertos.",
+  "seconds": 4.052,
+  "voiceStart": 0.17,
+  "voiceEnd": 3.79,
+  "words": [
+   {
+    "text": "La",
+    "start": 0.17,
+    "end": 0.376
+   },
+   {
+    "text": "primera",
+    "start": 0.376,
+    "end": 0.876
+   },
+   {
+    "text": "noche,",
+    "start": 0.876,
+    "end": 1.259
+   },
+   {
+    "text": "a",
+    "start": 1.259,
+    "end": 1.406
+   },
+   {
+    "text": "las",
+    "start": 1.406,
+    "end": 1.671
+   },
+   {
+    "text": "3:30,",
+    "start": 1.671,
+    "end": 1.936
+   },
+   {
+    "text": "seguía",
+    "start": 1.936,
+    "end": 2.377
+   },
+   {
+    "text": "con",
+    "start": 2.377,
+    "end": 2.642
+   },
+   {
+    "text": "los",
+    "start": 2.642,
+    "end": 2.907
+   },
+   {
+    "text": "ojos",
+    "start": 2.907,
+    "end": 3.231
+   },
+   {
+    "text": "abiertos.",
+    "start": 3.231,
+    "end": 3.79
+   }
+  ]
+ },
+ "l11": {
+  "text": "3:33. La puerta se abrió despacio.",
+  "seconds": 3.831,
+  "voiceStart": 0.17,
+  "voiceEnd": 3.62,
+  "words": [
+   {
+    "text": "3:33.",
+    "start": 0.17,
+    "end": 1.24
+   },
+   {
+    "text": "La",
+    "start": 2.06,
+    "end": 2.239
+   },
+   {
+    "text": "puerta",
+    "start": 2.239,
+    "end": 2.623
+   },
+   {
+    "text": "se",
+    "start": 2.623,
+    "end": 2.802
+   },
+   {
+    "text": "abrió",
+    "start": 2.802,
+    "end": 3.134
+   },
+   {
+    "text": "despacio.",
+    "start": 3.134,
+    "end": 3.62
+   }
+  ]
+ },
+ "l12": {
+  "text": "Algo altísimo entró agachándose. Tenía unos brazos larguísimos.",
+  "seconds": 4.307,
+  "voiceStart": 0.18,
+  "voiceEnd": 3.99,
+  "words": [
+   {
+    "text": "Algo",
+    "start": 0.18,
+    "end": 0.473
+   },
+   {
+    "text": "altísimo",
+    "start": 0.473,
+    "end": 0.979
+   },
+   {
+    "text": "entró",
+    "start": 0.979,
+    "end": 1.325
+   },
+   {
+    "text": "agachándose.",
+    "start": 1.325,
+    "end": 1.99
+   },
+   {
+    "text": "Tenía",
+    "start": 2.25,
+    "end": 2.603
+   },
+   {
+    "text": "unos",
+    "start": 2.603,
+    "end": 2.902
+   },
+   {
+    "text": "brazos",
+    "start": 2.902,
+    "end": 3.31
+   },
+   {
+    "text": "larguísimos.",
+    "start": 3.31,
+    "end": 3.99
+   }
+  ]
+ },
+ "l13": {
+  "text": "Cerré los ojos y me hice la dormida.",
+  "seconds": 2.554,
+  "voiceStart": 0.1,
+  "voiceEnd": 2.34,
+  "words": [
+   {
+    "text": "Cerré",
+    "start": 0.1,
+    "end": 0.464
+   },
+   {
+    "text": "los",
+    "start": 0.464,
+    "end": 0.716
+   },
+   {
+    "text": "ojos",
+    "start": 0.716,
+    "end": 1.024
+   },
+   {
+    "text": "y",
+    "start": 1.024,
+    "end": 1.164
+   },
+   {
+    "text": "me",
+    "start": 1.164,
+    "end": 1.36
+   },
+   {
+    "text": "hice",
+    "start": 1.36,
+    "end": 1.668
+   },
+   {
+    "text": "la",
+    "start": 1.668,
+    "end": 1.864
+   },
+   {
+    "text": "dormida.",
+    "start": 1.864,
+    "end": 2.34
+   }
+  ]
+ },
+ "l14": {
+  "text": "Sentí que se acercaba… y que me agarraba de los pies.",
+  "seconds": 3.75,
+  "voiceStart": 0.15,
+  "voiceEnd": 3.42,
+  "words": [
+   {
+    "text": "Sentí",
+    "start": 0.15,
+    "end": 0.478
+   },
+   {
+    "text": "que",
+    "start": 0.478,
+    "end": 0.705
+   },
+   {
+    "text": "se",
+    "start": 0.705,
+    "end": 0.881
+   },
+   {
+    "text": "acercaba…",
+    "start": 0.881,
+    "end": 1.36
+   },
+   {
+    "text": "y",
+    "start": 1.98,
+    "end": 2.087
+   },
+   {
+    "text": "que",
+    "start": 2.087,
+    "end": 2.281
+   },
+   {
+    "text": "me",
+    "start": 2.281,
+    "end": 2.431
+   },
+   {
+    "text": "agarraba",
+    "start": 2.431,
+    "end": 2.84
+   },
+   {
+    "text": "de",
+    "start": 2.84,
+    "end": 2.99
+   },
+   {
+    "text": "los",
+    "start": 2.99,
+    "end": 3.184
+   },
+   {
+    "text": "pies.",
+    "start": 3.184,
+    "end": 3.42
+   }
+  ]
+ },
+ "l15": {
+  "text": "Y me tapó los pies con la cobija.",
+  "seconds": 2.043,
+  "voiceStart": 0.17,
+  "voiceEnd": 1.78,
+  "words": [
+   {
+    "text": "Y",
+    "start": 0.17,
+    "end": 0.279
+   },
+   {
+    "text": "me",
+    "start": 0.279,
+    "end": 0.431
+   },
+   {
+    "text": "tapó",
+    "start": 0.431,
+    "end": 0.67
+   },
+   {
+    "text": "los",
+    "start": 0.67,
+    "end": 0.866
+   },
+   {
+    "text": "pies",
+    "start": 0.866,
+    "end": 1.106
+   },
+   {
+    "text": "con",
+    "start": 1.106,
+    "end": 1.301
+   },
+   {
+    "text": "la",
+    "start": 1.301,
+    "end": 1.454
+   },
+   {
+    "text": "cobija.",
+    "start": 1.454,
+    "end": 1.78
+   }
+  ]
+ },
+ "l16": {
+  "text": "La noche siguiente lo seguí.",
+  "seconds": 1.742,
+  "voiceStart": 0.17,
+  "voiceEnd": 1.54,
+  "words": [
+   {
+    "text": "La",
+    "start": 0.17,
+    "end": 0.327
+   },
+   {
+    "text": "noche",
+    "start": 0.327,
+    "end": 0.619
+   },
+   {
+    "text": "siguiente",
+    "start": 0.619,
+    "end": 1.091
+   },
+   {
+    "text": "lo",
+    "start": 1.091,
+    "end": 1.248
+   },
+   {
+    "text": "seguí.",
+    "start": 1.248,
+    "end": 1.54
+   }
+  ]
+ },
+ "l17": {
+  "text": "Iba casa por casa arropando niños, devolviendo peluches y apagando luces que alguien había dejado prendidas.",
+  "seconds": 6.304,
+  "voiceStart": 0.09,
+  "voiceEnd": 5.94,
+  "words": [
+   {
+    "text": "Iba",
+    "start": 0.09,
+    "end": 0.319
+   },
+   {
+    "text": "casa",
+    "start": 0.319,
+    "end": 0.599
+   },
+   {
+    "text": "por",
+    "start": 0.599,
+    "end": 0.828
+   },
+   {
+    "text": "casa",
+    "start": 0.828,
+    "end": 1.107
+   },
+   {
+    "text": "arropando",
+    "start": 1.107,
+    "end": 1.642
+   },
+   {
+    "text": "niños,",
+    "start": 1.642,
+    "end": 1.972
+   },
+   {
+    "text": "devolviendo",
+    "start": 1.972,
+    "end": 2.608
+   },
+   {
+    "text": "peluches",
+    "start": 2.608,
+    "end": 3.091
+   },
+   {
+    "text": "y",
+    "start": 3.091,
+    "end": 3.218
+   },
+   {
+    "text": "apagando",
+    "start": 3.218,
+    "end": 3.702
+   },
+   {
+    "text": "luces",
+    "start": 3.702,
+    "end": 4.032
+   },
+   {
+    "text": "que",
+    "start": 4.032,
+    "end": 4.261
+   },
+   {
+    "text": "alguien",
+    "start": 4.261,
+    "end": 4.694
+   },
+   {
+    "text": "había",
+    "start": 4.694,
+    "end": 5.024
+   },
+   {
+    "text": "dejado",
+    "start": 5.024,
+    "end": 5.406
+   },
+   {
+    "text": "prendidas.",
+    "start": 5.406,
+    "end": 5.94
+   }
+  ]
+ },
+ "l18": {
+  "text": "En la última casa había un niño solo, sin cobija. Sus papás trabajaban de noche.",
+  "seconds": 5.503,
+  "voiceStart": 0.15,
+  "voiceEnd": 5.35,
+  "words": [
+   {
+    "text": "En",
+    "start": 0.15,
+    "end": 0.339
+   },
+   {
+    "text": "la",
+    "start": 0.339,
+    "end": 0.527
+   },
+   {
+    "text": "última",
+    "start": 0.527,
+    "end": 0.932
+   },
+   {
+    "text": "casa",
+    "start": 0.932,
+    "end": 1.228
+   },
+   {
+    "text": "había",
+    "start": 1.228,
+    "end": 1.578
+   },
+   {
+    "text": "un",
+    "start": 1.578,
+    "end": 1.767
+   },
+   {
+    "text": "niño",
+    "start": 1.767,
+    "end": 2.064
+   },
+   {
+    "text": "solo,",
+    "start": 2.064,
+    "end": 2.36
+   },
+   {
+    "text": "sin",
+    "start": 2.63,
+    "end": 2.889
+   },
+   {
+    "text": "cobija.",
+    "start": 2.889,
+    "end": 3.32
+   },
+   {
+    "text": "Sus",
+    "start": 3.67,
+    "end": 3.903
+   },
+   {
+    "text": "papás",
+    "start": 3.903,
+    "end": 4.239
+   },
+   {
+    "text": "trabajaban",
+    "start": 4.239,
+    "end": 4.833
+   },
+   {
+    "text": "de",
+    "start": 4.833,
+    "end": 5.014
+   },
+   {
+    "text": "noche.",
+    "start": 5.014,
+    "end": 5.35
+   }
+  ]
+ },
+ "l19": {
+  "text": "La criatura se quitó su propia bufanda y se la puso encima.",
+  "seconds": 3.622,
+  "voiceStart": 0.16,
+  "voiceEnd": 3.38,
+  "words": [
+   {
+    "text": "La",
+    "start": 0.16,
+    "end": 0.333
+   },
+   {
+    "text": "criatura",
+    "start": 0.333,
+    "end": 0.804
+   },
+   {
+    "text": "se",
+    "start": 0.804,
+    "end": 0.977
+   },
+   {
+    "text": "quitó",
+    "start": 0.977,
+    "end": 1.299
+   },
+   {
+    "text": "su",
+    "start": 1.299,
+    "end": 1.473
+   },
+   {
+    "text": "propia",
+    "start": 1.473,
+    "end": 1.844
+   },
+   {
+    "text": "bufanda",
+    "start": 1.844,
+    "end": 2.265
+   },
+   {
+    "text": "y",
+    "start": 2.265,
+    "end": 2.389
+   },
+   {
+    "text": "se",
+    "start": 2.389,
+    "end": 2.563
+   },
+   {
+    "text": "la",
+    "start": 2.563,
+    "end": 2.736
+   },
+   {
+    "text": "puso",
+    "start": 2.736,
+    "end": 3.008
+   },
+   {
+    "text": "encima.",
+    "start": 3.008,
+    "end": 3.38
+   }
+  ]
+ },
+ "l20": {
+  "text": "Entonces me vio.",
+  "seconds": 1.277,
+  "voiceStart": 0.16,
+  "voiceEnd": 1.04,
+  "words": [
+   {
+    "text": "Entonces",
+    "start": 0.16,
+    "end": 0.638
+   },
+   {
+    "text": "me",
+    "start": 0.638,
+    "end": 0.814
+   },
+   {
+    "text": "vio.",
+    "start": 0.814,
+    "end": 1.04
+   }
+  ]
+ },
+ "l21": {
+  "text": "¿Por qué nadie puede verte?",
+  "seconds": 1.614,
+  "voiceStart": 0.15,
+  "voiceEnd": 1.38,
+  "words": [
+   {
+    "text": "¿Por",
+    "start": 0.15,
+    "end": 0.344
+   },
+   {
+    "text": "qué",
+    "start": 0.344,
+    "end": 0.538
+   },
+   {
+    "text": "nadie",
+    "start": 0.538,
+    "end": 0.819
+   },
+   {
+    "text": "puede",
+    "start": 0.819,
+    "end": 1.099
+   },
+   {
+    "text": "verte?",
+    "start": 1.099,
+    "end": 1.38
+   }
+  ]
+ },
+ "l22": {
+  "text": "Porque si me ven… dejo de existir.",
+  "seconds": 2.125,
+  "voiceStart": 0.11,
+  "voiceEnd": 1.99,
+  "words": [
+   {
+    "text": "Porque",
+    "start": 0.11,
+    "end": 0.398
+   },
+   {
+    "text": "si",
+    "start": 0.398,
+    "end": 0.533
+   },
+   {
+    "text": "me",
+    "start": 0.533,
+    "end": 0.667
+   },
+   {
+    "text": "ven…",
+    "start": 0.667,
+    "end": 0.84
+   },
+   {
+    "text": "dejo",
+    "start": 1.08,
+    "end": 1.366
+   },
+   {
+    "text": "de",
+    "start": 1.366,
+    "end": 1.548
+   },
+   {
+    "text": "existir.",
+    "start": 1.548,
+    "end": 1.99
+   }
+  ]
+ },
+ "l23": {
+  "text": "En ese momento apareció Don Bruno con una linterna y una red.",
+  "seconds": 3.831,
+  "voiceStart": 0.17,
+  "voiceEnd": 3.53,
+  "words": [
+   {
+    "text": "En",
+    "start": 0.17,
+    "end": 0.346
+   },
+   {
+    "text": "ese",
+    "start": 0.346,
+    "end": 0.571
+   },
+   {
+    "text": "momento",
+    "start": 0.571,
+    "end": 0.997
+   },
+   {
+    "text": "apareció",
+    "start": 0.997,
+    "end": 1.474
+   },
+   {
+    "text": "Don",
+    "start": 1.474,
+    "end": 1.7
+   },
+   {
+    "text": "Bruno",
+    "start": 1.7,
+    "end": 2.026
+   },
+   {
+    "text": "con",
+    "start": 2.026,
+    "end": 2.251
+   },
+   {
+    "text": "una",
+    "start": 2.251,
+    "end": 2.477
+   },
+   {
+    "text": "linterna",
+    "start": 2.477,
+    "end": 2.953
+   },
+   {
+    "text": "y",
+    "start": 2.953,
+    "end": 3.079
+   },
+   {
+    "text": "una",
+    "start": 3.079,
+    "end": 3.304
+   },
+   {
+    "text": "red.",
+    "start": 3.304,
+    "end": 3.53
+   }
+  ]
+ },
+ "l24": {
+  "text": "¡Por fin te atrapé, monstruo!",
+  "seconds": 1.962,
+  "voiceStart": 0.14,
+  "voiceEnd": 1.86,
+  "words": [
+   {
+    "text": "¡Por",
+    "start": 0.14,
+    "end": 0.402
+   },
+   {
+    "text": "fin",
+    "start": 0.402,
+    "end": 0.665
+   },
+   {
+    "text": "te",
+    "start": 0.665,
+    "end": 0.869
+   },
+   {
+    "text": "atrapé,",
+    "start": 0.869,
+    "end": 1.306
+   },
+   {
+    "text": "monstruo!",
+    "start": 1.306,
+    "end": 1.86
+   }
+  ]
+ },
+ "l25": {
+  "text": "Le apagué la linterna. Nadie lo vio. Se fue.",
+  "seconds": 3.111,
+  "voiceStart": 0.17,
+  "voiceEnd": 2.85,
+  "words": [
+   {
+    "text": "Le",
+    "start": 0.17,
+    "end": 0.326
+   },
+   {
+    "text": "apagué",
+    "start": 0.326,
+    "end": 0.66
+   },
+   {
+    "text": "la",
+    "start": 0.66,
+    "end": 0.816
+   },
+   {
+    "text": "linterna.",
+    "start": 0.816,
+    "end": 1.24
+   },
+   {
+    "text": "Nadie",
+    "start": 1.54,
+    "end": 1.791
+   },
+   {
+    "text": "lo",
+    "start": 1.791,
+    "end": 1.926
+   },
+   {
+    "text": "vio.",
+    "start": 1.926,
+    "end": 2.1
+   },
+   {
+    "text": "Se",
+    "start": 2.43,
+    "end": 2.614
+   },
+   {
+    "text": "fue.",
+    "start": 2.614,
+    "end": 2.85
+   }
+  ]
+ },
+ "l26": {
+  "text": "Ahora, a las 3:33, yo también me hago la dormida.",
+  "seconds": 4.005,
+  "voiceStart": 0.14,
+  "voiceEnd": 3.77,
+  "words": [
+   {
+    "text": "Ahora,",
+    "start": 0.14,
+    "end": 0.603
+   },
+   {
+    "text": "a",
+    "start": 0.603,
+    "end": 0.781
+   },
+   {
+    "text": "las",
+    "start": 0.781,
+    "end": 1.101
+   },
+   {
+    "text": "3:33,",
+    "start": 1.101,
+    "end": 1.421
+   },
+   {
+    "text": "yo",
+    "start": 1.421,
+    "end": 1.67
+   },
+   {
+    "text": "también",
+    "start": 1.67,
+    "end": 2.275
+   },
+   {
+    "text": "me",
+    "start": 2.275,
+    "end": 2.524
+   },
+   {
+    "text": "hago",
+    "start": 2.524,
+    "end": 2.916
+   },
+   {
+    "text": "la",
+    "start": 2.916,
+    "end": 3.165
+   },
+   {
+    "text": "dormida.",
+    "start": 3.165,
+    "end": 3.77
+   }
+  ]
+ },
+ "l27": {
+  "text": "Y siempre amanezco bien tapada.",
+  "seconds": 2.043,
+  "voiceStart": 0.18,
+  "voiceEnd": 1.82,
+  "words": [
+   {
+    "text": "Y",
+    "start": 0.18,
+    "end": 0.302
+   },
+   {
+    "text": "siempre",
+    "start": 0.302,
+    "end": 0.719
+   },
+   {
+    "text": "amanezco",
+    "start": 0.719,
+    "end": 1.184
+   },
+   {
+    "text": "bien",
+    "start": 1.184,
+    "end": 1.453
+   },
+   {
+    "text": "tapada.",
+    "start": 1.453,
+    "end": 1.82
+   }
+  ]
+ },
+ "l28": {
+  "text": "Y esta noche a las 3:33 va a revisar si te suscribiste.",
+  "seconds": 4.435,
+  "voiceStart": 0.15,
+  "voiceEnd": 4.28,
+  "words": [
+   {
+    "text": "Y",
+    "start": 0.15,
+    "end": 0.322
+   },
+   {
+    "text": "esta",
+    "start": 0.322,
+    "end": 0.701
+   },
+   {
+    "text": "noche",
+    "start": 0.701,
+    "end": 1.148
+   },
+   {
+    "text": "a",
+    "start": 1.148,
+    "end": 1.32
+   },
+   {
+    "text": "las",
+    "start": 1.32,
+    "end": 1.63
+   },
+   {
+    "text": "3:33",
+    "start": 1.63,
+    "end": 1.94
+   },
+   {
+    "text": "va",
+    "start": 1.94,
+    "end": 2.181
+   },
+   {
+    "text": "a",
+    "start": 2.181,
+    "end": 2.353
+   },
+   {
+    "text": "revisar",
+    "start": 2.353,
+    "end": 2.938
+   },
+   {
+    "text": "si",
+    "start": 2.938,
+    "end": 3.179
+   },
+   {
+    "text": "te",
+    "start": 3.179,
+    "end": 3.42
+   },
+   {
+    "text": "suscribiste.",
+    "start": 3.42,
+    "end": 4.28
+   }
+  ]
+ }
+}

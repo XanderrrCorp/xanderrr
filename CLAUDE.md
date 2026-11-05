@@ -113,6 +113,15 @@ Estado al 04-10-2026. El repositorio es PÚBLICO: nunca escribir claves, tokens 
   barniz, «muy Roblox») en 5, 1 y 3. `src/pueblo/look/mirada.tsx` conecta la skill: dos tonos, sol relativo a la
   cámara, cielo, nubes, tinta, desenfoque (Cam.dof/foco), bloom, tono NEUTRAL, gradación + ajuste de NOCHE propio.
   El relleno desde la cámara solo ilumina a los personajes de plástico (el mundo de dos tonos lo ignora).
+- (05-11, noche) LOS 6 ARMADOS con voz grabada (permiso del dueño para los 6; guiones TAL CUAL, sin frases añadidas:
+  duran 1:26–1:37, el revisor lo deja en aviso). ep1 PuebloEp1Invisible (3D, transparencia), ep2 PuebloEp2Criatura
+  (2D + criatura dibujada en ep2/criatura.ts), ep3 PuebloEp3Sombra (3D, sombras = Personaje.Sombra, silueta con su
+  propia pose), ep4 PuebloEp4Mentiras (2D, altavoces y «¡MENTIRA!»), ep5 PuebloEp5Juguetes (3D), ep6 PuebloEp6Rompes (2D).
+  2D: Carta2D (toon.ts copiado de la skill + caras sad/cry/sleep/fear) gira hacia la cámara con su posición EN EL MUNDO
+  (onBeforeRender), porque los sets están desplazados. Video vertical = encuadre horizontal de ~24°: dos personajes
+  en el mismo plano necesitan cámara lejos. Velocidad de voz: 1,0 → 174–187 ppm; 0,96 → ~175.
+  Previas: `scripts/previa_pueblo.sh <Comp> <nombre>` (540x960 con inputProps dpr 0.5: la escala sola NO achica el
+  lienzo 3D; ~1,7 s/cuadro en la nube, ~75 min por episodio). Final en el PC del dueño con --gl=angle sin --props.
 - `node scripts/revisar_pueblo.mjs` (EP=5) comprueba la ficha; `python scripts/sonidos_pueblo.py` (gratis);
   `EP=5 python scripts/voz_pueblo.py --pagar` (cobra, pedir permiso). Render en la nube ~1,8 s/cuadro.
 

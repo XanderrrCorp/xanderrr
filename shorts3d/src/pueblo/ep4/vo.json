@@ -1,0 +1,1404 @@
+{
+ "l01": {
+  "text": "En este pueblo, si dices una mentira, todo el pueblo la escucha por los altavoces.",
+  "seconds": 5.689,
+  "voiceStart": 0.12,
+  "voiceEnd": 5.59,
+  "words": [
+   {
+    "text": "En",
+    "start": 0.12,
+    "end": 0.36
+   },
+   {
+    "text": "este",
+    "start": 0.36,
+    "end": 0.736
+   },
+   {
+    "text": "pueblo,",
+    "start": 0.736,
+    "end": 1.25
+   },
+   {
+    "text": "si",
+    "start": 1.39,
+    "end": 1.614
+   },
+   {
+    "text": "dices",
+    "start": 1.614,
+    "end": 2.029
+   },
+   {
+    "text": "una",
+    "start": 2.029,
+    "end": 2.317
+   },
+   {
+    "text": "mentira,",
+    "start": 2.317,
+    "end": 2.86
+   },
+   {
+    "text": "todo",
+    "start": 3.16,
+    "end": 3.438
+   },
+   {
+    "text": "el",
+    "start": 3.438,
+    "end": 3.616
+   },
+   {
+    "text": "pueblo",
+    "start": 3.616,
+    "end": 3.995
+   },
+   {
+    "text": "la",
+    "start": 3.995,
+    "end": 4.172
+   },
+   {
+    "text": "escucha",
+    "start": 4.172,
+    "end": 4.603
+   },
+   {
+    "text": "por",
+    "start": 4.603,
+    "end": 4.831
+   },
+   {
+    "text": "los",
+    "start": 4.831,
+    "end": 5.058
+   },
+   {
+    "text": "altavoces.",
+    "start": 5.058,
+    "end": 5.59
+   }
+  ]
+ },
+ "l02": {
+  "text": "Ya hice la tarea. MENTIRA.",
+  "seconds": 2.345,
+  "voiceStart": 0.11,
+  "voiceEnd": 2.11,
+  "words": [
+   {
+    "text": "Ya",
+    "start": 0.11,
+    "end": 0.287
+   },
+   {
+    "text": "hice",
+    "start": 0.287,
+    "end": 0.565
+   },
+   {
+    "text": "la",
+    "start": 0.565,
+    "end": 0.742
+   },
+   {
+    "text": "tarea.",
+    "start": 0.742,
+    "end": 1.07
+   },
+   {
+    "text": "MENTIRA.",
+    "start": 1.47,
+    "end": 2.11
+   }
+  ]
+ },
+ "l03": {
+  "text": "Me encanta tu suéter, abuela. MENTIRA.",
+  "seconds": 2.845,
+  "voiceStart": 0.18,
+  "voiceEnd": 2.63,
+  "words": [
+   {
+    "text": "Me",
+    "start": 0.18,
+    "end": 0.4
+   },
+   {
+    "text": "encanta",
+    "start": 0.4,
+    "end": 0.934
+   },
+   {
+    "text": "tu",
+    "start": 0.934,
+    "end": 1.154
+   },
+   {
+    "text": "suéter,",
+    "start": 1.154,
+    "end": 1.625
+   },
+   {
+    "text": "abuela.",
+    "start": 1.625,
+    "end": 2.096
+   },
+   {
+    "text": "MENTIRA.",
+    "start": 2.096,
+    "end": 2.63
+   }
+  ]
+ },
+ "l04": {
+  "text": "Solo me comí una galleta. MENTIRA.",
+  "seconds": 2.705,
+  "voiceStart": 0.09,
+  "voiceEnd": 2.47,
+  "words": [
+   {
+    "text": "Solo",
+    "start": 0.09,
+    "end": 0.352
+   },
+   {
+    "text": "me",
+    "start": 0.352,
+    "end": 0.519
+   },
+   {
+    "text": "comí",
+    "start": 0.519,
+    "end": 0.781
+   },
+   {
+    "text": "una",
+    "start": 0.781,
+    "end": 0.995
+   },
+   {
+    "text": "galleta.",
+    "start": 0.995,
+    "end": 1.4
+   },
+   {
+    "text": "MENTIRA.",
+    "start": 1.76,
+    "end": 2.47
+   }
+  ]
+ },
+ "l05": {
+  "text": "Por eso aquí la gente responde mmm a todo.",
+  "seconds": 3.82,
+  "voiceStart": 0.13,
+  "voiceEnd": 3.71,
+  "words": [
+   {
+    "text": "Por",
+    "start": 0.13,
+    "end": 0.476
+   },
+   {
+    "text": "eso",
+    "start": 0.476,
+    "end": 0.823
+   },
+   {
+    "text": "aquí",
+    "start": 0.823,
+    "end": 1.246
+   },
+   {
+    "text": "la",
+    "start": 1.246,
+    "end": 1.516
+   },
+   {
+    "text": "gente",
+    "start": 1.516,
+    "end": 2.016
+   },
+   {
+    "text": "responde",
+    "start": 2.016,
+    "end": 2.748
+   },
+   {
+    "text": "mmm",
+    "start": 2.748,
+    "end": 3.094
+   },
+   {
+    "text": "a",
+    "start": 3.094,
+    "end": 3.287
+   },
+   {
+    "text": "todo.",
+    "start": 3.287,
+    "end": 3.71
+   }
+  ]
+ },
+ "l06": {
+  "text": "Y nadie pregunta ¿me veo bien?.",
+  "seconds": 1.811,
+  "voiceStart": 0.13,
+  "voiceEnd": 1.67,
+  "words": [
+   {
+    "text": "Y",
+    "start": 0.13,
+    "end": 0.25
+   },
+   {
+    "text": "nadie",
+    "start": 0.25,
+    "end": 0.563
+   },
+   {
+    "text": "pregunta",
+    "start": 0.563,
+    "end": 1.02
+   },
+   {
+    "text": "¿me",
+    "start": 1.02,
+    "end": 1.189
+   },
+   {
+    "text": "veo",
+    "start": 1.189,
+    "end": 1.405
+   },
+   {
+    "text": "bien?.",
+    "start": 1.405,
+    "end": 1.67
+   }
+  ]
+ },
+ "l07": {
+  "text": "Nos mudamos un lunes y nadie nos avisó.",
+  "seconds": 2.926,
+  "voiceStart": 0.17,
+  "voiceEnd": 2.71,
+  "words": [
+   {
+    "text": "Nos",
+    "start": 0.17,
+    "end": 0.436
+   },
+   {
+    "text": "mudamos",
+    "start": 0.436,
+    "end": 0.938
+   },
+   {
+    "text": "un",
+    "start": 0.938,
+    "end": 1.145
+   },
+   {
+    "text": "lunes",
+    "start": 1.145,
+    "end": 1.529
+   },
+   {
+    "text": "y",
+    "start": 1.529,
+    "end": 1.676
+   },
+   {
+    "text": "nadie",
+    "start": 1.676,
+    "end": 2.06
+   },
+   {
+    "text": "nos",
+    "start": 2.06,
+    "end": 2.326
+   },
+   {
+    "text": "avisó.",
+    "start": 2.326,
+    "end": 2.71
+   }
+  ]
+ },
+ "l08": {
+  "text": "Me llamo Sofi. Mi mejor amiga aquí era Ana.",
+  "seconds": 3.506,
+  "voiceStart": 0.17,
+  "voiceEnd": 3.29,
+  "words": [
+   {
+    "text": "Me",
+    "start": 0.17,
+    "end": 0.357
+   },
+   {
+    "text": "llamo",
+    "start": 0.357,
+    "end": 0.705
+   },
+   {
+    "text": "Sofi.",
+    "start": 0.705,
+    "end": 1.0
+   },
+   {
+    "text": "Mi",
+    "start": 1.5,
+    "end": 1.702
+   },
+   {
+    "text": "mejor",
+    "start": 1.702,
+    "end": 2.077
+   },
+   {
+    "text": "amiga",
+    "start": 2.077,
+    "end": 2.453
+   },
+   {
+    "text": "aquí",
+    "start": 2.453,
+    "end": 2.77
+   },
+   {
+    "text": "era",
+    "start": 2.77,
+    "end": 3.03
+   },
+   {
+    "text": "Ana.",
+    "start": 3.03,
+    "end": 3.29
+   }
+  ]
+ },
+ "l09": {
+  "text": "Ana siempre llegaba con moretones.",
+  "seconds": 2.577,
+  "voiceStart": 0.18,
+  "voiceEnd": 2.26,
+  "words": [
+   {
+    "text": "Ana",
+    "start": 0.18,
+    "end": 0.436
+   },
+   {
+    "text": "siempre",
+    "start": 0.436,
+    "end": 0.921
+   },
+   {
+    "text": "llegaba",
+    "start": 0.921,
+    "end": 1.405
+   },
+   {
+    "text": "con",
+    "start": 1.405,
+    "end": 1.662
+   },
+   {
+    "text": "moretones.",
+    "start": 1.662,
+    "end": 2.26
+   }
+  ]
+ },
+ "l10": {
+  "text": "Me caí de la bici.",
+  "seconds": 1.416,
+  "voiceStart": 0.18,
+  "voiceEnd": 1.2,
+  "words": [
+   {
+    "text": "Me",
+    "start": 0.18,
+    "end": 0.354
+   },
+   {
+    "text": "caí",
+    "start": 0.354,
+    "end": 0.578
+   },
+   {
+    "text": "de",
+    "start": 0.578,
+    "end": 0.752
+   },
+   {
+    "text": "la",
+    "start": 0.752,
+    "end": 0.926
+   },
+   {
+    "text": "bici.",
+    "start": 0.926,
+    "end": 1.2
+   }
+  ]
+ },
+ "l11": {
+  "text": "Y el altavoz no sonaba.",
+  "seconds": 1.683,
+  "voiceStart": 0.16,
+  "voiceEnd": 1.56,
+  "words": [
+   {
+    "text": "Y",
+    "start": 0.16,
+    "end": 0.297
+   },
+   {
+    "text": "el",
+    "start": 0.297,
+    "end": 0.489
+   },
+   {
+    "text": "altavoz",
+    "start": 0.489,
+    "end": 0.956
+   },
+   {
+    "text": "no",
+    "start": 0.956,
+    "end": 1.148
+   },
+   {
+    "text": "sonaba.",
+    "start": 1.148,
+    "end": 1.56
+   }
+  ]
+ },
+ "l12": {
+  "text": "Era verdad… pero se caía de la bici todos los días.",
+  "seconds": 3.82,
+  "voiceStart": 0.17,
+  "voiceEnd": 3.56,
+  "words": [
+   {
+    "text": "Era",
+    "start": 0.17,
+    "end": 0.406
+   },
+   {
+    "text": "verdad…",
+    "start": 0.406,
+    "end": 0.8
+   },
+   {
+    "text": "pero",
+    "start": 1.33,
+    "end": 1.612
+   },
+   {
+    "text": "se",
+    "start": 1.612,
+    "end": 1.791
+   },
+   {
+    "text": "caía",
+    "start": 1.791,
+    "end": 2.073
+   },
+   {
+    "text": "de",
+    "start": 2.073,
+    "end": 2.253
+   },
+   {
+    "text": "la",
+    "start": 2.253,
+    "end": 2.432
+   },
+   {
+    "text": "bici",
+    "start": 2.432,
+    "end": 2.714
+   },
+   {
+    "text": "todos",
+    "start": 2.714,
+    "end": 3.047
+   },
+   {
+    "text": "los",
+    "start": 3.047,
+    "end": 3.278
+   },
+   {
+    "text": "días.",
+    "start": 3.278,
+    "end": 3.56
+   }
+  ]
+ },
+ "l13": {
+  "text": "Una noche la vi por la ventana: practicaba sola, a oscuras, cayéndose una y otra vez.",
+  "seconds": 6.304,
+  "voiceStart": 0.18,
+  "voiceEnd": 6.01,
+  "words": [
+   {
+    "text": "Una",
+    "start": 0.18,
+    "end": 0.391
+   },
+   {
+    "text": "noche",
+    "start": 0.391,
+    "end": 0.697
+   },
+   {
+    "text": "la",
+    "start": 0.697,
+    "end": 0.861
+   },
+   {
+    "text": "vi",
+    "start": 0.861,
+    "end": 1.025
+   },
+   {
+    "text": "por",
+    "start": 1.025,
+    "end": 1.237
+   },
+   {
+    "text": "la",
+    "start": 1.237,
+    "end": 1.401
+   },
+   {
+    "text": "ventana:",
+    "start": 1.401,
+    "end": 1.8
+   },
+   {
+    "text": "practicaba",
+    "start": 2.32,
+    "end": 3.024
+   },
+   {
+    "text": "sola,",
+    "start": 3.024,
+    "end": 3.36
+   },
+   {
+    "text": "a",
+    "start": 3.54,
+    "end": 3.688
+   },
+   {
+    "text": "oscuras,",
+    "start": 3.688,
+    "end": 4.19
+   },
+   {
+    "text": "cayéndose",
+    "start": 4.51,
+    "end": 5.083
+   },
+   {
+    "text": "una",
+    "start": 5.083,
+    "end": 5.328
+   },
+   {
+    "text": "y",
+    "start": 5.328,
+    "end": 5.465
+   },
+   {
+    "text": "otra",
+    "start": 5.465,
+    "end": 5.765
+   },
+   {
+    "text": "vez.",
+    "start": 5.765,
+    "end": 6.01
+   }
+  ]
+ },
+ "l14": {
+  "text": "¿Por qué entrenas de noche?",
+  "seconds": 1.95,
+  "voiceStart": 0.18,
+  "voiceEnd": 1.7,
+  "words": [
+   {
+    "text": "¿Por",
+    "start": 0.18,
+    "end": 0.42
+   },
+   {
+    "text": "qué",
+    "start": 0.42,
+    "end": 0.66
+   },
+   {
+    "text": "entrenas",
+    "start": 0.66,
+    "end": 1.167
+   },
+   {
+    "text": "de",
+    "start": 1.167,
+    "end": 1.353
+   },
+   {
+    "text": "noche?",
+    "start": 1.353,
+    "end": 1.7
+   }
+  ]
+ },
+ "l15": {
+  "text": "Porque en la carrera del sábado, el que gana le pide un deseo al alcalde.",
+  "seconds": 4.307,
+  "voiceStart": 0.09,
+  "voiceEnd": 4.16,
+  "words": [
+   {
+    "text": "Porque",
+    "start": 0.09,
+    "end": 0.424
+   },
+   {
+    "text": "en",
+    "start": 0.424,
+    "end": 0.58
+   },
+   {
+    "text": "la",
+    "start": 0.58,
+    "end": 0.736
+   },
+   {
+    "text": "carrera",
+    "start": 0.736,
+    "end": 1.115
+   },
+   {
+    "text": "del",
+    "start": 1.115,
+    "end": 1.316
+   },
+   {
+    "text": "sábado,",
+    "start": 1.316,
+    "end": 1.65
+   },
+   {
+    "text": "el",
+    "start": 1.93,
+    "end": 2.105
+   },
+   {
+    "text": "que",
+    "start": 2.105,
+    "end": 2.331
+   },
+   {
+    "text": "gana",
+    "start": 2.331,
+    "end": 2.607
+   },
+   {
+    "text": "le",
+    "start": 2.607,
+    "end": 2.782
+   },
+   {
+    "text": "pide",
+    "start": 2.782,
+    "end": 3.058
+   },
+   {
+    "text": "un",
+    "start": 3.058,
+    "end": 3.233
+   },
+   {
+    "text": "deseo",
+    "start": 3.233,
+    "end": 3.559
+   },
+   {
+    "text": "al",
+    "start": 3.559,
+    "end": 3.734
+   },
+   {
+    "text": "alcalde.",
+    "start": 3.734,
+    "end": 4.16
+   }
+  ]
+ },
+ "l16": {
+  "text": "¿Y qué vas a pedir?",
+  "seconds": 1.324,
+  "voiceStart": 0.15,
+  "voiceEnd": 1.03,
+  "words": [
+   {
+    "text": "¿Y",
+    "start": 0.15,
+    "end": 0.257
+   },
+   {
+    "text": "qué",
+    "start": 0.257,
+    "end": 0.45
+   },
+   {
+    "text": "vas",
+    "start": 0.45,
+    "end": 0.644
+   },
+   {
+    "text": "a",
+    "start": 0.644,
+    "end": 0.751
+   },
+   {
+    "text": "pedir?",
+    "start": 0.751,
+    "end": 1.03
+   }
+  ]
+ },
+ "l17": {
+  "text": "Que apaguen los altavoces.",
+  "seconds": 1.683,
+  "voiceStart": 0.18,
+  "voiceEnd": 1.5,
+  "words": [
+   {
+    "text": "Que",
+    "start": 0.18,
+    "end": 0.392
+   },
+   {
+    "text": "apaguen",
+    "start": 0.392,
+    "end": 0.793
+   },
+   {
+    "text": "los",
+    "start": 0.793,
+    "end": 1.005
+   },
+   {
+    "text": "altavoces.",
+    "start": 1.005,
+    "end": 1.5
+   }
+  ]
+ },
+ "l18": {
+  "text": "Hace años, Ana dijo: Mi papá vuelve pronto. Y el pueblo entero escuchó: MENTIRA.",
+  "seconds": 5.283,
+  "voiceStart": 0.11,
+  "voiceEnd": 5.1,
+  "words": [
+   {
+    "text": "Hace",
+    "start": 0.11,
+    "end": 0.441
+   },
+   {
+    "text": "años,",
+    "start": 0.441,
+    "end": 0.771
+   },
+   {
+    "text": "Ana",
+    "start": 0.771,
+    "end": 1.042
+   },
+   {
+    "text": "dijo:",
+    "start": 1.042,
+    "end": 1.373
+   },
+   {
+    "text": "Mi",
+    "start": 1.373,
+    "end": 1.583
+   },
+   {
+    "text": "papá",
+    "start": 1.583,
+    "end": 1.914
+   },
+   {
+    "text": "vuelve",
+    "start": 1.914,
+    "end": 2.365
+   },
+   {
+    "text": "pronto.",
+    "start": 2.365,
+    "end": 2.815
+   },
+   {
+    "text": "Y",
+    "start": 2.815,
+    "end": 2.966
+   },
+   {
+    "text": "el",
+    "start": 2.966,
+    "end": 3.176
+   },
+   {
+    "text": "pueblo",
+    "start": 3.176,
+    "end": 3.627
+   },
+   {
+    "text": "entero",
+    "start": 3.627,
+    "end": 4.078
+   },
+   {
+    "text": "escuchó:",
+    "start": 4.078,
+    "end": 4.589
+   },
+   {
+    "text": "MENTIRA.",
+    "start": 4.589,
+    "end": 5.1
+   }
+  ]
+ },
+ "l19": {
+  "text": "El sábado Ana iba ganando… pero se cayó en la última curva.",
+  "seconds": 3.82,
+  "voiceStart": 0.18,
+  "voiceEnd": 3.58,
+  "words": [
+   {
+    "text": "El",
+    "start": 0.18,
+    "end": 0.369
+   },
+   {
+    "text": "sábado",
+    "start": 0.369,
+    "end": 0.774
+   },
+   {
+    "text": "Ana",
+    "start": 0.774,
+    "end": 1.018
+   },
+   {
+    "text": "iba",
+    "start": 1.018,
+    "end": 1.261
+   },
+   {
+    "text": "ganando…",
+    "start": 1.261,
+    "end": 1.72
+   },
+   {
+    "text": "pero",
+    "start": 2.02,
+    "end": 2.262
+   },
+   {
+    "text": "se",
+    "start": 2.262,
+    "end": 2.415
+   },
+   {
+    "text": "cayó",
+    "start": 2.415,
+    "end": 2.657
+   },
+   {
+    "text": "en",
+    "start": 2.657,
+    "end": 2.811
+   },
+   {
+    "text": "la",
+    "start": 2.811,
+    "end": 2.965
+   },
+   {
+    "text": "última",
+    "start": 2.965,
+    "end": 3.294
+   },
+   {
+    "text": "curva.",
+    "start": 3.294,
+    "end": 3.58
+   }
+  ]
+ },
+ "l20": {
+  "text": "Don Bruno le dio la copa a otro niño.",
+  "seconds": 2.577,
+  "voiceStart": 0.13,
+  "voiceEnd": 2.33,
+  "words": [
+   {
+    "text": "Don",
+    "start": 0.13,
+    "end": 0.369
+   },
+   {
+    "text": "Bruno",
+    "start": 0.369,
+    "end": 0.713
+   },
+   {
+    "text": "le",
+    "start": 0.713,
+    "end": 0.899
+   },
+   {
+    "text": "dio",
+    "start": 0.899,
+    "end": 1.137
+   },
+   {
+    "text": "la",
+    "start": 1.137,
+    "end": 1.323
+   },
+   {
+    "text": "copa",
+    "start": 1.323,
+    "end": 1.614
+   },
+   {
+    "text": "a",
+    "start": 1.614,
+    "end": 1.747
+   },
+   {
+    "text": "otro",
+    "start": 1.747,
+    "end": 2.038
+   },
+   {
+    "text": "niño.",
+    "start": 2.038,
+    "end": 2.33
+   }
+  ]
+ },
+ "l21": {
+  "text": "Entonces subí al escenario y dije:",
+  "seconds": 2.438,
+  "voiceStart": 0.19,
+  "voiceEnd": 2.23,
+  "words": [
+   {
+    "text": "Entonces",
+    "start": 0.19,
+    "end": 0.714
+   },
+   {
+    "text": "subí",
+    "start": 0.714,
+    "end": 1.017
+   },
+   {
+    "text": "al",
+    "start": 1.017,
+    "end": 1.21
+   },
+   {
+    "text": "escenario",
+    "start": 1.21,
+    "end": 1.789
+   },
+   {
+    "text": "y",
+    "start": 1.789,
+    "end": 1.927
+   },
+   {
+    "text": "dije:",
+    "start": 1.927,
+    "end": 2.23
+   }
+  ]
+ },
+ "l22": {
+  "text": "¡Ana ganó!",
+  "seconds": 1.149,
+  "voiceStart": 0.13,
+  "voiceEnd": 0.97,
+  "words": [
+   {
+    "text": "¡Ana",
+    "start": 0.13,
+    "end": 0.508
+   },
+   {
+    "text": "ganó!",
+    "start": 0.508,
+    "end": 0.97
+   }
+  ]
+ },
+ "l23": {
+  "text": "Silencio. Ningún altavoz sonó.",
+  "seconds": 2.577,
+  "voiceStart": 0.19,
+  "voiceEnd": 2.31,
+  "words": [
+   {
+    "text": "Silencio.",
+    "start": 0.19,
+    "end": 0.84
+   },
+   {
+    "text": "Ningún",
+    "start": 0.84,
+    "end": 1.353
+   },
+   {
+    "text": "altavoz",
+    "start": 1.353,
+    "end": 1.934
+   },
+   {
+    "text": "sonó.",
+    "start": 1.934,
+    "end": 2.31
+   }
+  ]
+ },
+ "l24": {
+  "text": "Esa niña… dice la verdad.",
+  "seconds": 2.485,
+  "voiceStart": 0.2,
+  "voiceEnd": 2.21,
+  "words": [
+   {
+    "text": "Esa",
+    "start": 0.2,
+    "end": 0.542
+   },
+   {
+    "text": "niña…",
+    "start": 0.542,
+    "end": 0.96
+   },
+   {
+    "text": "dice",
+    "start": 1.38,
+    "end": 1.657
+   },
+   {
+    "text": "la",
+    "start": 1.657,
+    "end": 1.833
+   },
+   {
+    "text": "verdad.",
+    "start": 1.833,
+    "end": 2.21
+   }
+  ]
+ },
+ "l25": {
+  "text": "¡Porque ganar no es llegar primero! ¡Es no dejar de levantarse!",
+  "seconds": 4.656,
+  "voiceStart": 0.14,
+  "voiceEnd": 4.5,
+  "words": [
+   {
+    "text": "¡Porque",
+    "start": 0.14,
+    "end": 0.639
+   },
+   {
+    "text": "ganar",
+    "start": 0.639,
+    "end": 1.072
+   },
+   {
+    "text": "no",
+    "start": 1.072,
+    "end": 1.305
+   },
+   {
+    "text": "es",
+    "start": 1.305,
+    "end": 1.538
+   },
+   {
+    "text": "llegar",
+    "start": 1.538,
+    "end": 2.037
+   },
+   {
+    "text": "primero!",
+    "start": 2.037,
+    "end": 2.603
+   },
+   {
+    "text": "¡Es",
+    "start": 2.603,
+    "end": 2.836
+   },
+   {
+    "text": "no",
+    "start": 2.836,
+    "end": 3.069
+   },
+   {
+    "text": "dejar",
+    "start": 3.069,
+    "end": 3.502
+   },
+   {
+    "text": "de",
+    "start": 3.502,
+    "end": 3.735
+   },
+   {
+    "text": "levantarse!",
+    "start": 3.735,
+    "end": 4.5
+   }
+  ]
+ },
+ "l26": {
+  "text": "Los altavoces se apagaron solos, uno por uno.",
+  "seconds": 3.286,
+  "voiceStart": 0.17,
+  "voiceEnd": 3.15,
+  "words": [
+   {
+    "text": "Los",
+    "start": 0.17,
+    "end": 0.449
+   },
+   {
+    "text": "altavoces",
+    "start": 0.449,
+    "end": 1.101
+   },
+   {
+    "text": "se",
+    "start": 1.101,
+    "end": 1.319
+   },
+   {
+    "text": "apagaron",
+    "start": 1.319,
+    "end": 1.908
+   },
+   {
+    "text": "solos,",
+    "start": 1.908,
+    "end": 2.312
+   },
+   {
+    "text": "uno",
+    "start": 2.312,
+    "end": 2.591
+   },
+   {
+    "text": "por",
+    "start": 2.591,
+    "end": 2.871
+   },
+   {
+    "text": "uno.",
+    "start": 2.871,
+    "end": 3.15
+   }
+  ]
+ },
+ "l27": {
+  "text": "Ahora en el pueblo la gente puede equivocarse.",
+  "seconds": 3.46,
+  "voiceStart": 0.11,
+  "voiceEnd": 3.31,
+  "words": [
+   {
+    "text": "Ahora",
+    "start": 0.11,
+    "end": 0.526
+   },
+   {
+    "text": "en",
+    "start": 0.526,
+    "end": 0.75
+   },
+   {
+    "text": "el",
+    "start": 0.75,
+    "end": 0.974
+   },
+   {
+    "text": "pueblo",
+    "start": 0.974,
+    "end": 1.454
+   },
+   {
+    "text": "la",
+    "start": 1.454,
+    "end": 1.678
+   },
+   {
+    "text": "gente",
+    "start": 1.678,
+    "end": 2.094
+   },
+   {
+    "text": "puede",
+    "start": 2.094,
+    "end": 2.51
+   },
+   {
+    "text": "equivocarse.",
+    "start": 2.51,
+    "end": 3.31
+   }
+  ]
+ },
+ "l28": {
+  "text": "Pero Ana y yo nunca nos mentimos.",
+  "seconds": 2.879,
+  "voiceStart": 0.17,
+  "voiceEnd": 2.58,
+  "words": [
+   {
+    "text": "Pero",
+    "start": 0.17,
+    "end": 0.533
+   },
+   {
+    "text": "Ana",
+    "start": 0.533,
+    "end": 0.83
+   },
+   {
+    "text": "y",
+    "start": 0.83,
+    "end": 0.995
+   },
+   {
+    "text": "yo",
+    "start": 0.995,
+    "end": 1.226
+   },
+   {
+    "text": "nunca",
+    "start": 1.226,
+    "end": 1.656
+   },
+   {
+    "text": "nos",
+    "start": 1.656,
+    "end": 1.953
+   },
+   {
+    "text": "mentimos.",
+    "start": 1.953,
+    "end": 2.58
+   }
+  ]
+ },
+ "l29": {
+  "text": "Y si dices que ya te suscribiste… los altavoces te van a delatar.",
+  "seconds": 4.354,
+  "voiceStart": 0.19,
+  "voiceEnd": 4.07,
+  "words": [
+   {
+    "text": "Y",
+    "start": 0.19,
+    "end": 0.319
+   },
+   {
+    "text": "si",
+    "start": 0.319,
+    "end": 0.501
+   },
+   {
+    "text": "dices",
+    "start": 0.501,
+    "end": 0.837
+   },
+   {
+    "text": "que",
+    "start": 0.837,
+    "end": 1.07
+   },
+   {
+    "text": "ya",
+    "start": 1.07,
+    "end": 1.252
+   },
+   {
+    "text": "te",
+    "start": 1.252,
+    "end": 1.433
+   },
+   {
+    "text": "suscribiste…",
+    "start": 1.433,
+    "end": 2.08
+   },
+   {
+    "text": "los",
+    "start": 2.43,
+    "end": 2.647
+   },
+   {
+    "text": "altavoces",
+    "start": 2.647,
+    "end": 3.154
+   },
+   {
+    "text": "te",
+    "start": 3.154,
+    "end": 3.322
+   },
+   {
+    "text": "van",
+    "start": 3.322,
+    "end": 3.539
+   },
+   {
+    "text": "a",
+    "start": 3.539,
+    "end": 3.66
+   },
+   {
+    "text": "delatar.",
+    "start": 3.66,
+    "end": 4.07
+   }
+  ]
+ }
+}

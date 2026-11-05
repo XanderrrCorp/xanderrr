@@ -145,7 +145,7 @@ export const Fuente: React.FC<{f: number}> = ({f}) => (
 );
 
 /** EL PUEBLO completo, alrededor de la plaza */
-export const Pueblo: React.FC<{f: number; noche?: boolean; hora?: number; sinCasas?: string[]}> = ({f, noche, hora = 10.2}) => {
+export const Pueblo: React.FC<{f: number; noche?: boolean; hora?: number; sinCasas?: string[]; panaderia?: string}> = ({f, noche, hora = 10.2, panaderia = 'PANADERÍA'}) => {
   const arboles = useMemo(() => Array.from({length: 46}, (_, i) => {
     const a = (i / 46) * Math.PI * 2 + rnd(i, 1) * 0.1, r = 27 + rnd(i, 2) * 12;
     return {p: [Math.cos(a) * r, 0, Math.sin(a) * r - 4] as V3, s: 0.9 + rnd(i, 3) * 0.8, t: i % 2};
@@ -175,7 +175,7 @@ export const Pueblo: React.FC<{f: number; noche?: boolean; hora?: number; sinCas
         {Array.from({length: 7}, (_, i) => <Caja key={i} p={[-2.4 + i * 0.8, 3.5, 2.5]} s={[0.8, 0.12, 1]} c={i % 2 ? '#ffffff' : '#e63946'} r={[0.35, 0, 0]} />)}
         <Ventana p={[-1.3, 1.6, 2.12]} s={[1.6, 1.2]} noche={noche} />
         <Caja p={[1.4, 1.0, 2.12]} s={[0.9, 2.0, 0.06]} c="#8b4a2b" />
-        <Cartel p={[0, 3.1, 2.16]} w={3.4} texto="PANADERÍA" fondo="#fff3d6" color="#8b4a2b" />
+        <Cartel p={[0, 3.1, 2.16]} w={3.4} texto={panaderia} fondo="#fff3d6" color="#8b4a2b" />
       </group>
       <group position={[-13, 0, 6]} rotation={[0, 1.6, 0]}>
         <Caja p={[0, 2.2, 0]} s={[8, 4.4, 4.5]} c="#bde0fe" />
@@ -193,7 +193,6 @@ export const Pueblo: React.FC<{f: number; noche?: boolean; hora?: number; sinCas
       <Casa p={[18, 0, 12]} pared="#ffd6a5" techo={C.techoAzul} rotY={-2.3} noche={noche} />
       <Casa p={[-18, 0, 12]} pared="#9bf6ff" techo={C.techoRojo} rotY={2.3} noche={noche} />
       {[0.4, 1.2, 2.0, 2.8, 3.6, 4.4, 5.2, 6.0].map((a) => <Farol key={a} p={[Math.cos(a) * 9.2, 0, Math.sin(a) * 9.2]} noche={noche} />)}
-      <Banca p={[0, 0, 5.5]} rotY={Math.PI} />
       <Banca p={[-5.5, 0, 0]} rotY={Math.PI / 2} />
       <Banca p={[5.5, 0, 0]} rotY={-Math.PI / 2} />
       {arboles.map((t, i) => <Arbol key={i} p={t.p} s={t.s} tono={t.t} />)}
@@ -326,5 +325,48 @@ export const CajaCarton: React.FC<{p: V3; s?: number; r?: number}> = ({p, s = 1,
   <group position={p} scale={s} rotation={[0, r, 0]}>
     <Caja p={[0, 0.3, 0]} s={[0.8, 0.6, 0.6]} c="#c8a27a" />
     <Caja p={[0, 0.61, 0]} s={[0.1, 0.02, 0.62]} c="#e8d5b5" />
+  </group>
+);
+
+export const AULA: V3 = [0, 0, -200];
+/** salón de la escuela: pizarra, pupitres, ventanas de día */
+export const Aula: React.FC<{children?: React.ReactNode}> = ({children}) => (
+  <group position={AULA}>
+    <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow><planeGeometry args={[10, 8]} /><M c="#e0a070" map={T.madera()} /></mesh>
+    <Caja p={[0, 1.7, -4]} s={[10, 3.4, 0.2]} c="#bde0fe" sombra={false} />
+    <Caja p={[-5, 1.7, 0]} s={[0.2, 3.4, 8]} c="#bde0fe" sombra={false} />
+    <Caja p={[5, 1.7, 0]} s={[0.2, 3.4, 8]} c="#bde0fe" sombra={false} />
+    <Caja p={[0, 1.8, -3.86]} s={[4.2, 1.6, 0.06]} c="#2d4a3e" />
+    <Caja p={[0, 1.8, -3.9]} s={[4.4, 1.8, 0.04]} c="#8b5e34" />
+    <Ventana p={[-3.2, 1.9, -3.88]} s={[1.3, 1.2]} />
+    <Ventana p={[3.2, 1.9, -3.88]} s={[1.3, 1.2]} />
+    {[-2.2, 0, 2.2].map((x) => [-0.6, 1.4].map((z) => (
+      <group key={x + ',' + z} position={[x, 0, z]}>
+        <Caja p={[0, 0.72, 0]} s={[1.2, 0.06, 0.7]} c="#c1793f" />
+        {[-0.5, 0.5].map((dx) => [-0.28, 0.28].map((dz) => <Caja key={dx + ',' + dz} p={[dx, 0.36, dz]} s={[0.06, 0.72, 0.06]} c="#6c584c" />))}
+      </group>
+    )))}
+    {children}
+  </group>
+);
+/** reloj digital de mesa (muestra la hora en grande) */
+export const RelojMesa: React.FC<{p: V3; hora: string}> = ({p, hora}) => (
+  <group position={p}>
+    <Caja p={[0, 0.12, 0]} s={[0.5, 0.24, 0.16]} c="#222" />
+    <Cartel p={[0, 0.13, 0.085]} w={0.44} texto={hora} fondo="#111" color="#ff4d4d" />
+  </group>
+);
+
+/** la estación del tren (episodio 3), al fondo del camino norte */
+export const Estacion: React.FC<{noche?: boolean}> = ({noche}) => (
+  <group position={[0, 0, -34]}>
+    <Caja p={[0, 0.3, 0]} s={[14, 0.6, 3]} c="#bfb7a8" />
+    <Caja p={[0, 2.0, -1.0]} s={[6, 3.4, 1.6]} c="#e9c46a" />
+    <DosAguas p={[0, 3.7, -1.0]} w={6} d={1.6} h={1.0} c={C.techoRojo} />
+    <Ventana p={[-1.6, 2.2, -0.18]} noche={noche} />
+    <Ventana p={[1.6, 2.2, -0.18]} noche={noche} />
+    {[-1.5, 1.5].map((z) => <Caja key={z} p={[0, 0.05, 3.2 + z * 0.5]} s={[30, 0.1, 0.12]} c="#6c757d" />)}
+    {Array.from({length: 15}, (_, i) => <Caja key={i} p={[-14 + i * 2, 0.03, 3.2]} s={[0.3, 0.06, 2.0]} c="#7a4a24" />)}
+    <Cartel p={[0, 3.0, 0.62]} w={2.6} texto="ESTACIÓN" fondo="#fff" color="#1d3557" />
   </group>
 );

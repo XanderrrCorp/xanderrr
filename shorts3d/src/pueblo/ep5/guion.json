@@ -2,8 +2,8 @@
  "titulo": "SI UN NIÑO LLORA, LOS JUGUETES DESPIERTAN…",
  "voz": {
   "voice_id": "moss_audio_ebf2f8a2-b928-11f1-8f51-7270dd4a9232",
-  "speed": 1.08,
-  "nota": "Voz de Peligro Tropical (clonada). A 1,0 mide ~171 ppm al hablar; a 1,08 apunta a 170–180 en el video."
+  "speed": 1.0,
+  "nota": "A 1,08 midió 206 ppm al hablar (194 en el video); a 1,0 apunta a 170–180."
  },
  "claves": [],
  "lineas": [
@@ -63,70 +63,6 @@
     {
      "s": "pop",
      "palabra": "guardia"
-    }
-   ]
-  },
-  {
-   "id": "l04b",
-   "escena": "pelotas",
-   "propuesta": true,
-   "texto": "Las pelotas ruedan solas hasta la puerta, por si hay que salir corriendo.",
-   "clave": [
-    "pelotas"
-   ],
-   "sfx": [
-    {
-     "s": "boing",
-     "palabra": "ruedan"
-    }
-   ]
-  },
-  {
-   "id": "l04c",
-   "escena": "robots",
-   "propuesta": true,
-   "texto": "Los robots de cuerda revisan que la ventana esté bien cerrada.",
-   "clave": [
-    "robots"
-   ],
-   "sfx": [
-    {
-     "s": "cuerda",
-     "palabra": "robots"
-    }
-   ]
-  },
-  {
-   "id": "l04d",
-   "escena": "turnos",
-   "propuesta": true,
-   "texto": "Y los peluches más viejos se turnan para no quedarse dormidos.",
-   "clave": [
-    "peluches"
-   ],
-   "sfx": [
-    {
-     "s": "pop",
-     "palabra": "turnan"
-    }
-   ]
-  },
-  {
-   "id": "l04e",
-   "escena": "mochila",
-   "propuesta": true,
-   "texto": "En la escuela, el que llora en clase sale con un dinosaurio asomado en la mochila.",
-   "clave": [
-    "dinosaurio"
-   ],
-   "sfx": [
-    {
-     "s": "campana",
-     "palabra": "escuela,"
-    },
-    {
-     "s": "boing",
-     "palabra": "dinosaurio"
     }
    ]
   },
@@ -213,23 +149,6 @@
     {
      "s": "crujido",
      "palabra": "movió."
-    }
-   ]
-  },
-  {
-   "id": "l10b",
-   "escena": "rasca",
-   "tensa": true,
-   "propuesta": true,
-   "texto": "Esa noche no dormí. El armario rascaba la puerta, despacito, toda la noche.",
-   "clave": [
-    "armario",
-    "rascaba"
-   ],
-   "sfx": [
-    {
-     "s": "rascar",
-     "palabra": "rascaba"
     }
    ]
   },

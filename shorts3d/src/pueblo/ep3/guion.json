@@ -1,0 +1,32 @@
+{
+ "titulo": "AQUÍ TU SOMBRA HACE LO QUE REALMENTE QUIERES!",
+ "voz": {"voice_id": "moss_audio_ebf2f8a2-b928-11f1-8f51-7270dd4a9232", "speed": 0.96},
+ "claves": [],
+ "lineas": [
+  {"id": "l01", "escena": "lata", "texto": "En este pueblo, tu sombra hace lo que realmente quieres hacer.", "clave": ["sombra", "realmente"], "golpe": "realmente", "sfx": [{"s": "boing", "palabra": "realmente"}]},
+  {"id": "l02", "escena": "pastel", "texto": "El señor dice: \"Qué rico tu pastel\"… y su sombra lo escupe.", "clave": ["escupe."], "sfx": [{"s": "plop", "palabra": "escupe."}]},
+  {"id": "l03", "escena": "dibujo", "texto": "La profe dice: \"Qué buen dibujo\"… y su sombra lo tira a la basura.", "clave": ["basura."], "sfx": [{"s": "crujido", "palabra": "tira"}]},
+  {"id": "l04", "escena": "parejas", "texto": "Las parejas se toman de la mano, pero sus sombras miran a otro lado.", "clave": ["mano,", "otro", "lado."]},
+  {"id": "l05", "escena": "mediodia", "texto": "Por eso todos caminan a mediodía, cuando la sombra es más pequeñita.", "clave": ["mediodía,", "pequeñita."], "sfx": [{"s": "campana", "palabra": "mediodía,"}]},
+  {"id": "l06", "escena": "pelea", "texto": "Y en las tardes las sombras se pelean entre ellas en el piso.", "clave": ["pelean"], "golpe": "pelean", "sfx": [{"s": "boing", "palabra": "pelean"}, {"s": "pop", "palabra": "piso."}]},
+  {"id": "l07", "escena": "mudanza", "texto": "Nos mudamos un lunes y nadie nos avisó.", "clave": ["lunes"], "sfx": [{"s": "bocina", "palabra": "mudamos"}]},
+  {"id": "l08", "escena": "lucas", "texto": "Yo me llamo Lucas, y nunca digo lo que siento.", "clave": ["Lucas,", "siento."]},
+  {"id": "l09", "escena": "casa", "texto": "Cuando papá me preguntaba si me gustaba el pueblo nuevo, yo decía \"sí\"…", "clave": ["\"sí\"…"]},
+  {"id": "l10", "escena": "rincon", "tensa": true, "texto": "y mi sombra se sentaba en una esquina, abrazando sus rodillas.", "clave": ["esquina,", "rodillas."]},
+  {"id": "l11", "escena": "burla", "tensa": true, "texto": "En la escuela se burlaban de mí y yo me reía. Mi sombra lloraba.", "clave": ["reía.", "lloraba."], "golpe": "lloraba."},
+  {"id": "l12", "escena": "discurso", "texto": "Lo raro era Don Bruno. Siempre sonreía, siempre daba discursos…", "clave": ["Bruno.", "discursos…"], "sfx": [{"s": "campanas", "palabra": "discursos…"}]},
+  {"id": "l13", "escena": "brunoSombra", "tensa": true, "texto": "y su sombra siempre estaba llorando.", "clave": ["llorando."], "golpe": "llorando.", "sfx": [{"s": "sollozo", "palabra": "llorando."}]},
+  {"id": "l14", "escena": "estacion", "tensa": true, "texto": "Una noche seguí a su sombra hasta la estación del tren.", "clave": ["estación", "tren."], "sfx": [{"s": "pasitos", "palabra": "seguí"}]},
+  {"id": "l15", "escena": "cartel", "tensa": true, "texto": "Se quedó mirando un cartel viejo: \"SE BUSCA PANADERO — CIUDAD GRANDE\".", "clave": ["PANADERO"], "golpe": "PANADERO"},
+  {"id": "l16", "escena": "joven", "texto": "Don Bruno nunca quiso ser alcalde. Quería hacer pan. Su papá lo obligó.", "clave": ["alcalde.", "pan.", "obligó."]},
+  {"id": "l17", "escena": "acerca", "habla": "nino", "quien": "lucas", "texto": "—Señor, su sombra quiere hacer pan.", "clave": ["pan."]},
+  {"id": "l18", "escena": "callado", "tensa": true, "texto": "Todo el pueblo se quedó callado. Y entonces Don Bruno dijo la verdad:", "clave": ["callado.", "verdad:"]},
+  {"id": "l19", "escena": "callado", "habla": "bruno", "quien": "bruno", "texto": "—Odio ser alcalde.", "clave": ["Odio"], "golpe": "Odio"},
+  {"id": "l20", "escena": "baila", "texto": "Su sombra se levantó y empezó a bailar.", "clave": ["levantó", "bailar."], "sfx": [{"s": "pop", "palabra": "levantó"}, {"s": "boing", "palabra": "bailar."}]},
+  {"id": "l21", "escena": "papa", "texto": "Así que yo también lo dije:", "clave": ["también"]},
+  {"id": "l22", "escena": "papa", "habla": "nino", "quien": "lucas", "texto": "—Papá… extraño mi casa.", "clave": ["casa."]},
+  {"id": "l23", "escena": "abrazo", "texto": "Papá me abrazó. Y por primera vez, nuestras sombras también.", "clave": ["abrazó.", "sombras"], "sfx": [{"s": "pop", "palabra": "sombras"}]},
+  {"id": "l24", "escena": "panaderia", "texto": "Ahora Don Bruno hace el mejor pan del pueblo.", "clave": ["mejor", "pan"], "sfx": [{"s": "campana", "palabra": "Ahora"}]},
+  {"id": "l25", "escena": "cta", "texto": "Y tu sombra ya le dio like… te falta a ti.", "clave": ["like…", "ti."], "sfx": [{"s": "pop", "palabra": "like…"}, {"s": "boing", "palabra": "ti."}]}
+ ]
+}

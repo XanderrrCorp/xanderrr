@@ -1,0 +1,1568 @@
+{
+ "l01": {
+  "text": "En este pueblo, si rompes algo, a la mañana siguiente aparece en tu cama.",
+  "seconds": 5.817,
+  "voiceStart": 0.17,
+  "voiceEnd": 5.57,
+  "words": [
+   {
+    "text": "En",
+    "start": 0.17,
+    "end": 0.412
+   },
+   {
+    "text": "este",
+    "start": 0.412,
+    "end": 0.793
+   },
+   {
+    "text": "pueblo,",
+    "start": 0.793,
+    "end": 1.312
+   },
+   {
+    "text": "si",
+    "start": 1.312,
+    "end": 1.555
+   },
+   {
+    "text": "rompes",
+    "start": 1.555,
+    "end": 2.074
+   },
+   {
+    "text": "algo,",
+    "start": 2.074,
+    "end": 2.455
+   },
+   {
+    "text": "a",
+    "start": 2.455,
+    "end": 2.628
+   },
+   {
+    "text": "la",
+    "start": 2.628,
+    "end": 2.87
+   },
+   {
+    "text": "mañana",
+    "start": 2.87,
+    "end": 3.389
+   },
+   {
+    "text": "siguiente",
+    "start": 3.389,
+    "end": 4.116
+   },
+   {
+    "text": "aparece",
+    "start": 4.116,
+    "end": 4.705
+   },
+   {
+    "text": "en",
+    "start": 4.705,
+    "end": 4.947
+   },
+   {
+    "text": "tu",
+    "start": 4.947,
+    "end": 5.189
+   },
+   {
+    "text": "cama.",
+    "start": 5.189,
+    "end": 5.57
+   }
+  ]
+ },
+ "l02": {
+  "text": "Un señor rompió una ventana y amaneció lleno de vidrios.",
+  "seconds": 4.261,
+  "voiceStart": 0.19,
+  "voiceEnd": 3.93,
+  "words": [
+   {
+    "text": "Un",
+    "start": 0.19,
+    "end": 0.405
+   },
+   {
+    "text": "señor",
+    "start": 0.405,
+    "end": 0.803
+   },
+   {
+    "text": "rompió",
+    "start": 0.803,
+    "end": 1.263
+   },
+   {
+    "text": "una",
+    "start": 1.263,
+    "end": 1.539
+   },
+   {
+    "text": "ventana",
+    "start": 1.539,
+    "end": 2.06
+   },
+   {
+    "text": "y",
+    "start": 2.06,
+    "end": 2.213
+   },
+   {
+    "text": "amaneció",
+    "start": 2.213,
+    "end": 2.796
+   },
+   {
+    "text": "lleno",
+    "start": 2.796,
+    "end": 3.194
+   },
+   {
+    "text": "de",
+    "start": 3.194,
+    "end": 3.409
+   },
+   {
+    "text": "vidrios.",
+    "start": 3.409,
+    "end": 3.93
+   }
+  ]
+ },
+ "l03": {
+  "text": "El que chocó el carro amaneció con el carro encima.",
+  "seconds": 3.367,
+  "voiceStart": 0.2,
+  "voiceEnd": 3.15,
+  "words": [
+   {
+    "text": "El",
+    "start": 0.2,
+    "end": 0.384
+   },
+   {
+    "text": "que",
+    "start": 0.384,
+    "end": 0.621
+   },
+   {
+    "text": "chocó",
+    "start": 0.621,
+    "end": 0.964
+   },
+   {
+    "text": "el",
+    "start": 0.964,
+    "end": 1.148
+   },
+   {
+    "text": "carro",
+    "start": 1.148,
+    "end": 1.491
+   },
+   {
+    "text": "amaneció",
+    "start": 1.491,
+    "end": 1.991
+   },
+   {
+    "text": "con",
+    "start": 1.991,
+    "end": 2.228
+   },
+   {
+    "text": "el",
+    "start": 2.228,
+    "end": 2.412
+   },
+   {
+    "text": "carro",
+    "start": 2.412,
+    "end": 2.755
+   },
+   {
+    "text": "encima.",
+    "start": 2.755,
+    "end": 3.15
+   }
+  ]
+ },
+ "l04": {
+  "text": "El que rompió la piñata, lleno de dulces. A ese le fue bien.",
+  "seconds": 3.994,
+  "voiceStart": 0.2,
+  "voiceEnd": 3.78,
+  "words": [
+   {
+    "text": "El",
+    "start": 0.2,
+    "end": 0.394
+   },
+   {
+    "text": "que",
+    "start": 0.394,
+    "end": 0.644
+   },
+   {
+    "text": "rompió",
+    "start": 0.644,
+    "end": 1.06
+   },
+   {
+    "text": "la",
+    "start": 1.06,
+    "end": 1.255
+   },
+   {
+    "text": "piñata,",
+    "start": 1.255,
+    "end": 1.671
+   },
+   {
+    "text": "lleno",
+    "start": 1.671,
+    "end": 2.032
+   },
+   {
+    "text": "de",
+    "start": 2.032,
+    "end": 2.226
+   },
+   {
+    "text": "dulces.",
+    "start": 2.226,
+    "end": 2.642
+   },
+   {
+    "text": "A",
+    "start": 2.642,
+    "end": 2.781
+   },
+   {
+    "text": "ese",
+    "start": 2.781,
+    "end": 3.031
+   },
+   {
+    "text": "le",
+    "start": 3.031,
+    "end": 3.225
+   },
+   {
+    "text": "fue",
+    "start": 3.225,
+    "end": 3.475
+   },
+   {
+    "text": "bien.",
+    "start": 3.475,
+    "end": 3.78
+   }
+  ]
+ },
+ "l05": {
+  "text": "Por eso aquí todos caminan despacito.",
+  "seconds": 2.345,
+  "voiceStart": 0.16,
+  "voiceEnd": 2.26,
+  "words": [
+   {
+    "text": "Por",
+    "start": 0.16,
+    "end": 0.396
+   },
+   {
+    "text": "eso",
+    "start": 0.396,
+    "end": 0.632
+   },
+   {
+    "text": "aquí",
+    "start": 0.632,
+    "end": 0.921
+   },
+   {
+    "text": "todos",
+    "start": 0.921,
+    "end": 1.262
+   },
+   {
+    "text": "caminan",
+    "start": 1.262,
+    "end": 1.709
+   },
+   {
+    "text": "despacito.",
+    "start": 1.709,
+    "end": 2.26
+   }
+  ]
+ },
+ "l06": {
+  "text": "Y nadie juega fútbol cerca de las casas.",
+  "seconds": 2.798,
+  "voiceStart": 0.19,
+  "voiceEnd": 2.5,
+  "words": [
+   {
+    "text": "Y",
+    "start": 0.19,
+    "end": 0.321
+   },
+   {
+    "text": "nadie",
+    "start": 0.321,
+    "end": 0.662
+   },
+   {
+    "text": "juega",
+    "start": 0.662,
+    "end": 1.004
+   },
+   {
+    "text": "fútbol",
+    "start": 1.004,
+    "end": 1.398
+   },
+   {
+    "text": "cerca",
+    "start": 1.398,
+    "end": 1.739
+   },
+   {
+    "text": "de",
+    "start": 1.739,
+    "end": 1.922
+   },
+   {
+    "text": "las",
+    "start": 1.922,
+    "end": 2.159
+   },
+   {
+    "text": "casas.",
+    "start": 2.159,
+    "end": 2.5
+   }
+  ]
+ },
+ "l07": {
+  "text": "Nos mudamos un lunes y nadie nos avisó.",
+  "seconds": 2.659,
+  "voiceStart": 0.17,
+  "voiceEnd": 2.38,
+  "words": [
+   {
+    "text": "Nos",
+    "start": 0.17,
+    "end": 0.401
+   },
+   {
+    "text": "mudamos",
+    "start": 0.401,
+    "end": 0.838
+   },
+   {
+    "text": "un",
+    "start": 0.838,
+    "end": 1.018
+   },
+   {
+    "text": "lunes",
+    "start": 1.018,
+    "end": 1.352
+   },
+   {
+    "text": "y",
+    "start": 1.352,
+    "end": 1.481
+   },
+   {
+    "text": "nadie",
+    "start": 1.481,
+    "end": 1.815
+   },
+   {
+    "text": "nos",
+    "start": 1.815,
+    "end": 2.046
+   },
+   {
+    "text": "avisó.",
+    "start": 2.046,
+    "end": 2.38
+   }
+  ]
+ },
+ "l08": {
+  "text": "Me llamo Leo. El primer día rompí el florero de mamá.",
+  "seconds": 3.773,
+  "voiceStart": 0.19,
+  "voiceEnd": 3.51,
+  "words": [
+   {
+    "text": "Me",
+    "start": 0.19,
+    "end": 0.443
+   },
+   {
+    "text": "llamo",
+    "start": 0.443,
+    "end": 0.914
+   },
+   {
+    "text": "Leo.",
+    "start": 0.914,
+    "end": 1.24
+   },
+   {
+    "text": "El",
+    "start": 1.43,
+    "end": 1.599
+   },
+   {
+    "text": "primer",
+    "start": 1.599,
+    "end": 1.962
+   },
+   {
+    "text": "día",
+    "start": 1.962,
+    "end": 2.18
+   },
+   {
+    "text": "rompí",
+    "start": 2.18,
+    "end": 2.494
+   },
+   {
+    "text": "el",
+    "start": 2.494,
+    "end": 2.663
+   },
+   {
+    "text": "florero",
+    "start": 2.663,
+    "end": 3.075
+   },
+   {
+    "text": "de",
+    "start": 3.075,
+    "end": 3.244
+   },
+   {
+    "text": "mamá.",
+    "start": 3.244,
+    "end": 3.51
+   }
+  ]
+ },
+ "l09": {
+  "text": "Amanecí lleno de tierra.",
+  "seconds": 1.904,
+  "voiceStart": 0.18,
+  "voiceEnd": 1.72,
+  "words": [
+   {
+    "text": "Amanecí",
+    "start": 0.18,
+    "end": 0.683
+   },
+   {
+    "text": "lleno",
+    "start": 0.683,
+    "end": 1.068
+   },
+   {
+    "text": "de",
+    "start": 1.068,
+    "end": 1.276
+   },
+   {
+    "text": "tierra.",
+    "start": 1.276,
+    "end": 1.72
+   }
+  ]
+ },
+ "l10": {
+  "text": "En la escuela conocí a Dani. Nos hicimos mejores amigos en un día.",
+  "seconds": 4.574,
+  "voiceStart": 0.2,
+  "voiceEnd": 4.31,
+  "words": [
+   {
+    "text": "En",
+    "start": 0.2,
+    "end": 0.376
+   },
+   {
+    "text": "la",
+    "start": 0.376,
+    "end": 0.552
+   },
+   {
+    "text": "escuela",
+    "start": 0.552,
+    "end": 0.98
+   },
+   {
+    "text": "conocí",
+    "start": 0.98,
+    "end": 1.357
+   },
+   {
+    "text": "a",
+    "start": 1.357,
+    "end": 1.483
+   },
+   {
+    "text": "Dani.",
+    "start": 1.483,
+    "end": 1.76
+   },
+   {
+    "text": "Nos",
+    "start": 2.32,
+    "end": 2.541
+   },
+   {
+    "text": "hicimos",
+    "start": 2.541,
+    "end": 2.959
+   },
+   {
+    "text": "mejores",
+    "start": 2.959,
+    "end": 3.376
+   },
+   {
+    "text": "amigos",
+    "start": 3.376,
+    "end": 3.745
+   },
+   {
+    "text": "en",
+    "start": 3.745,
+    "end": 3.917
+   },
+   {
+    "text": "un",
+    "start": 3.917,
+    "end": 4.089
+   },
+   {
+    "text": "día.",
+    "start": 4.089,
+    "end": 4.31
+   }
+  ]
+ },
+ "l11": {
+  "text": "Pero una semana después, le conté su secreto a toda la clase.",
+  "seconds": 3.727,
+  "voiceStart": 0.16,
+  "voiceEnd": 3.47,
+  "words": [
+   {
+    "text": "Pero",
+    "start": 0.16,
+    "end": 0.41
+   },
+   {
+    "text": "una",
+    "start": 0.41,
+    "end": 0.614
+   },
+   {
+    "text": "semana",
+    "start": 0.614,
+    "end": 0.954
+   },
+   {
+    "text": "después,",
+    "start": 0.954,
+    "end": 1.34
+   },
+   {
+    "text": "le",
+    "start": 1.67,
+    "end": 1.828
+   },
+   {
+    "text": "conté",
+    "start": 1.828,
+    "end": 2.12
+   },
+   {
+    "text": "su",
+    "start": 2.12,
+    "end": 2.278
+   },
+   {
+    "text": "secreto",
+    "start": 2.278,
+    "end": 2.66
+   },
+   {
+    "text": "a",
+    "start": 2.66,
+    "end": 2.772
+   },
+   {
+    "text": "toda",
+    "start": 2.772,
+    "end": 3.02
+   },
+   {
+    "text": "la",
+    "start": 3.02,
+    "end": 3.178
+   },
+   {
+    "text": "clase.",
+    "start": 3.178,
+    "end": 3.47
+   }
+  ]
+ },
+ "l12": {
+  "text": "Dani dejó de hablarme.",
+  "seconds": 1.637,
+  "voiceStart": 0.16,
+  "voiceEnd": 1.34,
+  "words": [
+   {
+    "text": "Dani",
+    "start": 0.16,
+    "end": 0.43
+   },
+   {
+    "text": "dejó",
+    "start": 0.43,
+    "end": 0.701
+   },
+   {
+    "text": "de",
+    "start": 0.701,
+    "end": 0.873
+   },
+   {
+    "text": "hablarme.",
+    "start": 0.873,
+    "end": 1.34
+   }
+  ]
+ },
+ "l13": {
+  "text": "Esa noche me dormí pensando que no había roto nada.",
+  "seconds": 3.506,
+  "voiceStart": 0.17,
+  "voiceEnd": 3.31,
+  "words": [
+   {
+    "text": "Esa",
+    "start": 0.17,
+    "end": 0.422
+   },
+   {
+    "text": "noche",
+    "start": 0.422,
+    "end": 0.787
+   },
+   {
+    "text": "me",
+    "start": 0.787,
+    "end": 0.983
+   },
+   {
+    "text": "dormí",
+    "start": 0.983,
+    "end": 1.348
+   },
+   {
+    "text": "pensando",
+    "start": 1.348,
+    "end": 1.88
+   },
+   {
+    "text": "que",
+    "start": 1.88,
+    "end": 2.132
+   },
+   {
+    "text": "no",
+    "start": 2.132,
+    "end": 2.329
+   },
+   {
+    "text": "había",
+    "start": 2.329,
+    "end": 2.693
+   },
+   {
+    "text": "roto",
+    "start": 2.693,
+    "end": 3.002
+   },
+   {
+    "text": "nada.",
+    "start": 3.002,
+    "end": 3.31
+   }
+  ]
+ },
+ "l14": {
+  "text": "Y al despertar… Dani estaba sentado al pie de mi cama.",
+  "seconds": 3.994,
+  "voiceStart": 0.18,
+  "voiceEnd": 3.76,
+  "words": [
+   {
+    "text": "Y",
+    "start": 0.18,
+    "end": 0.318
+   },
+   {
+    "text": "al",
+    "start": 0.318,
+    "end": 0.511
+   },
+   {
+    "text": "despertar…",
+    "start": 0.511,
+    "end": 1.09
+   },
+   {
+    "text": "Dani",
+    "start": 1.54,
+    "end": 1.831
+   },
+   {
+    "text": "estaba",
+    "start": 1.831,
+    "end": 2.227
+   },
+   {
+    "text": "sentado",
+    "start": 2.227,
+    "end": 2.676
+   },
+   {
+    "text": "al",
+    "start": 2.676,
+    "end": 2.861
+   },
+   {
+    "text": "pie",
+    "start": 2.861,
+    "end": 3.099
+   },
+   {
+    "text": "de",
+    "start": 3.099,
+    "end": 3.284
+   },
+   {
+    "text": "mi",
+    "start": 3.284,
+    "end": 3.469
+   },
+   {
+    "text": "cama.",
+    "start": 3.469,
+    "end": 3.76
+   }
+  ]
+ },
+ "l15": {
+  "text": "¿Qué haces aquí?",
+  "seconds": 1.149,
+  "voiceStart": 0.15,
+  "voiceEnd": 0.9,
+  "words": [
+   {
+    "text": "¿Qué",
+    "start": 0.15,
+    "end": 0.355
+   },
+   {
+    "text": "haces",
+    "start": 0.355,
+    "end": 0.65
+   },
+   {
+    "text": "aquí?",
+    "start": 0.65,
+    "end": 0.9
+   }
+  ]
+ },
+ "l16": {
+  "text": "No sé. Me desperté aquí.",
+  "seconds": 2.043,
+  "voiceStart": 0.18,
+  "voiceEnd": 1.82,
+  "words": [
+   {
+    "text": "No",
+    "start": 0.18,
+    "end": 0.41
+   },
+   {
+    "text": "sé.",
+    "start": 0.41,
+    "end": 0.64
+   },
+   {
+    "text": "Me",
+    "start": 0.94,
+    "end": 1.106
+   },
+   {
+    "text": "desperté",
+    "start": 1.106,
+    "end": 1.558
+   },
+   {
+    "text": "aquí.",
+    "start": 1.558,
+    "end": 1.82
+   }
+  ]
+ },
+ "l17": {
+  "text": "Entonces entendí: había roto algo. Nuestra amistad.",
+  "seconds": 4.969,
+  "voiceStart": 0.18,
+  "voiceEnd": 4.85,
+  "words": [
+   {
+    "text": "Entonces",
+    "start": 0.18,
+    "end": 0.861
+   },
+   {
+    "text": "entendí:",
+    "start": 0.861,
+    "end": 1.47
+   },
+   {
+    "text": "había",
+    "start": 2.13,
+    "end": 2.576
+   },
+   {
+    "text": "roto",
+    "start": 2.576,
+    "end": 2.953
+   },
+   {
+    "text": "algo.",
+    "start": 2.953,
+    "end": 3.33
+   },
+   {
+    "text": "Nuestra",
+    "start": 3.9,
+    "end": 4.375
+   },
+   {
+    "text": "amistad.",
+    "start": 4.375,
+    "end": 4.85
+   }
+  ]
+ },
+ "l18": {
+  "text": "Intenté arreglarlo. Pegamento, cinta, una carta. Nada.",
+  "seconds": 4.435,
+  "voiceStart": 0.21,
+  "voiceEnd": 4.16,
+  "words": [
+   {
+    "text": "Intenté",
+    "start": 0.21,
+    "end": 0.66
+   },
+   {
+    "text": "arreglarlo.",
+    "start": 0.66,
+    "end": 1.27
+   },
+   {
+    "text": "Pegamento,",
+    "start": 1.42,
+    "end": 2.09
+   },
+   {
+    "text": "cinta,",
+    "start": 2.27,
+    "end": 2.74
+   },
+   {
+    "text": "una",
+    "start": 2.91,
+    "end": 3.184
+   },
+   {
+    "text": "carta.",
+    "start": 3.184,
+    "end": 3.58
+   },
+   {
+    "text": "Nada.",
+    "start": 3.79,
+    "end": 4.16
+   }
+  ]
+ },
+ "l19": {
+  "text": "Cada mañana, Dani aparecía otra vez al pie de mi cama.",
+  "seconds": 3.553,
+  "voiceStart": 0.18,
+  "voiceEnd": 3.3,
+  "words": [
+   {
+    "text": "Cada",
+    "start": 0.18,
+    "end": 0.473
+   },
+   {
+    "text": "mañana,",
+    "start": 0.473,
+    "end": 0.873
+   },
+   {
+    "text": "Dani",
+    "start": 0.873,
+    "end": 1.167
+   },
+   {
+    "text": "aparecía",
+    "start": 1.167,
+    "end": 1.673
+   },
+   {
+    "text": "otra",
+    "start": 1.673,
+    "end": 1.967
+   },
+   {
+    "text": "vez",
+    "start": 1.967,
+    "end": 2.207
+   },
+   {
+    "text": "al",
+    "start": 2.207,
+    "end": 2.393
+   },
+   {
+    "text": "pie",
+    "start": 2.393,
+    "end": 2.633
+   },
+   {
+    "text": "de",
+    "start": 2.633,
+    "end": 2.82
+   },
+   {
+    "text": "mi",
+    "start": 2.82,
+    "end": 3.007
+   },
+   {
+    "text": "cama.",
+    "start": 3.007,
+    "end": 3.3
+   }
+  ]
+ },
+ "l20": {
+  "text": "La casa de Don Bruno estaba llena de cosas rotas hasta el techo.",
+  "seconds": 4.214,
+  "voiceStart": 0.19,
+  "voiceEnd": 4.09,
+  "words": [
+   {
+    "text": "La",
+    "start": 0.19,
+    "end": 0.384
+   },
+   {
+    "text": "casa",
+    "start": 0.384,
+    "end": 0.688
+   },
+   {
+    "text": "de",
+    "start": 0.688,
+    "end": 0.881
+   },
+   {
+    "text": "Don",
+    "start": 0.881,
+    "end": 1.13
+   },
+   {
+    "text": "Bruno",
+    "start": 1.13,
+    "end": 1.49
+   },
+   {
+    "text": "estaba",
+    "start": 1.49,
+    "end": 1.905
+   },
+   {
+    "text": "llena",
+    "start": 1.905,
+    "end": 2.264
+   },
+   {
+    "text": "de",
+    "start": 2.264,
+    "end": 2.458
+   },
+   {
+    "text": "cosas",
+    "start": 2.458,
+    "end": 2.818
+   },
+   {
+    "text": "rotas",
+    "start": 2.818,
+    "end": 3.177
+   },
+   {
+    "text": "hasta",
+    "start": 3.177,
+    "end": 3.537
+   },
+   {
+    "text": "el",
+    "start": 3.537,
+    "end": 3.73
+   },
+   {
+    "text": "techo.",
+    "start": 3.73,
+    "end": 4.09
+   }
+  ]
+ },
+ "l21": {
+  "text": "Y en su cama dormía su hermano, que no le hablaba desde hacía 30 años.",
+  "seconds": 4.795,
+  "voiceStart": 0.17,
+  "voiceEnd": 4.37,
+  "words": [
+   {
+    "text": "Y",
+    "start": 0.17,
+    "end": 0.312
+   },
+   {
+    "text": "en",
+    "start": 0.312,
+    "end": 0.511
+   },
+   {
+    "text": "su",
+    "start": 0.511,
+    "end": 0.71
+   },
+   {
+    "text": "cama",
+    "start": 0.71,
+    "end": 1.022
+   },
+   {
+    "text": "dormía",
+    "start": 1.022,
+    "end": 1.448
+   },
+   {
+    "text": "su",
+    "start": 1.448,
+    "end": 1.647
+   },
+   {
+    "text": "hermano,",
+    "start": 1.647,
+    "end": 2.13
+   },
+   {
+    "text": "que",
+    "start": 2.3,
+    "end": 2.522
+   },
+   {
+    "text": "no",
+    "start": 2.522,
+    "end": 2.694
+   },
+   {
+    "text": "le",
+    "start": 2.694,
+    "end": 2.867
+   },
+   {
+    "text": "hablaba",
+    "start": 2.867,
+    "end": 3.286
+   },
+   {
+    "text": "desde",
+    "start": 3.286,
+    "end": 3.606
+   },
+   {
+    "text": "hacía",
+    "start": 3.606,
+    "end": 3.926
+   },
+   {
+    "text": "30",
+    "start": 3.926,
+    "end": 4.099
+   },
+   {
+    "text": "años.",
+    "start": 4.099,
+    "end": 4.37
+   }
+  ]
+ },
+ "l22": {
+  "text": "Así que hice lo único que no había intentado.",
+  "seconds": 2.531,
+  "voiceStart": 0.09,
+  "voiceEnd": 2.39,
+  "words": [
+   {
+    "text": "Así",
+    "start": 0.09,
+    "end": 0.299
+   },
+   {
+    "text": "que",
+    "start": 0.299,
+    "end": 0.508
+   },
+   {
+    "text": "hice",
+    "start": 0.508,
+    "end": 0.764
+   },
+   {
+    "text": "lo",
+    "start": 0.764,
+    "end": 0.926
+   },
+   {
+    "text": "único",
+    "start": 0.926,
+    "end": 1.228
+   },
+   {
+    "text": "que",
+    "start": 1.228,
+    "end": 1.437
+   },
+   {
+    "text": "no",
+    "start": 1.437,
+    "end": 1.6
+   },
+   {
+    "text": "había",
+    "start": 1.6,
+    "end": 1.902
+   },
+   {
+    "text": "intentado.",
+    "start": 1.902,
+    "end": 2.39
+   }
+  ]
+ },
+ "l23": {
+  "text": "Perdón. Lo hice para que se rieran de mí, no de ti.",
+  "seconds": 4.574,
+  "voiceStart": 0.18,
+  "voiceEnd": 4.3,
+  "words": [
+   {
+    "text": "Perdón.",
+    "start": 0.18,
+    "end": 0.55
+   },
+   {
+    "text": "Lo",
+    "start": 1.54,
+    "end": 1.69
+   },
+   {
+    "text": "hice",
+    "start": 1.69,
+    "end": 1.927
+   },
+   {
+    "text": "para",
+    "start": 1.927,
+    "end": 2.163
+   },
+   {
+    "text": "que",
+    "start": 2.163,
+    "end": 2.356
+   },
+   {
+    "text": "se",
+    "start": 2.356,
+    "end": 2.507
+   },
+   {
+    "text": "rieran",
+    "start": 2.507,
+    "end": 2.829
+   },
+   {
+    "text": "de",
+    "start": 2.829,
+    "end": 2.98
+   },
+   {
+    "text": "mí,",
+    "start": 2.98,
+    "end": 3.13
+   },
+   {
+    "text": "no",
+    "start": 3.76,
+    "end": 3.94
+   },
+   {
+    "text": "de",
+    "start": 3.94,
+    "end": 4.12
+   },
+   {
+    "text": "ti.",
+    "start": 4.12,
+    "end": 4.3
+   }
+  ]
+ },
+ "l24": {
+  "text": "Pop. Esa mañana desperté solo en mi cama. Dani estaba en la puerta, con un balón.",
+  "seconds": 6.037,
+  "voiceStart": 0.17,
+  "voiceEnd": 5.82,
+  "words": [
+   {
+    "text": "Pop.",
+    "start": 0.17,
+    "end": 0.466
+   },
+   {
+    "text": "Esa",
+    "start": 0.466,
+    "end": 0.761
+   },
+   {
+    "text": "mañana",
+    "start": 0.761,
+    "end": 1.254
+   },
+   {
+    "text": "desperté",
+    "start": 1.254,
+    "end": 1.878
+   },
+   {
+    "text": "solo",
+    "start": 1.878,
+    "end": 2.239
+   },
+   {
+    "text": "en",
+    "start": 2.239,
+    "end": 2.469
+   },
+   {
+    "text": "mi",
+    "start": 2.469,
+    "end": 2.699
+   },
+   {
+    "text": "cama.",
+    "start": 2.699,
+    "end": 3.061
+   },
+   {
+    "text": "Dani",
+    "start": 3.061,
+    "end": 3.422
+   },
+   {
+    "text": "estaba",
+    "start": 3.422,
+    "end": 3.915
+   },
+   {
+    "text": "en",
+    "start": 3.915,
+    "end": 4.145
+   },
+   {
+    "text": "la",
+    "start": 4.145,
+    "end": 4.375
+   },
+   {
+    "text": "puerta,",
+    "start": 4.375,
+    "end": 4.867
+   },
+   {
+    "text": "con",
+    "start": 4.867,
+    "end": 5.163
+   },
+   {
+    "text": "un",
+    "start": 5.163,
+    "end": 5.393
+   },
+   {
+    "text": "balón.",
+    "start": 5.393,
+    "end": 5.82
+   }
+  ]
+ },
+ "l25": {
+  "text": "Don Bruno lo vio todo. Esa tarde, por fin, le pidió perdón a su hermano.",
+  "seconds": 4.748,
+  "voiceStart": 0.11,
+  "voiceEnd": 4.63,
+  "words": [
+   {
+    "text": "Don",
+    "start": 0.11,
+    "end": 0.376
+   },
+   {
+    "text": "Bruno",
+    "start": 0.376,
+    "end": 0.76
+   },
+   {
+    "text": "lo",
+    "start": 0.76,
+    "end": 0.967
+   },
+   {
+    "text": "vio",
+    "start": 0.967,
+    "end": 1.233
+   },
+   {
+    "text": "todo.",
+    "start": 1.233,
+    "end": 1.558
+   },
+   {
+    "text": "Esa",
+    "start": 1.558,
+    "end": 1.823
+   },
+   {
+    "text": "tarde,",
+    "start": 1.823,
+    "end": 2.208
+   },
+   {
+    "text": "por",
+    "start": 2.208,
+    "end": 2.473
+   },
+   {
+    "text": "fin,",
+    "start": 2.473,
+    "end": 2.739
+   },
+   {
+    "text": "le",
+    "start": 2.739,
+    "end": 2.946
+   },
+   {
+    "text": "pidió",
+    "start": 2.946,
+    "end": 3.33
+   },
+   {
+    "text": "perdón",
+    "start": 3.33,
+    "end": 3.773
+   },
+   {
+    "text": "a",
+    "start": 3.773,
+    "end": 3.921
+   },
+   {
+    "text": "su",
+    "start": 3.921,
+    "end": 4.128
+   },
+   {
+    "text": "hermano.",
+    "start": 4.128,
+    "end": 4.63
+   }
+  ]
+ },
+ "l26": {
+  "text": "Y su casa se vació en un segundo.",
+  "seconds": 2.438,
+  "voiceStart": 0.18,
+  "voiceEnd": 2.21,
+  "words": [
+   {
+    "text": "Y",
+    "start": 0.18,
+    "end": 0.317
+   },
+   {
+    "text": "su",
+    "start": 0.317,
+    "end": 0.509
+   },
+   {
+    "text": "casa",
+    "start": 0.509,
+    "end": 0.811
+   },
+   {
+    "text": "se",
+    "start": 0.811,
+    "end": 1.003
+   },
+   {
+    "text": "vació",
+    "start": 1.003,
+    "end": 1.36
+   },
+   {
+    "text": "en",
+    "start": 1.36,
+    "end": 1.552
+   },
+   {
+    "text": "un",
+    "start": 1.552,
+    "end": 1.744
+   },
+   {
+    "text": "segundo.",
+    "start": 1.744,
+    "end": 2.21
+   }
+  ]
+ },
+ "l27": {
+  "text": "Y si no te suscribes, mañana vas a amanecer con este video en tu cama.",
+  "seconds": 4.656,
+  "voiceStart": 0.14,
+  "voiceEnd": 4.45,
+  "words": [
+   {
+    "text": "Y",
+    "start": 0.14,
+    "end": 0.272
+   },
+   {
+    "text": "si",
+    "start": 0.272,
+    "end": 0.457
+   },
+   {
+    "text": "no",
+    "start": 0.457,
+    "end": 0.641
+   },
+   {
+    "text": "te",
+    "start": 0.641,
+    "end": 0.826
+   },
+   {
+    "text": "suscribes,",
+    "start": 0.826,
+    "end": 1.38
+   },
+   {
+    "text": "mañana",
+    "start": 1.63,
+    "end": 2.029
+   },
+   {
+    "text": "vas",
+    "start": 2.029,
+    "end": 2.268
+   },
+   {
+    "text": "a",
+    "start": 2.268,
+    "end": 2.402
+   },
+   {
+    "text": "amanecer",
+    "start": 2.402,
+    "end": 2.907
+   },
+   {
+    "text": "con",
+    "start": 2.907,
+    "end": 3.146
+   },
+   {
+    "text": "este",
+    "start": 3.146,
+    "end": 3.439
+   },
+   {
+    "text": "video",
+    "start": 3.439,
+    "end": 3.785
+   },
+   {
+    "text": "en",
+    "start": 3.785,
+    "end": 3.971
+   },
+   {
+    "text": "tu",
+    "start": 3.971,
+    "end": 4.157
+   },
+   {
+    "text": "cama.",
+    "start": 4.157,
+    "end": 4.45
+   }
+  ]
+ }
+}

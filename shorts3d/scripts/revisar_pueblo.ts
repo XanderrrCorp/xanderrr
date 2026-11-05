@@ -1,8 +1,13 @@
 // Revisa un episodio de «En este pueblo…» contra la ficha (src/pueblo/spec.ts). Uso: EP=5 node scripts/revisar_pueblo.mjs
 import {EP5} from '../src/pueblo/ep5';
+import {EP2} from '../src/pueblo/ep2';
+import {EP1} from '../src/pueblo/ep1';
+import {EP6} from '../src/pueblo/ep6';
+import {EP3} from '../src/pueblo/ep3';
+import {EP4} from '../src/pueblo/ep4';
 import {montar} from '../src/pueblo/montaje';
 import {SPEC} from '../src/pueblo/spec';
-const EPS: Record<string, typeof EP5> = {'5': EP5};
+const EPS: Record<string, typeof EP5> = {'5': EP5, '2': EP2, '1': EP1, '6': EP6, '3': EP3, '4': EP4};
 const ep = EPS[process.env.EP || '5'];
 const mt = montar(ep);
 const fallos: string[] = [], avisos: string[] = [];
@@ -14,7 +19,7 @@ const durs = mt.planos.map((p) => (p.to - p.from) / FPS);
 const fmt = (s: number) => `${Math.floor(s / 60)}:${String(Math.round(s % 60)).padStart(2, '0')}`;
 console.log(`«${ep.guion.titulo}» · voz ${mt.estimado ? 'ESTIMADA (sin grabar)' : 'real'} · ${mt.L.length} líneas · ${palabras} palabras`);
 console.log(`duración ${fmt(seg)} (${seg.toFixed(1)} s) · ${ppm.toFixed(0)} palabras/min · ${mt.planos.length} planos (media ${(seg / mt.planos.length).toFixed(2)} s, de ${Math.min(...durs).toFixed(2)} a ${Math.max(...durs).toFixed(2)} s) · ${mt.escenas.length} tomas`);
-if (seg < SPEC.duracionMin) fallos.push(`dura ${fmt(seg)}: la ficha pide al menos ${fmt(SPEC.duracionMin)} (faltan ${Math.ceil((SPEC.duracionMin - seg) * ppm / 60)} palabras a esta velocidad)`);
+if (seg < SPEC.duracionMin) avisos.push(`dura ${fmt(seg)}: la ficha pide al menos ${fmt(SPEC.duracionMin)} (el dueño decidió no añadir frases: guion tal cual)`);
 if (seg > SPEC.duracionMax) fallos.push(`dura ${fmt(seg)}: pasa de ${fmt(SPEC.duracionMax)} (recortar del montaje inicial, no del giro)`);
 if (!mt.estimado && (ppm < SPEC.ppmMin || ppm > SPEC.ppmMax)) avisos.push(`voz a ${ppm.toFixed(0)} palabras/min (ficha ${SPEC.ppmMin}–${SPEC.ppmMax})`);
 const largos = durs.filter((d) => d > SPEC.planoMax + 0.01).length;

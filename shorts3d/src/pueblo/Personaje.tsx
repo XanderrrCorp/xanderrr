@@ -4,6 +4,7 @@
 import React from 'react';
 import * as THREE from 'three';
 import type {V3} from './tipos';
+import {Cartel} from './Pueblo';
 
 export type Cara = 'feliz' | 'neutral' | 'triste' | 'miedo' | 'enojo' | 'sorpresa' | 'llora' | 'dormido' | 'guino';
 export type Pose = 'quieto' | 'camina' | 'corre' | 'saluda' | 'sentado' | 'acostado' | 'llora' | 'abraza' | 'senala' | 'cose' | 'brazos_arriba' | 'agachado' | 'carga';
@@ -13,8 +14,13 @@ export type Ropa = {
   bufanda?: string; mochila?: string; delantal?: string; banda?: string; bigote?: string; barriga?: boolean;
   falda?: string; coletas?: boolean; lentes?: boolean; corbata?: string; pijama?: boolean;
 };
+/** SILUETA (episodio 3): el mismo personaje pintado de sombra oscura, para las sombras que actúan solas */
+export const SiluetaCtx = React.createContext(false);
+const COLOR_SOMBRA = '#0e0b1e';
 /** plástico brillante de juguete: barniz (clearcoat) con reflejos del entorno */
-const Mate: React.FC<{c: string; o?: number}> = ({c, o = 1}) => (
+const Mate: React.FC<{c: string; o?: number}> = ({c, o = 1}) => React.useContext(SiluetaCtx)
+  ? <meshBasicMaterial color={COLOR_SOMBRA} transparent opacity={0.9} depthWrite={false} toneMapped={false} />
+  : (
   <meshPhysicalMaterial color={c} roughness={0.32} metalness={0} clearcoat={1} clearcoatRoughness={0.12} envMapIntensity={0.9} transparent={o < 1} opacity={o} depthWrite={o > 0.5} />
 );
 const Caja: React.FC<{p: V3; s: V3; c: string; o?: number; r?: V3}> = ({p, s, c, o, r}) => (
@@ -22,7 +28,9 @@ const Caja: React.FC<{p: V3; s: V3; c: string; o?: number; r?: V3}> = ({p, s, c,
     <boxGeometry args={s} /><Mate c={c} o={o} />
   </mesh>
 );
-const Negro: React.FC<{o?: number}> = ({o = 1}) => <meshBasicMaterial color="#111" transparent={o < 1} opacity={o} />;
+const Negro: React.FC<{o?: number}> = ({o = 1}) => React.useContext(SiluetaCtx)
+  ? <meshBasicMaterial color={COLOR_SOMBRA} transparent opacity={0} depthWrite={false} />
+  : <meshBasicMaterial color="#111" transparent={o < 1} opacity={o} />;
 
 /** la cara va pegada al frente del cilindro de la cabeza */
 const CaraPlana: React.FC<{cara: Cara; f: number; o: number}> = ({cara, f, o}) => {
@@ -63,8 +71,8 @@ const Brazo: React.FC<{x: number; rx: number; rz: number; c: string; piel: strin
   </group>
 );
 
-export type PropsPersonaje = {pos?: V3; rotY?: number; escala?: number; ropa: Ropa; cara?: Cara; pose?: Pose; f?: number; opacidad?: number; mira?: number};
-export const Personaje: React.FC<PropsPersonaje> = ({pos = [0, 0, 0], rotY = 0, escala = 1, ropa, cara = 'neutral', pose = 'quieto', f = 0, opacidad = 1, mira = 0}) => {
+export type PropsPersonaje = {pos?: V3; rotY?: number; escala?: number; ropa: Ropa; cara?: Cara; pose?: Pose; f?: number; opacidad?: number; mira?: number; nombre?: string};
+export const Personaje: React.FC<PropsPersonaje> = ({pos = [0, 0, 0], rotY = 0, escala = 1, ropa, cara = 'neutral', pose = 'quieto', f = 0, opacidad = 1, mira = 0, nombre}) => {
   const o = opacidad;
   const fase = f * (pose === 'corre' ? 0.55 : 0.32);
   const paso = pose === 'camina' ? Math.sin(fase) * 0.55 : pose === 'corre' ? Math.sin(fase) * 0.95 : 0;
@@ -99,6 +107,7 @@ export const Personaje: React.FC<PropsPersonaje> = ({pos = [0, 0, 0], rotY = 0, 
             {/* torso */}
             <Caja p={[0, 1.05, 0]} s={[ancho, 0.7, fondo]} c={camisa} o={o} />
             {ropa.falda && <Caja p={[0, 0.72, 0]} s={[ancho + 0.08, 0.22, fondo + 0.08]} c={ropa.falda} o={o} />}
+            {nombre && o > 0.4 && <Cartel p={[0, 1.08, fondo / 2 + 0.02]} w={ancho * 0.9} texto={nombre} fondo={camisa} color="#ffffff" />}
             {ropa.delantal && <Caja p={[0, 0.92, fondo / 2 + 0.01]} s={[ancho * 0.85, 0.62, 0.02]} c={ropa.delantal} o={o} />}
             {ropa.banda && <Caja p={[0, 1.08, fondo / 2 + 0.012]} s={[0.09, 0.85, 0.02]} c={ropa.banda} o={o} r={[0, 0, 0.75]} />}
             {ropa.corbata && <Caja p={[0, 1.15, fondo / 2 + 0.012]} s={[0.07, 0.36, 0.02]} c={ropa.corbata} o={o} />}
@@ -139,6 +148,19 @@ export const Personaje: React.FC<PropsPersonaje> = ({pos = [0, 0, 0], rotY = 0, 
     </group>
   );
 };
+/** LA SOMBRA QUE ACTÚA: silueta plana del personaje tendida en el suelo detrás de él (hacia `dir`), con su
+ *  propia pose. `levanta` 0..1 la pone de pie (se despega del piso), como en el baile del episodio 3. */
+export const Sombra: React.FC<PropsPersonaje & {dir?: number; levanta?: number; largo?: number}> = ({pos = [0, 0, 0], dir = 0, levanta = 0, largo = 1.25, ...p}) => (
+  <SiluetaCtx.Provider value={true}>
+    <group position={[pos[0], pos[1] + 0.035, pos[2]]} rotation={[0, dir, 0]}>
+      <group rotation={[-Math.PI / 2 * (1 - levanta), 0, 0]} scale={[1, largo * (1 - 0.15 * (1 - levanta)), 1]}>
+        <group scale={[1, 1, 0.03 + 0.97 * levanta]}>
+          <Personaje {...p} pos={[0, 0, 0]} rotY={Math.PI} />
+        </group>
+      </group>
+    </group>
+  </SiluetaCtx.Provider>
+);
 /** altura de la cabeza (para los globos de diálogo) */
 export const alturaCabeza = (escala = 1, pose: Pose = 'quieto') => (pose === 'sentado' ? 1.45 : pose === 'acostado' ? 0.5 : 2.0) * escala;
 export const _three = THREE;

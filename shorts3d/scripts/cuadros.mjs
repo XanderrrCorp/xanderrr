@@ -9,9 +9,9 @@ import fs from 'fs';
 const NUBE = '/opt/pw-browsers/chromium_headless_shell-1243/chrome-headless-shell-linux64/chrome-headless-shell';
 const browserExecutable = fs.existsSync(NUBE) ? NUBE : null;
 const chromiumOptions = {gl: 'swangle'};
-const composition = await selectComposition({serveUrl, id: process.env.COMP || 'AvisponGigante', browserExecutable, chromiumOptions});
+const composition = await selectComposition({serveUrl, id: process.env.COMP || 'AvisponGigante', browserExecutable, chromiumOptions, timeoutInMilliseconds: 300000});
 for (const f of frames) {
   const t = Date.now();
-  await renderStill({serveUrl, composition, frame: f, output: `out/${process.argv[3] || 'cuadros'}/c${String(f).padStart(4, '0')}.png`, browserExecutable, chromiumOptions});
+  await renderStill({serveUrl, composition, frame: f, output: `out/${process.argv[3] || 'cuadros'}/c${String(f).padStart(4, '0')}.png`, browserExecutable, chromiumOptions, timeoutInMilliseconds: 300000});
   console.log('cuadro', f, ((Date.now() - t) / 1000).toFixed(1) + ' s');
 }
