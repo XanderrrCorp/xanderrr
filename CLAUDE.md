@@ -96,6 +96,20 @@ Estado al 04-10-2026. El repositorio es PÚBLICO: nunca escribir claves, tokens 
 - Guion en `src/terror/guion.json`: líneas → frases → tomas (tipo:foco). El montaje elige solo cuántos planos caben
   y, si caben más de los propuestos, intercala el encuadre complementario.
 
+## «EN ESTE PUEBLO…» (05-11-2026: 6 Shorts de terror amable, mismo pueblo y reparto)
+- Kit en `shorts3d/src/pueblo/` (compartido) + `src/pueblo/ep<N>/` (guion.json + escenas.tsx + vo.json). Orden del
+  dueño: 5, 2, 1, 6, 3, 4. Hecho: ep5 (composición `PuebloEp5Juguetes`). Ficha en `src/pueblo/spec.ts`:
+  1:45–2:05, voz 170–180 ppm (la de Peligro Tropical a 1,08; en los diálogos «habla» cambia el tono: niños +4/+5,
+  Don Bruno −5), planos FIJOS de 1–2 s (punch-in 5 % en «golpe»), regla en el título desde el cuadro 0.
+- Reparto fijo en `personajes.ts` (DON_BRUNO, NINOS teo/mia/lucas/sofi/max/leo, EXTRAS): no cambiar colores entre
+  episodios. Personajes de bloques en `Personaje.tsx` (caras: feliz/neutral/triste/miedo/enojo/sorpresa/llora/
+  dormido/guino; poses en el tipo Pose). Pueblo y sets en `Pueblo.tsx`: pueblo en el origen, CUARTO x=200,
+  BASURERO x=-200, OFICINA z=200 (los hijos de un set van en coordenadas RELATIVAS; cámaras y «cabezas» en absolutas).
+- Guion: líneas {id, escena, texto, habla?, quien? (globo), clave?, sfx?, golpe?, tensa? (música tensa)}. Las líneas
+  marcadas «propuesta» las escribí yo para llegar a 1:45 (el guion del dueño daba 1:25): esperar su visto bueno.
+- `node scripts/revisar_pueblo.mjs` (EP=5) comprueba la ficha; `python scripts/sonidos_pueblo.py` (gratis);
+  `EP=5 python scripts/voz_pueblo.py --pagar` (cobra, pedir permiso). Render en la nube ~1,8 s/cuadro.
+
 ## Ramas y forma de entregar
 - Desarrollo: `claude/xandart-saas` (la «versión nueva» que instala). Producción: `claude/new-session-uq98jd`: NO tocar.
 - Antes de cada commit: `python -m pytest -q tests` (≈4 min, todo en verde). Si algo falla, no guardar.

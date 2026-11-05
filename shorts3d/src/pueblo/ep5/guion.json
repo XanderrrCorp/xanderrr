@@ -1,0 +1,421 @@
+{
+ "titulo": "SI UN NIÑO LLORA, LOS JUGUETES DESPIERTAN…",
+ "voz": {
+  "voice_id": "moss_audio_ebf2f8a2-b928-11f1-8f51-7270dd4a9232",
+  "speed": 1.08,
+  "nota": "Voz de Peligro Tropical (clonada). A 1,0 mide ~171 ppm al hablar; a 1,08 apunta a 170–180 en el video."
+ },
+ "claves": [],
+ "lineas": [
+  {
+   "id": "l01",
+   "escena": "llora",
+   "texto": "En este pueblo, si un niño llora de noche, sus juguetes despiertan.",
+   "clave": [
+    "llora",
+    "juguetes",
+    "despiertan."
+   ],
+   "golpe": "despiertan.",
+   "sfx": [
+    {
+     "s": "boing",
+     "palabra": "despiertan."
+    }
+   ]
+  },
+  {
+   "id": "l02",
+   "escena": "dinos",
+   "texto": "Los dinosaurios patrullan debajo de la cama.",
+   "clave": [
+    "dinosaurios"
+   ],
+   "sfx": [
+    {
+     "s": "pasitos",
+     "palabra": "patrullan"
+    }
+   ]
+  },
+  {
+   "id": "l03",
+   "escena": "munecas",
+   "texto": "Las muñecas cierran el armario con cinta.",
+   "clave": [
+    "muñecas"
+   ],
+   "sfx": [
+    {
+     "s": "cinta",
+     "palabra": "cinta."
+    }
+   ]
+  },
+  {
+   "id": "l04",
+   "escena": "soldaditos",
+   "texto": "Los soldaditos hacen guardia en la ventana.",
+   "clave": [
+    "soldaditos"
+   ],
+   "sfx": [
+    {
+     "s": "pop",
+     "palabra": "guardia"
+    }
+   ]
+  },
+  {
+   "id": "l04b",
+   "escena": "pelotas",
+   "propuesta": true,
+   "texto": "Las pelotas ruedan solas hasta la puerta, por si hay que salir corriendo.",
+   "clave": [
+    "pelotas"
+   ],
+   "sfx": [
+    {
+     "s": "boing",
+     "palabra": "ruedan"
+    }
+   ]
+  },
+  {
+   "id": "l04c",
+   "escena": "robots",
+   "propuesta": true,
+   "texto": "Los robots de cuerda revisan que la ventana esté bien cerrada.",
+   "clave": [
+    "robots"
+   ],
+   "sfx": [
+    {
+     "s": "cuerda",
+     "palabra": "robots"
+    }
+   ]
+  },
+  {
+   "id": "l04d",
+   "escena": "turnos",
+   "propuesta": true,
+   "texto": "Y los peluches más viejos se turnan para no quedarse dormidos.",
+   "clave": [
+    "peluches"
+   ],
+   "sfx": [
+    {
+     "s": "pop",
+     "palabra": "turnan"
+    }
+   ]
+  },
+  {
+   "id": "l04e",
+   "escena": "mochila",
+   "propuesta": true,
+   "texto": "En la escuela, el que llora en clase sale con un dinosaurio asomado en la mochila.",
+   "clave": [
+    "dinosaurio"
+   ],
+   "sfx": [
+    {
+     "s": "campana",
+     "palabra": "escuela,"
+    },
+    {
+     "s": "boing",
+     "palabra": "dinosaurio"
+    }
+   ]
+  },
+  {
+   "id": "l05",
+   "escena": "papas",
+   "texto": "Por eso aquí los papás lloran a escondidas, para no despertar a los juguetes de sus hijos.",
+   "clave": [
+    "papás",
+    "escondidas,"
+   ],
+   "sfx": [
+    {
+     "s": "sollozo",
+     "palabra": "lloran"
+    }
+   ]
+  },
+  {
+   "id": "l06",
+   "escena": "mudanza",
+   "texto": "Nos mudamos un lunes y nadie nos avisó.",
+   "clave": [
+    "lunes"
+   ],
+   "sfx": [
+    {
+     "s": "bocina",
+     "palabra": "mudamos"
+    }
+   ]
+  },
+  {
+   "id": "l07",
+   "escena": "max",
+   "texto": "Me llamo Max. En la mudanza perdí todos mis juguetes.",
+   "clave": [
+    "Max.",
+    "juguetes."
+   ],
+   "sfx": [
+    {
+     "s": "plop",
+     "palabra": "perdí"
+    }
+   ]
+  },
+  {
+   "id": "l08",
+   "escena": "vacio",
+   "tensa": true,
+   "texto": "Mi cuarto estaba vacío. Y la primera noche, lloré.",
+   "clave": [
+    "vacío.",
+    "lloré."
+   ],
+   "sfx": [
+    {
+     "s": "sollozo",
+     "palabra": "lloré."
+    }
+   ]
+  },
+  {
+   "id": "l09",
+   "escena": "vacio",
+   "tensa": true,
+   "texto": "Pero no tenía juguetes que despertaran.",
+   "clave": [
+    "juguetes"
+   ]
+  },
+  {
+   "id": "l10",
+   "escena": "armario",
+   "tensa": true,
+   "texto": "Y en el armario, algo se movió.",
+   "clave": [
+    "armario,",
+    "movió."
+   ],
+   "golpe": "movió.",
+   "sfx": [
+    {
+     "s": "crujido",
+     "palabra": "movió."
+    }
+   ]
+  },
+  {
+   "id": "l10b",
+   "escena": "rasca",
+   "tensa": true,
+   "propuesta": true,
+   "texto": "Esa noche no dormí. El armario rascaba la puerta, despacito, toda la noche.",
+   "clave": [
+    "armario",
+    "rascaba"
+   ],
+   "sfx": [
+    {
+     "s": "rascar",
+     "palabra": "rascaba"
+    }
+   ]
+  },
+  {
+   "id": "l11",
+   "escena": "basurero",
+   "texto": "Al día siguiente fui al basurero del pueblo a buscar algo, lo que fuera.",
+   "clave": [
+    "basurero"
+   ],
+   "sfx": [
+    {
+     "s": "pasos",
+     "palabra": "fui"
+    }
+   ]
+  },
+  {
+   "id": "l12",
+   "escena": "conejo",
+   "texto": "Encontré un conejo viejo. Le faltaba un ojo y tenía una oreja rota.",
+   "clave": [
+    "conejo",
+    "ojo",
+    "rota."
+   ],
+   "golpe": "conejo",
+   "sfx": [
+    {
+     "s": "pop",
+     "palabra": "conejo"
+    }
+   ]
+  },
+  {
+   "id": "l13",
+   "escena": "coser",
+   "texto": "Lo cosí como pude.",
+   "clave": [
+    "cosí"
+   ],
+   "sfx": [
+    {
+     "s": "costura",
+     "palabra": "cosí"
+    }
+   ]
+  },
+  {
+   "id": "l14",
+   "escena": "ojo",
+   "tensa": true,
+   "texto": "Esa noche lloré otra vez… y el conejo abrió su único ojo.",
+   "clave": [
+    "único",
+    "ojo."
+   ],
+   "golpe": "ojo.",
+   "sfx": [
+    {
+     "s": "boing",
+     "palabra": "ojo."
+    }
+   ]
+  },
+  {
+   "id": "l15",
+   "escena": "guardia",
+   "tensa": true,
+   "texto": "Se paró frente al armario. Y el armario se calmó.",
+   "clave": [
+    "frente",
+    "calmó."
+   ],
+   "sfx": [
+    {
+     "s": "pasitos",
+     "palabra": "paró"
+    },
+    {
+     "s": "plop",
+     "palabra": "calmó."
+    }
+   ]
+  },
+  {
+   "id": "l16",
+   "escena": "leyenda",
+   "texto": "Los juguetes del pueblo le decían «el Tuerto». Era una leyenda.",
+   "clave": [
+    "Tuerto».",
+    "leyenda."
+   ],
+   "sfx": [
+    {
+     "s": "pop",
+     "palabra": "Tuerto»."
+    }
+   ]
+  },
+  {
+   "id": "l17",
+   "escena": "cientos",
+   "texto": "Antes de llegar al basurero, había cuidado a cientos de niños… y a uno más que a todos.",
+   "clave": [
+    "cientos",
+    "uno"
+   ],
+   "golpe": "uno"
+  },
+  {
+   "id": "l18",
+   "escena": "foto",
+   "texto": "En el escritorio de Don Bruno había una foto: él, de niño, abrazando a mi conejo.",
+   "clave": [
+    "Bruno",
+    "foto:",
+    "conejo."
+   ],
+   "golpe": "conejo.",
+   "sfx": [
+    {
+     "s": "campana",
+     "palabra": "foto:"
+    }
+   ]
+  },
+  {
+   "id": "l19",
+   "escena": "bruno",
+   "habla": "bruno",
+   "quien": "bruno",
+   "texto": "—Lo tiré cuando crecí. Me dio vergüenza.",
+   "clave": [
+    "vergüenza."
+   ]
+  },
+  {
+   "id": "l20",
+   "escena": "brunoLlora",
+   "texto": "Don Bruno empezó a llorar. Y el conejo abrió su ojo… por él.",
+   "clave": [
+    "llorar.",
+    "él."
+   ],
+   "golpe": "él.",
+   "sfx": [
+    {
+     "s": "boing",
+     "palabra": "ojo…"
+    }
+   ]
+  },
+  {
+   "id": "l21",
+   "escena": "abrazo",
+   "texto": "Ahora lo cuidamos los dos. Una semana en mi casa, una semana en la alcaldía.",
+   "clave": [
+    "dos.",
+    "alcaldía."
+   ],
+   "sfx": [
+    {
+     "s": "campanas",
+     "palabra": "Ahora"
+    }
+   ]
+  },
+  {
+   "id": "l22",
+   "escena": "cta",
+   "texto": "Y si no te suscribes… el armario de tu cuarto se va a quedar sin guardia.",
+   "clave": [
+    "suscribes…",
+    "guardia."
+   ],
+   "sfx": [
+    {
+     "s": "pop",
+     "palabra": "suscribes…"
+    },
+    {
+     "s": "boing",
+     "palabra": "guardia."
+    }
+   ]
+  }
+ ]
+}

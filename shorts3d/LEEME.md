@@ -44,3 +44,12 @@ así que no se copió su código).
 4. Voz (la de Peligro Tropical, clonada, a velocidad 1,0 → ~165 palabras/min; a 1,3 iba a ~235): `python scripts/voz_terror.py` (dice cuánto cobraría) → `--pagar` tras aprobar el guion. Mide las palabras
    y escribe `src/terror/vo.json`; los cortes se recalculan solos con la voz real. Vuelve a pasar el revisor.
 5. Cuadros: `COMP=TerrorNiebla node scripts/cuadros.mjs 0,300,900 terror` y grabar como siempre (`TerrorNiebla`).
+
+## «En este pueblo…» (kit `src/pueblo`, 6 episodios con el mismo pueblo y reparto)
+1. Guion en `src/pueblo/ep<N>/guion.json` (una línea de voz por frase; `escena` = la toma entre corchetes; `habla` y
+   `quien` para los diálogos con globo; `clave` = palabras en amarillo; `sfx`, `golpe` y `tensa`).
+2. Escenas en `src/pueblo/ep<N>/escenas.tsx` (2–3 cámaras fijas por toma) con las piezas compartidas
+   (`Pueblo.tsx`, `Personaje.tsx`, `personajes.ts`, `Juguetes.tsx`).
+3. `EP=5 node scripts/revisar_pueblo.mjs` → «cumple la ficha». `python scripts/sonidos_pueblo.py`.
+4. Voz: `EP=5 python scripts/voz_pueblo.py` (dice cuánto cobraría) → `--pagar` tras aprobar el guion.
+5. `COMP=PuebloEp5Juguetes node scripts/cuadros.mjs 0,300,900 p` y grabar `PuebloEp5Juguetes`.
