@@ -84,12 +84,15 @@ const Globo: React.FC<{ep: Episodio; mt: Montaje; f: number}> = ({ep, mt, f}) =>
   const pk = punch(mt, f);
   let x = ((v.x * pk) * 0.5 + 0.5) * 1080, y = ((-v.y * pk) * 0.5 + 0.5) * 1920;
   if (v.z > 1) return null;
-  x = Math.max(320, Math.min(760, x)); y = Math.max(260, Math.min(1150, y));
-  const a = sp(f, l.from + 1, 11, 0.5);
   const txt = l.texto.replace(/^—\s*/, '').replace(/\s*—\s*(gritó|dijo|susurró).*$/, '').replace(/^«|»$/g, '');
+  // globo largo: letra más chica y nunca por encima del borde de arriba
+  const fs = txt.length > 60 ? 46 : 60;
+  const alto = Math.ceil((txt.length * 0.62 * fs * 1.15) / 532) * fs * 1.12 + 60;
+  x = Math.max(320, Math.min(760, x)); y = Math.max(Math.max(260, alto + 50), Math.min(1150, y));
+  const a = sp(f, l.from + 1, 11, 0.5);
   return (
     <div style={{position: 'absolute', left: x, top: y, transform: `translate(-50%, -100%) scale(${clamp(a, 0, 1.1)})`, transformOrigin: '50% 100%'}}>
-      <div style={{background: '#fff', color: '#111', fontFamily: FUENTE, fontWeight: 800, fontSize: 60, lineHeight: 1.12, padding: '24px 34px', borderRadius: 34,
+      <div style={{background: '#fff', color: '#111', fontFamily: FUENTE, fontWeight: 800, fontSize: fs, lineHeight: 1.12, padding: '24px 34px', borderRadius: 34,
         border: '6px solid #111', width: 600, boxSizing: 'border-box', textAlign: 'center', boxShadow: '0 10px 0 rgba(0,0,0,0.18)'}}>{txt}</div>
       <div style={{position: 'absolute', left: '50%', bottom: -30, width: 0, height: 0, marginLeft: -18, borderLeft: '18px solid transparent', borderRight: '18px solid transparent', borderTop: '32px solid #111'}} />
       <div style={{position: 'absolute', left: '50%', bottom: -20, width: 0, height: 0, marginLeft: -11, borderLeft: '11px solid transparent', borderRight: '11px solid transparent', borderTop: '22px solid #fff'}} />
