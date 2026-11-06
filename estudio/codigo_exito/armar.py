@@ -59,7 +59,7 @@ def respiros(dur: float) -> list[float]:
     return out
 
 
-def preparar(trabajo: Path, bloques: list[dict], ff: str, avisar=print) -> dict:
+def preparar(trabajo: Path, bloques: list[dict], ff: str, avisar=print, escenas: dict | None = None) -> dict:
     """Profesor y stock de cada bloque → {id: datos del bloque para Remotion} (rutas relativas a la carpeta de trabajo)"""
     d = {}
     (trabajo / "profesor").mkdir(exist_ok=True)
@@ -87,7 +87,17 @@ def preparar(trabajo: Path, bloques: list[dict], ff: str, avisar=print) -> dict:
                 avisar(f"  Profesor del bloque {b['id']} ({b['ranura']:.0f} s)…")
             dur = b["ranura"] + 1.0
             gestos = [(dur * 0.35, dur * 0.35 + 2.2)] if dur > 7 else []
-            PR.renderizar(wav, b["texto"], dur, mp4, ff, gestos=gestos)
+            plan = escenas.get(str(b["id"])) if escenas else None
+            if plan:                                   # las escenas de los primeros videos (tablas, libreta, frases…)
+                from . import escenas_bloque as EB
+
+                plan = [{**e, "inicio": round(float(e.get("inicio", e.get("en", 0) * b["ranura"])), 3)} for e in plan]
+                mp4 = mp4.with_name(mp4.stem + "_esc" + hashlib.sha1(json.dumps(plan, sort_keys=True).encode()).hexdigest()[:8] + ".mp4")
+                EB.renderizar(plan, wav, b["texto"], dur, mp4, ff, gestos=gestos)
+                b["_pantalla"] = [(b["inicio"] + a, b["inicio"] + z, sorted(p)) for a, z, p in EB.pantalla(EB.completar(plan, b["ranura"]))]
+                b["_cortes"] = [b["inicio"] + e["inicio"] for e in plan[1:]]
+            else:
+                PR.renderizar(wav, b["texto"], dur, mp4, ff, gestos=gestos)
             d[b["id"]] = {"tipo": "profesor", "profesor": "@/" + mp4.relative_to(trabajo).as_posix()}
         elif b["tipo"] == "stock" and f"bloque_{b['id']:03d}" in stock:
             d[b["id"]] = {"tipo": "stock", "stock": [{"url": f"@/stock/{c['archivo']}", "dur": c["dur"]} for c in stock[f"bloque_{b['id']:03d}"]]}
@@ -100,6 +110,20 @@ def preparar(trabajo: Path, bloques: list[dict], ff: str, avisar=print) -> dict:
                         rs.append({"t": t, "dur": RESPIRO, "url": "@/stock/" + stock[clave][0]["archivo"]})
             d[b["id"]] = {"tipo": "aura", "aura": {"respiros": rs}}
     return d
+
+
+def _en_pantalla(trozo: dict, pantalla) -> bool:
+    """la escena ya muestra esas palabras en grande: sin subtítulo (como en los primeros videos)"""
+    if not pantalla:
+        return False
+    from .escenas_bloque import pantalla as _p  # noqa: F401
+    import re
+    import unicodedata
+
+    s = unicodedata.normalize("NFKD", trozo["texto"].lower())
+    pal = set(re.findall(r"\w+", "".join(c for c in s if not unicodedata.combining(c))))
+    medio = (trozo["ini"] + trozo["fin"]) / 2
+    return any(a <= medio < z and pal and pal <= set(p) for a, z, p in pantalla)
 
 
 def partes(trabajo: Path, tl: dict, datos: dict, ff: str) -> list[dict]:
@@ -118,7 +142,8 @@ def partes(trabajo: Path, tl: dict, datos: dict, ff: str) -> list[dict]:
         wav = trabajo / "partes" / f"voz_{k:02d}.wav"
         subprocess.run([ff, "-v", "error", "-y", "-ss", f"{ini:.3f}", "-t", f"{dur + T:.3f}", "-i", str(trabajo / "voz" / "voz.wav"),
                         "-ac", "1", "-ar", "48000", str(wav)], check=True)
-        subs = [{"texto": z["texto"], "ini": round(z["ini"] - ini, 3), "fin": round(z["fin"] - ini, 3)} for b in bs for z in b["trozos"]]
+        subs = [{"texto": z["texto"], "ini": round(z["ini"] - ini, 3), "fin": round(z["fin"] - ini, 3)}
+                for b in bs for z in b["trozos"] if not _en_pantalla(z, b.get("_pantalla"))]
         props = {"fps": FPS, "inicio": ini, "cola": 0 if ultima else round(T * FPS),
                  "bloques": [{**datos[b["id"]], "dur": b["ranura"]} for b in bs], "subtitulos": subs,
                  "audio": "@/" + wav.relative_to(trabajo).as_posix()}
@@ -181,7 +206,8 @@ def textos(trabajo: Path, tl: dict) -> None:
         (trabajo / "creditos_pexels.txt").write_text("Clips de Pexels (licencia libre, sin atribución obligatoria):\n" + "\n".join(cred) + "\n", "utf-8")
 
 
-def hacer(guion_txt: Path, trabajo: Path, permiso: bool = False, avisar=print, carpeta_musica: Path | None = None) -> Path:
+def hacer(guion_txt: Path, trabajo: Path, permiso: bool = False, avisar=print, carpeta_musica: Path | None = None,
+          escenas: dict | None = None) -> Path:
     from ..pt_animado.audio import dsp
 
     from .mezcla import mezclar
@@ -193,12 +219,15 @@ def hacer(guion_txt: Path, trabajo: Path, permiso: bool = False, avisar=print, c
     avisar(f"Guion: {len(bloques)} bloques en {len({b['parte'] for b in bloques})} partes")
     tl = V.generar(trabajo, bloques, ff, permiso, avisar)
     ranuras(tl)
-    datos = preparar(trabajo, tl["bloques"], ff, avisar)
+    datos = preparar(trabajo, tl["bloques"], ff, avisar, escenas)
     lista = partes(trabajo, tl, datos, ff)
     renderizar_partes(trabajo, lista, avisar)
     video = unir(trabajo, lista, ff)
     v, _ = dsp.read_wav(str(trabajo / "voz" / "voz.wav"))
-    mezcla, info = mezclar(v.mean(0) if v.ndim > 1 else v, ff, carpeta_musica)
+    efectos = [{"t": b["inicio"], "tipo": "whoosh"} for b in tl["bloques"][1:]]                   # cada corte de bloque
+    efectos += [{"t": t, "tipo": "pop"} for b in tl["bloques"] for t in b.get("_cortes", [])]     # cada escena nueva
+    efectos += [{"t": b["inicio"] + 0.2, "tipo": "pop"} for b in tl["bloques"] if b["tipo"] == "profesor"]
+    mezcla, info = mezclar(v.mean(0) if v.ndim > 1 else v, ff, carpeta_musica, efectos=efectos)
     dsp.write_wav(str(trabajo / "mezcla.wav"), mezcla)
     final = trabajo / "final.mp4"
     subprocess.run([ff, "-y", "-v", "error", "-i", str(video), "-i", str(trabajo / "mezcla.wav"), "-map", "0:v", "-map", "1:a",
@@ -212,9 +241,11 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("guion"); ap.add_argument("trabajo"); ap.add_argument("--permiso", action="store_true")
     ap.add_argument("--musica", default=None)
+    ap.add_argument("--escenas", default=None, help="plan de escenas de los bloques [PROFESOR] (.json)")
     a = ap.parse_args()
     try:
-        hacer(Path(a.guion), Path(a.trabajo), a.permiso, carpeta_musica=Path(a.musica) if a.musica else None)
+        hacer(Path(a.guion), Path(a.trabajo), a.permiso, carpeta_musica=Path(a.musica) if a.musica else None,
+              escenas=json.loads(Path(a.escenas).read_text("utf-8")) if a.escenas else None)
     except PermissionError as ex:
         sys.exit(str(ex))
 

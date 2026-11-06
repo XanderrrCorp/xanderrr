@@ -518,6 +518,13 @@ Estado al 04-10-2026. El repositorio es PÚBLICO: nunca escribir claves, tokens 
   con xfade + bloques.txt/capitulos.txt/creditos_pexels.txt). Prueba de 1:35 enviada (sin stock: la clave de Pexels
   guardada con «Bearer» da 401; el dueño debe dejarla sin prefijo en el entorno). El dueño la vio: «no tiene las
   animaciones de los primeros videos (tablas, etc.), más dopamina» y «el texto siempre centrado no encaja».
+  ARREGLADO (06-11, prueba «a mano» pedida por el dueño): escenas_bloque.py dibuja los [PROFESOR] con las escenas del motor
+  viejo (tipografía, fondo_frase, número, libreta, preguntas…; plan por bloque en ejemplos/*_escenas.json con «en» =
+  fracción; el motor viejo se importa con su carpeta en sys.path), Profesor de lado o arriba a la derecha, cámara con
+  golpe de zoom cada 3,5 s, cortes con movimiento; subtítulos ABAJO en franja oscura (no repiten lo que la escena ya
+  muestra); stock en tomas de ≤8 s con golpe de zoom; sfx del dueño (whoosh en cada bloque, pop en cada escena; carpeta
+  datos/codigo_exito/sfx o CODIGO_EXITO_SFX; capas en …/profesor, fuentes en …/fuentes). FALTA: que Claude arme el plan
+  de escenas solo (para el de 50 min) y la prueba con stock real (Pexels en la nube sigue en 401).
 ## Pendiente
 - Preguntas sin responder del dueño: ¿en qué canal notó la voz lenta? (Peligro Tropical está en 1.3 en
   config/proveedores.json; Tracy en 1.0 por pedido suyo). ¿En qué momento sale «la tira de animales» sin sentido?

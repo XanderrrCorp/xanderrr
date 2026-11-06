@@ -41,7 +41,9 @@ const Gradado: React.FC<{ children: React.ReactNode }> = ({ children }) => (
 
 const ClipStock: React.FC<{ c: Clip }> = ({ c }) => {
   const f = useCurrentFrame(); const { fps } = useVideoConfig();
-  const z = interpolate(f, [0, c.dur * fps], [1.0, 1.07]);       // ningún plano quieto
+  const fase = ((f / fps) % 3.5) / 3.5;                            // golpe de zoom cada 3,5 s (más dopamina)
+  const golpe = f / fps > 1 ? 0.03 * Math.exp(-fase * 6) * (1 - Math.exp(-fase * 40)) : 0;
+  const z = interpolate(f, [0, c.dur * fps], [1.02, 1.12]) + golpe;  // ningún plano quieto
   return <AbsoluteFill style={{ transform: `scale(${z})` }}><OffthreadVideo src={c.url} muted style={{ width: "100%", height: "100%", objectFit: "cover" }} /></AbsoluteFill>;
 };
 
@@ -111,16 +113,18 @@ const Pelicula: React.FC = () => {
   );
 };
 
+/** subtítulos abajo, en una franja oscura (como los primeros videos): nunca tapan la tabla, la frase ni al Profesor */
 const Subtitulos: React.FC<{ lista: PropsParte["subtitulos"] }> = ({ lista }) => {
   const f = useCurrentFrame(); const { fps } = useVideoConfig();
   const t = f / fps;
   const s = lista.find((x) => t >= x.ini && t < x.fin);
   if (!s) return null;
-  const k = spring({ frame: f - Math.round(s.ini * fps), fps, config: { damping: 14, stiffness: 220, mass: 0.6 } });
+  const k = spring({ frame: f - Math.round(s.ini * fps), fps, config: { damping: 14, stiffness: 240, mass: 0.5 } });
   return (
-    <AbsoluteFill style={{ justifyContent: "center", alignItems: "center" }}>
-      <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 104, letterSpacing: 2, color: COLOR.crema, textAlign: "center", maxWidth: 1050,
-        transform: `scale(${0.86 + 0.14 * k})`, textShadow: "0 4px 0 #1a0508, 0 0 22px rgba(0,0,0,0.75)", WebkitTextStroke: "2px #1a0508" }}>
+    <AbsoluteFill style={{ justifyContent: "flex-end", alignItems: "center", paddingBottom: 58 }}>
+      <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 80, letterSpacing: 1.5, color: "#ffffff", textAlign: "center", maxWidth: 1400,
+        padding: "6px 34px 2px", borderRadius: 18, background: "rgba(0,0,0,0.47)", transform: `translateY(${(1 - k) * 18}px) scale(${0.9 + 0.1 * k})`,
+        WebkitTextStroke: "3px #000000", paintOrder: "stroke fill" }}>
         {s.texto.toUpperCase()}
       </div>
     </AbsoluteFill>

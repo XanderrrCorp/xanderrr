@@ -56,7 +56,39 @@ def cama_de_archivo(carpeta: Path, dur: float, ffmpeg: str) -> np.ndarray | None
     return m
 
 
-def mezclar(voz: np.ndarray, ffmpeg: str, carpeta_musica: Path | None = None) -> tuple[np.ndarray, dict]:
+NIVEL_SFX = {"whoosh": -21.0, "pop": -24.0, "clic": -24.0, "lapiz": -22.0, "tick": -26.0, "tono": -24.0}
+
+
+def carpeta_sfx() -> Path:
+    import os
+
+    if os.environ.get("CODIGO_EXITO_SFX"):
+        return Path(os.environ["CODIGO_EXITO_SFX"])
+    from ..plataforma.db import carpeta_datos
+
+    return carpeta_datos() / "codigo_exito" / "sfx"
+
+
+def pista_efectos(efectos, n: int, ffmpeg: str) -> np.ndarray:
+    """los efectos del dueño (whoosh, pop, clic, lápiz…) en cada corte; sin su carpeta, ninguno"""
+    fx = np.zeros((2, n))
+    sonidos: dict = {}
+    for e in efectos:
+        if e["tipo"] not in sonidos:
+            ruta = carpeta_sfx() / f"{e['tipo']}.wav"
+            if not ruta.exists():
+                sonidos[e["tipo"]] = None
+                continue
+            r = subprocess.run([ffmpeg, "-v", "error", "-i", str(ruta), "-f", "f32le", "-ac", "2", "-ar", str(SR), "-"], capture_output=True, check=True)
+            x = np.frombuffer(r.stdout, np.float32).reshape(-1, 2).T.astype(np.float64)
+            sonidos[e["tipo"]] = x / (np.abs(x).max() + 1e-9) * dbg(NIVEL_SFX.get(e["tipo"], -24.0) + 6)
+        x = sonidos[e["tipo"]]
+        if x is not None:
+            D.place(fx, x, max(0.0, e["t"] - (0.12 if e["tipo"] == "whoosh" else 0.0)))
+    return fx
+
+
+def mezclar(voz: np.ndarray, ffmpeg: str, carpeta_musica: Path | None = None, efectos: list[dict] = ()) -> tuple[np.ndarray, dict]:
     """voz mono float a 48 kHz → mezcla estéreo float32 lista para el video"""
     n = len(voz)
     dur = n / SR
@@ -74,7 +106,7 @@ def mezclar(voz: np.ndarray, ffmpeg: str, carpeta_musica: Path | None = None) ->
     m = m * dbg(capa._agache(capa._actividad_voz(voz), n, prof=-8.0))[None, :]
     fo = ns(3.0)
     m[:, -fo:] *= np.linspace(1, 0, fo)[None, :]
-    mezcla = v + m
+    mezcla = v + m + pista_efectos(efectos, n, ffmpeg)
     mezcla = mezcla * dbg(OBJETIVO - integrated(mezcla))
     for _ in range(3):
         mezcla = capa.limitador(mezcla)

@@ -35,9 +35,9 @@ def test_guion_etiquetado_en_bloques_y_partes():
 def test_tramos_de_stock_y_respiros_del_aura():
     from estudio.codigo_exito import armar, stock
 
-    assert stock.tramos(25) == [25.0]
+    assert stock.tramos(7) == [7.0]
     t = stock.tramos(75)
-    assert len(t) == 3 and max(t) <= 30 and abs(sum(t) - 75) < 0.01
+    assert max(t) <= stock.TOMA <= stock.MAX_CLIP and abs(sum(t) - 75) < 0.01   # tomas cortas, ninguna de más de 30 s
     assert armar.respiros(100) == []
     r = armar.respiros(420)
     cortes = [0.0] + [x for t in r for x in (t, t + armar.RESPIRO)] + [420.0]
@@ -58,9 +58,9 @@ def test_stock_no_repite_clips_en_el_video(tmp_path, monkeypatch):
     monkeypatch.setattr(clips, "descargar", descargar)
     out = stock.elegir(tmp_path / "v", [{"clave": "a", "claves": ["x"], "dur": 70}, {"clave": "b", "claves": ["x"], "dur": 20}], avisar=lambda *_: None)
     ids = [c["pexels_id"] for v in out.values() for c in v]
-    assert len(ids) == len(set(ids)) == 4
+    assert len(ids) == len(set(ids)) == len(stock.tramos(70)) + len(stock.tramos(20))
     reg = json.loads((tmp_path / "v" / "stock" / "usados.json").read_text())
-    assert len(reg["clips"]) == 4 and {c["pedido"] for c in reg["clips"]} == {"a", "b"}
+    assert len(reg["clips"]) == len(ids) and {c["pedido"] for c in reg["clips"]} == {"a", "b"}
     again = stock.elegir(tmp_path / "v", [{"clave": "a", "claves": ["x"], "dur": 70}], avisar=lambda *_: None)
     assert [c["pexels_id"] for c in again["a"]] == [c["pexels_id"] for c in out["a"]]   # se reusa, no se vuelve a buscar
 

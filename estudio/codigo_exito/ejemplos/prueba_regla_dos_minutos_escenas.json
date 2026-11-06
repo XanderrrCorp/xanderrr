@@ -1,0 +1,19 @@
+{
+ "_nota": "Plan de escenas de los bloques [PROFESOR] de la prueba, hecho a mano (en producción lo arma Claude). «en» = fracción del bloque donde empieza la escena.",
+ "1": [
+  {"tipo": "tipografia", "en": 0.0, "lineas": [["CASI NADIE", "blanco"], ["TERMINA", "dorado"], ["LO QUE EMPIEZA", "blanco"]], "fondo": "noche", "profesor": "lado", "lado": true},
+  {"tipo": "fondo_frase", "en": 0.29, "frase": "No es falta de *talento*.", "fondo": "vino"},
+  {"tipo": "tipografia", "en": 0.47, "lineas": [["ES ALGO", "blanco"], ["TAN PEQUEÑO", "dorado"], ["QUE LO IGNORAS", "blanco"]], "fondo": "noche", "profesor": "esquina"},
+  {"tipo": "tipografia", "en": 0.72, "lineas": [["LA REGLA DE LOS", "blanco"], ["2 MINUTOS", "dorado"]], "fondo": "vino", "profesor": "lado", "lado": true}
+ ],
+ "4": [
+  {"tipo": "numero", "en": 0.0, "n_punto": 1, "etiqueta": "REGLA", "titulo": ["MENOS DE 2 MINUTOS", "HAZLO AHORA"], "fondo": "vino", "profesor": "lado", "lado": true},
+  {"tipo": "tipografia", "en": 0.42, "lineas": [["ALGO GRANDE", "blanco"], ["EN SU VERSIÓN", "blanco"], ["DE 2 MINUTOS", "dorado"]], "fondo": "noche", "profesor": "esquina"},
+  {"tipo": "libreta", "en": 0.7, "titulo": "HOY", "lineas": ["No un libro.", "Una frase."]}
+ ],
+ "7": [
+  {"tipo": "tipografia", "en": 0.0, "lineas": [["SUSCRÍBETE", "dorado"], ["Y ACTIVA", "blanco"], ["LA CAMPANA", "blanco"]], "fondo": "vino", "profesor": "lado", "lado": true},
+  {"tipo": "fondo_frase", "en": 0.35, "frase": "La próxima regla convierte esto en *hábito*.", "fondo": "noche"},
+  {"tipo": "preguntas", "en": 0.62, "preguntas": ["¿Cuál va a ser tu primer paso de dos minutos?"]}
+ ]
+}

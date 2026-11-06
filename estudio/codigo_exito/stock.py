@@ -10,7 +10,8 @@ import os
 import shutil
 from pathlib import Path
 
-MAX_CLIP = 30.0
+MAX_CLIP = 30.0                  # pedido del dueño: ningún clip pasa de 30 s
+TOMA = 8.0                       # (06-11, «más dopaminérgico») cada toma de stock dura como mucho ~8 s
 MIN_CLIP = 6.0
 GENERALES_AURA = ["golden hour nature", "calm sunset clouds", "candle light dark", "ocean waves sunset", "forest light rays"]
 
@@ -25,8 +26,8 @@ def _enlazar(origen: Path, destino: Path) -> None:
 
 
 def tramos(dur: float) -> list[float]:
-    """Largo de cada clip para cubrir `dur` (ninguno pasa de 30 s; el último no queda chiquito)."""
-    n = max(1, int(-(-dur // MAX_CLIP)))
+    """Largo de cada toma para cubrir `dur` (ninguna pasa de TOMA s; todas iguales: ninguna queda chiquita)."""
+    n = max(1, int(-(-dur // min(MAX_CLIP, TOMA))))
     return [round(dur / n, 3)] * n
 
 
