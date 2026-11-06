@@ -159,6 +159,7 @@ MODULOS_DEL_DUENO = [
     {"clave": "explica", "nombre": "El Calvo Explica", "ir": "/explica", "menu": "El Calvo Explica"},
     {"clave": "calma", "nombre": "Hazlo con Calma", "ir": "/calma", "menu": "Hazlo con Calma"},
     {"clave": "cola", "nombre": "Cola de la semana", "ir": "/cola", "menu": "Cola de la semana"},
+    {"clave": "codigo_exito", "nombre": "Código del Éxito (Profesor + Pexels + aura)", "ir": "/codigo-exito", "menu": "Código del Éxito"},
 ]
 
 

@@ -119,3 +119,21 @@ def test_sin_claude_plan_por_reglas(tmp_path):
     plan = PE.planear(tmp_path, [b], avisar=lambda *_: None, ejecutar=falla)["4"]
     assert plan and plan[0]["inicio"] == 0.0 and all(e["tipo"] in PE.TIPOS for e in plan)
     assert (tmp_path / "plan_escenas.json").exists()
+
+
+def test_pagina_crea_el_video_con_su_costo(tmp_path):
+    from fastapi.testclient import TestClient
+
+    from estudio.app import app
+
+    c = TestClient(app)
+    r = c.get("/api/codigo-exito")
+    assert r.status_code == 200 and "faltan" in r.json()
+    r = c.post("/api/codigo-exito/videos", json={"titulo": "La regla de los dos minutos", "guion": GUION})
+    assert r.status_code == 200, r.text
+    d = r.json()
+    assert d["costo"]["por_tipo"] == {"profesor": 2, "stock": 1, "aura": 1} and d["estado"] == "nuevo"
+    v = c.get(f"/api/codigo-exito/videos/{d['slug']}").json()
+    assert v["titulo"] == "La regla de los dos minutos" and not v["final"]
+    assert c.post("/api/codigo-exito/videos", json={"titulo": "Malo", "guion": "[STOCK]\\n" + "x " * 30}).status_code == 422
+    assert any(m["clave"] == "codigo_exito" for m in c.get("/api/v2/estudio").json()["modulos"])

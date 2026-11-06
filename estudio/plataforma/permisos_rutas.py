@@ -91,11 +91,12 @@ REGLAS: list[tuple[str, str, str]] = [
     (TODOS, "/api/calma", OWNER), (TODOS, "/api/calma/{resto:path}", OWNER),
     (TODOS, "/api/explica", OWNER), (TODOS, "/api/explica/{resto:path}", OWNER),
     (TODOS, "/api/cola", OWNER), (TODOS, "/api/cola/{resto:path}", OWNER),
+    (TODOS, "/api/codigo-exito", OWNER), (TODOS, "/api/codigo-exito/{resto:path}", OWNER),
 ]
 
 
 # Las pantallas de tus módulos privados van en archivos aparte de la página (React.lazy): solo te los entrega a ti
-PRIVADAS_APP = re.compile(r"^/app/assets/(Tracy|TracyVideo|Calma|Explica|ExplicaNuevo|Cola)-[^/]+$")
+PRIVADAS_APP = re.compile(r"^/app/assets/(Tracy|TracyVideo|Calma|Explica|ExplicaNuevo|Cola|CodigoExito)-[^/]+$")
 
 
 def _patron(plantilla: str) -> re.Pattern:

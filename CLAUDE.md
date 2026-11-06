@@ -531,6 +531,12 @@ Estado al 04-10-2026. El repositorio es PÚBLICO: nunca escribir claves, tokens 
   trozos; validar() corta textos, quita símbolos, cambia lo inventado por una tipografía segura, sin Profesor en escenas
   anchas, ≥2,2 s entre escenas; sin Claude, respaldo por reglas; caché plan_escenas.json por huella. armar.hacer lo usa
   si no se pasa --escenas. Prueba v3 de 1:35 armada así y enviada.
+  (06-11) DENTRO DE XANDART (el dueño: «pásalo a Xandart para que use clips de Pexels»): estudio/codigo_exito/api.py
+  (/api/codigo-exito, solo owner: estado con lo que falta en el PC, crear video con costo de voz, hacer en un hilo con
+  estado.json/log, final.mp4, abrir carpeta), página interfaz/src/paginas/CodigoExito.tsx (/codigo-exito, «Tu estudio»
+  vía MODULOS_DEL_DUENO; PRIVADAS_APP incluye CodigoExito). Videos en proyectos/codigo_exito/<slug>; copia final +
+  capítulos + créditos en Videos/Xandart. Recursos del dueño en datos/codigo_exito/{profesor,sfx,musica}; fuentes OFL en
+  el repo (codigo_exito/fuentes). Pexels con la clave de Ajustes (.env, la misma de Tracy). Sin Rhubarb: boca por volumen.
 ## Pendiente
 - Preguntas sin responder del dueño: ¿en qué canal notó la voz lenta? (Peligro Tropical está en 1.3 en
   config/proveedores.json; Tracy en 1.0 por pedido suyo). ¿En qué momento sale «la tira de animales» sin sentido?

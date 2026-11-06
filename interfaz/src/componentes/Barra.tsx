@@ -8,7 +8,7 @@ const TITULOS: [RegExp, string][] = [
   [/^\/$/, 'Home'], [/^\/producir/, 'Producer'], [/^\/videos\/[^/]+\/editor/, 'Editor'], [/^\/videos\/[^/]+\/miniatura/, 'Miniatura'],
   [/^\/videos/, 'Proyectos'], [/^\/personajes/, 'Personajes'], [/^\/estilos/, 'Estilos'], [/^\/miniaturas/, 'Miniaturas'],
   [/^\/media/, 'Media'], [/^\/canales/, 'Canales'], [/^\/formatos/, 'Inspire'], [/^\/planes/, 'Planes y créditos'], [/^\/creditos/, 'Historial de créditos'],
-  [/^\/(cola|tracy|explica|calma)/, 'Tu estudio'],
+  [/^\/(cola|tracy|explica|calma|codigo-exito)/, 'Tu estudio'],
   [/^\/espacio/, 'Liberar espacio'], [/^\/cuenta$/, 'Mi cuenta'], [/^\/cuentas/, 'Cuentas beta'],
 ];
 

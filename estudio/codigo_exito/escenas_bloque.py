@@ -28,7 +28,8 @@ def carpeta_fuentes() -> Path:
         return Path(os.environ["CODIGO_EXITO_FUENTES"])
     from ..plataforma.db import carpeta_datos
 
-    return carpeta_datos() / "codigo_exito" / "fuentes"
+    propia = carpeta_datos() / "codigo_exito" / "fuentes"
+    return propia if (propia / "BebasNeue-Regular.ttf").exists() else Path(__file__).resolve().parent / "fuentes"  # las del repo (OFL)
 
 
 def _motor():

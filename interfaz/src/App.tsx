@@ -33,6 +33,7 @@ const TracyVideo = lazy(() => import('./paginas/Tracy').then((m) => ({ default: 
 const Calma = lazy(() => import('./paginas/Calma').then((m) => ({ default: m.Calma })));
 const Explica = lazy(() => import('./paginas/Explica').then((m) => ({ default: m.Explica })));
 const Cola = lazy(() => import('./paginas/Cola').then((m) => ({ default: m.Cola })));
+const CodigoExito = lazy(() => import('./paginas/CodigoExito').then((m) => ({ default: m.CodigoExito })));
 
 // (Paso B) Primero se mira si hay sesión: sin sesión solo se ve la pantalla de entrar (nada de datos).
 export function App() {
@@ -115,6 +116,7 @@ function Marco() {
             <Route path="/calma" element={<Calma />} />
             <Route path="/explica" element={<Explica />} />
             <Route path="/cola" element={<Cola />} />
+            <Route path="/codigo-exito" element={<CodigoExito />} />
             <Route path="/espacio" element={<Espacio />} />
             <Route path="/tracy/:slug" element={<TracyVideo />} />
             <Route path="/canales" element={<Canales />} />
