@@ -509,6 +509,15 @@ Estado al 04-10-2026. El repositorio es PÚBLICO: nunca escribir claves, tokens 
   Fase 4 (plan.py): estudio/pt_animado/plan.py (dónde va cada plantilla y sus claves, escenario y luz
   por palabras del guion; tests/test_pt_plan_animado.py). Falta: Node/Remotion en su PC (instalador), imágenes del
   animal con Gemini (fondo liso → recorte), clips a assets/animaciones + EDL, y su visto bueno de las Fases 1-3.
+- (06-11) CÓDIGO DEL ÉXITO HÍBRIDO en Remotion (plan aprobado por el dueño): estudio/codigo_exito/ (guion.py etiquetas
+  [PROFESOR]/[STOCK: kw]/[AURA] → bloques y partes; voz.py MiniMax por bloque, MiniMax NO devolvió subtítulos → frases
+  por pausas + trozos de 1-4 palabras; stock.py Pexels ≤30 s encadenado, caché de Tracy, registro stock/usados.json sin
+  repetir clip en el video; profesor.py motor de estudio/animado SIN subtítulos; mezcla.py música de la carpeta o por
+  código, -14 LUFS; armar.py partes en Remotion (remotion/src/Parte.tsx: fundido fijo de 15 cuadros, color cálido del
+  stock, viñeta+grano encima de todo, subtítulos Bebas, aura con visualizeAudio y respiro de stock cada ≤150 s) + unión
+  con xfade + bloques.txt/capitulos.txt/creditos_pexels.txt). Prueba de 1:35 enviada (sin stock: la clave de Pexels
+  guardada con «Bearer» da 401; el dueño debe dejarla sin prefijo en el entorno). El dueño la vio: «no tiene las
+  animaciones de los primeros videos (tablas, etc.), más dopamina» y «el texto siempre centrado no encaja».
 ## Pendiente
 - Preguntas sin responder del dueño: ¿en qué canal notó la voz lenta? (Peligro Tropical está en 1.3 en
   config/proveedores.json; Tracy en 1.0 por pedido suyo). ¿En qué momento sale «la tira de animales» sin sentido?
