@@ -65,7 +65,7 @@ def planear(frases: list[dict], palabras: list[dict] | None = None, duracion: fl
     claves["susto"] = max(claves["susto"], claves["revela"] + 1.0)
     clips.append({"plantilla": "intro", "inicio": 0.0, "fin": round(i_fin, 2), "escenario": esc, "luz": luz, "claves": claves})
     # un ENCUENTRO por capítulo de animal + TRANSICIÓN entre capítulos
-    cuerpo = [c for c in caps[1:] if not (c[0] or "").startswith(("cierre", "final"))]
+    cuerpo = [c for c in caps[1:] if not (c[0] or "").lower().startswith(("cierre", "final"))]
     for k, (sec, fr) in enumerate(cuerpo):
         a0, a1 = fr[0]["ini"], fr[-1]["fin"]
         if a0 < i_fin:

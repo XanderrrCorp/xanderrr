@@ -38,9 +38,9 @@ CANAL_PT = "animales-peligrosos"
 
 # ------------------------------------------------------------------ activación por canal
 AJUSTE = "audio_animado"
-# Mientras el dueño no apruebe la Fase 1 al escucharla, queda APAGADA por defecto (se prende por canal con
-# Canal.ajustes["audio_animado"] = True). Cuando la apruebe: PRENDIDA_POR_DEFECTO = True (solo Peligro Tropical).
-PRENDIDA_POR_DEFECTO = False
+# (06-11) El dueño la aprobó al ver el video de prueba de la granja: PRENDIDA por defecto (solo Peligro Tropical;
+# se apaga por canal con Canal.ajustes["audio_animado"] = False).
+PRENDIDA_POR_DEFECTO = True
 
 
 def activa(canal: str | None, ajustes: dict | None = None) -> bool:

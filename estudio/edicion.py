@@ -1224,8 +1224,9 @@ def construir_edl(carpeta: CarpetaProyecto) -> dict:
             continue
         # video híbrido: la escena va animada por código a pantalla completa (sus textos y sonidos van dentro)
         c["efectos"] = [{"efecto": "animacion", "en": c["inicio"], "dur": round(c["fin"] - c["inicio"], 3),
-                         "archivo": a["archivo"], "desde": 0}]
-        c["razon"] = "Escena explicada con animación por código (video híbrido)"
+                         "archivo": a["archivo"], "desde": float(a.get("desde", 0))}]
+        c["razon"] = ("Parte animada de Peligro Tropical (Remotion)" if a.get("origen") == "pt_animado"
+                      else "Escena explicada con animación por código (video híbrido)")
         textos[:] = [t for t in textos if not (c["inicio"] <= t["inicio"] < c["fin"])]
         sfx[:] = [x for x in sfx if x["clip"] != idx]
         for x in a.get("efectos") or []:

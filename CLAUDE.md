@@ -500,7 +500,13 @@ Estado al 04-10-2026. El repositorio es PÚBLICO: nunca escribir claves, tokens 
   guion_granja.json + dudas_granja.md (idea del dueño «De la gallina más mansa al animal de granja que más gente manda al
   hospital», 6 animales, sin voz todavía: ~20 COP, falta permiso). scripts/clips.mjs ya sirve en Windows (gl angle, lista en
   archivo .json). La conexión Remote Control a su PC no ofrece carpetas a la nube aunque la app está al día.
-  Fase 4 PREPARADA, sin enganchar: estudio/pt_animado/plan.py (dónde va cada plantilla y sus claves, escenario y luz
+  (06-11) FASE 4 ENGANCHADA (el dueño aprobó Fases 1-3 viendo la granja: «si me gusta»; en su PC tardó ~10 min):
+  estudio/pt_animado/integrar.py en pipeline.paso_video tras la voz: plan → animales con Google (caché por nombre, freno
+  de gasto; sin dibujo no hay encuentro) → clips Remotion (assets/pt_animado/clips, por huella) → direccion
+  «animacion_escena» con origen pt_animado y «desde» (edicion lo respeta). Canal.ajustes «animado» (prendido) y capa de
+  audio PRENDIDA_POR_DEFECTO True; solo animales-peligrosos y 16:9; si falla, video de siempre. Pruebas: XANDART_SIN_
+  ANIMACION_PT en conftest; tests/test_pt_animado_integrar.py. NO probado aún con un video real en su PC.
+  Fase 4 (plan.py): estudio/pt_animado/plan.py (dónde va cada plantilla y sus claves, escenario y luz
   por palabras del guion; tests/test_pt_plan_animado.py). Falta: Node/Remotion en su PC (instalador), imágenes del
   animal con Gemini (fondo liso → recorte), clips a assets/animaciones + EDL, y su visto bueno de las Fases 1-3.
 ## Pendiente

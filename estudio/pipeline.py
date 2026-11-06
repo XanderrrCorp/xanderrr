@@ -930,6 +930,12 @@ def paso_video(c: CarpetaProyecto, t: Trabajo, permiso: bool = False, fps: int |
     from .animaciones_codigo import renderizar as animar
 
     animar(c, ffmpeg(), avisar=t.avisar)          # video híbrido (si el guion trae animaciones por código)
+    try:                                          # (06-11) Peligro Tropical: intro, encuentros y cierre animados
+        from .pt_animado.integrar import preparar as partes_animadas
+
+        partes_animadas(c, avisar=t.avisar, permiso=permiso)
+    except Exception as ex:  # noqa: BLE001 — sin animación el video sale como siempre
+        t.avisar(f"Sin partes animadas esta vez ({str(ex)[:160]})")
     direccion = c.ruta / "direccion.json"
     if not direccion.exists() or "focos_revisados" not in leer_json(direccion):
         _ubicar_focos(c, t)
