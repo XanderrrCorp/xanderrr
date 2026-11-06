@@ -83,3 +83,39 @@ def test_mezcla_a_menos_14_lufs():
     assert m.shape == (2, len(v))
     assert abs(integrated(m) + 14) < 0.5 and true_peak(m) <= -0.9
     assert info["musica"] == "por código"
+
+
+def _bloque_profesor():
+    texto = "Regla número uno: si algo toma menos de dos minutos, hazlo ahora. No vas a escribir un libro hoy. Vas a escribir una frase."
+    from estudio.codigo_exito import voz
+
+    frases = voz.trozos([{"texto": texto, "ini": 10.0, "fin": 20.0}])
+    return {"id": 4, "tipo": "profesor", "texto": texto, "inicio": 10.0, "fin": 20.0, "ranura": 10.6, "trozos": frases}
+
+
+def test_plan_de_claude_validado_y_en_su_segundo():
+    from estudio.codigo_exito import plan_escenas as PE
+
+    b = _bloque_profesor()
+    datos = {"tabla_video": None, "bloques": {"4": [
+        {"tipo": "numero", "desde": "", "profesor": "lado", "n_punto": 1, "etiqueta": "REGLA", "titulo": ["MENOS DE 2 MINUTOS", "HAZLO AHORA"]},
+        {"tipo": "fondo_frase", "desde": "No vas a escribir", "profesor": "esquina", "frase": "No es un *libro*, es una frase"},
+        {"tipo": "inventado", "desde": "Vas a escribir una frase", "profesor": "lado"},
+        {"tipo": "tabla", "desde": "una frase.", "modo": "fila", "fila": 1}]}}
+    plan = PE.validar(datos, [b])["4"]
+    assert plan[0]["tipo"] == "numero" and plan[0]["inicio"] == 0.0 and plan[0]["profesor"] == "lado"
+    assert plan[1]["tipo"] == "fondo_frase" and plan[1]["profesor"] is None and 3.0 < plan[1]["inicio"] < 8.0
+    assert all(e["tipo"] in PE.TIPOS for e in plan)                 # lo inventado se cambia por una escena segura
+    assert "tabla" not in [e["tipo"] for e in plan]                 # sin tabla del video no hay escenas de tabla
+    assert all(b2["inicio"] - a["inicio"] >= PE.MIN_ESCENA for a, b2 in zip(plan, plan[1:]))
+
+
+def test_sin_claude_plan_por_reglas(tmp_path):
+    from estudio.codigo_exito import plan_escenas as PE
+
+    b = _bloque_profesor()
+    def falla(*a, **k):
+        raise RuntimeError("sin sesión")
+    plan = PE.planear(tmp_path, [b], avisar=lambda *_: None, ejecutar=falla)["4"]
+    assert plan and plan[0]["inicio"] == 0.0 and all(e["tipo"] in PE.TIPOS for e in plan)
+    assert (tmp_path / "plan_escenas.json").exists()

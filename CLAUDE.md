@@ -525,6 +525,12 @@ Estado al 04-10-2026. El repositorio es PÚBLICO: nunca escribir claves, tokens 
   muestra); stock en tomas de ≤8 s con golpe de zoom; sfx del dueño (whoosh en cada bloque, pop en cada escena; carpeta
   datos/codigo_exito/sfx o CODIGO_EXITO_SFX; capas en …/profesor, fuentes en …/fuentes). FALTA: que Claude arme el plan
   de escenas solo (para el de 50 min) y la prueba con stock real (Pexels en la nube sigue en 401).
+  (06-11) PLAN AUTOMÁTICO (el dueño: «si me gusta» la prueba a mano): plan_escenas.py = UNA llamada a claude_cli.revisor
+  con el guion entero (catálogo de 11 escenas con sus campos; tabla del video solo si hay 5 reglas: 5 filas × 3 columnas,
+  escenas.py ahora lee tab «columnas» y «titulo»), cada escena trae «desde» (palabras de la voz) → su segundo por los
+  trozos; validar() corta textos, quita símbolos, cambia lo inventado por una tipografía segura, sin Profesor en escenas
+  anchas, ≥2,2 s entre escenas; sin Claude, respaldo por reglas; caché plan_escenas.json por huella. armar.hacer lo usa
+  si no se pasa --escenas. Prueba v3 de 1:35 armada así y enviada.
 ## Pendiente
 - Preguntas sin responder del dueño: ¿en qué canal notó la voz lenta? (Peligro Tropical está en 1.3 en
   config/proveedores.json; Tracy en 1.0 por pedido suyo). ¿En qué momento sale «la tira de animales» sin sentido?

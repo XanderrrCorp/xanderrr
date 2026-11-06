@@ -219,6 +219,10 @@ def hacer(guion_txt: Path, trabajo: Path, permiso: bool = False, avisar=print, c
     avisar(f"Guion: {len(bloques)} bloques en {len({b['parte'] for b in bloques})} partes")
     tl = V.generar(trabajo, bloques, ff, permiso, avisar)
     ranuras(tl)
+    if escenas is None:                                # (06-11) Claude arma las escenas del Profesor (o por reglas)
+        from .plan_escenas import planear as planear_escenas
+
+        escenas = planear_escenas(trabajo, tl["bloques"], avisar)
     datos = preparar(trabajo, tl["bloques"], ff, avisar, escenas)
     lista = partes(trabajo, tl, datos, ff)
     renderizar_partes(trabajo, lista, avisar)

@@ -329,7 +329,7 @@ def dibujar_tabla(t, e, tabla, celdas_progreso=None, activa=None, col_luz=None, 
         xk = ox + LBL + k * cw
         d.line([xk, oy + 20, xk, oy + 20 + (TH - 40) * ease(g * 1.2 - 0.15 * k)], fill=lin, width=2)
     # cabeceras
-    for k, c in enumerate(COLS):
+    for k, c in enumerate(tabla.get("columnas") or COLS):      # (06-11) cada video puede traer sus columnas
         a = max(0.0, min(1.0, cabeceras * 3 - k))
         if a > 0:
             x = ox + LBL + k * cw + cw / 2
@@ -380,7 +380,7 @@ def tabla(t, dur, e, tab):
     kw = {}
     if modo == "presentar":
         kw = dict(dibujar_grid=ease(t / 2.2), cabeceras=0, etiquetas=0, dy=(1 - ease(t / 0.9)) * 300)
-        titulo = "TU TABLA DE ESTÁNDARES"
+        titulo = tab.get("titulo") or "TU TABLA DE ESTÁNDARES"
     elif modo == "columnas":
         kw = dict(cabeceras=ease_io(t / max(2.0, dur * 0.8)), etiquetas=0)
     elif modo == "filas":
