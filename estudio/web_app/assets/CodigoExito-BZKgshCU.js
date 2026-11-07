@@ -1,4 +1,4 @@
-import{r as o,a as i,j as e}from"./index-TZYk0y1x.js";const S=`[PROFESOR]
+import{r as o,a as i,j as e}from"./index-B6IpKM6d.js";const S=`[PROFESOR]
 Hay una razón por la que casi nadie termina lo que empieza...
 
 [STOCK: man staring at laptop, messy desk]
