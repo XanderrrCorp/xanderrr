@@ -553,6 +553,11 @@ Estado al 04-10-2026. El repositorio es PÚBLICO: nunca escribir claves, tokens 
   calcula igual. TARJETA NVIDIA: todo lo que codificaba con libx264 (codigo_exito profesor/escenas/unir, tira,
   tracy escena_final, pt_animado/hacer_prueba) usa render._argumentos_codificador (NVENC si hay). El dibujo de cuadros
   (Pillow) sigue en el procesador.
+- (07-11) XANDART EN EL CELULAR (el dueño: «abre server para abrir desde el móvil»): app.main --celular (o
+  XANDART_CELULAR=1) escucha en 0.0.0.0 e imprime http://<ip de la Wi-Fi>:8030/app/ (app.ip_de_la_red); acceso directo
+  «Xandart en el celular» en el menú Inicio (instalar/Xandart en el celular.bat, ventana negra que NO se cierra). Pide
+  la contraseña de siempre; crear la clave del dueño y /api/apagar siguen solo desde el PC. Si Xandart ya está abierto,
+  avisa que lo cierre (sin videos en proceso) en vez de apagarlo. Solo misma Wi-Fi (fuera de casa: túnel, sin hacer).
 ## Pendiente
 - Preguntas sin responder del dueño: ¿en qué canal notó la voz lenta? (Peligro Tropical está en 1.3 en
   config/proveedores.json; Tracy en 1.0 por pedido suyo). ¿En qué momento sale «la tira de animales» sin sentido?

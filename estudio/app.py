@@ -1315,14 +1315,35 @@ def _cerrar_puerto() -> None:
     time.sleep(1.5)
 
 
+def ip_de_la_red() -> str | None:
+    """La dirección de este PC en la Wi-Fi de la casa (la que se escribe en el celular). No manda nada afuera."""
+    import socket
+
+    try:
+        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
+            s.connect(("10.255.255.255", 1))
+            ip = s.getsockname()[0]
+        return None if ip.startswith("127.") else ip
+    except OSError:
+        return None
+
+
 def main():
     import uvicorn
+
+    celular = "--celular" in sys.argv or os.environ.get("XANDART_CELULAR") == "1"
 
     if sys.stdout is None or sys.stderr is None:  # pythonw (acceso directo): sin consola
         (RAIZ / "logs").mkdir(exist_ok=True)
         salida = open(RAIZ / "logs" / "xandart.log", "a", encoding="utf-8", buffering=1)  # noqa: SIM115
         sys.stdout = sys.stdout or salida
         sys.stderr = sys.stderr or salida
+    if celular and _ya_abierto():
+        print("Xandart ya está abierto en este PC. Ciérralo primero (clic derecho en su ícono → Salir, o «Apagar» en la"
+              " página), SOLO si no hay ningún video haciéndose, y vuelve a abrir este acceso.")
+        if sys.stdin and sys.stdin.isatty():
+            input("Presiona Enter para cerrar…")
+        return
     if _ya_abierto():
         import json
         import time
@@ -1358,7 +1379,17 @@ def main():
 
         abrir = os.environ.get("XANDART_ABRIR", "/")     # la versión nueva abre directo en /app/
         threading.Timer(1.5, lambda: webbrowser.open(f"http://127.0.0.1:{PUERTO}{abrir}")).start()
-    uvicorn.run(app, host="127.0.0.1", port=PUERTO, log_level="warning")
+    host = "127.0.0.1"
+    if celular:                    # también desde el celular en la misma Wi-Fi (pide la contraseña de siempre)
+        host = "0.0.0.0"
+        ip = ip_de_la_red()
+        print("\n  XANDART EN TU CELULAR")
+        print("  1. Conecta el celular a la MISMA Wi-Fi que este PC.")
+        print(f"  2. En el navegador del celular escribe:  http://{ip or 'IP-DE-ESTE-PC'}:{PUERTO}/app/")
+        print("  3. Entra con tu correo y tu contraseña de Xandart.")
+        print("  Si Windows pregunta, permite el acceso en «Redes privadas».")
+        print("  NO cierres esta ventana: si la cierras, Xandart se apaga.\n")
+    uvicorn.run(app, host=host, port=PUERTO, log_level="warning")
 
 
 if __name__ == "__main__":
