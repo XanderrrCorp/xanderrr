@@ -51,7 +51,20 @@ def _faltan() -> dict:
     return {"carpeta": str(r), "profesor": (carpeta_capas() / "cabeza_base.png").exists(),
             "efectos": any((r / "sfx").glob("*.wav")), "musica": len([p for p in (r / "musica").glob("*") if p.suffix.lower() in (".mp3", ".wav", ".m4a")]),
             "node": bool(shutil.which("node")), "pexels": bool(clave_api("PEXELS_API_KEY")),
-            "rhubarb": bool(os.environ.get("RHUBARB") or shutil.which("rhubarb"))}
+            "rhubarb": bool(_rhubarb())}
+
+
+def _rhubarb() -> str | None:
+    """Rhubarb: variable RHUBARB (entorno o .env de Xandart), en el PATH o en datos/codigo_exito/rhubarb"""
+    from ..config import clave_api
+
+    r = os.environ.get("RHUBARB") or clave_api("RHUBARB") or shutil.which("rhubarb")
+    if not r:
+        hallado = next(iter(carpeta_recursos().glob("rhubarb/**/rhubarb.exe")), None) or next(iter(carpeta_recursos().glob("rhubarb/**/rhubarb")), None)
+        r = str(hallado) if hallado else None
+    if r:
+        os.environ["RHUBARB"] = r
+    return r
 
 
 def _estado(carpeta: Path) -> dict:
@@ -151,6 +164,7 @@ def _correr(c: Path, permiso: bool) -> None:
     r = carpeta_recursos()
     musica = r / "musica" if any((r / "musica").glob("*")) else None
     os.environ.setdefault("CODIGO_EXITO_SFX", str(r / "sfx"))
+    _rhubarb()
     try:
         _guardar_estado(c, estado="haciendo", error=None)
         final = hacer(c / "guion.txt", c, permiso=permiso, avisar=avisar, carpeta_musica=musica)
