@@ -537,6 +537,10 @@ Estado al 04-10-2026. El repositorio es PÚBLICO: nunca escribir claves, tokens 
   vía MODULOS_DEL_DUENO; PRIVADAS_APP incluye CodigoExito). Videos en proyectos/codigo_exito/<slug>; copia final +
   capítulos + créditos en Videos/Xandart. Recursos del dueño en datos/codigo_exito/{profesor,sfx,musica}; fuentes OFL en
   el repo (codigo_exito/fuentes). Pexels con la clave de Ajustes (.env, la misma de Tracy). Sin Rhubarb: boca por volumen.
+- (07-11) PRIMER VIDEO REAL DE PELIGRO TROPICAL CON LA CAPA DE AUDIO: el dueño «la música es pésima: se escucha muy duro y
+  se repite la canción mucho sin nada que la difumine». capa.PRENDIDA_POR_DEFECTO vuelve a False (música de su biblioteca);
+  además, por si se vuelve a prender: MUSICA_BAJO_VOZ -21 (antes -15) y cruces de 2-2,5 s entre secciones. No prenderla
+  sin que él la oiga antes. Las partes animadas (integrar.py) siguen prendidas.
 ## Pendiente
 - Preguntas sin responder del dueño: ¿en qué canal notó la voz lenta? (Peligro Tropical está en 1.3 en
   config/proveedores.json; Tracy en 1.0 por pedido suyo). ¿En qué momento sale «la tira de animales» sin sentido?

@@ -31,16 +31,17 @@ from .dsp import SR, TAU, dbg, integrated, ns, rng, true_peak
 OBJETIVO_LUFS = -14.0
 TECHO_DBTP = -1.25                     # el limitador apunta un poco más abajo para quedar ≤ -1 dBTP medido
 VOZ_LUFS = -18.0                        # la voz se lleva aquí antes de mezclar
-MUSICA_BAJO_VOZ = -15.0                 # LU de la música (sin agachar) respecto a la voz
+MUSICA_BAJO_VOZ = -21.0                 # LU de la música (sin agachar) respecto a la voz (07-11: -15 sonaba muy duro)
 AGACHE_DB = -9.0                        # cuánto baja la música mientras se habla
 CANAL_PT = "animales-peligrosos"
 
 
 # ------------------------------------------------------------------ activación por canal
 AJUSTE = "audio_animado"
-# (06-11) El dueño la aprobó al ver el video de prueba de la granja: PRENDIDA por defecto (solo Peligro Tropical;
-# se apaga por canal con Canal.ajustes["audio_animado"] = False).
-PRENDIDA_POR_DEFECTO = True
+# (07-11) APAGADA otra vez: en el primer video real el dueño dijo «la música es pésima: se escucha muy duro y se repite
+# la canción mucho sin nada que la difumine». Vuelve la música de su biblioteca (la de siempre). Se prende por canal con
+# Canal.ajustes["audio_animado"] = True solo si él lo pide tras oír la versión arreglada (más baja y con cruces largos).
+PRENDIDA_POR_DEFECTO = False
 
 
 def activa(canal: str | None, ajustes: dict | None = None) -> bool:
@@ -440,9 +441,10 @@ def construir(voz: np.ndarray, frases: list[dict], palabras: list[dict] | None =
     m = np.zeros((2, n + ns(4)))
     for k, s in enumerate(secs):
         x = GENERADORES[s["tipo"]](s["ini"], s["fin"], r)
-        largo = ns(s["fin"] - s["ini"]) + (ns(2.5) if s["tipo"] == "remate" or k == len(secs) - 1 else ns(0.35))
+        largo = ns(s["fin"] - s["ini"]) + ns(2.5)                     # (07-11) cruce largo: una parte se funde en la otra
         x = x[:, :largo]
-        fo = min(x.shape[1], ns(0.35))
+        fo = min(x.shape[1], ns(2.5))
+        x[:, :min(x.shape[1], ns(2.0))] *= np.linspace(0, 1, min(x.shape[1], ns(2.0)))[None, :] if k else 1.0
         x[:, -fo:] *= np.linspace(1, 0, fo)[None, :]
         D.place(m, x, s["ini"])
     m = m[:, :n]
