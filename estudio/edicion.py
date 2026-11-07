@@ -1254,6 +1254,11 @@ def construir_edl(carpeta: CarpetaProyecto) -> dict:
         receta(clips, textos, subtitulos, sfx, escenas, esc, _sfx,
                lambda n: n.peligro if n.peligro is not None else valor_por_posicion(n.numero, len(esc.niveles)),
                poses_mascota, rng, total, dopamina=perfil.dopamina, veredictos=mostrar_escala)
+        if perfil.recursos_v4 and not vertical:
+            from .receta_pt import _nivel_de_clips
+            from .receta_v4 import aplicar as receta_v4
+
+            receta_v4(clips, escenas, sfx, _sfx, _nivel_de_clips(clips, escenas), esc, carpeta.ruta, rng)
     musica = [] if clasica else _musica(escenas, clips, revelacion, total, rng)   # clásica: sin música
     _equilibrar_movimientos(clips, perfil, rng, estilo.movimiento_maximo)
     _sonido_en_cada_corte(sfx, escenas, clips, rng, clasica)   # el recorte deja solo sfx_por_minuto

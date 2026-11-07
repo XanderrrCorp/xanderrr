@@ -55,6 +55,9 @@ EFECTOS = (
     # (24-10) técnicas de la competencia con dibujo propio: mano que señala, halo de luz, detalle borroso con «?»,
     # círculos de zoom con «?» y mapa antiguo con nubes (render_tecnicas.py)
     "mano", "halo", "borroso", "circulos_misterio", "mapa_antiguo",
+    # (07-11) v4 de Peligro Tropical (receta_v4.py / render_v4.py): pantalla dividida VS, silueta del último con «?»,
+    # globo de pensamiento, pantalla negra antes de una revelación, glitch e íconos (X, corona, pulgar abajo, alerta)
+    "vs", "silueta", "globo", "negro", "glitch", "icono_v4",
     # entradas del objeto al cortar (sale de abajo o de un lado con rebote) y vaivén suave mientras está
     "entrada_abajo", "entrada_lado", "vaiven",
     # escala de peligro 0–10 a pantalla completa cuando se presenta un nivel (dibujada con código)
@@ -305,6 +308,9 @@ class PerfilEdicion(Modelo):
     # (23-10) «más dopamina» encima de la receta: palabra grande que salta en las cifras y frases de golpe, golpe con
     # zoom y sacudida en los remates, aviso «sube el peligro» al pasar al siguiente animal (receta_pt.dopamina)
     dopamina: bool = False
+    # (07-11) v4 (perfil peligro_tropical_v4, fórmula escala_peligro_v3): tira y letrero que rotan entre videos y
+    # recursos nuevos por código (VS, silueta, globos, pantalla negra, glitch, íconos) — estudio/receta_v4.py
+    recursos_v4: bool = False
 
 
 # ---------------------------------------------------------- perfil_canal.json

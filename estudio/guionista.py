@@ -41,7 +41,7 @@ class Encargo:
 # (23-10) los videos NUEVOS de Peligro Tropical usan la versión 2 (pedido del dueño: estructura más narrativa, sin
 # «probabilidad», 3 llamados, voz más rápida y edición más movida). La versión 1 queda intacta para volver atrás:
 # basta con poner aquí "escala_peligro" y en catalogo/formatos/escala_peligro/formato.json.
-FORMULA_PELIGRO = "escala_peligro_v2"
+FORMULA_PELIGRO = "escala_peligro_v3"
 
 
 def cargar_formula(clave: str = "escala_peligro") -> dict:

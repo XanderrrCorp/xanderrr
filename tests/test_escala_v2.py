@@ -33,10 +33,11 @@ def test_problemas_de_llamados_segun_la_version():
 def test_los_videos_nuevos_de_peligro_usan_la_version_2():
     from estudio.config import RAIZ
 
-    assert leer_json(RAIZ / "catalogo/formatos/escala_peligro/formato.json")["formula"] == "escala_peligro_v2"
+    # (07-11) los nuevos ya van con la v3 (misma voz y ritmo de la v2 + lo de la skill del dueño)
+    assert leer_json(RAIZ / "catalogo/formatos/escala_peligro/formato.json")["formula"] == "escala_peligro_v3"
     c = pipeline.crear_video("Tortugas peligrosas", "", "", 8)
     p = c.cargar()
-    assert p.formula == "escala_peligro_v2"
+    assert p.formula == "escala_peligro_v3"
     assert voz_de_la_formula(p) == {"velocidad": 1.4, "pausas": 0.75}
     estilo = cargar_estilo(p.estilo)
     assert perfil_del_proyecto(p, estilo).interrupcion_de_patron_cada_seg == 1.8

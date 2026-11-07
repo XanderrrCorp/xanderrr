@@ -885,7 +885,7 @@ def _fondo_oscuro() -> Image.Image:
 def _presentacion(raiz: Path, ef: dict, loc: float) -> Image.Image:
     """Tarjeta de presentación de la especie (como la competencia): fondo azul oscuro, «1- Nombre» arriba
     en blanco y la imagen grande en marco blanco, que entra deslizándose desde la derecha."""
-    clave = ("pres", ef["archivo"], ef["numero"], ef["nombre"])
+    clave = ("pres", ef["archivo"], ef["numero"], ef["nombre"], ef.get("letrero"))
     if clave not in _ICONO:
         foto = Image.open(raiz / ef["archivo"]).convert("RGB")
         k = min(1000 / foto.width, 540 / foto.height)          # cabe entre el título y los subtítulos
@@ -898,7 +898,13 @@ def _presentacion(raiz: Path, ef: dict, loc: float) -> Image.Image:
         ImageDraw.Draw(mascara).rounded_rectangle((0, 0, foto.width - 1, foto.height - 1), radius=14, fill=255)
         marco.paste(foto, (borde, borde), mascara)
         sombra, desplaz = _sombra(marco, 24, 150)
-        titulo = _texto_img(f"{ef['numero']}- {ef['nombre']}", 100, 10)
+        if ef.get("letrero") in ("color", "tarjeta"):          # (07-11) v4: el letrero cambia entre videos
+            from . import render_v4 as RV
+
+            n_tot = max(ef["numero"], int(ef.get("total") or 6))
+            titulo = RV.letrero(f"{ef['numero']}- {ef['nombre']}", ef["letrero"], RV.color_nivel(ef["numero"] - 1, n_tot))
+        else:
+            titulo = _texto_img(f"{ef['numero']}- {ef['nombre']}", 100, 10)
         if titulo.width > W - 120:
             f = (W - 120) / titulo.width
             titulo = titulo.resize((int(titulo.width * f), int(titulo.height * f)), Image.Resampling.LANCZOS)
@@ -2196,7 +2202,11 @@ def _renderizar(carpeta: CarpetaProyecto, ffmpeg: str, destino: Path | None, des
         ef = {e["efecto"]: e for e in c["efectos"]}
         camara = None
         # --- imagen base del clip
-        if c["modo"] == "tira" and tira:
+        if c["modo"] == "tira" and tira and ef["tira_deslizar_a_nivel"].get("variante") in ("vertical", "cartas"):
+            from . import render_v4 as RV                     # (07-11) v4: la escala en otra forma
+
+            img = RV.escala(raiz, esc, ef["tira_deslizar_a_nivel"], loc, dur)
+        elif c["modo"] == "tira" and tira:
             e = ef["tira_deslizar_a_nivel"]
             if e.get("pasar"):
                 cen = tira["cx"][0] + (tira["cx"][-1] - tira["cx"][0]) * _suave(loc / max(0.5, dur))
@@ -2359,6 +2369,13 @@ def _renderizar(carpeta: CarpetaProyecto, ffmpeg: str, destino: Path | None, des
         pres = ef.get("presentacion_especie")
         if not en_reaccion and pres and pres["en"] <= tt < pres["en"] + pres["dur"]:
             img, en_reaccion = _presentacion(raiz, pres, tt - pres["en"]), True
+        for nombre in ("vs", "silueta"):                     # (07-11) v4: a pantalla completa
+            x = ef.get(nombre)
+            if not en_reaccion and x and x["en"] <= tt < x["en"] + x["dur"]:
+                from . import render_v4 as RV
+
+                img = (RV.vs if nombre == "vs" else RV.silueta_misterio)(raiz, esc, x, tt - x["en"])
+                en_reaccion = True
         pal = ef.get("palabra_completa")
         if not en_reaccion and pal and pal["en"] <= tt < pal["en"] + pal["dur"]:
             img, en_reaccion = _palabra_completa(pal, tt - pal["en"], papel), True
@@ -2410,6 +2427,19 @@ def _renderizar(carpeta: CarpetaProyecto, ffmpeg: str, destino: Path | None, des
                     img = RR.comentario(img, x, tt - x["en"])
                 else:
                     img = RR.cta_suscribir(img, x, tt - x["en"])
+        for nombre in ("globo", "icono_v4", "glitch", "negro"):  # (07-11) v4
+            x = ef.get(nombre)
+            if x and x["en"] <= tt < x["en"] + x["dur"] and (nombre in ("glitch", "negro") or not en_reaccion):
+                from . import render_v4 as RV
+
+                if nombre == "globo":
+                    img = RV.globo(img, x, tt - x["en"])
+                elif nombre == "icono_v4":
+                    img = RV.icono(img, x, tt - x["en"])
+                elif nombre == "glitch":
+                    img = RV.glitch(img, x, tt - x["en"], n)
+                else:
+                    img = RV.negro(img, x, tt - x["en"])
         if vertical:
             if en_reaccion or c["modo"] == "tira" or camara is None:
                 objetivo = 0.5
@@ -2445,11 +2475,11 @@ def _renderizar(carpeta: CarpetaProyecto, ffmpeg: str, destino: Path | None, des
                 if negro:
                     # entra con un pop que rebota, como los demás elementos
                     l = tt - t["inicio"]
-                    esc = _sale(l / 0.12) * (1.0 + 0.18 * math.exp(-l * 9) * math.cos(l * 16))
-                    if esc < 0.05:
+                    esc_t = _sale(l / 0.12) * (1.0 + 0.18 * math.exp(-l * 9) * math.cos(l * 16))
+                    if esc_t < 0.05:
                         continue
-                    ti2 = ti if abs(esc - 1) < 0.004 else ti.resize(
-                        (max(1, int(ti.width * esc)), max(1, int(ti.height * esc))), Image.Resampling.BICUBIC)
+                    ti2 = ti if abs(esc_t - 1) < 0.004 else ti.resize(
+                        (max(1, int(ti.width * esc_t)), max(1, int(ti.height * esc_t))), Image.Resampling.BICUBIC)
                     img.paste(ti2, ((W - ti2.width) // 2, 30 + (ti.height - ti2.height) // 2), ti2)
                     continue
                 a = _suave((tt - t["inicio"]) / 0.12)

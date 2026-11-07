@@ -558,6 +558,19 @@ Estado al 04-10-2026. El repositorio es PÚBLICO: nunca escribir claves, tokens 
   «Xandart en el celular» en el menú Inicio (instalar/Xandart en el celular.bat, ventana negra que NO se cierra). Pide
   la contraseña de siempre; crear la clave del dueño y /api/apagar siguen solo desde el PC. Si Xandart ya está abierto,
   avisa que lo cierre (sin videos en proceso) en vez de apagarlo. Solo misma Wi-Fi (fuera de casa: túnel, sin hacer).
+- (07-11) PELIGRO TROPICAL v4 (el dueño mandó una skill «formato Psicología Exótica»; analizada y aprobados con «Si»
+  los puntos 1, 2 y 4; se le advirtió que clonar el formato y la ropa del personaje de la competencia arriesga el canal:
+  solo técnicas). Fórmula catalogo/formulas/escala_peligro_v3 (= v2 + nombre solo como frase, APODO propio, «no te lo
+  digo todo de una vez», calmar tras asustar, pregunta retórica cada 20-30 s, sin gore, 6 animales en 8 min) →
+  perfil peligro_tropical_v4 (recursos_v4). FORMULA_PELIGRO y el formato escala_peligro apuntan a v3; videos v2/v1
+  siguen igual. estudio/receta_v4.py (EDL, tras receta_pt): estilo que ROTA (escala horizontal|vertical|cartas ×
+  letrero etiqueta|color|tarjeta; nunca la combinación de los últimos 3: datos/pt_estilos.json; fijo por video en
+  <proyecto>/estilo_video.json), VS cuando la voz compara (anterior vs actual), silueta del último con «?» en el
+  gancho, globo de pensamiento con preguntas cortas, pantalla negra antes de una revelación en niveles altos, glitch
+  en el último, íconos X/corona/pulgar abajo/alerta por palabras. render_v4.py los dibuja (recortes = los de la tira).
+  render.py: arreglada variable «esc» que se pisaba en los títulos (ahora esc_t). NO hechos (esperan al dueño): ropa
+  del muñeco por video (necesita diseños propios y cuesta imágenes), música por tramos (sus canciones con licencia) y
+  un plano cada 1-2 s (más imágenes = más costo). La skill quedó solo en el scratchpad (no va al repo).
 ## Pendiente
 - Preguntas sin responder del dueño: ¿en qué canal notó la voz lenta? (Peligro Tropical está en 1.3 en
   config/proveedores.json; Tracy en 1.0 por pedido suyo). ¿En qué momento sale «la tira de animales» sin sentido?
