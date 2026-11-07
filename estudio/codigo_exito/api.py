@@ -79,10 +79,13 @@ def _guardar_estado(carpeta: Path, **cambios) -> dict:
     return e
 
 
-def _costo(guion: str) -> dict:
+def _costo(guion: str, carpeta: Path | None = None) -> dict:
     from ..config import ConfigCostos, formato_cop
-    from .guion import leer
+    from .guion import _como_texto, etiquetar_por_reglas, leer, profesor_corto, tiene_etiquetas
 
+    if not tiene_etiquetas(guion):                     # sin etiquetas: las que puso Claude, o un cálculo por reglas
+        hecho = carpeta / "guion_etiquetado.txt" if carpeta else None
+        guion = hecho.read_text("utf-8") if hecho and hecho.exists() else _como_texto(profesor_corto(etiquetar_por_reglas(guion)))
     bloques = leer(guion)
     letras = sum(len(b["texto"]) for b in bloques)
     c = ConfigCostos.cargar()
@@ -142,7 +145,7 @@ def crear(d: NuevoVideo):
 def ver(slug: str):
     c = _video(slug)
     leer = lambda n: (c / n).read_text("utf-8") if (c / n).exists() else ""  # noqa: E731
-    return {**_resumen(c), "costo": _costo((c / "guion.txt").read_text("utf-8")), "log": _estado(c).get("log", [])[-40:],
+    return {**_resumen(c), "costo": _costo((c / "guion.txt").read_text("utf-8"), c), "log": _estado(c).get("log", [])[-40:],
             "error": _estado(c).get("error"), "capitulos": leer("capitulos.txt"), "bloques_txt": leer("bloques.txt"),
             "creditos": leer("creditos_pexels.txt"), "trabajando": slug in _TRABAJOS and _TRABAJOS[slug].is_alive()}
 

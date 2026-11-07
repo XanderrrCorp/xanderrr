@@ -546,6 +546,13 @@ Estado al 04-10-2026. El repositorio es PÚBLICO: nunca escribir claves, tokens 
   no confirmada (¿Xandart abierto con código viejo, Node fuera del PATH del proceso, error antes?). Arreglos: integrar
   anota todo en <proyecto>/logs/partes_animadas.txt (y pipeline el error con traza), _node() busca Program Files\nodejs,
   Whisper con try. Siguiente paso: que rehaga el video (voz e imágenes ya pagadas) y leer ese archivo.
+- (07-11) CÓDIGO DEL ÉXITO: guion SIN etiquetas (el dueño pegó 37 min sin [PROFESOR]/[STOCK]/[AURA] → 1 bloque → MiniMax
+  2013 «text too long»): armar.hacer lo etiqueta solo (guion.etiquetar: Claude liviano solo pone etiquetas y palabras
+  clave, validado palabra por palabra; si no, etiquetar_por_reglas) y lo guarda en guion_etiquetado.txt; profesor_corto
+  deja al Profesor ≤600 letras (el resto a stock) y leer parte todo bloque a ≤1400 letras. El costo (api._costo) se
+  calcula igual. TARJETA NVIDIA: todo lo que codificaba con libx264 (codigo_exito profesor/escenas/unir, tira,
+  tracy escena_final, pt_animado/hacer_prueba) usa render._argumentos_codificador (NVENC si hay). El dibujo de cuadros
+  (Pillow) sigue en el procesador.
 ## Pendiente
 - Preguntas sin responder del dueño: ¿en qué canal notó la voz lenta? (Peligro Tropical está en 1.3 en
   config/proveedores.json; Tracy en 1.0 por pedido suyo). ¿En qué momento sale «la tira de animales» sin sentido?

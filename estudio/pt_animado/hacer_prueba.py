@@ -253,7 +253,7 @@ def main() -> None:
     ass(frases, trabajo / "subs.ass")
     final = trabajo / "peligro_tropical_animado_prueba.mp4"
     subprocess.run([ffmpeg(), "-y", "-v", "error", "-i", "imagen.mp4", "-i", str(Path("audio") / "mezcla.wav"), "-vf", "ass=subs.ass",
-                    "-map", "0:v", "-map", "1:a", "-c:v", "libx264", "-crf", "18", "-preset", "medium", "-pix_fmt", "yuv420p",
+                    "-map", "0:v", "-map", "1:a", *__import__("estudio.render", fromlist=["x"])._argumentos_codificador(ffmpeg(), "medium", "18", None), "-pix_fmt", "yuv420p",
                     "-c:a", "aac", "-b:a", "192k", "-shortest", final.name], cwd=trabajo, check=True)
     # revisión automática (cuadros negros, congelados, saltos) y 3 cuadros para el dueño
     subprocess.run([sys.executable, str(REMOTION / "scripts" / "short_qa.py"), str(final), str(trabajo / "revision")], check=False)

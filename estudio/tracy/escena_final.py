@@ -25,6 +25,9 @@ BUSQUEDAS_FONDO = ["starry night sky", "night forest", "milky way", "misty fores
                    "calm ocean", "clouds timelapse", "nature landscape", "forest trees", "night sky"]
 
 
+from ..render import _argumentos_codificador  # la tarjeta NVIDIA si hay
+
+
 def carpeta_cache() -> Path:
     from ..plataforma.db import carpeta_datos
 
@@ -62,7 +65,7 @@ def particulas(ffmpeg: str, destino: Path | None = None, n: int = 150, semilla: 
     total = BUCLE_PARTICULAS_S * FPS
     tmp = destino.with_suffix(".part.mp4")
     proc = subprocess.Popen([ffmpeg, "-y", "-loglevel", "error", "-f", "rawvideo", "-pix_fmt", "gray", "-s", f"{W}x{H}",
-                             "-r", str(FPS), "-i", "-", "-c:v", "libx264", "-preset", "veryfast", "-crf", "22",
+                             "-r", str(FPS), "-i", "-", *_argumentos_codificador(ffmpeg, "veryfast", "22", None),
                              "-pix_fmt", "yuv420p", str(tmp)], stdin=subprocess.PIPE)
     try:
         for f in range(total):

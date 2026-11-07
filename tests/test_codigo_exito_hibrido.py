@@ -137,3 +137,59 @@ def test_pagina_crea_el_video_con_su_costo(tmp_path):
     assert v["titulo"] == "La regla de los dos minutos" and not v["final"]
     assert c.post("/api/codigo-exito/videos", json={"titulo": "Malo", "guion": "[STOCK]\\n" + "x " * 30}).status_code == 422
     assert any(m["clave"] == "codigo_exito" for m in c.get("/api/v2/estudio").json()["modulos"])
+
+
+# ---------------------------------------------------------------- guion sin etiquetas (07-11: MiniMax «text too long»)
+
+def _guion_largo():
+    frase = "Esta es una oración larga sobre cómo tomar decisiones con calma y sin miedo al qué dirán. "
+    partes = ["Hoy vas a descubrir por qué tu vida no se siente tuya."]
+    for n in range(1, 4):
+        partes.append(f"Decisión número {n}. " + frase * 12)
+        partes.append(frase * 30)
+    partes.append("Suscríbete y comenta qué decisión tomas hoy.")
+    return "\n\n".join(partes)
+
+
+def test_guion_sin_etiquetas_se_etiqueta_y_ningun_bloque_es_muy_largo():
+    from estudio.codigo_exito import guion as G
+
+    texto = _guion_largo()
+    assert not G.tiene_etiquetas(texto)
+    salida = G.etiquetar(texto, ejecutar=lambda p: ("no es json", None), avisar=lambda *_: None)
+    assert G.tiene_etiquetas(salida)
+    bloques = G.leer(salida)
+    assert bloques[0]["tipo"] == "profesor"
+    assert max(len(b["texto"]) for b in bloques) <= G.MAX_LETRAS
+    assert any(b["tipo"] == "stock" for b in bloques)
+    assert all(len(b["texto"]) <= G.PROFESOR_MAX for b in bloques if b["tipo"] == "profesor")
+    # no se pierde ni cambia ninguna palabra
+    assert G._palabras(" ".join(b["texto"] for b in bloques)) == G._palabras(texto)
+
+
+def test_etiquetas_de_claude_validas_se_usan():
+    import json
+
+    from estudio.codigo_exito import guion as G
+
+    texto = "Gancho corto del video.\n\nUna mujer camina por la playa al amanecer.\n\nRespira profundo tres veces."
+    resp = json.dumps([{"desde": 0, "hasta": 0, "tipo": "profesor"},
+                       {"desde": 1, "hasta": 1, "tipo": "stock", "claves": ["woman walking beach"]},
+                       {"desde": 2, "hasta": 2, "tipo": "aura"}])
+    bloques = G.leer(G.etiquetar(texto, ejecutar=lambda p: (resp, None), avisar=lambda *_: None))
+    assert [b["tipo"] for b in bloques] == ["profesor", "stock", "aura"]
+
+
+def test_bloque_etiquetado_largo_se_parte():
+    from estudio.codigo_exito import guion as G
+
+    texto = "[STOCK: nature]\n" + "Una oración de prueba que se repite bastante. " * 120
+    bloques = G.leer(texto)
+    assert len(bloques) > 1 and max(len(b["texto"]) for b in bloques) <= G.MAX_LETRAS
+
+
+def test_costo_de_guion_sin_etiquetas_cuenta_varios_bloques():
+    from estudio.codigo_exito.api import _costo
+
+    c = _costo(_guion_largo())
+    assert c["bloques"] > 3 and c["por_tipo"]["stock"] > 0

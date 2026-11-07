@@ -27,6 +27,12 @@ CARPETA = "assets/tira"
 
 # ------------------------------------------------------------------ utilidades
 
+def _cod_tira(ffmpeg):
+    from .render import _argumentos_codificador  # la tarjeta NVIDIA si hay
+
+    return _argumentos_codificador(ffmpeg, "veryfast", "20", None)
+
+
 def _rgb(hexa: str) -> tuple[int, int, int]:
     h = hexa.lstrip("#")
     return tuple(int(h[i:i + 2], 16) for i in (0, 2, 4))  # type: ignore[return-value]
@@ -340,8 +346,7 @@ def clip_tira(armada: TiraArmada, destino: Path, ffmpeg: str, fondo: Image.Image
     destino.parent.mkdir(parents=True, exist_ok=True)
     video_tmp = destino.with_suffix(".sinaudio.mp4")
     proc = subprocess.Popen([ffmpeg, "-y", "-loglevel", "error", "-f", "rawvideo", "-pix_fmt", "rgb24",
-                             "-s", f"{W}x{H}", "-r", str(fps), "-i", "-", "-c:v", "libx264", "-preset", "veryfast",
-                             "-crf", "20", "-pix_fmt", "yuv420p", str(video_tmp)], stdin=subprocess.PIPE)
+                             "-s", f"{W}x{H}", "-r", str(fps), "-i", "-", *_cod_tira(ffmpeg), "-pix_fmt", "yuv420p", str(video_tmp)], stdin=subprocess.PIPE)
     reloj = 0.0
     temblor = random.Random(semilla)
     for dur, a, b, efecto in tramos:

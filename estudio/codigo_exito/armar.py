@@ -23,6 +23,7 @@ from . import guion as G
 from . import profesor as PR
 from . import stock as ST
 from . import voz as V
+from ..render import _argumentos_codificador  # la tarjeta NVIDIA si hay (07-11, el dueño: «que use la gráfica»)
 
 REMOTION = Path(__file__).resolve().parent / "remotion"
 FPS = 30
@@ -185,7 +186,7 @@ def unir(trabajo: Path, lista: list[dict], ff: str) -> Path:
         filtro.append(f"{previo}[{k}:v]xfade=transition=fade:duration={T:.4f}:offset={lista[k]['inicio']:.4f}{salida}")
         previo = salida
     subprocess.run([ff, "-y", "-v", "error", *entradas, "-filter_complex", ";".join(filtro), "-map", "[vout]",
-                    "-c:v", "libx264", "-preset", "medium", "-crf", "18", "-pix_fmt", "yuv420p", str(video)], check=True)
+                    *_argumentos_codificador(ff, "medium", "18", None), "-pix_fmt", "yuv420p", str(video)], check=True)
     return video
 
 
@@ -214,7 +215,14 @@ def hacer(guion_txt: Path, trabajo: Path, permiso: bool = False, avisar=print, c
 
     ff = ffmpeg()
     trabajo.mkdir(parents=True, exist_ok=True)
-    bloques = G.leer(guion_txt.read_text("utf-8"))
+    texto = guion_txt.read_text("utf-8")
+    if not G.tiene_etiquetas(texto):                   # (07-11) guion pegado sin etiquetas: Xandart se las pone
+        etiquetado = trabajo / "guion_etiquetado.txt"
+        if not etiquetado.exists():
+            etiquetado.write_text(G.etiquetar(texto, avisar=avisar), "utf-8")
+        texto = etiquetado.read_text("utf-8")
+        avisar("El guion no traía etiquetas: se las puse (quedan en guion_etiquetado.txt).")
+    bloques = G.leer(texto)
     (trabajo / "bloques.json").write_text(json.dumps(bloques, ensure_ascii=False, indent=1), "utf-8")
     avisar(f"Guion: {len(bloques)} bloques en {len({b['parte'] for b in bloques})} partes")
     tl = V.generar(trabajo, bloques, ff, permiso, avisar)

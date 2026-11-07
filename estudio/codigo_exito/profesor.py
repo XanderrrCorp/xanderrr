@@ -17,6 +17,8 @@ from pathlib import Path
 import numpy as np
 from PIL import Image
 
+from ..render import _argumentos_codificador as _cod
+
 W, H, FPS = 1920, 1080, 30
 VINO, VINO_OSC, DORADO, CREMA = (92, 22, 38), (34, 8, 16), (214, 172, 92), (244, 232, 210)
 
@@ -82,7 +84,7 @@ def renderizar(wav: Path, texto: str, dur: float, destino: Path, ffmpeg: str, ge
     base = fondo()
     tmp = destino.with_suffix(".part.mp4")
     proc = subprocess.Popen([ffmpeg, "-y", "-v", "error", "-f", "rawvideo", "-pix_fmt", "rgb24", "-s", f"{W}x{H}", "-r", str(FPS),
-                             "-i", "-", "-c:v", "libx264", "-preset", "veryfast", "-crf", "17", "-pix_fmt", "yuv420p", str(tmp)],
+                             "-i", "-", *_cod(ffmpeg, "veryfast", "17", None), "-pix_fmt", "yuv420p", str(tmp)],
                             stdin=subprocess.PIPE)
     n = int(round(dur * FPS))
     tam = 640                                                     # a la izquierda: el centro queda para los subtítulos

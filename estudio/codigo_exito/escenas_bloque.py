@@ -16,6 +16,8 @@ from pathlib import Path
 
 from PIL import Image
 
+from ..render import _argumentos_codificador as _cod
+
 from .profesor import bocas_rhubarb, carpeta_capas
 
 W, H, FPS = 1920, 1080, 30
@@ -146,7 +148,7 @@ def renderizar(plan: list[dict], wav: Path | None, texto: str, dur: float, desti
 
     tmp = destino.with_suffix(".part.mp4")
     proc = subprocess.Popen([ffmpeg, "-y", "-v", "error", "-f", "rawvideo", "-pix_fmt", "rgb24", "-s", f"{W}x{H}", "-r", str(FPS),
-                             "-i", "-", "-c:v", "libx264", "-preset", "veryfast", "-crf", "17", "-pix_fmt", "yuv420p", str(tmp)],
+                             "-i", "-", *_cod(ffmpeg, "veryfast", "17", None), "-pix_fmt", "yuv420p", str(tmp)],
                             stdin=subprocess.PIPE)
     for f in range(int(round(dur * FPS))):
         T = f / FPS
