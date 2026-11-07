@@ -541,6 +541,11 @@ Estado al 04-10-2026. El repositorio es PÚBLICO: nunca escribir claves, tokens 
   se repite la canción mucho sin nada que la difumine». capa.PRENDIDA_POR_DEFECTO vuelve a False (música de su biblioteca);
   además, por si se vuelve a prender: MUSICA_BAJO_VOZ -21 (antes -15) y cruces de 2-2,5 s entre secciones. No prenderla
   sin que él la oiga antes. Las partes animadas (integrar.py) siguen prendidas.
+- (07-11) «Ninguna animación salió» en el video del okapi (6-11, proyectos\video-del-animal-del-congo-que-creian-un): la
+  sesión de su PC vio 0 rastros (sin assets/pt_animado, sin marca pt_animado, 70 animaciones del híbrido viejo). Causa
+  no confirmada (¿Xandart abierto con código viejo, Node fuera del PATH del proceso, error antes?). Arreglos: integrar
+  anota todo en <proyecto>/logs/partes_animadas.txt (y pipeline el error con traza), _node() busca Program Files\nodejs,
+  Whisper con try. Siguiente paso: que rehaga el video (voz e imágenes ya pagadas) y leer ese archivo.
 ## Pendiente
 - Preguntas sin responder del dueño: ¿en qué canal notó la voz lenta? (Peligro Tropical está en 1.3 en
   config/proveedores.json; Tracy en 1.0 por pedido suyo). ¿En qué momento sale «la tira de animales» sin sentido?

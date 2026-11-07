@@ -935,6 +935,11 @@ def paso_video(c: CarpetaProyecto, t: Trabajo, permiso: bool = False, fps: int |
 
         partes_animadas(c, avisar=t.avisar, permiso=permiso)
     except Exception as ex:  # noqa: BLE001 — sin animación el video sale como siempre
+        import traceback
+
+        (c.ruta / "logs").mkdir(exist_ok=True)
+        with open(c.ruta / "logs" / "partes_animadas.txt", "a", encoding="utf-8") as f:
+            f.write(f"ERROR: {ex}\n{traceback.format_exc()}\n")
         t.avisar(f"Sin partes animadas esta vez ({str(ex)[:160]})")
     direccion = c.ruta / "direccion.json"
     if not direccion.exists() or "focos_revisados" not in leer_json(direccion):

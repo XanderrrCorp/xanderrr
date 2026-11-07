@@ -48,13 +48,27 @@ def activa(canal: str | None, ajustes: dict | None = None) -> bool:
     return PRENDIDO_POR_DEFECTO if valor is None else bool(valor)
 
 
+def _node() -> str | None:
+    """Node.js aunque no esté en el PATH de este proceso (Xandart abierto antes de instalarlo)"""
+    r = shutil.which("node")
+    if r:
+        return r
+    for base in (os.environ.get("ProgramFiles", r"C:\Program Files"), os.environ.get("ProgramFiles(x86)", ""),
+                 str(Path(os.environ.get("LOCALAPPDATA", "")) / "Programs")):
+        cand = Path(base) / "nodejs" / "node.exe" if base else None
+        if cand and cand.exists():
+            os.environ["PATH"] = str(cand.parent) + os.pathsep + os.environ.get("PATH", "")   # también npm
+            return str(cand)
+    return None
+
+
 def listo_para_animar() -> str | None:
     """None si se puede; si no, el motivo en palabras simples."""
     if os.environ.get("XANDART_SIN_ANIMACION_PT"):
         return "apagada en este equipo"
     if not (REMOTION / "package.json").exists():
         return "falta la carpeta de animación"
-    if not shutil.which("node"):
+    if not _node():
         return "falta Node.js en este PC"
     return None
 
@@ -160,7 +174,7 @@ def dibujar_animales(carpeta: Path, nombres: list[str], permiso: bool, avisar=pr
 
 def renderizar_clips(lista: list[dict], salida: Path, avisar=print, timeout: int = 4 * 3600) -> None:
     """Remotion (scripts/clips.mjs): instala lo de Node la primera vez."""
-    node = shutil.which("node")
+    node = _node()
     if not (REMOTION / "node_modules").exists():
         avisar("Preparando la animación por primera vez (instalando sus piezas)…")
         npm = shutil.which("npm") or "npm"
@@ -173,8 +187,23 @@ def renderizar_clips(lista: list[dict], salida: Path, avisar=print, timeout: int
     limpiar_bundles()
 
 
+def con_registro(c, avisar):
+    """los avisos de las partes animadas también quedan en <proyecto>/logs/partes_animadas.txt (antes solo en pantalla)"""
+    import time
+
+    ruta = c.ruta / "logs" / "partes_animadas.txt"
+    ruta.parent.mkdir(parents=True, exist_ok=True)
+
+    def anotar(txt):
+        with open(ruta, "a", encoding="utf-8") as f:
+            f.write(time.strftime("%Y-%m-%d %H:%M:%S ") + str(txt).strip() + "\n")
+        avisar(txt)
+    return anotar
+
+
 def preparar(c, avisar=print, permiso: bool = False, render=renderizar_clips, proveedor=None) -> int:
     """Hace (o reusa) las partes animadas del video y las marca en direccion.json. Devuelve cuántas escenas cubren."""
+    avisar = con_registro(c, avisar)
     p = c.cargar()
     esc = c.cargar_escenas()
     direccion_ruta = c.ruta / "direccion.json"
@@ -183,6 +212,7 @@ def preparar(c, avisar=print, permiso: bool = False, render=renderizar_clips, pr
     propias = {k for k, v in anteriores.items() if v.get("origen") == MODULO}
     base = {k: v for k, v in anteriores.items() if k not in propias}        # las del video híbrido se respetan
     if not activa(p.canal) or esc.relacion_aspecto == "9:16":
+        avisar(f"Partes animadas: no aplican a este video (canal «{p.canal}», formato {esc.relacion_aspecto}).")
         if propias:
             direccion["animacion_escena"] = base
             escribir_json(direccion_ruta, direccion)
@@ -191,8 +221,13 @@ def preparar(c, avisar=print, permiso: bool = False, render=renderizar_clips, pr
     if motivo:
         avisar(f"Sin partes animadas esta vez ({motivo}); el video sale como siempre.")
         return 0
-    palabras = capa.palabras_whisper(c.ruta / "audio" / "voz.wav", capa.frases_de_escenas(esc.escenas))
+    try:
+        palabras = capa.palabras_whisper(c.ruta / "audio" / "voz.wav", capa.frases_de_escenas(esc.escenas))
+    except Exception as ex:  # noqa: BLE001 — sin Whisper, palabras repartidas por letras
+        avisar(f"  (Whisper no sirvió esta vez: {str(ex)[:100]}; se usan tiempos aproximados)")
+        palabras = None
     tramos = planear(esc.escenas, esc.niveles, palabras)
+    avisar(f"Partes animadas: {len(tramos)} tramos elegidos ({', '.join(t['plantilla'] for t in tramos) or 'ninguno'}).")
     if not tramos:
         return 0
     animales = dibujar_animales(c.ruta, [t["animal"] for t in tramos if t["animal"]], permiso, avisar, proveedor)
