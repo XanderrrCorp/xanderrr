@@ -571,6 +571,13 @@ Estado al 04-10-2026. El repositorio es PÚBLICO: nunca escribir claves, tokens 
   render.py: arreglada variable «esc» que se pisaba en los títulos (ahora esc_t). NO hechos (esperan al dueño): ropa
   del muñeco por video (necesita diseños propios y cuesta imágenes), música por tramos (sus canciones con licencia) y
   un plano cada 1-2 s (más imágenes = más costo). La skill quedó solo en el scratchpad (no va al repo).
+- (07-11) ROPA DEL MUÑECO QUE ROTA (el dueño: «haz lo de la ropa»): estudio/vestuario.py, como disfraz.py. Fórmula v3
+  "vestuarios": true → pipeline._disfraz (si no hay disfraz) llama vestuario.preparar antes de la 1.ª imagen: elige entre
+  clasico (gratis) / safari / lluvia / noche / biologo (diseños PROPIOS; prueba que no use la ropa de la competencia),
+  nunca uno de los últimos 3 (datos/pt_vestuarios.json; fijo en estilo_video.json), cambia assets/mascota_base.png
+  (guarda mascota_original.png) y el bloqueo del perfil. Cada ropa se dibuja UNA vez por mascota (caché
+  datos/pt_vestuarios/<huella>/; ≈1 imagen con freno de gasto; estimar_imagenes la suma). Videos con imágenes ya
+  hechas no cambian. Las poses/reacciones del canal siguen con la ropa de siempre (hacerlas por ropa costaría más).
 ## Pendiente
 - Preguntas sin responder del dueño: ¿en qué canal notó la voz lenta? (Peligro Tropical está en 1.3 en
   config/proveedores.json; Tracy en 1.0 por pedido suyo). ¿En qué momento sale «la tira de animales» sin sentido?

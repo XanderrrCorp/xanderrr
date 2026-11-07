@@ -69,13 +69,14 @@ def _historial() -> Path:
 def elegir_estilo(raiz: Path, rng: random.Random) -> dict:
     """el estilo de ESTE video (se guarda: rehacer el video no lo cambia)"""
     propio = raiz / "estilo_video.json"
+    previo = {}
     if propio.exists():
         try:
-            d = json.loads(propio.read_text("utf-8"))
-            if d.get("escala") in ESCALAS and d.get("letrero") in LETREROS:
-                return d
+            previo = json.loads(propio.read_text("utf-8"))
+            if previo.get("escala") in ESCALAS and previo.get("letrero") in LETREROS:
+                return previo
         except (OSError, ValueError):
-            pass
+            previo = {}
     ruta = _historial()
     try:
         hist = json.loads(ruta.read_text("utf-8")) if ruta.exists() else []
@@ -90,7 +91,7 @@ def elegir_estilo(raiz: Path, rng: random.Random) -> dict:
         opciones = mejores or opciones
     escala, letrero = rng.choice(opciones or [(ESCALAS[0], LETREROS[0])])
     d = {"escala": escala, "letrero": letrero}
-    propio.write_text(json.dumps(d, ensure_ascii=False), "utf-8")
+    propio.write_text(json.dumps({**previo, **d}, ensure_ascii=False), "utf-8")    # (la ropa ya puede estar ahí)
     hist.append({**d, "video": raiz.name})
     try:
         ruta.parent.mkdir(parents=True, exist_ok=True)

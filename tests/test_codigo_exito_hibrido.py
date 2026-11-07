@@ -193,3 +193,23 @@ def test_costo_de_guion_sin_etiquetas_cuenta_varios_bloques():
 
     c = _costo(_guion_largo())
     assert c["bloques"] > 3 and c["por_tipo"]["stock"] > 0
+
+
+def test_guion_con_la_forma_del_dueno_emoji_comillas_y_notas():
+    from estudio.codigo_exito import guion as G
+
+    texto = ('[ 🎬 AURA: fondo oscuro, onda dorada | TEXTO grande: "¿CUÁNTAS VECES DIJISTE ESTO HOY?"] Hay frases.\n\n'
+             '[ 🎬 STOCK: "woman apologizing office" / "woman talking phone worried"] "Perdón por molestar." Si alguna.\n\n'
+             '[ 🎬 PROFESOR: aparece de frente, dedo en la sien] Vamos a hacer un test.\n\n'
+             '[ 🎬 STOCK: "woman looking in mirror morning" | TEXTO: "7 FRASES + 1 SECRETA"] Brian Tracy enseña.\n\n'
+             '[STOCK: nature, sea] Como antes.')
+    assert G.tiene_etiquetas(texto)
+    b = G.leer(texto)
+    assert [x["tipo"] for x in b] == ["aura", "stock", "profesor", "stock", "stock"]
+    assert b[0]["texto"] == "Hay frases." and b[0]["texto_pantalla"] == "¿CUÁNTAS VECES DIJISTE ESTO HOY?"
+    assert b[1]["claves"] == ["woman apologizing office", "woman talking phone worried"]
+    assert b[1]["texto"].startswith('"Perdón por molestar."')
+    assert b[2]["nota"] == "aparece de frente, dedo en la sien" and b[2]["texto"] == "Vamos a hacer un test."
+    assert b[3]["claves"] == ["woman looking in mirror morning"] and b[3]["texto_pantalla"] == "7 FRASES + 1 SECRETA"
+    assert b[4]["claves"] == ["nature", "sea"]
+    assert not any("🎬" in x["texto"] or "TEXTO" in x["texto"] for x in b)

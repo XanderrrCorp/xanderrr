@@ -63,7 +63,9 @@ def prompt(bloques: list[dict]) -> str:
     lineas = []
     for b in bloques:
         if b["tipo"] == "profesor":
-            lineas.append(f'[PROFESOR id={b["id"]} dura={b["ranura"]:.0f}s] {b["texto"]}')
+            pista = "".join(f" ({k}: {b[c]})" for c, k in (("nota", "indicación del guionista"),
+                                                            ("texto_pantalla", "texto grande que pidió")) if b.get(c))
+            lineas.append(f'[PROFESOR id={b["id"]} dura={b["ranura"]:.0f}s{pista}] {b["texto"]}')
         else:
             lineas.append(f'[{b["tipo"].upper()}] {" ".join(b["texto"].split()[:25])}…')
     return ("Eres el editor de un canal de YouTube de desarrollo personal (Código del Éxito). Arma las escenas animadas "

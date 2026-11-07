@@ -316,6 +316,11 @@ def estimar_imagenes(c: CarpetaProyecto) -> dict:
     total = total_a_generar(esc) - (1 if (c.ruta / "assets" / "mascota_base.png").exists() else 0)
     if c.cargar().disfraz_mascota and not (c.ruta / "assets" / "disfraz.json").exists():
         total += 1                                   # la mascota disfrazada del tema
+    else:
+        from . import vestuario
+
+        if vestuario.pendiente_de_pago(c):
+            total += 1                               # el muñeco con la ropa nueva (solo la primera vez)
     faltan = max(0, total - hechas)
     ya = set(leer_json(man)) if man.exists() else set()
     prueba = sum(1 for e in esc.escenas[:10] if e.visual.accion == "generar" and f"escena:{e.id}" not in ya)
@@ -879,16 +884,24 @@ def regenerar_voz_escena(c: CarpetaProyecto, t: Trabajo, escena_id: int, texto: 
 
 
 def _disfraz(c: CarpetaProyecto, t: Trabajo, permiso: bool, config=None, ejecutar_claude=None) -> None:
-    """Si el video pide la mascota disfrazada, se hace antes de la primera imagen (una sola vez)."""
-    if not c.cargar().disfraz_mascota:
+    """Si el video pide la mascota disfrazada, se hace antes de la primera imagen (una sola vez). Si no, y la fórmula lo
+    trae (Peligro Tropical v3), el muñeco cambia de ropa respecto a los últimos videos (vestuario.py)."""
+    from . import vestuario
+
+    disfrazada = c.cargar().disfraz_mascota
+    if not disfrazada and not vestuario.activo(c):
         return
     from .config import leer_config
-    from .disfraz import preparar
     from .imagenes.proveedores import crear_proveedor
 
     config = config or ConfigCostos.cargar()
     proveedor = crear_proveedor(config, leer_config("proveedores.json")["imagenes"])
-    preparar(c, proveedor, config, permiso=permiso, ejecutar=ejecutar_claude, avisar=t.avisar)
+    if disfrazada:
+        from .disfraz import preparar
+
+        preparar(c, proveedor, config, permiso=permiso, ejecutar=ejecutar_claude, avisar=t.avisar)
+    else:
+        vestuario.preparar(c, proveedor, config, permiso=permiso, avisar=t.avisar)
 
 
 def _regenerar_imagen(c: CarpetaProyecto, t: Trabajo, escena_id: int, instruccion: str) -> None:

@@ -151,3 +151,71 @@ def test_render_de_un_video_v4(estilo):
     c, _ = _proyecto_v4(estilo)
     f = renderizar(c, ffmpeg(), c.ruta / "render" / "t.mp4", avisar=lambda _: None, salida=(320, 180, 3), procesos=1)
     assert f.exists() and f.stat().st_size > 0
+
+
+# ---------------------------------------------------------------- ropa del muñeco que rota (vestuario.py)
+
+def _video_ropa(estilo, slug, formula="escala_peligro_v3", color=(200, 200, 200)):
+    from estudio.config import escribir_json
+    from estudio.proyecto import CarpetaProyecto
+
+    c = CarpetaProyecto.crear("Ropa", "animales-peligrosos", estilo.id, 60, slug=slug)
+    p = c.cargar()
+    p.formula = formula
+    c.guardar(p)
+    (c.ruta / "assets").mkdir(parents=True, exist_ok=True)
+    Image.new("RGB", (64, 64), color).save(c.ruta / "assets" / "mascota_base.png")
+    (c.ruta / "imagenes").mkdir(exist_ok=True)
+    escribir_json(c.ruta / "imagenes" / "manifiesto.json", {"asset:mascota_base": {"archivo": "x"}})
+    return c
+
+
+def test_ropa_rota_y_cada_una_se_paga_una_sola_vez(estilo, tmp_path, monkeypatch):
+    from estudio import vestuario as V
+    from estudio.config import ConfigCostos, leer_json
+    from estudio.imagenes.proveedores import ProveedorSimulado
+
+    monkeypatch.setattr(V, "_historial", lambda: tmp_path / "pt_vestuarios.json")
+    monkeypatch.setattr(V, "_cache", lambda base: tmp_path / "cache")
+    config = ConfigCostos.cargar()
+    prov = ProveedorSimulado(config)
+    usados = []
+    for k in range(10):
+        c = _video_ropa(estilo, f"ropa{k}")
+        info = V.preparar(c, prov, config, permiso=True, avisar=lambda *_: None)
+        assert info["vestuario"] in V.VESTUARIOS
+        assert info["vestuario"] not in usados[-3:]
+        usados.append(info["vestuario"])
+        assert V.preparar(c, prov, config, permiso=True, avisar=lambda *_: None) == info   # la segunda vez, nada
+        if info["vestuario"] != "clasico":
+            assert "IN THIS VIDEO he wears instead" in leer_json(c.ruta / "perfil_canal.json")["personaje"]["bloqueo"]
+            assert (c.ruta / "assets" / "mascota_original.png").exists()
+            assert "asset:mascota_base" not in leer_json(c.ruta / "imagenes" / "manifiesto.json")
+        assert json.loads((c.ruta / "estilo_video.json").read_text("utf-8"))["vestuario"] == info["vestuario"]
+    # cada ropa (menos la de siempre) se dibujó UNA sola vez aunque se repitiera en varios videos
+    assert prov.llamadas == len(set(usados) - {"clasico"})
+    assert len(set(usados)) >= 4
+
+
+def test_sin_v3_o_con_imagenes_hechas_no_cambia_la_ropa(estilo, tmp_path, monkeypatch):
+    from estudio import vestuario as V
+    from estudio.config import ConfigCostos, escribir_json
+    from estudio.imagenes.proveedores import ProveedorSimulado
+
+    monkeypatch.setattr(V, "_historial", lambda: tmp_path / "h.json")
+    monkeypatch.setattr(V, "_cache", lambda base: tmp_path / "cache")
+    prov = ProveedorSimulado(ConfigCostos.cargar())
+    c = _video_ropa(estilo, "v2ropa", formula="escala_peligro_v2")
+    assert V.preparar(c, prov, permiso=True, avisar=lambda *_: None) is None
+    c = _video_ropa(estilo, "hechas")
+    escribir_json(c.ruta / "imagenes" / "manifiesto.json", {"escena:1": {"archivo": "x"}})
+    assert V.preparar(c, prov, permiso=True, avisar=lambda *_: None)["vestuario"] == "clasico"
+    assert prov.llamadas == 0 and not (c.ruta / "assets" / "mascota_original.png").exists()
+
+
+def test_la_ropa_no_es_la_del_personaje_de_la_competencia():
+    from estudio import vestuario as V
+
+    texto = " ".join(d for _, d in V.VESTUARIOS.values() if d).lower()
+    for prohibido in ("backwards", "gold chain", "grey hoodie", "gray hoodie", "beanie", "red cap", "red jacket"):
+        assert prohibido not in texto

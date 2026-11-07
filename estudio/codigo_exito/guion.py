@@ -11,7 +11,26 @@ from __future__ import annotations
 
 import re
 
-ETIQUETA = re.compile(r"^\s*\[(PROFESOR|AURA|STOCK)(?:\s*:\s*([^\]]*))?\]\s*", re.I)
+# (07-11) también la forma del dueño: «[ 🎬 STOCK: "woman ..." / "woman ..." | TEXTO: "..."]» y notas de dirección en
+# PROFESOR/AURA («[🎬 PROFESOR: dedo en la sien]»): la voz nunca las lee
+ETIQUETA = re.compile(r"^\s*\[\s*[^\w\[\]]*\s*(PROFESOR|AURA|STOCK)\b\s*(?::\s*([^\]]*))?\]\s*", re.I)
+COMILLAS = re.compile(r"[\"“”«]([^\"“”«»]+)[\"“”»]")
+
+
+def _detalle(tipo: str, resto: str | None) -> tuple[list[str], str | None, str | None]:
+    """(palabras clave de Pexels, nota de dirección, texto en pantalla) de lo que va después de «ETIQUETA:»"""
+    partes = [x.strip() for x in (resto or "").split("|")]
+    principal, texto_pantalla = partes[0], None
+    for x in partes[1:]:
+        m = re.match(r"(?i)texto[^:]*:\s*(.*)", x)
+        if m:
+            q = COMILLAS.findall(m.group(1))
+            texto_pantalla = (q[0] if q else m.group(1)).strip() or None
+    if tipo == "stock":
+        q = COMILLAS.findall(principal)
+        claves = q if q else re.split(r"[,/]", principal)
+        return [k.strip(" \"'“”«»") for k in claves if k.strip(" \"'“”«»")][:4], None, texto_pantalla
+    return [], principal or None, texto_pantalla
 
 
 def leer(texto: str) -> list[dict]:
@@ -24,9 +43,13 @@ def leer(texto: str) -> list[dict]:
         m = ETIQUETA.match(p)
         if m:
             tipo = m.group(1).lower()
-            claves = [k.strip() for k in (m.group(2) or "").split(",") if k.strip()]
+            claves, nota, en_pantalla = _detalle(tipo, m.group(2))
             cuerpo = " ".join(p[m.end():].split())
             actual = {"tipo": tipo, "claves": claves, "texto": cuerpo}
+            if nota:
+                actual["nota"] = nota
+            if en_pantalla:
+                actual["texto_pantalla"] = en_pantalla
             bloques.append(actual)
         elif actual is None:
             actual = {"tipo": "profesor", "claves": [], "texto": " ".join(p.split())}

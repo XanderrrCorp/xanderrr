@@ -41,5 +41,7 @@
     "maximo_montaje": 12,
     "separacion_montaje_seg": 20,
     "gana_al_efecto": true
-  }
+  },
+  "vestuarios": true,
+  "_nota_vestuarios": "(07-11) el muñeco cambia de ropa entre videos con diseños propios (estudio/vestuario.py); 1 imagen la primera vez que se usa cada ropa."
 }
