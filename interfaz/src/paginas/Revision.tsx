@@ -121,6 +121,10 @@ export function Revision() {
             <button className="boton-primario" onClick={() => ir(`/videos/${slug}/editor`)}>Abrir en el editor</button>
             <a className="boton-borde" href={`${archivo(slug, v.video!)}?descargar=true`}>Descargar MP4</a>
             <a className="boton-borde" href={`${archivo(slug, 'render/final.srt')}?descargar=true`}>Subtítulos (SRT)</a>
+            <button className="boton-borde" title="Vuelve a armar el video con la voz y las imágenes que ya tiene: sirve para que tome los arreglos nuevos (música, animaciones)"
+              onClick={() => {
+                if (window.confirm('Vuelvo a armar este video con la voz y las imágenes que ya tiene (no se pagan otra vez). Toma los arreglos nuevos, como la música de siempre. Si es de Peligro Tropical y lleva partes animadas, los dibujos de los animales cuestan unos 120 pesos cada uno (solo la primera vez). Tarda lo mismo que montarlo. ¿Lo hago?')) accion('video', { fps });
+              }}>Volver a montar el video</button>
             {v.puede_short && <button className="boton-borde" onClick={() => {
               if (window.confirm('Claude escribe un short vertical de unos 40 s con el nivel del villano, usando las mismas imágenes (solo se paga la voz, unos pocos pesos). ¿Lo hago?')) accion('short');
             }}>Sacar un short vertical</button>}
