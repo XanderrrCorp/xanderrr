@@ -578,6 +578,10 @@ Estado al 04-10-2026. El repositorio es PÚBLICO: nunca escribir claves, tokens 
   (guarda mascota_original.png) y el bloqueo del perfil. Cada ropa se dibuja UNA vez por mascota (caché
   datos/pt_vestuarios/<huella>/; ≈1 imagen con freno de gasto; estimar_imagenes la suma). Videos con imágenes ya
   hechas no cambian. Las poses/reacciones del canal siguen con la ropa de siempre (hacerlas por ropa costaría más).
+- (08-11) CÓDIGO DEL ÉXITO lee la forma de etiquetas del dueño: «[ 🎬 STOCK: "kw" / "kw" | TEXTO: "…"]», notas en
+  PROFESOR/AURA («[🎬 PROFESOR: dedo en la sien]»): guion._detalle → claves (comillas o comas), nota, texto_pantalla;
+  la voz nunca las lee. plan_escenas pasa nota y texto pedido a Claude para los bloques del Profesor. Los textos
+  grandes de STOCK/AURA aún NO salen en pantalla (pendiente si lo pide).
 ## Pendiente
 - Preguntas sin responder del dueño: ¿en qué canal notó la voz lenta? (Peligro Tropical está en 1.3 en
   config/proveedores.json; Tracy en 1.0 por pedido suyo). ¿En qué momento sale «la tira de animales» sin sentido?
