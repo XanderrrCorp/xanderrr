@@ -588,6 +588,8 @@ class ClipMusica(Tramo):
     desde: float = Field(0, ge=0)     # segundo de la pista donde empieza
     # 14.5: la música cae de golpe 0,3 a 0,8 s antes de una revelación y el golpe cae en ese silencio
     caidas: list[tuple[float, float]] = []
+    # (09-11) música hecha por código (musica_codigo.py): {"animo": calma|tension|oscura, "semilla": n}; archivo = «codigo:…»
+    codigo: dict | None = None
 
 
 class ClipSfx(Modelo):

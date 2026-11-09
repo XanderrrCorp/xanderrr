@@ -219,3 +219,31 @@ def test_la_ropa_no_es_la_del_personaje_de_la_competencia():
     texto = " ".join(d for _, d in V.VESTUARIOS.values() if d).lower()
     for prohibido in ("backwards", "gold chain", "grey hoodie", "gray hoodie", "beanie", "red cap", "red jacket"):
         assert prohibido not in texto
+
+
+# ---------------------------------------------------------------- música por código solo en tramos (09-11)
+
+def test_musica_por_codigo_solo_en_tramos(estilo):
+    from estudio import musica_codigo as M
+
+    _, edl = _proyecto_v4(estilo)
+    musica = edl["pistas"]["musica"]
+    assert musica and all(m.get("codigo") and m["archivo"].startswith("codigo:") for m in musica)
+    from estudio import receta_v4 as R
+
+    # NO todo el video: cada tramo tiene un largo máximo (en un video de 8 min suena ~1/3 del tiempo)
+    assert all(m["fin"] - m["inicio"] <= max(R.GANCHO_MAX_S, R.ULTIMO_S, R.CIERRE_S) + 0.01 for m in musica)
+    assert sum(m["fin"] - m["inicio"] for m in musica) < edl["duracion_total"]
+    for a, b in zip(musica, musica[1:]):
+        assert a["fin"] <= b["inicio"] + 1e-6                        # no se pisan
+    animos = [m["animo"] for m in musica]
+    assert animos[0] == "tension" and "oscura" in animos and animos[-1] == "calma"
+    assert len({m["codigo"]["semilla"] for m in musica}) == len(musica)   # cada tramo, otra música
+    y = M.generar("calma", 6, 1)
+    assert len(y) == 6 * 48000 and abs(y).max() <= 0.61 and abs(y[:100]).max() < 0.01   # entra despacio
+    assert not np.array_equal(M.generar("oscura", 4, 1), M.generar("oscura", 4, 2))
+
+
+def test_videos_de_antes_siguen_con_su_musica(estilo):
+    _, edl = _proyecto_v4(estilo, formula="escala_peligro_v2", slug="v2m")
+    assert not any(m.get("codigo") for m in edl["pistas"]["musica"])

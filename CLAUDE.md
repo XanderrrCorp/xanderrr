@@ -582,6 +582,12 @@ Estado al 04-10-2026. El repositorio es PÚBLICO: nunca escribir claves, tokens 
   PROFESOR/AURA («[🎬 PROFESOR: dedo en la sien]»): guion._detalle → claves (comillas o comas), nota, texto_pantalla;
   la voz nunca las lee. plan_escenas pasa nota y texto pedido a Claude para los bloques del Profesor. Los textos
   grandes de STOCK/AURA aún NO salen en pantalla (pendiente si lo pide).
+- (09-11) MÚSICA POR CÓDIGO SOLO EN TRAMOS (el dueño: «haz las canciones con código y que no duren todo el video»):
+  estudio/musica_codigo.py (calma/tension/oscura: pad cálido filtrado + arpegio que salta notas / pulso grave / zumbido
+  con timbal; acordes al azar compás por compás, otro tono por tramo, entrada y salida de 2 s, casi sin agudos) y
+  receta_v4.musica_por_tramos: gancho (≤35 s, tensión), entrada de cada animal (14 s; calma→tensión→oscura según el
+  nivel), el último (26 s, oscura), cierre (20 s, calma); el resto sin música. ClipMusica.codigo {animo, semilla} →
+  render._mezclar_musica la sintetiza del largo exacto (vol 0,13 + ducking). Solo perfil v4; capa animada sigue apagada.
 ## Pendiente
 - Preguntas sin responder del dueño: ¿en qué canal notó la voz lenta? (Peligro Tropical está en 1.3 en
   config/proveedores.json; Tracy en 1.0 por pedido suyo). ¿En qué momento sale «la tira de animales» sin sentido?

@@ -226,3 +226,56 @@ def aplicar(clips: list, escenas: list, sfx: list, sfx_fn, nivel: list, esc, rai
         sfx_fn(sfx, "pop", en, i, f"Pop: ícono «{tipo}»")
         hechos, ultima = hechos + 1, c["inicio"]
     return estilo
+
+
+# ------------------------------------------------------------------ 3. música por código, solo en tramos (09-11)
+MUSICA_VOLUMEN = 0.13
+GANCHO_MAX_S = 35.0
+ENTRADA_NIVEL_S = 14.0
+ULTIMO_S = 26.0
+CIERRE_S = 20.0
+
+
+def animo_de_nivel(k: int, n_niv: int) -> str:
+    if not n_niv or k <= n_niv / 3:
+        return "calma"
+    return "tension" if k <= 2 * n_niv / 3 else "oscura"
+
+
+def musica_por_tramos(clips: list, nivel: list, n_niv: int, total: float, semilla: int = 0) -> list:
+    """Música SOLO en momentos marcados (el resto del video, voz y efectos): el gancho, la entrada a cada animal (del
+    tranquilo al oscuro según suba el peligro), el último de la lista y el cierre. Cada tramo es una música distinta
+    hecha por código (musica_codigo.py) que entra y sale despacio."""
+    tramos: list[tuple[float, float, str, str]] = []
+    primero = next((i for i, k in enumerate(nivel) if k), None)
+    if primero:
+        fin = min(clips[primero]["inicio"], GANCHO_MAX_S)
+        if fin >= 6:
+            tramos.append((0.0, fin, "tension", "Gancho: música tensa suave"))
+    for i, c in enumerate(clips):
+        t = next((x for x in c["efectos"] if x["efecto"] == "tira_deslizar_a_nivel" and not x.get("pasar")), None)
+        if not t:
+            continue
+        k = int(t["hasta"])
+        ultimo = bool(n_niv) and k == n_niv
+        siguiente = next((clips[j]["inicio"] for j in range(i + 1, len(clips))
+                          if any(x["efecto"] == "tira_deslizar_a_nivel" for x in clips[j]["efectos"])), total)
+        largo = ULTIMO_S if ultimo else ENTRADA_NIVEL_S
+        fin = min(c["inicio"] + largo, siguiente - 0.5, total)
+        animo = "oscura" if ultimo else animo_de_nivel(k, n_niv)
+        tramos.append((c["inicio"], fin, animo, f"Entra el animal {k}: música {animo}"
+                       + (" (el último de la lista)" if ultimo else "")))
+    cierre = next((i for i, k in enumerate(nivel) if k is None), None)
+    if cierre is not None:
+        ini = max(clips[cierre]["inicio"], total - CIERRE_S)
+        tramos.append((ini, total, "calma", "Cierre: música tranquila"))
+    salida, fin_previo = [], 0.0
+    for n, (a, b, animo, razon) in enumerate(sorted(tramos)):
+        a = max(a, fin_previo)
+        if b - a < 5.0:
+            continue
+        salida.append({"id": f"m{n:02d}", "inicio": round(a, 3), "fin": round(b, 3), "archivo": f"codigo:{animo}",
+                       "volumen": MUSICA_VOLUMEN, "ducking": True, "animo": animo, "desde": 0.0,
+                       "codigo": {"animo": animo, "semilla": int(semilla) * 31 + n}, "razon": razon})
+        fin_previo = b
+    return salida

@@ -1702,12 +1702,21 @@ def _mezclar_musica(musica: list, voz: np.ndarray, total: int, ffmpeg: str, usad
     pista = np.zeros(total, np.float32)
     fundido = int(SR * 0.6)
     for m in musica:
+        i0, i1 = int(m["inicio"] * SR), min(total, int(m["fin"] * SR))
+        largo = i1 - i0
+        if m.get("codigo"):                    # (09-11) música hecha por código, justo del largo del tramo
+            if largo <= 0:
+                continue
+            from .musica_codigo import generar
+
+            seg = generar(m["codigo"].get("animo", "calma"), largo / SR, int(m["codigo"].get("semilla", 0)))
+            pista[i0:i0 + len(seg)] += seg[:total - i0] * m.get("volumen", 0.14)
+            usados.append(m["archivo"])
+            continue
         ruta = biblioteca.raiz() / m["archivo"]
         if not ruta.exists():
             continue
         x = biblioteca.leer_audio(ruta, ffmpeg, SR)
-        i0, i1 = int(m["inicio"] * SR), min(total, int(m["fin"] * SR))
-        largo = i1 - i0
         seg = x[int(m.get("desde", 0) * SR):]
         if len(seg) < largo:                   # pista corta: se une consigo misma con un fundido largo
             reps = [seg]
@@ -1747,7 +1756,7 @@ def mezclar_audio(raiz: Path, edl: dict, ffmpeg: str | None = None) -> np.ndarra
     voz = mezcla.copy()
     animado = (edl.get("audio") or {}).get("animado")
     musica = [] if animado else (edl["pistas"].get("musica") or [])   # la capa animada trae su propia música
-    if musica and ffmpeg:
+    if musica and (ffmpeg or all(m.get("codigo") for m in musica)):
         mezcla += _mezclar_musica(musica, voz, total, ffmpeg, usados)
     for s in edl["pistas"]["sfx"]:
         tipo, var = s["variante"].rsplit("_", 1)

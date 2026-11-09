@@ -1260,6 +1260,12 @@ def construir_edl(carpeta: CarpetaProyecto) -> dict:
 
             receta_v4(clips, escenas, sfx, _sfx, _nivel_de_clips(clips, escenas), esc, carpeta.ruta, rng)
     musica = [] if clasica else _musica(escenas, clips, revelacion, total, rng)   # clásica: sin música
+    if perfil.recursos_v4 and not vertical and esc.niveles:
+        # (09-11, el dueño) Peligro Tropical v4: música hecha por código y SOLO en tramos (no todo el video)
+        from .receta_pt import _nivel_de_clips
+        from .receta_v4 import musica_por_tramos
+
+        musica = musica_por_tramos(clips, _nivel_de_clips(clips, escenas), len(esc.niveles), total, proyecto.semilla)
     _equilibrar_movimientos(clips, perfil, rng, estilo.movimiento_maximo)
     _sonido_en_cada_corte(sfx, escenas, clips, rng, clasica)   # el recorte deja solo sfx_por_minuto
     vivos = _recortar_sonidos(sfx, len(clips), total, perfil, rng)
