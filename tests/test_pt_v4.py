@@ -247,3 +247,19 @@ def test_musica_por_codigo_solo_en_tramos(estilo):
 def test_videos_de_antes_siguen_con_su_musica(estilo):
     _, edl = _proyecto_v4(estilo, formula="escala_peligro_v2", slug="v2m")
     assert not any(m.get("codigo") for m in edl["pistas"]["musica"])
+
+
+def test_la_musica_por_codigo_nunca_suena_mas_duro_que_la_voz():
+    from estudio.render import SR, _mezclar_musica
+
+    rng = np.random.default_rng(0)
+    for nivel_voz in (0.03, 0.1, 0.3):                    # voz bajita, normal y fuerte
+        voz = (rng.standard_normal(SR * 30) * nivel_voz).astype(np.float32)
+        voz[SR * 10:SR * 12] = 0                          # una pausa
+        musica = [{"id": "m0", "inicio": 2.0, "fin": 25.0, "archivo": "codigo:oscura", "volumen": 0.13,
+                   "codigo": {"animo": "oscura", "semilla": 1}}]
+        pista = _mezclar_musica(musica, voz, len(voz), None, [])
+        tramo = pista[SR * 3:SR * 24]
+        rms_m = float(np.sqrt(np.mean(tramo ** 2)))
+        assert rms_m < nivel_voz * 10 ** (-12 / 20), (nivel_voz, rms_m)     # al menos 12 dB debajo de la voz
+        assert float(np.abs(pista).max()) < nivel_voz * 4                     # ni un golpe más fuerte que la voz

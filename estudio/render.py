@@ -1696,6 +1696,9 @@ def _envolvente(x: np.ndarray, ventana_s: float = 0.25) -> np.ndarray:
     return np.clip(e / (np.percentile(e[e > 1e-4], 90) if np.any(e > 1e-4) else 1), 0, 1)
 
 
+MUSICA_BAJO_VOZ_DB = 14.0      # música por código: tantos dB por debajo de la voz (antes de bajar más cuando habla)
+
+
 def _mezclar_musica(musica: list, voz: np.ndarray, total: int, ffmpeg: str, usados: list) -> np.ndarray:
     from . import biblioteca
 
@@ -1710,7 +1713,13 @@ def _mezclar_musica(musica: list, voz: np.ndarray, total: int, ffmpeg: str, usad
             from .musica_codigo import generar
 
             seg = generar(m["codigo"].get("animo", "calma"), largo / SR, int(m["codigo"].get("semilla", 0)))
-            pista[i0:i0 + len(seg)] += seg[:total - i0] * m.get("volumen", 0.14)
+            # (09-11, el dueño: «que no suene más duro que la voz») el volumen sale de la VOZ de este video: la música
+            # queda MUSICA_BAJO_VOZ_DB por debajo de la voz (y además baja cuando la voz habla: ducking)
+            activa = voz[:total][np.abs(voz[:total]) > 0.01]
+            voz_rms = float(np.sqrt(np.mean(activa ** 2))) if len(activa) > SR // 2 else 0.08
+            seg_rms = float(np.sqrt(np.mean(seg ** 2))) or 1.0
+            ganancia = min(m.get("volumen", 0.14), voz_rms * 10 ** (-MUSICA_BAJO_VOZ_DB / 20) / seg_rms)
+            pista[i0:i0 + len(seg)] += seg[:total - i0] * ganancia
             usados.append(m["archivo"])
             continue
         ruta = biblioteca.raiz() / m["archivo"]

@@ -587,7 +587,7 @@ Estado al 04-10-2026. El repositorio es PÚBLICO: nunca escribir claves, tokens 
   con timbal; acordes al azar compás por compás, otro tono por tramo, entrada y salida de 2 s, casi sin agudos) y
   receta_v4.musica_por_tramos: gancho (≤35 s, tensión), entrada de cada animal (14 s; calma→tensión→oscura según el
   nivel), el último (26 s, oscura), cierre (20 s, calma); el resto sin música. ClipMusica.codigo {animo, semilla} →
-  render._mezclar_musica la sintetiza del largo exacto (vol 0,13 + ducking). Solo perfil v4; capa animada sigue apagada.
+  render._mezclar_musica la sintetiza del largo exacto; volumen atado a la VOZ del video (MUSICA_BAJO_VOZ_DB=14 dB debajo + ducking; el dueño aprobó la muestra: «que no suene más duro que la voz»). Solo perfil v4; capa animada sigue apagada.
 ## Pendiente
 - Preguntas sin responder del dueño: ¿en qué canal notó la voz lenta? (Peligro Tropical está en 1.3 en
   config/proveedores.json; Tracy en 1.0 por pedido suyo). ¿En qué momento sale «la tira de animales» sin sentido?
