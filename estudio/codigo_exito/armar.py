@@ -127,7 +127,22 @@ def _en_pantalla(trozo: dict, pantalla) -> bool:
     return any(a <= medio < z and pal and pal <= set(p) for a, z, p in pantalla)
 
 
-def partes(trabajo: Path, tl: dict, datos: dict, ff: str) -> list[dict]:
+def qr_de_venta(trabajo: Path, tl: dict, avisar=print) -> list[dict]:
+    """(09-11) el QR de compra en los bloques de venta del infoproducto (venta.py); sin link guardado, nada"""
+    from . import venta as V
+
+    cfg = V.leer()
+    tramos = V.tramos(tl["bloques"], cfg)
+    if not tramos:
+        return []
+    huella = hashlib.sha1(cfg["link"].encode()).hexdigest()[:10]
+    png = V.imagen(cfg["link"], trabajo / "partes" / f"qr_{huella}.png")
+    avisar(f"QR de compra en {len(tramos)} momento(s) de venta")
+    return [{"ini": round(a, 3), "fin": round(z, 3), "url": "@/" + png.relative_to(trabajo).as_posix(), "texto": cfg["texto"]}
+            for a, z in tramos]
+
+
+def partes(trabajo: Path, tl: dict, datos: dict, ff: str, qr: list[dict] | None = None) -> list[dict]:
     """agrupa los bloques en partes (cada [PROFESOR] abre una) con sus subtítulos y su pedazo de voz"""
     grupos: dict[int, list[dict]] = {}
     for b in tl["bloques"]:
@@ -148,6 +163,10 @@ def partes(trabajo: Path, tl: dict, datos: dict, ff: str) -> list[dict]:
         props = {"fps": FPS, "inicio": ini, "cola": 0 if ultima else round(T * FPS),
                  "bloques": [{**datos[b["id"]], "dur": b["ranura"]} for b in bs], "subtitulos": subs,
                  "audio": "@/" + wav.relative_to(trabajo).as_posix()}
+        locales = [{**q, "ini": round(max(0.0, q["ini"] - ini), 3), "fin": round(min(dur, q["fin"] - ini), 3)}
+                   for q in (qr or []) if q["ini"] < ini + dur and q["fin"] > ini]
+        if locales:
+            props["qr"] = [q for q in locales if q["fin"] - q["ini"] > 0.5]
         firma = hashlib.sha1(json.dumps(props, sort_keys=True).encode()).hexdigest()[:10]
         salida.append({"nombre": f"parte_{k:02d}_{firma}", "props": props, "inicio": ini, "dur": dur, "ultima": ultima})
     return salida
@@ -232,7 +251,8 @@ def hacer(guion_txt: Path, trabajo: Path, permiso: bool = False, avisar=print, c
 
         escenas = planear_escenas(trabajo, tl["bloques"], avisar)
     datos = preparar(trabajo, tl["bloques"], ff, avisar, escenas)
-    lista = partes(trabajo, tl, datos, ff)
+    (trabajo / "partes").mkdir(exist_ok=True)
+    lista = partes(trabajo, tl, datos, ff, qr_de_venta(trabajo, tl, avisar))
     renderizar_partes(trabajo, lista, avisar)
     video = unir(trabajo, lista, ff)
     v, _ = dsp.read_wav(str(trabajo / "voz" / "voz.wav"))

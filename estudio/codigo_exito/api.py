@@ -7,6 +7,7 @@
 - POST /api/codigo-exito/videos/{slug}/hacer {permiso} → arma el video en segundo plano (lo hecho no se repite)
 - GET  /api/codigo-exito/videos/{slug}/final.mp4
 - POST /api/codigo-exito/abrir {que: recursos|videos} → abre la carpeta en el Explorador
+- POST /api/codigo-exito/venta {link, producto, texto} → link de compra para el QR de la venta (09-11)
 El video final se copia también a Videos/Xandart (como los demás), con sus capítulos al lado.
 """
 from __future__ import annotations
@@ -113,7 +114,26 @@ def _resumen(c: Path) -> dict:
 @rutas.get("")
 def estado():
     videos = sorted((p for p in carpeta_videos_ce().iterdir() if (p / "guion.txt").exists()), key=lambda p: p.stat().st_mtime, reverse=True)
-    return {"faltan": _faltan(), "videos": [_resumen(v) for v in videos]}
+    from .venta import leer as venta
+
+    return {"faltan": _faltan(), "videos": [_resumen(v) for v in videos], "venta": venta()}
+
+
+class Venta(BaseModel):
+    link: str = Field("", max_length=500)
+    producto: str = Field("", max_length=60)
+    texto: str = Field("", max_length=40)
+
+
+@rutas.post("/venta")
+def guardar_venta(d: Venta):
+    """(09-11) link de compra del infoproducto: el QR sale en los videos que se armen después"""
+    from .venta import guardar
+
+    try:
+        return guardar(d.link, d.producto, d.texto)
+    except ValueError as ex:
+        raise HTTPException(422, str(ex)) from ex
 
 
 class NuevoVideo(BaseModel):

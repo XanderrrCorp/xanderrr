@@ -8,6 +8,7 @@ import { api } from '../api';
 interface Faltan { carpeta: string; profesor: boolean; efectos: boolean; musica: number; node: boolean; pexels: boolean; rhubarb: boolean }
 interface Resumen { slug: string; titulo: string; estado: 'nuevo' | 'haciendo' | 'listo' | 'error'; mensaje: string; final: boolean }
 interface Costo { bloques: number; partes: number; letras: number; minutos: number; costo_voz: string; por_tipo: Record<string, number> }
+interface Venta { link: string; producto: string; texto: string }
 interface Detalle extends Resumen { costo: Costo; log: string[]; error: string | null; capitulos: string; bloques_txt: string; creditos: string; trabajando: boolean }
 
 const EJEMPLO = `[PROFESOR]
@@ -29,9 +30,17 @@ export function CodigoExito() {
   const [abierto, setAbierto] = useState<Detalle | null>(null);
   const [error, setError] = useState('');
   const [enviando, setEnviando] = useState(false);
+  const [venta, setVenta] = useState<Venta>({ link: '', producto: '', texto: '' });
+  const [ventaOk, setVentaOk] = useState('');
 
-  const cargar = useCallback(() => api<{ faltan: Faltan; videos: Resumen[] }>('/api/codigo-exito')
-    .then((r) => { setFaltan(r.faltan); setVideos(r.videos); }).catch((x) => setError((x as Error).message)), []);
+  const cargar = useCallback(() => api<{ faltan: Faltan; videos: Resumen[]; venta?: Venta }>('/api/codigo-exito')
+    .then((r) => { setFaltan(r.faltan); setVideos(r.videos); if (r.venta) setVenta(r.venta); })
+    .catch((x) => setError((x as Error).message)), []);
+  const guardarVenta = async () => {
+    setVentaOk('');
+    try { setVenta(await api<Venta>('/api/codigo-exito/venta', { cuerpo: venta })); setVentaOk('Guardado: el QR sale en los videos que armes desde ahora.'); }
+    catch (x) { setVentaOk((x as Error).message); }
+  };
   const abrir = useCallback((slug: string) => api<Detalle>(`/api/codigo-exito/videos/${slug}`).then(setAbierto)
     .catch((x) => setError((x as Error).message)), []);
   useEffect(() => { cargar(); }, [cargar]);
@@ -80,6 +89,22 @@ export function CodigoExito() {
             <button className="boton-borde pequeno" onClick={() => carpeta('recursos')}>Abrir carpeta</button></p>
         </section>
       )}
+
+      <section className="rev-tarjeta">
+        <b>QR de compra (para las que ven en TV)</b>
+        <p className="pequeno tenue">Cuando el video habla de tu programa, sale un código QR grande abajo a la derecha que lleva a
+          este link. Si escribes el nombre del programa, Xandart lo reconoce mejor.</p>
+        <input placeholder="Link de compra (https://…)" value={venta.link} onChange={(e) => setVenta({ ...venta, link: e.target.value })}
+          style={{ width: '100%', marginBottom: 6 }} />
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+          <input placeholder="Nombre del programa (ej. MI VALOR)" value={venta.producto}
+            onChange={(e) => setVenta({ ...venta, producto: e.target.value })} style={{ flex: 1, minWidth: 200 }} />
+          <input placeholder="Texto debajo del QR" value={venta.texto} onChange={(e) => setVenta({ ...venta, texto: e.target.value })}
+            style={{ flex: 1, minWidth: 200 }} />
+          <button className="boton" onClick={guardarVenta}>Guardar</button>
+        </div>
+        {ventaOk && <p className="pequeno">{ventaOk}</p>}
+      </section>
 
       <section className="rev-tarjeta">
         <input placeholder="Título del video" value={titulo} onChange={(e) => setTitulo(e.target.value)} style={{ width: '100%', marginBottom: 8 }} />

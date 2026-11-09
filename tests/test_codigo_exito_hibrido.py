@@ -213,3 +213,50 @@ def test_guion_con_la_forma_del_dueno_emoji_comillas_y_notas():
     assert b[3]["claves"] == ["woman looking in mirror morning"] and b[3]["texto_pantalla"] == "7 FRASES + 1 SECRETA"
     assert b[4]["claves"] == ["nature", "sea"]
     assert not any("🎬" in x["texto"] or "TEXTO" in x["texto"] for x in b)
+
+
+def test_qr_de_compra_en_la_venta(tmp_path, monkeypatch):
+    from estudio.codigo_exito import venta as V
+
+    monkeypatch.setattr(V, "archivo", lambda: tmp_path / "venta.json")
+    bloques = [{"id": 1, "inicio": 0.0, "ranura": 20.0, "texto": "Hay frases que una mujer dice veinte veces al día."},
+               {"id": 2, "inicio": 20.0, "ranura": 15.0, "texto": "Eso es lo que trabajamos en MI VALOR, el programa de veintiún días."},
+               {"id": 3, "inicio": 35.0, "ranura": 3.0, "texto": "Te dejo el link en la descripción."},
+               {"id": 4, "inicio": 60.0, "ranura": 12.0, "texto": "Ahora sí, la frase número uno.", "nota": "dedo en la sien"},
+               {"id": 5, "inicio": 80.0, "ranura": 5.0, "texto": "Una cosa más.", "nota": "VENTA, mostrar QR"}]
+    assert V.tramos(bloques) == []                                     # sin link guardado: no hay QR
+    try:
+        V.guardar("mi-valor.com")
+        raise AssertionError("debía pedir https://")
+    except ValueError:
+        pass
+    V.guardar("https://ejemplo.com/mi-valor", "Mi Valor")
+    assert V.tramos(bloques) == [(20.0, 38.0), (80.0, 88.0)]           # producto + link juntos; la nota VENTA (mín. 8 s)
+    png = V.imagen(V.leer()["link"], tmp_path / "qr.png")
+    import cv2
+
+    assert cv2.QRCodeDetector().detectAndDecode(cv2.imread(str(png)))[0] == "https://ejemplo.com/mi-valor"
+
+
+def test_el_qr_va_en_las_partes_que_toca(tmp_path, monkeypatch):
+    import wave
+
+    import numpy as np
+
+    from estudio.codigo_exito import armar as A, venta as V
+    from estudio.pipeline import ffmpeg
+
+    monkeypatch.setattr(V, "archivo", lambda: tmp_path / "venta.json")
+    V.guardar("https://ejemplo.com/mi-valor", "MI VALOR")
+    (tmp_path / "voz").mkdir()
+    with wave.open(str(tmp_path / "voz" / "voz.wav"), "wb") as w:
+        w.setnchannels(1); w.setsampwidth(2); w.setframerate(48000); w.writeframes(np.zeros(48000 * 40, "<i2").tobytes())
+    tl = {"bloques": [{"id": 1, "parte": 0, "tipo": "aura", "inicio": 0.0, "ranura": 10.0, "texto": "Hola.", "trozos": []},
+                      {"id": 2, "parte": 1, "tipo": "aura", "inicio": 10.0, "ranura": 12.0, "trozos": [],
+                       "texto": "En MI VALOR te enseño a dejar de ponerte en rebaja."}]}
+    datos = {1: {"tipo": "aura", "aura": {"respiros": []}}, 2: {"tipo": "aura", "aura": {"respiros": []}}}
+    (tmp_path / "partes").mkdir()
+    lista = A.partes(tmp_path, tl, datos, ffmpeg(), A.qr_de_venta(tmp_path, tl, avisar=lambda *_: None))
+    assert "qr" not in lista[0]["props"]
+    q = lista[1]["props"]["qr"]
+    assert q[0]["ini"] == 0.0 and q[0]["fin"] == 12.0 and q[0]["url"].startswith("@/partes/qr_")

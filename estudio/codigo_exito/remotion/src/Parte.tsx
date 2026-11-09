@@ -17,7 +17,8 @@ export type Bloque = {
   profesor?: string; stock?: Clip[];
   aura?: { respiros: { t: number; dur: number; url: string }[] };
 };
-export type PropsParte = { fps: number; bloques: Bloque[]; subtitulos: { texto: string; ini: number; fin: number }[]; audio?: string | null; inicio: number; cola: number };
+export type QR = { ini: number; fin: number; url: string; texto: string };
+export type PropsParte = { fps: number; bloques: Bloque[]; subtitulos: { texto: string; ini: number; fin: number }[]; audio?: string | null; inicio: number; cola: number; qr?: QR[] };
 
 const fuente = (() => {
   let lista = false;
@@ -131,6 +132,30 @@ const Subtitulos: React.FC<{ lista: PropsParte["subtitulos"] }> = ({ lista }) =>
   );
 };
 
+/** (09-11) QR de compra en la venta del infoproducto: tarjeta blanca abajo a la derecha (al lado de los subtítulos, que
+ *  van al centro), grande para que se escanee desde el sofá mirando la TV; entra con rebote y late suave */
+const CodigoQR: React.FC<{ lista: QR[] }> = ({ lista }) => {
+  const f = useCurrentFrame(); const { fps } = useVideoConfig();
+  const t = f / fps;
+  const q = lista.find((x) => t >= x.ini && t < x.fin);
+  if (!q) return null;
+  const entra = spring({ frame: f - Math.round(q.ini * fps), fps, config: { damping: 12, stiffness: 180, mass: 0.6 } });
+  const sale = interpolate(t, [q.fin - 0.35, q.fin], [1, 0], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
+  const late = 1 + 0.025 * Math.sin(t * 3.2);
+  return (
+    <AbsoluteFill style={{ justifyContent: "flex-end", alignItems: "flex-end", padding: "0 46px 46px 0" }}>
+      <div style={{ width: 330, padding: "18px 18px 10px", borderRadius: 24, background: COLOR.crema, border: `6px solid ${COLOR.dorado}`,
+        boxShadow: "0 14px 40px rgba(0,0,0,0.55)", textAlign: "center", opacity: sale,
+        transform: `translateY(${(1 - entra) * 160}px) scale(${(0.7 + 0.3 * entra) * late})` }}>
+        <Img src={q.url} style={{ width: 282, height: 282, display: "block", margin: "0 auto", imageRendering: "pixelated" }} />
+        <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 36, lineHeight: 1.05, color: COLOR.vino, marginTop: 8 }}>
+          {q.texto.toUpperCase()}
+        </div>
+      </div>
+    </AbsoluteFill>
+  );
+};
+
 export const Parte: React.FC<PropsParte> = (p) => {
   fuente();
   const { fps } = useVideoConfig();
@@ -150,6 +175,7 @@ export const Parte: React.FC<PropsParte> = (p) => {
       </TransitionSeries>
       <Pelicula />
       <Subtitulos lista={p.subtitulos} />
+      {p.qr?.length ? <CodigoQR lista={p.qr} /> : null}
     </AbsoluteFill>
   );
 };
