@@ -589,11 +589,13 @@ Estado al 04-10-2026. El repositorio es PÚBLICO: nunca escribir claves, tokens 
   nivel), el último (26 s, oscura), cierre (20 s, calma); el resto sin música. ClipMusica.codigo {animo, semilla} →
   render._mezclar_musica la sintetiza del largo exacto; volumen atado a la VOZ del video (MUSICA_BAJO_VOZ_DB=14 dB debajo + ducking; el dueño aprobó la muestra: «que no suene más duro que la voz»). Solo perfil v4; capa animada sigue apagada.
 - (09-11) CÓDIGO DEL ÉXITO: QR DE COMPRA en la venta del infoproducto (el dueño: «para las que ven en TV»):
-  codigo_exito/venta.py (link/producto/texto en datos/codigo_exito/venta.json; POST /api/codigo-exito/venta y tarjeta
+  codigo_exito/venta.py (10-11: VARIOS programas {producto, link}, la página trae MI VALOR y MI CÓDIGO; cada venta lleva
+  el QR del programa nombrado, o del último nombrado; datos/codigo_exito/venta.json; POST /api/codigo-exito/venta y tarjeta
   «QR de compra» en la página). Bloque de venta = nombra el producto, su nota dice VENTA/QR o habla de comprar/link/
   inscribirse; tramos unidos, mín. 8 s. QR con segno (dependencia nueva en pyproject, error «l» = cuadros grandes; se lee
   hasta a 960 px) → armar.qr_de_venta → props «qr» por parte → Parte.tsx CodigoQR (tarjeta crema con borde dorado abajo
-  a la derecha, 330 px, «ESCANEA CON TU CELULAR»). Sin link guardado: nada cambia. Recomendado un link corto.
+  a la derecha, 330 px, «ESCANEA CON TU CELULAR»). Sin link guardado: nada cambia. Recomendado un link corto. Los links
+  reales NO los tengo (en los videos viejos siempre fue «[TU ENLACE DE HOTMART]»): el dueño los pega en la página.
 ## Pendiente
 - Preguntas sin responder del dueño: ¿en qué canal notó la voz lenta? (Peligro Tropical está en 1.3 en
   config/proveedores.json; Tracy en 1.0 por pedido suyo). ¿En qué momento sale «la tira de animales» sin sentido?

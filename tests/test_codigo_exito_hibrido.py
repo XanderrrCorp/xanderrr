@@ -223,19 +223,33 @@ def test_qr_de_compra_en_la_venta(tmp_path, monkeypatch):
                {"id": 2, "inicio": 20.0, "ranura": 15.0, "texto": "Eso es lo que trabajamos en MI VALOR, el programa de veintiún días."},
                {"id": 3, "inicio": 35.0, "ranura": 3.0, "texto": "Te dejo el link en la descripción."},
                {"id": 4, "inicio": 60.0, "ranura": 12.0, "texto": "Ahora sí, la frase número uno.", "nota": "dedo en la sien"},
-               {"id": 5, "inicio": 80.0, "ranura": 5.0, "texto": "Una cosa más.", "nota": "VENTA, mostrar QR"}]
-    assert V.tramos(bloques) == []                                     # sin link guardado: no hay QR
+               {"id": 5, "inicio": 80.0, "ranura": 10.0, "texto": "Y si quieres ir más lejos, está Mi Código."},
+               {"id": 6, "inicio": 100.0, "ranura": 5.0, "texto": "Una cosa más.", "nota": "VENTA, mostrar QR"}]
+    assert V.tramos(bloques) == []                                     # sin links guardados: no hay QR
     try:
-        V.guardar("mi-valor.com")
+        V.guardar([{"producto": "MI VALOR", "link": "mi-valor.com"}])
         raise AssertionError("debía pedir https://")
     except ValueError:
         pass
-    V.guardar("https://ejemplo.com/mi-valor", "Mi Valor")
-    assert V.tramos(bloques) == [(20.0, 38.0), (80.0, 88.0)]           # producto + link juntos; la nota VENTA (mín. 8 s)
-    png = V.imagen(V.leer()["link"], tmp_path / "qr.png")
+    V.guardar([{"producto": "MI VALOR", "link": "https://ejemplo.com/mi-valor"},
+               {"producto": "MI CÓDIGO", "link": "https://ejemplo.com/mi-codigo"}])
+    assert V.tramos(bloques) == [(20.0, 38.0, "https://ejemplo.com/mi-valor"),      # producto + link juntos
+                                 (80.0, 90.0, "https://ejemplo.com/mi-codigo"),     # cada programa, su QR
+                                 (100.0, 108.0, "https://ejemplo.com/mi-codigo")]   # nota VENTA: el último nombrado
+    png = V.imagen("https://ejemplo.com/mi-valor", tmp_path / "qr.png")
     import cv2
 
     assert cv2.QRCodeDetector().detectAndDecode(cv2.imread(str(png)))[0] == "https://ejemplo.com/mi-valor"
+
+
+def test_lo_guardado_con_un_solo_link_se_sigue_leyendo(tmp_path, monkeypatch):
+    import json
+
+    from estudio.codigo_exito import venta as V
+
+    monkeypatch.setattr(V, "archivo", lambda: tmp_path / "venta.json")
+    (tmp_path / "venta.json").write_text(json.dumps({"link": "https://ejemplo.com/x", "producto": "MI VALOR"}), "utf-8")
+    assert V.leer()["productos"] == [{"producto": "MI VALOR", "link": "https://ejemplo.com/x"}]
 
 
 def test_el_qr_va_en_las_partes_que_toca(tmp_path, monkeypatch):
@@ -247,7 +261,7 @@ def test_el_qr_va_en_las_partes_que_toca(tmp_path, monkeypatch):
     from estudio.pipeline import ffmpeg
 
     monkeypatch.setattr(V, "archivo", lambda: tmp_path / "venta.json")
-    V.guardar("https://ejemplo.com/mi-valor", "MI VALOR")
+    V.guardar([{"producto": "MI VALOR", "link": "https://ejemplo.com/mi-valor"}])
     (tmp_path / "voz").mkdir()
     with wave.open(str(tmp_path / "voz" / "voz.wav"), "wb") as w:
         w.setnchannels(1); w.setsampwidth(2); w.setframerate(48000); w.writeframes(np.zeros(48000 * 40, "<i2").tobytes())

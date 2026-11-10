@@ -128,18 +128,20 @@ def _en_pantalla(trozo: dict, pantalla) -> bool:
 
 
 def qr_de_venta(trabajo: Path, tl: dict, avisar=print) -> list[dict]:
-    """(09-11) el QR de compra en los bloques de venta del infoproducto (venta.py); sin link guardado, nada"""
+    """(09-11) el QR de compra en los bloques de venta (venta.py): el del programa que se nombra; sin links, nada"""
     from . import venta as V
 
     cfg = V.leer()
     tramos = V.tramos(tl["bloques"], cfg)
     if not tramos:
         return []
-    huella = hashlib.sha1(cfg["link"].encode()).hexdigest()[:10]
-    png = V.imagen(cfg["link"], trabajo / "partes" / f"qr_{huella}.png")
+    salida = []
+    for a, z, link in tramos:
+        png = V.imagen(link, trabajo / "partes" / f"qr_{hashlib.sha1(link.encode()).hexdigest()[:10]}.png")
+        salida.append({"ini": round(a, 3), "fin": round(z, 3), "url": "@/" + png.relative_to(trabajo).as_posix(),
+                       "texto": cfg["texto"]})
     avisar(f"QR de compra en {len(tramos)} momento(s) de venta")
-    return [{"ini": round(a, 3), "fin": round(z, 3), "url": "@/" + png.relative_to(trabajo).as_posix(), "texto": cfg["texto"]}
-            for a, z in tramos]
+    return salida
 
 
 def partes(trabajo: Path, tl: dict, datos: dict, ff: str, qr: list[dict] | None = None) -> list[dict]:

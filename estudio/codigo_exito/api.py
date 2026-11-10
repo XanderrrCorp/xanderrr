@@ -7,7 +7,7 @@
 - POST /api/codigo-exito/videos/{slug}/hacer {permiso} → arma el video en segundo plano (lo hecho no se repite)
 - GET  /api/codigo-exito/videos/{slug}/final.mp4
 - POST /api/codigo-exito/abrir {que: recursos|videos} → abre la carpeta en el Explorador
-- POST /api/codigo-exito/venta {link, producto, texto} → link de compra para el QR de la venta (09-11)
+- POST /api/codigo-exito/venta {productos: [{producto, link}], texto} → links de compra para el QR de la venta
 El video final se copia también a Videos/Xandart (como los demás), con sus capítulos al lado.
 """
 from __future__ import annotations
@@ -119,19 +119,23 @@ def estado():
     return {"faltan": _faltan(), "videos": [_resumen(v) for v in videos], "venta": venta()}
 
 
-class Venta(BaseModel):
-    link: str = Field("", max_length=500)
+class Programa(BaseModel):
     producto: str = Field("", max_length=60)
+    link: str = Field("", max_length=500)
+
+
+class Venta(BaseModel):
+    productos: list[Programa] = Field(default_factory=list, max_length=6)
     texto: str = Field("", max_length=40)
 
 
 @rutas.post("/venta")
 def guardar_venta(d: Venta):
-    """(09-11) link de compra del infoproducto: el QR sale en los videos que se armen después"""
+    """(09-11) links de compra de sus programas: el QR sale en los videos que se armen después"""
     from .venta import guardar
 
     try:
-        return guardar(d.link, d.producto, d.texto)
+        return guardar([p.model_dump() for p in d.productos], d.texto)
     except ValueError as ex:
         raise HTTPException(422, str(ex)) from ex
 

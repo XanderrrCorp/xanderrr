@@ -8,7 +8,15 @@ import { api } from '../api';
 interface Faltan { carpeta: string; profesor: boolean; efectos: boolean; musica: number; node: boolean; pexels: boolean; rhubarb: boolean }
 interface Resumen { slug: string; titulo: string; estado: 'nuevo' | 'haciendo' | 'listo' | 'error'; mensaje: string; final: boolean }
 interface Costo { bloques: number; partes: number; letras: number; minutos: number; costo_voz: string; por_tipo: Record<string, number> }
-interface Venta { link: string; producto: string; texto: string }
+interface Programa { producto: string; link: string }
+interface Venta { productos: Programa[]; texto: string }
+// (10-11) sus dos programas ya escritos: solo falta pegar el link de cada uno
+const PROGRAMAS = ['MI VALOR', 'MI CÓDIGO'];
+const conProgramas = (v: Venta): Venta => {
+  const lista = [...(v.productos || [])];
+  for (const n of PROGRAMAS) if (!lista.some((p) => p.producto.toUpperCase() === n)) lista.push({ producto: n, link: '' });
+  return { ...v, productos: lista };
+};
 interface Detalle extends Resumen { costo: Costo; log: string[]; error: string | null; capitulos: string; bloques_txt: string; creditos: string; trabajando: boolean }
 
 const EJEMPLO = `[PROFESOR]
@@ -30,15 +38,15 @@ export function CodigoExito() {
   const [abierto, setAbierto] = useState<Detalle | null>(null);
   const [error, setError] = useState('');
   const [enviando, setEnviando] = useState(false);
-  const [venta, setVenta] = useState<Venta>({ link: '', producto: '', texto: '' });
+  const [venta, setVenta] = useState<Venta>(conProgramas({ productos: [], texto: '' }));
   const [ventaOk, setVentaOk] = useState('');
 
   const cargar = useCallback(() => api<{ faltan: Faltan; videos: Resumen[]; venta?: Venta }>('/api/codigo-exito')
-    .then((r) => { setFaltan(r.faltan); setVideos(r.videos); if (r.venta) setVenta(r.venta); })
+    .then((r) => { setFaltan(r.faltan); setVideos(r.videos); if (r.venta) setVenta(conProgramas(r.venta)); })
     .catch((x) => setError((x as Error).message)), []);
   const guardarVenta = async () => {
     setVentaOk('');
-    try { setVenta(await api<Venta>('/api/codigo-exito/venta', { cuerpo: venta })); setVentaOk('Guardado: el QR sale en los videos que armes desde ahora.'); }
+    try { setVenta(conProgramas(await api<Venta>('/api/codigo-exito/venta', { cuerpo: venta }))); setVentaOk('Guardado: el QR sale en los videos que armes desde ahora.'); }
     catch (x) { setVentaOk((x as Error).message); }
   };
   const abrir = useCallback((slug: string) => api<Detalle>(`/api/codigo-exito/videos/${slug}`).then(setAbierto)
@@ -92,13 +100,17 @@ export function CodigoExito() {
 
       <section className="rev-tarjeta">
         <b>QR de compra (para las que ven en TV)</b>
-        <p className="pequeno tenue">Cuando el video habla de tu programa, sale un código QR grande abajo a la derecha que lleva a
-          este link. Si escribes el nombre del programa, Xandart lo reconoce mejor.</p>
-        <input placeholder="Link de compra (https://…)" value={venta.link} onChange={(e) => setVenta({ ...venta, link: e.target.value })}
-          style={{ width: '100%', marginBottom: 6 }} />
+        <p className="pequeno tenue">Cuando el video habla de uno de tus programas, sale un código QR grande abajo a la derecha que lleva
+          a SU link. Pega el link de compra de cada uno y dale Guardar.</p>
+        {venta.productos.map((p, k) => (
+          <div key={k} style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 6 }}>
+            <input placeholder="Nombre del programa" value={p.producto} style={{ width: 180 }}
+              onChange={(e) => setVenta({ ...venta, productos: venta.productos.map((x, i) => i === k ? { ...x, producto: e.target.value } : x) })} />
+            <input placeholder="Link de compra (https://…)" value={p.link} style={{ flex: 1, minWidth: 220 }}
+              onChange={(e) => setVenta({ ...venta, productos: venta.productos.map((x, i) => i === k ? { ...x, link: e.target.value } : x) })} />
+          </div>
+        ))}
         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-          <input placeholder="Nombre del programa (ej. MI VALOR)" value={venta.producto}
-            onChange={(e) => setVenta({ ...venta, producto: e.target.value })} style={{ flex: 1, minWidth: 200 }} />
           <input placeholder="Texto debajo del QR" value={venta.texto} onChange={(e) => setVenta({ ...venta, texto: e.target.value })}
             style={{ flex: 1, minWidth: 200 }} />
           <button className="boton" onClick={guardarVenta}>Guardar</button>
