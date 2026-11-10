@@ -596,6 +596,12 @@ Estado al 04-10-2026. El repositorio es PÚBLICO: nunca escribir claves, tokens 
   hasta a 960 px) → armar.qr_de_venta → props «qr» por parte → Parte.tsx CodigoQR (tarjeta crema con borde dorado abajo
   a la derecha, 330 px, «ESCANEA CON TU CELULAR»). Sin link guardado: nada cambia. Recomendado un link corto. Los links
   reales NO los tengo (en los videos viejos siempre fue «[TU ENLACE DE HOTMART]»): el dueño los pega en la página.
+- (10-11) ESCENA DEL PRODUCTO (el dueño: «que se vea como cuando lo hacíamos a mano»): codigo_exito/producto.py. Cuando la
+  voz nombra MI VALOR o MI CÓDIGO sale LA MISMA escena de los primeros videos (animado/escenas.mivalor con sello «7 días de
+  garantía» / escenas_extra.micodigo, el planner en el celular): en bloques del Profesor entra al plan en el segundo del
+  nombre (PD.en_plan, ≥4,5 s); en stock/aura va un clip de 5,5 s encima (armar._inserto → Bloque.inserto → Parte.tsx
+  Inserto). Máx. una por bloque y del mismo producto cada 45 s. Mientras sale, el QR se pasa arriba a la derecha y
+  se achica (props «productos»), sin tapar la lista. Probado con cuadros reales (se lee el QR).
 ## Pendiente
 - Preguntas sin responder del dueño: ¿en qué canal notó la voz lenta? (Peligro Tropical está en 1.3 en
   config/proveedores.json; Tracy en 1.0 por pedido suyo). ¿En qué momento sale «la tira de animales» sin sentido?

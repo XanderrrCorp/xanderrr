@@ -77,6 +77,9 @@ def preparar(trabajo: Path, bloques: list[dict], ff: str, avisar=print, escenas:
             stock.update(ST.elegir(trabajo, [p], avisar))
         except Exception as ex:  # noqa: BLE001
             avisar(f"  sin stock para {p['clave']} ({str(ex)[:120]}): ese tramo va como aura")
+    from . import producto as PD
+
+    productos = PD.elegir(bloques)                    # (10-11) MI VALOR / MI CÓDIGO: su escena de los primeros videos
     for b in bloques:
         if b["tipo"] == "profesor":
             wav = trabajo / "profesor" / f"bloque_{b['id']:03d}.wav"
@@ -93,6 +96,11 @@ def preparar(trabajo: Path, bloques: list[dict], ff: str, avisar=print, escenas:
                 from . import escenas_bloque as EB
 
                 plan = [{**e, "inicio": round(float(e.get("inicio", e.get("en", 0) * b["ranura"])), 3)} for e in plan]
+                if b["id"] in productos:
+                    plan = PD.en_plan(plan, b["ranura"], *productos[b["id"]])
+                    k = next(i for i, e in enumerate(plan) if e["tipo"] == productos[b["id"]][0])
+                    fin = plan[k + 1]["inicio"] if k + 1 < len(plan) else b["ranura"]
+                    b["_producto"] = (b["inicio"] + plan[k]["inicio"], b["inicio"] + fin)
                 mp4 = mp4.with_name(mp4.stem + "_esc" + hashlib.sha1(json.dumps(plan, sort_keys=True).encode()).hexdigest()[:8] + ".mp4")
                 EB.renderizar(plan, wav, b["texto"], dur, mp4, ff, gestos=gestos)
                 b["_pantalla"] = [(b["inicio"] + a, b["inicio"] + z, sorted(p)) for a, z, p in EB.pantalla(EB.completar(plan, b["ranura"]))]
@@ -100,6 +108,9 @@ def preparar(trabajo: Path, bloques: list[dict], ff: str, avisar=print, escenas:
             else:
                 PR.renderizar(wav, b["texto"], dur, mp4, ff, gestos=gestos)
             d[b["id"]] = {"tipo": "profesor", "profesor": "@/" + mp4.relative_to(trabajo).as_posix()}
+            if b["id"] in productos and not plan:     # sin plan de escenas: la escena del producto va encima, como inserto
+                d[b["id"]]["inserto"] = ins = _inserto(trabajo, ff, *productos[b["id"]], b["ranura"])
+                b["_producto"] = (b["inicio"] + ins["ini"], b["inicio"] + ins["ini"] + ins["dur"])
         elif b["tipo"] == "stock" and f"bloque_{b['id']:03d}" in stock:
             d[b["id"]] = {"tipo": "stock", "stock": [{"url": f"@/stock/{c['archivo']}", "dur": c["dur"]} for c in stock[f"bloque_{b['id']:03d}"]]}
         else:
@@ -110,7 +121,27 @@ def preparar(trabajo: Path, bloques: list[dict], ff: str, avisar=print, escenas:
                     if clave in stock:
                         rs.append({"t": t, "dur": RESPIRO, "url": "@/stock/" + stock[clave][0]["archivo"]})
             d[b["id"]] = {"tipo": "aura", "aura": {"respiros": rs}}
+        if b["tipo"] != "profesor" and b["id"] in productos:
+            try:
+                d[b["id"]]["inserto"] = ins = _inserto(trabajo, ff, *productos[b["id"]], b["ranura"])
+                b["_producto"] = (b["inicio"] + ins["ini"], b["inicio"] + ins["ini"] + ins["dur"])
+            except Exception as ex:  # noqa: BLE001 — sin capas o sin fuentes: el bloque sigue sin la escena
+                avisar(f"  sin escena del producto en el bloque {b['id']} ({str(ex)[:120]})")
     return d
+
+
+def _inserto(trabajo: Path, ff: str, tipo: str, t: float, ranura: float) -> dict:
+    """un clip de la escena del producto (la misma de los primeros videos) para poner encima del stock o del aura"""
+    from . import escenas_bloque as EB
+    from . import producto as PD
+
+    mp4 = trabajo / "producto" / f"{tipo}_v1.mp4"
+    if not mp4.exists():
+        mp4.parent.mkdir(exist_ok=True)
+        EB.renderizar([{**PD.escena(tipo), "inicio": 0.0}], None, "", PD.DUR_INSERTO, mp4, ff)
+    ini = min(max(0.0, t), max(0.0, ranura - 2.5))
+    return {"url": "@/" + mp4.relative_to(trabajo).as_posix(), "ini": round(ini, 3),
+            "dur": round(min(PD.DUR_INSERTO, ranura - ini), 3)}
 
 
 def _en_pantalla(trozo: dict, pantalla) -> bool:
@@ -169,6 +200,9 @@ def partes(trabajo: Path, tl: dict, datos: dict, ff: str, qr: list[dict] | None 
                    for q in (qr or []) if q["ini"] < ini + dur and q["fin"] > ini]
         if locales:
             props["qr"] = [q for q in locales if q["fin"] - q["ini"] > 0.5]
+            # (10-11) mientras sale la escena de MI VALOR / MI CÓDIGO, el QR se pasa arriba a la derecha (abajo tapa su lista)
+            props["productos"] = [[round(a - ini, 3), round(z - ini, 3)] for b in bs if b.get("_producto")
+                                  for a, z in [b["_producto"]]]
         firma = hashlib.sha1(json.dumps(props, sort_keys=True).encode()).hexdigest()[:10]
         salida.append({"nombre": f"parte_{k:02d}_{firma}", "props": props, "inicio": ini, "dur": dur, "ultima": ultima})
     return salida

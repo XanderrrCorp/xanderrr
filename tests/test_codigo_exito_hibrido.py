@@ -274,3 +274,23 @@ def test_el_qr_va_en_las_partes_que_toca(tmp_path, monkeypatch):
     assert "qr" not in lista[0]["props"]
     q = lista[1]["props"]["qr"]
     assert q[0]["ini"] == 0.0 and q[0]["fin"] == 12.0 and q[0]["url"].startswith("@/partes/qr_")
+
+
+def test_escena_del_producto_cuando_la_voz_lo_nombra():
+    from estudio.codigo_exito import producto as PD
+
+    trozos = [{"texto": "Eso es lo que", "ini": 100.0, "fin": 101.0}, {"texto": "trabajamos en Mi", "ini": 101.0, "fin": 102.0},
+              {"texto": "Valor, el programa", "ini": 102.0, "fin": 103.0}]
+    b = {"id": 7, "inicio": 99.0, "ranura": 20.0, "texto": "Eso es lo que trabajamos en Mi Valor, el programa.", "trozos": trozos}
+    assert PD.momento(b) == ("mivalor", 2.0)                    # el trozo donde empieza «Mi Valor»
+    assert PD.momento({"texto": "Y está MI CÓDIGO, el planner."}) == ("micodigo", 0.0)
+    assert PD.momento({"texto": "Nada que vender aquí."}) is None
+    # el mismo producto no se repite antes de SEPARACION_S
+    bloques = [{"id": 1, "inicio": 0.0, "texto": "mi valor"}, {"id": 2, "inicio": 10.0, "texto": "mi valor otra vez"},
+               {"id": 3, "inicio": 20.0, "texto": "y mi código"}, {"id": 4, "inicio": 60.0, "texto": "mi valor"}]
+    assert set(PD.elegir(bloques)) == {1, 3, 4}
+    # en el plan del Profesor entra justo ahí, con su sello, y quita lo que la tapaba
+    plan = [{"tipo": "tipografia", "inicio": 0.0}, {"tipo": "fondo_frase", "inicio": 3.0}, {"tipo": "libreta", "inicio": 9.0}]
+    nuevo = PD.en_plan(plan, 12.0, "mivalor", 2.5)
+    assert [e["tipo"] for e in nuevo] == ["tipografia", "mivalor", "libreta"]
+    assert nuevo[1]["sello"] and nuevo[1]["inicio"] == 2.5 and nuevo[1]["profesor"] is None

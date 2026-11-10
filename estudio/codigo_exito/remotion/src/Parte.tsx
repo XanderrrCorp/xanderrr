@@ -16,9 +16,10 @@ export type Bloque = {
   tipo: "profesor" | "stock" | "aura"; dur: number;               // segundos del bloque en la parte
   profesor?: string; stock?: Clip[];
   aura?: { respiros: { t: number; dur: number; url: string }[] };
+  inserto?: { url: string; ini: number; dur: number };            // (10-11) escena del producto encima del bloque
 };
 export type QR = { ini: number; fin: number; url: string; texto: string };
-export type PropsParte = { fps: number; bloques: Bloque[]; subtitulos: { texto: string; ini: number; fin: number }[]; audio?: string | null; inicio: number; cola: number; qr?: QR[] };
+export type PropsParte = { fps: number; bloques: Bloque[]; subtitulos: { texto: string; ini: number; fin: number }[]; audio?: string | null; inicio: number; cola: number; qr?: QR[]; productos?: [number, number][] };
 
 const fuente = (() => {
   let lista = false;
@@ -134,16 +135,20 @@ const Subtitulos: React.FC<{ lista: PropsParte["subtitulos"] }> = ({ lista }) =>
 
 /** (09-11) QR de compra en la venta del infoproducto: tarjeta blanca abajo a la derecha (al lado de los subtítulos, que
  *  van al centro), grande para que se escanee desde el sofá mirando la TV; entra con rebote y late suave */
-const CodigoQR: React.FC<{ lista: QR[] }> = ({ lista }) => {
+const CodigoQR: React.FC<{ lista: QR[]; productos?: [number, number][] }> = ({ lista, productos }) => {
   const f = useCurrentFrame(); const { fps } = useVideoConfig();
   const t = f / fps;
   const q = lista.find((x) => t >= x.ini && t < x.fin);
   if (!q) return null;
+  // con la escena del producto en pantalla, arriba a la derecha (pasa suave en 0,4 s)
+  const arriba = Math.max(0, ...(productos ?? []).map(([a, z]) =>
+    Math.min(interpolate(t, [a - 0.2, a + 0.2], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" }),
+             interpolate(t, [z - 0.2, z + 0.2], [1, 0], { extrapolateLeft: "clamp", extrapolateRight: "clamp" }))));
   const entra = spring({ frame: f - Math.round(q.ini * fps), fps, config: { damping: 12, stiffness: 180, mass: 0.6 } });
   const sale = interpolate(t, [q.fin - 0.35, q.fin], [1, 0], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
   const late = 1 + 0.025 * Math.sin(t * 3.2);
   return (
-    <AbsoluteFill style={{ justifyContent: "flex-end", alignItems: "flex-end", padding: "0 46px 46px 0" }}>
+    <AbsoluteFill style={{ justifyContent: "flex-end", alignItems: "flex-end", padding: "0 46px 46px 0", transform: `translateY(${-arriba * 432}px) scale(${1 - 0.28 * arriba})`, transformOrigin: "100% 0%" }}>
       <div style={{ width: 330, padding: "18px 18px 10px", borderRadius: 24, background: COLOR.crema, border: `6px solid ${COLOR.dorado}`,
         boxShadow: "0 14px 40px rgba(0,0,0,0.55)", textAlign: "center", opacity: sale,
         transform: `translateY(${(1 - entra) * 160}px) scale(${(0.7 + 0.3 * entra) * late})` }}>
@@ -154,6 +159,14 @@ const CodigoQR: React.FC<{ lista: QR[] }> = ({ lista }) => {
       </div>
     </AbsoluteFill>
   );
+};
+
+/** (10-11) la escena de MI VALOR / MI CÓDIGO (la de los primeros videos) tapa el stock o el aura en ese momento */
+const Inserto: React.FC<{ url: string; dur: number }> = ({ url, dur }) => {
+  const f = useCurrentFrame(); const { fps } = useVideoConfig();
+  const n = Math.round(dur * fps);
+  const o = interpolate(f, [0, 8, n - 8, n], [0, 1, 1, 0], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
+  return <AbsoluteFill style={{ opacity: o }}><OffthreadVideo src={url} muted style={{ width: "100%", height: "100%" }} /></AbsoluteFill>;
 };
 
 export const Parte: React.FC<PropsParte> = (p) => {
@@ -169,13 +182,17 @@ export const Parte: React.FC<PropsParte> = (p) => {
           const contenido = b.tipo === "profesor" && b.profesor ? <Profesor url={b.profesor} />
             : b.tipo === "stock" && b.stock?.length ? <Stock clips={b.stock} />
             : <Aura audio={p.audio} desde={ini} respiros={b.aura?.respiros ?? []} />;
-          const s = <TransitionSeries.Sequence key={`s${i}`} durationInFrames={largo}>{contenido}</TransitionSeries.Sequence>;
+          const ins = b.inserto && b.inserto.dur > 0.5 ? (
+            <Sequence from={Math.round(b.inserto.ini * fps)} durationInFrames={Math.round(b.inserto.dur * fps)}>
+              <Inserto url={b.inserto.url} dur={b.inserto.dur} />
+            </Sequence>) : null;
+          const s = <TransitionSeries.Sequence key={`s${i}`} durationInFrames={largo}>{contenido}{ins}</TransitionSeries.Sequence>;
           return i === 0 ? [s] : [<TransitionSeries.Transition key={`t${i}`} presentation={fade()} timing={linearTiming({ durationInFrames: T })} />, s];
         })}
       </TransitionSeries>
       <Pelicula />
       <Subtitulos lista={p.subtitulos} />
-      {p.qr?.length ? <CodigoQR lista={p.qr} /> : null}
+      {p.qr?.length ? <CodigoQR lista={p.qr} productos={p.productos} /> : null}
     </AbsoluteFill>
   );
 };
