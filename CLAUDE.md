@@ -595,7 +595,8 @@ Estado al 04-10-2026. El repositorio es PÚBLICO: nunca escribir claves, tokens 
   inscribirse; tramos unidos, mín. 8 s. QR con segno (dependencia nueva en pyproject, error «l» = cuadros grandes; se lee
   hasta a 960 px) → armar.qr_de_venta → props «qr» por parte → Parte.tsx CodigoQR (tarjeta crema con borde dorado abajo
   a la derecha, 330 px, «ESCANEA CON TU CELULAR»). Sin link guardado: nada cambia. Recomendado un link corto. Los links
-  reales NO los tengo (en los videos viejos siempre fue «[TU ENLACE DE HOTMART]»): el dueño los pega en la página.
+  del dueño en venta.POR_DEFECTO (públicos, de venta): MI CÓDIGO = https://go.hotmart.com/D107710093D, MI VALOR =
+  https://go.hotmart.com/M108119283G (10-11; el dueño probó el QR de MI CÓDIGO: abre). Lo guardado en la página manda.
 - (10-11) ESCENA DEL PRODUCTO (el dueño: «que se vea como cuando lo hacíamos a mano»): codigo_exito/producto.py. Cuando la
   voz nombra MI VALOR o MI CÓDIGO sale LA MISMA escena de los primeros videos (animado/escenas.mivalor con sello «7 días de
   garantía» / escenas_extra.micodigo, el planner en el celular): en bloques del Profesor entra al plan en el segundo del

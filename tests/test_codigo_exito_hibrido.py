@@ -219,6 +219,7 @@ def test_qr_de_compra_en_la_venta(tmp_path, monkeypatch):
     from estudio.codigo_exito import venta as V
 
     monkeypatch.setattr(V, "archivo", lambda: tmp_path / "venta.json")
+    monkeypatch.setattr(V, "POR_DEFECTO", [])
     bloques = [{"id": 1, "inicio": 0.0, "ranura": 20.0, "texto": "Hay frases que una mujer dice veinte veces al día."},
                {"id": 2, "inicio": 20.0, "ranura": 15.0, "texto": "Eso es lo que trabajamos en MI VALOR, el programa de veintiún días."},
                {"id": 3, "inicio": 35.0, "ranura": 3.0, "texto": "Te dejo el link en la descripción."},
@@ -248,6 +249,7 @@ def test_lo_guardado_con_un_solo_link_se_sigue_leyendo(tmp_path, monkeypatch):
     from estudio.codigo_exito import venta as V
 
     monkeypatch.setattr(V, "archivo", lambda: tmp_path / "venta.json")
+    monkeypatch.setattr(V, "POR_DEFECTO", [])
     (tmp_path / "venta.json").write_text(json.dumps({"link": "https://ejemplo.com/x", "producto": "MI VALOR"}), "utf-8")
     assert V.leer()["productos"] == [{"producto": "MI VALOR", "link": "https://ejemplo.com/x"}]
 
@@ -294,3 +296,13 @@ def test_escena_del_producto_cuando_la_voz_lo_nombra():
     nuevo = PD.en_plan(plan, 12.0, "mivalor", 2.5)
     assert [e["tipo"] for e in nuevo] == ["tipografia", "mivalor", "libreta"]
     assert nuevo[1]["sello"] and nuevo[1]["inicio"] == 2.5 and nuevo[1]["profesor"] is None
+
+
+def test_el_link_de_mi_codigo_viene_puesto(tmp_path, monkeypatch):
+    from estudio.codigo_exito import venta as V
+
+    monkeypatch.setattr(V, "archivo", lambda: tmp_path / "venta.json")
+    p = {x["producto"]: x["link"] for x in V.leer()["productos"]}
+    assert p["MI CÓDIGO"] == "https://go.hotmart.com/D107710093D" and p["MI VALOR"] == "https://go.hotmart.com/M108119283G"
+    V.guardar([{"producto": "MI CÓDIGO", "link": "https://otro.com/x"}])         # lo que él guarde manda
+    assert {x["producto"]: x["link"] for x in V.leer()["productos"]}["MI CÓDIGO"] == "https://otro.com/x"

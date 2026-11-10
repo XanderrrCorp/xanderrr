@@ -16,6 +16,10 @@ import unicodedata
 from pathlib import Path
 
 MIN_S = 8.0
+# (10-11) los links que dio el dueño (son links públicos de venta, los mismos de las descripciones): salen solos al
+# instalar; lo que él guarde en la página manda sobre esto
+POR_DEFECTO = [{"producto": "MI VALOR", "link": "https://go.hotmart.com/M108119283G"},
+               {"producto": "MI CÓDIGO", "link": "https://go.hotmart.com/D107710093D"}]
 VENTA = re.compile(r"\b(link|enlace)s?\b.{0,30}\b(descripcion|comentario|abajo|pantalla)\b|\binscribete\b|\binscribirte\b|"
                    r"\bcompra(r|lo|la)?\b|\bprecio\b|\boferta\b|\bdescuento\b|\bacceso inmediato\b|\bunete\b.{0,40}\bprograma\b|"
                    r"\bescanea\b|\bcodigo qr\b")
@@ -44,6 +48,12 @@ def leer() -> dict:
         productos = [{"producto": d.get("producto") or "", "link": d.get("link") or ""}] if d.get("link") else []
     productos = [{"producto": str(p.get("producto") or "").strip(), "link": str(p.get("link") or "").strip()}
                  for p in productos if isinstance(p, dict)]
+    for base in POR_DEFECTO:                           # los del dueño, si en la página no hay otro link para ese programa
+        igual = next((p for p in productos if _plano(p["producto"]) == _plano(base["producto"])), None)
+        if igual is None:
+            productos.append(dict(base))
+        elif not igual["link"]:
+            igual["link"] = base["link"]
     return {"productos": [p for p in productos if p["link"] or p["producto"]],
             "texto": str(d.get("texto") or "Escanea con tu celular").strip()}
 
