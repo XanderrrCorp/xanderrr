@@ -56,6 +56,7 @@ def test_stock_no_repite_clips_en_el_video(tmp_path, monkeypatch):
         p = tmp_path / f"c{clip['pexels_id']}.mp4"; p.write_bytes(b"0"); return p
     monkeypatch.setattr(clips, "buscar", buscar)
     monkeypatch.setattr(clips, "descargar", descargar)
+    monkeypatch.setattr(stock, "_BUSQUEDAS", {})
     out = stock.elegir(tmp_path / "v", [{"clave": "a", "claves": ["x"], "dur": 70}, {"clave": "b", "claves": ["x"], "dur": 20}], avisar=lambda *_: None)
     ids = [c["pexels_id"] for v in out.values() for c in v]
     assert len(ids) == len(set(ids)) == len(stock.tramos(70)) + len(stock.tramos(20))
@@ -63,6 +64,35 @@ def test_stock_no_repite_clips_en_el_video(tmp_path, monkeypatch):
     assert len(reg["clips"]) == len(ids) and {c["pedido"] for c in reg["clips"]} == {"a", "b"}
     again = stock.elegir(tmp_path / "v", [{"clave": "a", "claves": ["x"], "dur": 70}], avisar=lambda *_: None)
     assert [c["pexels_id"] for c in again["a"]] == [c["pexels_id"] for c in out["a"]]   # se reusa, no se vuelve a buscar
+
+
+def test_pexels_una_busqueda_y_espera_si_pide_pausa(tmp_path, monkeypatch):
+    """(10-11) el dueño vio «429 Too Many Requests» y todo el video quedó en aura: ahora cada búsqueda se pregunta UNA vez
+    (no una por toma de 8 s) y, si Pexels pide pausa, Xandart espera y sigue"""
+    import requests
+
+    from estudio.codigo_exito import stock
+    from estudio.tracy import clips
+
+    llamadas, esperas, n = [], [], iter(range(5000, 9000))
+
+    def buscar(q, minimo, excluir, sesion=None):
+        llamadas.append(q)
+        if len(llamadas) == 1:                       # la primera vez: Pexels dice «demasiados pedidos»
+            r = requests.Response(); r.status_code = 429
+            raise requests.HTTPError(response=r)
+        return [{"pexels_id": str(next(n)), "duracion": 40.0, "url_origen": "u", "autor": "a", "descarga": "d",
+                 "ancho": 1920, "alto": 1080, "consulta": q} for _ in range(30)]
+
+    def descargar(clip, sesion=None):
+        p = tmp_path / f"c{clip['pexels_id']}.mp4"; p.write_bytes(b"0"); return p
+    monkeypatch.setattr(clips, "buscar", buscar)
+    monkeypatch.setattr(clips, "descargar", descargar)
+    monkeypatch.setattr(stock, "_BUSQUEDAS", {})
+    monkeypatch.setattr(stock, "_dormir", esperas.append)
+    out = stock.elegir(tmp_path / "v", [{"clave": "a", "claves": ["woman phone"], "dur": 120}], avisar=lambda *_: None)
+    assert len(out["a"]) == len(stock.tramos(120)) == 15                     # 15 tomas…
+    assert llamadas == ["woman phone", "woman phone"] and esperas == [60]     # …con UNA búsqueda (y un reintento tras esperar)
 
 
 def test_subtitulos_en_trozos_cortos():

@@ -603,6 +603,10 @@ Estado al 04-10-2026. El repositorio es PÚBLICO: nunca escribir claves, tokens 
   nombre (PD.en_plan, ≥4,5 s); en stock/aura va un clip de 5,5 s encima (armar._inserto → Bloque.inserto → Parte.tsx
   Inserto). Máx. una por bloque y del mismo producto cada 45 s. Mientras sale, el QR se pasa arriba a la derecha y
   se achica (props «productos»), sin tapar la lista. Probado con cuadros reales (se lee el QR).
+- (10-11) CÓDIGO DEL ÉXITO + PEXELS 429 (captura del dueño: «429 Too Many Requests» en todos los bloques → todo el video
+  en aura): stock.elegir pedía UNA búsqueda por toma de 8 s (cientos por video; Pexels deja ~200/hora). Ahora
+  stock._buscar pregunta cada búsqueda una vez (caché _BUSQUEDAS, filtra duración/usados en local) y ante 429 espera
+  1-2-4-8-15 min (ESPERAS_429) y sigue. Ese video (16 bloques, 0 del Profesor) quedó sin stock: rehacer tras instalar.
 ## Pendiente
 - Preguntas sin responder del dueño: ¿en qué canal notó la voz lenta? (Peligro Tropical está en 1.3 en
   config/proveedores.json; Tracy en 1.0 por pedido suyo). ¿En qué momento sale «la tira de animales» sin sentido?

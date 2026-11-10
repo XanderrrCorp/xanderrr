@@ -31,11 +31,43 @@ def tramos(dur: float) -> list[float]:
     return [round(dur / n, 3)] * n
 
 
+ESPERAS_429 = (60, 120, 240, 480, 900)   # (10-11) si Pexels pide pausa (límite ~200 pedidos por hora): esperar y seguir
+_BUSQUEDAS: dict[str, list[dict]] = {}   # una sola pregunta a Pexels por búsqueda (antes: una por cada toma de 8 s)
+
+
+def _dormir(s: float) -> None:
+    import time
+
+    time.sleep(s)
+
+
+def _buscar(q: str, sesion, avisar=print) -> list[dict]:
+    """todos los clips que Pexels da para esa búsqueda (sin filtrar), guardados para las tomas siguientes; ante un 429
+    espera lo que Pexels diga (o 1, 2, 4, 8, 15 min) y vuelve a preguntar"""
+    import requests
+
+    from ..tracy.clips import buscar
+
+    if q in _BUSQUEDAS:
+        return _BUSQUEDAS[q]
+    for k, espera in enumerate((0,) + ESPERAS_429):
+        if espera:
+            avisar(f"  Pexels pidió una pausa (muchos pedidos seguidos): espero {espera // 60} min y sigo")
+            _dormir(espera)
+        try:
+            _BUSQUEDAS[q] = buscar(q, 0.0, set(), sesion=sesion)
+            return _BUSQUEDAS[q]
+        except requests.HTTPError as ex:
+            if getattr(ex.response, "status_code", None) != 429 or k == len(ESPERAS_429):
+                raise
+    raise RuntimeError("Pexels sigue pidiendo pausa")
+
+
 def elegir(trabajo: Path, pedidos: list[dict], avisar=print, sesion=None) -> dict:
     """pedidos: [{clave, claves[], dur}] → {clave: [{archivo, dur, pexels_id}]}. Lo ya elegido para ese pedido se reusa."""
     import requests
 
-    from ..tracy.clips import buscar, consultas, descargar
+    from ..tracy.clips import consultas, descargar
 
     sesion = sesion or requests
     d = trabajo / "stock"
@@ -54,7 +86,8 @@ def elegir(trabajo: Path, pedidos: list[dict], avisar=print, sesion=None) -> dic
         for k, largo in enumerate(largos):
             clip = None
             for q in consultas(p["claves"], "") + (GENERALES_AURA if p.get("aura") else []):
-                candidatos = [c for c in buscar(q, min(largo, MAX_CLIP) * 0.9, usados, sesion=sesion) if c["pexels_id"] not in usados]
+                minimo = min(largo, MAX_CLIP) * 0.9
+                candidatos = [c for c in _buscar(q, sesion, avisar) if c["pexels_id"] not in usados and c["duracion"] >= minimo]
                 if candidatos:
                     clip = max(candidatos, key=lambda c: c["duracion"] >= largo)
                     break
