@@ -70,7 +70,13 @@ def _rhubarb() -> str | None:
 
 def _estado(carpeta: Path) -> dict:
     ruta = carpeta / "estado.json"
-    return json.loads(ruta.read_text("utf-8")) if ruta.exists() else {"estado": "nuevo", "log": []}
+    e = json.loads(ruta.read_text("utf-8")) if ruta.exists() else {"estado": "nuevo", "log": []}
+    hilo = _TRABAJOS.get(carpeta.name)
+    if e.get("estado") == "haciendo" and not (hilo and hilo.is_alive()):
+        # (10-11, el dueño reinició y seguía «Haciéndose» sin botón) Xandart se cerró a mitad: lo hecho quedó guardado
+        e = {**e, "estado": "error", "error": "Se detuvo porque Xandart se cerró. Dale «Seguir donde iba»: lo ya hecho "
+                                             "(voz, escenas, clips) no se repite ni se vuelve a pagar."}
+    return e
 
 
 def _guardar_estado(carpeta: Path, **cambios) -> dict:

@@ -336,3 +336,17 @@ def test_el_link_de_mi_codigo_viene_puesto(tmp_path, monkeypatch):
     assert p["MI CÓDIGO"] == "https://go.hotmart.com/D107710093D" and p["MI VALOR"] == "https://go.hotmart.com/M108119283G"
     V.guardar([{"producto": "MI CÓDIGO", "link": "https://otro.com/x"}])         # lo que él guarde manda
     assert {x["producto"]: x["link"] for x in V.leer()["productos"]}["MI CÓDIGO"] == "https://otro.com/x"
+
+
+def test_tras_reiniciar_no_queda_haciendose(tmp_path):
+    """(10-11) el dueño reinició el PC y el video seguía en «Haciéndose» sin botón para seguir"""
+    import json
+
+    from estudio.codigo_exito import api as A
+
+    c = tmp_path / "video-x"
+    c.mkdir()
+    (c / "estado.json").write_text(json.dumps({"estado": "haciendo", "log": ["Armando 1 partes en Remotion…"]}), "utf-8")
+    e = A._estado(c)
+    assert e["estado"] == "error" and "Seguir donde iba" in e["error"]
+    assert e["log"][-1].startswith("Armando")                     # lo que iba haciendo se sigue viendo

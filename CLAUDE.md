@@ -607,6 +607,7 @@ Estado al 04-10-2026. El repositorio es PÚBLICO: nunca escribir claves, tokens 
   en aura): stock.elegir pedía UNA búsqueda por toma de 8 s (cientos por video; Pexels deja ~200/hora). Ahora
   stock._buscar pregunta cada búsqueda una vez (caché _BUSQUEDAS, filtra duración/usados en local) y ante 429 espera
   1-2-4-8-15 min (ESPERAS_429) y sigue. Ese video (16 bloques, 0 del Profesor) quedó sin stock: rehacer tras instalar.
+  api._estado: un «haciendo» sin hilo vivo (Xandart se cerró/reinició) se muestra como «error» con «Seguir donde iba».
 ## Pendiente
 - Preguntas sin responder del dueño: ¿en qué canal notó la voz lenta? (Peligro Tropical está en 1.3 en
   config/proveedores.json; Tracy en 1.0 por pedido suyo). ¿En qué momento sale «la tira de animales» sin sentido?
